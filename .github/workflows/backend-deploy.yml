@@ -1,0 +1,7 @@
+name: Backend deployment (placeholder)
+on: { workflow_dispatch: {} }
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Future workflow: build API image, push it to ECR, then deploy it to EC2."

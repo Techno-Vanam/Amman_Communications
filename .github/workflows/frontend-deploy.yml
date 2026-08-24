@@ -1,0 +1,7 @@
+name: Frontend deployment (placeholder)
+on: { workflow_dispatch: {} }
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Future workflow: build Next.js applications and publish them to the frontend hosting platform."

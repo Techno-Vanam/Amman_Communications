@@ -1,0 +1,1 @@
+export default function AdminLoginPage() { return <main><p className="eyebrow">ADMIN ACCESS</p><h1>Sign in to operations.</h1><p>Admin accounts are provisioned server-side by the API.</p></main>; }

@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+model HealthCheck {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+}
+
+enum DocumentVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model Customer {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  name         String
+  applications Application[]
+  documents    Document[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Application {
+  id         String     @id @default(cuid())
+  customer   Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId String
+  documents  Document[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Document {
+  id                  String                    @id @default(cuid())
+  customer            Customer                  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId          String
+  application         Application               @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId       String
+  documentType        String
+  storagePath         String
+  fileName            String
+  mimeType             String
+  fileSize            Int
+  verificationStatus  DocumentVerificationStatus @default(PENDING)
+  verificationRemarks String?
+  uploadedAt          DateTime                  @default(now())
+}

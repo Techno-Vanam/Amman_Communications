@@ -1,0 +1,1 @@
+export default function AdminDashboardPage() { return <main><p className="eyebrow">ADMIN WORKSPACE</p><h1>Operations at a glance.</h1><p>Manage customers, applications, documents, finance, and activity from one workspace.</p></main>; }

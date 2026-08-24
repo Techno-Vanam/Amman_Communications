@@ -1,0 +1,1 @@
+export default function PortalDashboardPage() { return <main><p className="eyebrow">CUSTOMER PORTAL</p><h1>Your applications, in one place.</h1><p>Track appointments, documents, consultations, and payments securely.</p></main>; }

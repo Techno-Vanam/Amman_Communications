@@ -1,0 +1,1 @@
+export default function LoginPage() { return <main><p className="eyebrow">CUSTOMER ACCESS</p><h1>Welcome back.</h1><p>Sign in to continue to your customer portal.</p></main>; }
