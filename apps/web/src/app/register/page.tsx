@@ -1,13 +1,14 @@
+import { Metadata } from 'next';
 import styles from './page.module.css';
-import LoginForm from './LoginForm';
+import RegisterForm from './RegisterForm';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'Sign In | Amman Communications',
-  description: 'Sign in to access your customer or admin portal.',
+export const metadata: Metadata = {
+  title: 'Register | Amman Communications',
+  description: 'Create a new customer account',
 };
 
-export default function LoginPage() {
+export default function RegisterPage() {
   return (
     <div className={styles.page}>
       <div className={styles.leftCol}>
@@ -18,7 +19,7 @@ export default function LoginPage() {
             </svg>
             <span>Amman Comm</span>
           </Link>
-          <LoginForm />
+          <RegisterForm />
         </div>
       </div>
       
@@ -27,10 +28,10 @@ export default function LoginPage() {
         <div className={styles.decorativeCircle2} />
         <div className={styles.heroContent}>
           <h2 className={styles.heroTitle}>
-            Manage everything in <span>one place.</span>
+            Start your journey with <span>us today.</span>
           </h2>
           <p className={styles.heroText}>
-            Welcome back to Amman Communications. Securely access your dashboard to track applications, manage documents, and stay up to date.
+            Join Amman Communications to access our secure portal, manage your applications, and track your essential documents.
           </p>
         </div>
       </div>

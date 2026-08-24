@@ -7,9 +7,25 @@ class LoginDto {
   @IsString() @MinLength(8) password!: string;
 }
 
-@Controller()
+class RegisterDto {
+  @IsString() @MinLength(2) name!: string;
+  @IsEmail() email!: string;
+  @IsString() @MinLength(8) password!: string;
+}
+
+@Controller('v1/auth')
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
-  @Post('customer/auth/login') customerLogin(@Body() dto: LoginDto) { return this.auth.login('customer', dto.email, dto.password); }
-  @Post('admin/auth/login') adminLogin(@Body() dto: LoginDto) { return this.auth.login('admin', dto.email, dto.password); }
+
+  @Post('login')
+  async login(@Body() dto: LoginDto) {
+    const { accessToken, user } = await this.auth.login(dto.email, dto.password);
+    return { accessToken, user };
+  }
+
+  @Post('register')
+  async register(@Body() dto: RegisterDto) {
+    const { accessToken, user } = await this.auth.register(dto.name, dto.email, dto.password);
+    return { accessToken, user };
+  }
 }

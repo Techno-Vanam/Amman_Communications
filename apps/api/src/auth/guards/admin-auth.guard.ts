@@ -8,7 +8,12 @@ export class AdminAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<{ headers: { authorization?: string }; user?: unknown }>();
     const token = request.headers.authorization?.replace(/^Bearer\s+/i, '');
     if (!token) throw new UnauthorizedException();
-    try { const payload = await this.jwt.verifyAsync(token, { secret: process.env.JWT_ACCESS_SECRET, audience: 'admin' }); request.user = payload; return true; }
+    try { 
+      const payload = await this.jwt.verifyAsync(token, { secret: process.env.JWT_ACCESS_SECRET }); 
+      if (payload.role !== 'ADMIN') throw new UnauthorizedException();
+      request.user = payload; 
+      return true; 
+    }
     catch { throw new UnauthorizedException(); }
   }
 }
