@@ -28,7 +28,7 @@ NestJS (apps/api)
 Prerequisites: Node.js 24+, pnpm 11+, and Docker.
 
 ```powershell
-Copy-Item .env.example .env
+Copy-Item .env.example .env   //Copy the .env.example file content and create .env file and passte it 
 pnpm install
 docker compose up -d
 pnpm db:generate
