@@ -1,0 +1,31 @@
+.header {
+  padding: var(--space-20) 0 var(--space-12);
+  background-color: var(--color-white);
+  border-bottom: 1px solid rgba(18, 55, 42, 0.05);
+  text-align: center;
+}
+
+.title {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--color-dark-green);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-4);
+}
+
+.description {
+  font-size: var(--font-size-lg);
+  color: rgba(18, 55, 42, 0.7);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: var(--space-16) 0 var(--space-10);
+  }
+  
+  .title {
+    font-size: var(--font-size-2xl);
+  }
+}
