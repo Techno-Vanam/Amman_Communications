@@ -13,8 +13,7 @@ import {
   Trash2,
   X,
   ArrowUp,
-  ArrowDown,
-  Eye
+  ArrowDown
 } from 'lucide-react';
 import {
   createAdminService,
@@ -39,6 +38,9 @@ export default function AdminServicesPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Selection state
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
 
   // Filter states
   const [search, setSearch] = useState<string>('');
@@ -235,34 +237,66 @@ export default function AdminServicesPage() {
     setIsSubmitting(false);
   };
 
-  // Status Toggle (Activate / Deactivate)
-  const handleToggleStatus = async (service: Service) => {
+  // Status Toggle (Activate / Deactivate) without full page reload
+  const handleToggleStatus = async (e: React.MouseEvent, service: Service) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     const nextStatus: ServiceStatus =
       service.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+
+    // Optimistic UI update
+    setServices((prev) =>
+      prev.map((s) => (s.id === service.id ? { ...s, status: nextStatus } : s))
+    );
 
     const res = await updateAdminServiceStatus(service.id, nextStatus);
     if (res.error) {
       setError(res.error);
+      // Revert on error
+      setServices((prev) =>
+        prev.map((s) => (s.id === service.id ? { ...s, status: service.status } : s))
+      );
     } else {
       setSuccessMessage(
         `Service "${service.name}" is now ${nextStatus === 'ACTIVE' ? 'Activated' : 'Deactivated'}.`
       );
-      loadData();
+      // Soft reload stats in background without unmounting table
+      const statsRes = await fetchAdminServiceStats();
+      if (statsRes.stats) setStats(statsRes.stats);
     }
   };
 
-  // Delete Action
+  // Bulk Delete Modal State
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState<boolean>(false);
+
+  // Delete Action (Single or Bulk)
   const handleDeleteService = async () => {
-    if (!deletingService) return;
+    const idsToDelete = deletingService ? [deletingService.id] : selectedServiceIds;
+    if (idsToDelete.length === 0) return;
+
     setIsDeleting(true);
     setDeleteError(null);
 
-    const res = await deleteAdminService(deletingService.id);
-    if (res.error) {
-      setDeleteError(res.error);
-    } else {
-      setSuccessMessage(`Service "${deletingService.name}" deleted successfully.`);
+    let hasError = false;
+    for (const id of idsToDelete) {
+      const res = await deleteAdminService(id);
+      if (res.error) {
+        setDeleteError(res.error);
+        hasError = true;
+        break;
+      }
+    }
+
+    if (!hasError) {
+      setSuccessMessage(
+        idsToDelete.length === 1
+          ? `Service deleted successfully.`
+          : `${idsToDelete.length} services deleted successfully.`
+      );
       setDeletingService(null);
+      setIsBulkDeleteModalOpen(false);
+      setSelectedServiceIds([]);
       loadData();
     }
     setIsDeleting(false);
@@ -295,13 +329,24 @@ export default function AdminServicesPage() {
             Configure application services, government & service fee structures, and document verification criteria.
           </p>
         </div>
-        <button
-          onClick={handleOpenCreateModal}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-700"
-        >
-          <Plus className="h-4 w-4" />
-          <span>New Service</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {selectedServiceIds.length > 0 && (
+            <button
+              onClick={() => setIsBulkDeleteModalOpen(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>Delete Selected ({selectedServiceIds.length})</span>
+            </button>
+          )}
+          <button
+            onClick={handleOpenCreateModal}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-700"
+          >
+            <Plus className="h-4 w-4" />
+            <span>New Service</span>
+          </button>
+        </div>
       </div>
 
       {/* Alert Messages */}
@@ -321,14 +366,33 @@ export default function AdminServicesPage() {
       )}
 
       {error && (
-        <div className="flex items-center justify-between rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-900 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4 text-rose-900 shadow-sm">
           <div className="flex items-center gap-3">
             <ShieldAlert className="h-5 w-5 text-rose-600 shrink-0" />
-            <p className="text-sm font-medium">{error}</p>
+            <div>
+              <p className="text-sm font-medium">{error}</p>
+              <p className="text-xs text-rose-700 mt-0.5">
+                Make sure NestJS backend is running on port 3003 and you are signed in as an Admin.
+              </p>
+            </div>
           </div>
-          <button onClick={() => setError(null)} className="text-rose-700 hover:text-rose-900">
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => loadData()}
+              className="inline-flex items-center gap-1.5 rounded-md bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 shadow-sm"
+            >
+              <RefreshCw className="h-3.5 w-3.5" /> Retry
+            </button>
+            <a
+              href="/login"
+              className="rounded-md border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-800 hover:bg-rose-100"
+            >
+              Sign In Again
+            </a>
+            <button onClick={() => setError(null)} className="text-rose-700 hover:text-rose-900 p-1">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -479,6 +543,20 @@ export default function AdminServicesPage() {
             <table className="w-full text-left text-sm text-gray-600">
               <thead className="bg-gray-50 text-xs uppercase font-semibold tracking-wider text-gray-500 border-b border-gray-200">
                 <tr>
+                  <th scope="col" className="px-4 py-3.5 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={services.length > 0 && selectedServiceIds.length === services.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedServiceIds(services.map((s) => s.id));
+                        } else {
+                          setSelectedServiceIds([]);
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-gray-300 text-emerald-800 focus:ring-emerald-700 cursor-pointer"
+                    />
+                  </th>
                   <th scope="col" className="px-6 py-3.5">Service Name</th>
                   <th scope="col" className="px-6 py-3.5">Required Documents</th>
                   <th scope="col" className="px-6 py-3.5">Govt Fee</th>
@@ -492,9 +570,31 @@ export default function AdminServicesPage() {
               <tbody className="divide-y divide-gray-200 bg-white">
                 {services.map((service) => (
                   <tr key={service.id} className="hover:bg-gray-50/80 transition">
-                    {/* Name & Description */}
+                    {/* Select Checkbox */}
+                    <td className="px-4 py-4 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedServiceIds.includes(service.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedServiceIds((prev) => [...prev, service.id]);
+                          } else {
+                            setSelectedServiceIds((prev) => prev.filter((id) => id !== service.id));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-emerald-800 focus:ring-emerald-700 cursor-pointer"
+                      />
+                    </td>
+
+                    {/* Name & Description (Clickable to view details) */}
                     <td className="px-6 py-4">
-                      <div className="font-semibold text-gray-900">{service.name}</div>
+                      <button
+                        type="button"
+                        onClick={() => setViewingService(service)}
+                        className="text-left font-semibold text-gray-900 hover:text-emerald-800 hover:underline cursor-pointer"
+                      >
+                        {service.name}
+                      </button>
                       {service.description && (
                         <p className="mt-0.5 text-xs text-gray-500 line-clamp-1 max-w-xs">
                           {service.description}
@@ -528,17 +628,17 @@ export default function AdminServicesPage() {
 
                     {/* Govt Fee */}
                     <td className="px-6 py-4 font-medium text-gray-700">
-                      ${Number(service.governmentFee).toFixed(2)}
+                      ₹{Number(service.governmentFee).toFixed(2)}
                     </td>
 
                     {/* Service Fee */}
                     <td className="px-6 py-4 font-medium text-gray-700">
-                      ${Number(service.serviceFee).toFixed(2)}
+                      ₹{Number(service.serviceFee).toFixed(2)}
                     </td>
 
                     {/* Total Fee */}
                     <td className="px-6 py-4 font-bold text-gray-900">
-                      ${Number(service.totalFee).toFixed(2)}
+                      ₹{Number(service.totalFee).toFixed(2)}
                     </td>
 
                     {/* Est Time */}
@@ -574,14 +674,7 @@ export default function AdminServicesPage() {
                     {/* Actions */}
                     <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
                       <button
-                        onClick={() => setViewingService(service)}
-                        className="p-1.5 text-gray-500 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition"
-                        title="View Details"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-
-                      <button
+                        type="button"
                         onClick={() => handleOpenEditModal(service)}
                         className="p-1.5 text-gray-500 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition"
                         title="Edit Service"
@@ -590,7 +683,8 @@ export default function AdminServicesPage() {
                       </button>
 
                       <button
-                        onClick={() => handleToggleStatus(service)}
+                        type="button"
+                        onClick={(e) => handleToggleStatus(e, service)}
                         className={`px-2 py-1 text-xs font-semibold rounded-lg border transition ${
                           service.status === 'ACTIVE'
                             ? 'border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100'
@@ -598,14 +692,6 @@ export default function AdminServicesPage() {
                         }`}
                       >
                         {service.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
-                      </button>
-
-                      <button
-                        onClick={() => setDeletingService(service)}
-                        className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                        title="Delete Service"
-                      >
-                        <Trash2 className="h-4 w-4" />
                       </button>
                     </td>
                   </tr>
@@ -677,7 +763,7 @@ export default function AdminServicesPage() {
               <div className="grid gap-4 sm:grid-cols-3">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
-                    Government Fee ($) <span className="text-rose-500">*</span>
+                    Government Fee (₹) <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -692,7 +778,7 @@ export default function AdminServicesPage() {
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
-                    Service Fee ($) <span className="text-rose-500">*</span>
+                    Service Fee (₹) <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -707,10 +793,10 @@ export default function AdminServicesPage() {
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
-                    Total Fee ($)
+                    Total Fee (₹)
                   </label>
                   <div className="w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-sm font-bold text-emerald-900">
-                    ${calculatedTotal}
+                    ₹{calculatedTotal}
                   </div>
                   <p className="mt-1 text-[10px] text-gray-400">Calculated server-side</p>
                 </div>
@@ -894,19 +980,19 @@ export default function AdminServicesPage() {
                 <div>
                   <p className="text-[11px] text-gray-500 font-bold uppercase">Govt Fee</p>
                   <p className="text-base font-bold text-gray-900">
-                    ${Number(viewingService.governmentFee).toFixed(2)}
+                    ₹{Number(viewingService.governmentFee).toFixed(2)}
                   </p>
                 </div>
                 <div>
                   <p className="text-[11px] text-gray-500 font-bold uppercase">Service Fee</p>
                   <p className="text-base font-bold text-gray-900">
-                    ${Number(viewingService.serviceFee).toFixed(2)}
+                    ₹{Number(viewingService.serviceFee).toFixed(2)}
                   </p>
                 </div>
                 <div>
                   <p className="text-[11px] text-emerald-800 font-bold uppercase">Total Fee</p>
                   <p className="text-base font-bold text-emerald-900">
-                    ${Number(viewingService.totalFee).toFixed(2)}
+                    ₹{Number(viewingService.totalFee).toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -955,17 +1041,27 @@ export default function AdminServicesPage() {
         </div>
       )}
 
-      {/* DELETE CONFIRMATION MODAL */}
-      {deletingService && (
+      {/* DELETE CONFIRMATION MODAL (Single or Bulk) */}
+      {(deletingService || isBulkDeleteModalOpen) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3 text-rose-600">
               <ShieldAlert className="h-6 w-6 shrink-0" />
-              <h3 className="text-lg font-bold text-gray-900">Delete Service</h3>
+              <h3 className="text-lg font-bold text-gray-900">
+                {deletingService ? 'Delete Service' : `Delete ${selectedServiceIds.length} Selected Services`}
+              </h3>
             </div>
 
             <p className="text-sm text-gray-600">
-              Are you sure you want to delete <strong className="text-gray-900">{deletingService.name}</strong>?
+              {deletingService ? (
+                <>
+                  Are you sure you want to delete <strong className="text-gray-900">{deletingService.name}</strong>?
+                </>
+              ) : (
+                <>
+                  Are you sure you want to delete <strong className="text-gray-900">{selectedServiceIds.length}</strong> selected service(s)?
+                </>
+              )}
             </p>
 
             {deleteError && (
@@ -976,7 +1072,10 @@ export default function AdminServicesPage() {
 
             <div className="flex items-center justify-end gap-3 pt-2">
               <button
-                onClick={() => setDeletingService(null)}
+                onClick={() => {
+                  setDeletingService(null);
+                  setIsBulkDeleteModalOpen(false);
+                }}
                 className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
               >
                 Cancel

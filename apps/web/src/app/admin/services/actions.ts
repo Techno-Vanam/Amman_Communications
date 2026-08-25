@@ -22,13 +22,16 @@ export async function fetchAdminServiceStats(): Promise<{ stats?: ServiceStats; 
       cache: 'no-store',
     });
     if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        return { error: 'Session expired or Unauthorized. Please sign in as Admin at /login.' };
+      }
       return { error: 'Failed to fetch service statistics' };
     }
     const stats: ServiceStats = await res.json();
     return { stats };
   } catch (err) {
     console.error('fetchAdminServiceStats error:', err);
-    return { error: 'Network error or backend service unavailable' };
+    return { error: 'Backend service starting up or unavailable. Please retry in a moment.' };
   }
 }
 
@@ -43,13 +46,16 @@ export async function fetchAdminServices(search?: string, status?: string): Prom
     const res = await fetch(url, { headers, cache: 'no-store' });
 
     if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        return { error: 'Session expired or Unauthorized. Please sign in as Admin at /login.' };
+      }
       return { error: 'Failed to fetch services list' };
     }
     const services: Service[] = await res.json();
     return { services };
   } catch (err) {
     console.error('fetchAdminServices error:', err);
-    return { error: 'Network error or backend service unavailable' };
+    return { error: 'Backend service starting up or unavailable. Please retry in a moment.' };
   }
 }
 
