@@ -37,6 +37,13 @@ export default function PortalLayout({
             >
               📁 Document Center
             </Link>
+            <Link
+              href="/docs"
+              className={`nav-link ${pathname === '/docs' ? 'active' : ''}`}
+              style={{ color: '#10b981' }}
+            >
+              📜 API Docs (Swagger)
+            </Link>
           </nav>
 
           <div className="nav-user">
