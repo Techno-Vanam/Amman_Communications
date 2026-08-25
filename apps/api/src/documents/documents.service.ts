@@ -18,6 +18,8 @@ export class DocumentsService {
   }
   async complete(customerId: string, input: { applicationId: string; documentType: string; storagePath: string; fileName: string; mimeType: string; fileSize: number }) {
     if (!input.storagePath.startsWith(`documents/${customerId}/${input.applicationId}/`)) throw new BadRequestException('Invalid storage path');
+    const application = await this.prisma.application.findFirst({ where: { id: input.applicationId, customerId } });
+    if (!application) throw new NotFoundException('Application not found');
     return this.prisma.document.create({ data: { ...input, customerId } });
   }
   async download(customerId: string, id: string) {
