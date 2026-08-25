@@ -228,7 +228,7 @@ export function BookAppointmentForm() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <button
-            onClick={() => router.push('/portal/appointments')}
+            onClick={() => router.push('/customer/appointments')}
             className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm"
           >
             <span>View My Appointments</span>

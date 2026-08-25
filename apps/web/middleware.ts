@@ -40,11 +40,11 @@ export function middleware(request: NextRequest) {
 
   // Authorization rules
   if (pathname.startsWith('/admin') && role !== 'ADMIN') {
-    return NextResponse.redirect(new URL('/portal/appointments', request.url));
+    return NextResponse.redirect(new URL('/customer/appointments', request.url));
   }
 
-  if (pathname.startsWith('/portal') && role !== 'CUSTOMER') {
-    // Admin trying to access portal should go to admin dashboard
+  if ((pathname.startsWith('/portal') || pathname.startsWith('/customer')) && role !== 'CUSTOMER') {
+    // Admin trying to access customer portal should go to admin dashboard
     return NextResponse.redirect(new URL('/admin/dashboard', request.url));
   }
 
@@ -52,5 +52,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/portal/:path*', '/admin/:path*', '/portal', '/admin'],
+  matcher: ['/customer/:path*', '/portal/:path*', '/admin/:path*', '/customer', '/portal', '/admin'],
 };

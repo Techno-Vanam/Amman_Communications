@@ -82,6 +82,6 @@ export async function loginAction(formData: FormData) {
   return {
     success: true,
     accessToken,
-    redirectTo: user.role === 'ADMIN' ? '/admin/dashboard' : '/portal/appointments',
+    redirectTo: user.role === 'ADMIN' ? '/admin/dashboard' : '/customer/appointments',
   };
 }

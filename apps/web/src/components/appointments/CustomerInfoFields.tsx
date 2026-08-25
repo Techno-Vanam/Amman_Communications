@@ -77,7 +77,7 @@ export const CustomerInfoFields: React.FC<CustomerInfoFieldsProps> = ({
 
       <p className="text-xs text-slate-400">
         Need to update your personal details? Manage your profile in{' '}
-        <Link href="/portal/profile" className="text-blue-600 font-medium hover:underline">
+        <Link href="/customer/profile" className="text-blue-600 font-medium hover:underline">
           Profile Settings
         </Link>
       </p>

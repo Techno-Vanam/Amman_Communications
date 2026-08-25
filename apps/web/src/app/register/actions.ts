@@ -86,6 +86,6 @@ export async function registerAction(formData: FormData) {
   return {
     success: true,
     accessToken,
-    redirectTo: '/portal/appointments',
+    redirectTo: '/customer/appointments',
   };
 }
