@@ -1,6 +1,6 @@
 # Amman Communications Platform
 
-Foundation for a documentation and office-management system using one Next.js application, one NestJS API, PostgreSQL through Prisma, and Firebase Storage for persistent user files.
+Foundation for a documentation and office-management system using one Next.js application, one NestJS API, and PostgreSQL through Prisma.
 
 ## Architecture
 
@@ -12,10 +12,10 @@ Next.js (apps/web)
                v
 NestJS (apps/api)
    Prisma -> PostgreSQL
-   Firebase Admin -> Firebase Storage
+   PostgreSQL through Prisma
 ```
 
-`apps/web` is the only frontend application. Customer and admin areas have separate route layouts and middleware. `apps/api` is the only application allowed to access PostgreSQL, Prisma, or Firebase Admin credentials.
+`apps/web` is the only frontend application. Customer and admin areas have separate route layouts and middleware. `apps/api` is the only application allowed to access PostgreSQL and Prisma.
 
 ## Repository layout
 
@@ -36,7 +36,7 @@ pnpm db:migrate -- --name init
 pnpm dev
 ```
 
-The web app runs at `http://localhost:3000`; the API runs at `http://localhost:3003`. Configure Firebase server credentials only in the API environment. Never use `NEXT_PUBLIC_*` for database or Firebase Admin secrets.
+The web app runs at `http://localhost:3000`; the API runs at `http://localhost:3003`. Never use `NEXT_PUBLIC_*` for database or Prisma secrets.
 
 Run repository checks with:
 
@@ -49,4 +49,4 @@ pnpm test
 
 ## Document foundation
 
-The API provides customer/admin authentication boundaries and document endpoints for issuing signed upload URLs, recording metadata after upload, and issuing signed download URLs. PostgreSQL stores document metadata; file bytes remain in Firebase Storage under customer/application-scoped paths.
+The API provides customer/admin authentication boundaries and document metadata endpoints. PostgreSQL is the only active persistence system; file upload/download is disabled until a storage provider is intentionally added.
