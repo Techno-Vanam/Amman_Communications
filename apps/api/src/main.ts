@@ -1,5 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -11,6 +12,16 @@ async function bootstrap() {
 
   app.enableCors({ origin: process.env.CORS_ALLOWED_ORIGINS?.split(',') ?? true, credentials: true });
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+  
+  const config = new DocumentBuilder()
+    .setTitle('Amman Communications API')
+    .setDescription('The Amman Communications backend API')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, document);
+
   await app.listen(process.env.PORT ?? 3003);
 }
 void bootstrap();

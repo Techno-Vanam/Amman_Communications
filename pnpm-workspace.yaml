@@ -9,3 +9,4 @@ allowBuilds:
   esbuild: true
   sharp: false
   unrs-resolver: false
+  '@scarf/scarf': set this to true or false
