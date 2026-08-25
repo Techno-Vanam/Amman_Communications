@@ -30,6 +30,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (customer && customer.status === 'INACTIVE') {
+      throw new UnauthorizedException('Account is deactivated. Please contact support.');
+    }
+
     const accessToken = await this.jwt.signAsync(
       { sub: user.id, role },
       { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' }

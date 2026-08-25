@@ -675,15 +675,6 @@ export default function AdminServicesPage() {
                     <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
                       <button
                         type="button"
-                        onClick={() => handleOpenEditModal(service)}
-                        className="p-1.5 text-gray-500 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition"
-                        title="Edit Service"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </button>
-
-                      <button
-                        type="button"
                         onClick={(e) => handleToggleStatus(e, service)}
                         className={`px-2 py-1 text-xs font-semibold rounded-lg border transition ${
                           service.status === 'ACTIVE'
@@ -692,6 +683,15 @@ export default function AdminServicesPage() {
                         }`}
                       >
                         {service.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditModal(service)}
+                        className="p-1.5 text-gray-500 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition inline-flex items-center align-middle"
+                        title="Edit Service"
+                      >
+                        <Edit3 className="h-4 w-4" />
                       </button>
                     </td>
                   </tr>

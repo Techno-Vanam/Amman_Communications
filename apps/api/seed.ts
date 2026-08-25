@@ -6,17 +6,51 @@ const prisma = new PrismaClient();
 async function main() {
   const passwordHash = await hash('password123', 10);
 
-  // 1. Create a customer
+  // 1. Create customers
   await prisma.customer.upsert({
     where: { email: 'customer@test.com' },
-    update: { passwordHash },
+    update: { passwordHash, status: 'ACTIVE' },
     create: {
       email: 'customer@test.com',
       passwordHash,
       name: 'Test Customer',
+      status: 'ACTIVE',
     },
   });
-  console.log('Test customer created: customer@test.com / password123');
+
+  await prisma.customer.upsert({
+    where: { email: 'sarah.smith@example.com' },
+    update: { passwordHash, status: 'ACTIVE' },
+    create: {
+      email: 'sarah.smith@example.com',
+      passwordHash,
+      name: 'Sarah Smith',
+      status: 'ACTIVE',
+    },
+  });
+
+  await prisma.customer.upsert({
+    where: { email: 'john.doe@example.com' },
+    update: { passwordHash, status: 'INACTIVE' },
+    create: {
+      email: 'john.doe@example.com',
+      passwordHash,
+      name: 'John Doe',
+      status: 'INACTIVE',
+    },
+  });
+
+  await prisma.customer.upsert({
+    where: { email: 'acme.corp@business.com' },
+    update: { passwordHash, status: 'ACTIVE' },
+    create: {
+      email: 'acme.corp@business.com',
+      passwordHash,
+      name: 'Acme Corporation',
+      status: 'ACTIVE',
+    },
+  });
+  console.log('Sample customers created');
 
   // 2. Create an admin
   await prisma.admin.upsert({
