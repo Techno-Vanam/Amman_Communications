@@ -1,1 +1,0 @@
-export default function PortalDocumentsPage() { return <main><p className="eyebrow">DOCUMENTS</p><h1>Upload and review documents.</h1><p>Files are uploaded directly to protected storage and recorded by the API.</p></main>; }

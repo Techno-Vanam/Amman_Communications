@@ -1,3 +1,36 @@
-export default function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <section><nav><strong>Amman Communications</strong> <a href="/admin/dashboard">Admin</a> <a href="/admin/documents">Documents</a></nav>{children}</section>;
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+
+export default function AdminLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <header className="portal-nav" style={{ borderBottomColor: 'rgba(245, 158, 11, 0.3)' }}>
+        <div className="nav-inner">
+          <Link href="/admin/dashboard" className="nav-brand">
+            <span style={{ fontSize: '1.5rem' }}>🛡️</span>
+            <span style={{ color: '#f59e0b' }}>AMMAN ADMIN CONSOLE</span>
+          </Link>
+
+          <nav className="nav-links">
+            <Link href="/admin/dashboard" className="nav-link active">
+              📑 Document Verification Desk
+            </Link>
+            <Link href="/client/dashboard" className="nav-link" style={{ color: '#06b6d4' }}>
+              👤 Switch to Customer Portal
+            </Link>
+          </nav>
+
+          <div className="nav-user">
+            <span className="badge badge-warning">Admin Authorized</span>
+          </div>
+        </div>
+      </header>
+
+      <main style={{ flex: 1 }}>{children}</main>
+    </div>
+  );
 }

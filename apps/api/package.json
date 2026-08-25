@@ -12,30 +12,32 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"src/**/*.ts\" --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test": "echo No tests configured"
+    "test": "vitest run"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
-    "@nestjs/platform-express": "^11.0.1",
     "@nestjs/jwt": "^11.0.0",
-    "@prisma/client": "^6.7.0",
+    "@nestjs/platform-express": "^11.0.1",
+    "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "firebase-admin": "^13.4.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "firebase-admin": "^13.4.0",
-    "@prisma/client": "^6.19.3"
+    "@repo/shared-types": "workspace:*"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.5",
+    "@nestjs/testing": "^11.2.1",
     "@repo/eslint-config": "workspace:*",
     "@repo/tsconfig": "workspace:*",
     "@types/node": "^22.15.0",
     "eslint": "^9.25.0",
+    "prisma": "^6.19.3",
     "typescript": "^5.8.3",
-    "prisma": "^6.19.3"
+    "vitest": "^4.1.11"
   }
 }
