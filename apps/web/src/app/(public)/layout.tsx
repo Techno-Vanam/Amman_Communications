@@ -1,19 +1,4 @@
-import React from 'react';
-import Navbar from '@/components/landing/Navbar';
-import Footer from '@/components/landing/Footer';
-
-export default function PublicLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <>
-      <Navbar />
-      <main id="main-content" tabIndex={-1}>
-        {children}
-      </main>
-      <Footer />
-    </>
-  );
+/* Root layout — no extra wrappers needed, LandingPage handles its own nav/footer */
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }

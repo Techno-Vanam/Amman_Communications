@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from 'react';
 import { loginAction } from './actions';
-import styles from './LoginForm.module.css';
 import Link from 'next/link';
 
 export default function LoginForm() {
@@ -14,39 +13,38 @@ export default function LoginForm() {
     e.preventDefault();
     setError(null);
     const formData = new FormData(e.currentTarget);
-    
+
     startTransition(async () => {
       const result = await loginAction(formData);
-      
+
       if (result?.error) {
         setError(result.error);
       } else if (result?.success && result.redirectTo) {
-        // Force a hard refresh on the router to apply new cookies to layout
         window.location.href = result.redirectTo;
       }
     });
   };
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Welcome back</h1>
-        <p className={styles.subtitle}>Sign in to your account to continue</p>
+    <form className="flex flex-col gap-5 w-full" onSubmit={handleSubmit} noValidate>
+      <div className="text-center mb-2">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h1>
+        <p className="text-sm text-gray-500">Sign in to your account to continue</p>
       </div>
 
       {error && (
-        <div className={styles.errorAlert} role="alert">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" className={styles.errorIcon}>
+        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-300 rounded-xl text-red-800 text-sm font-medium" role="alert">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="flex-shrink-0 text-red-500">
             <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zM12 7v6M12 16h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span>{error}</span>
         </div>
       )}
 
-      <div className={styles.fieldGroup}>
-        <label htmlFor="email" className={styles.label}>Email address</label>
-        <div className={styles.inputWrap}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" className={styles.inputIcon}>
+      <div className="flex flex-col gap-2">
+        <label htmlFor="email" className="text-sm font-medium text-gray-800">Email address</label>
+        <div className="relative flex items-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="absolute left-3 text-gray-400 pointer-events-none">
             <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <input
@@ -55,7 +53,7 @@ export default function LoginForm() {
             type="email"
             autoComplete="email"
             required
-            className={styles.input}
+            className="w-full pl-10 pr-4 py-2.5 text-base border border-gray-200 rounded-xl bg-white text-gray-900 focus:outline-none focus:border-brand-700 focus:ring-2 focus:ring-brand-700/10 transition-colors disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
             placeholder="name@example.com"
             disabled={isPending}
             suppressHydrationWarning
@@ -63,32 +61,32 @@ export default function LoginForm() {
         </div>
       </div>
 
-      <div className={styles.fieldGroup}>
-        <div className={styles.labelRow}>
-          <label htmlFor="password" className={styles.label}>Password</label>
-          <Link href="/forgot-password" className={styles.forgotLink}>Forgot password?</Link>
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between items-baseline">
+          <label htmlFor="password" className="text-sm font-medium text-gray-800">Password</label>
+          <Link href="/forgot-password" className="text-sm text-brand-700 font-medium hover:underline">Forgot password?</Link>
         </div>
-        <div className={styles.inputWrap}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" className={styles.inputIcon}>
+        <div className="relative flex items-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="absolute left-3 text-gray-400 pointer-events-none">
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" strokeWidth="1.5" />
             <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <input
             id="password"
             name="password"
-            type={showPassword ? "text" : "password"}
+            type={showPassword ? 'text' : 'password'}
             autoComplete="current-password"
             required
-            className={styles.input}
+            className="w-full pl-10 pr-10 py-2.5 text-base border border-gray-200 rounded-xl bg-white text-gray-900 focus:outline-none focus:border-brand-700 focus:ring-2 focus:ring-brand-700/10 transition-colors disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
             placeholder="••••••••"
             disabled={isPending}
             suppressHydrationWarning
           />
           <button
             type="button"
-            className={styles.showHideBtn}
+            className="absolute right-2 flex items-center justify-center p-1 text-gray-400 rounded-md hover:text-gray-700 hover:bg-gray-100 transition-colors"
             onClick={() => setShowPassword(!showPassword)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
             disabled={isPending}
           >
             {showPassword ? (
@@ -104,13 +102,18 @@ export default function LoginForm() {
         </div>
       </div>
 
-      <button type="submit" className={styles.submitBtn} disabled={isPending}>
+      <button
+        type="submit"
+        className="flex items-center justify-center w-full py-3 px-6 mt-2 bg-brand-700 text-white font-semibold rounded-xl hover:bg-brand-800 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+        disabled={isPending}
+      >
         {isPending ? 'Signing in...' : 'Sign In'}
       </button>
 
-      <div className={styles.footer}>
-        <p className={styles.footerText}>
-          Don't have an account? <Link href="/register" className={styles.footerLink}>Create account</Link>
+      <div className="text-center mt-2">
+        <p className="text-sm text-gray-500">
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="text-brand-700 font-semibold hover:underline">Create account</Link>
         </p>
       </div>
     </form>

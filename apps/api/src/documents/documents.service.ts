@@ -1,12 +1,15 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { StorageService } from '../storage/storage.service';
+import { IStorageService, STORAGE_SERVICE } from '../storage/storage.interface';
 
 const allowedTypes = new Set(['application/pdf', 'image/jpeg', 'image/png']);
 
 @Injectable()
 export class DocumentsService {
-  constructor(private readonly prisma: PrismaService, private readonly storage: StorageService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(STORAGE_SERVICE) private readonly storage: IStorageService,
+  ) {}
   async uploadUrl(customerId: string, input: { applicationId: string; documentType: string; fileName: string; mimeType: string; fileSize: number }) {
     const max = Number(process.env.MAX_UPLOAD_SIZE_MB ?? 10) * 1024 * 1024;
     if (!allowedTypes.has(input.mimeType) || input.fileSize > max) throw new BadRequestException('Unsupported file or size');
