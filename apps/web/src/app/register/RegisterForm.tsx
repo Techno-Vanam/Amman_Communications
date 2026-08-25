@@ -110,6 +110,7 @@ export default function RegisterForm() {
             onClick={() => setShowPassword(!showPassword)}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             disabled={isPending}
+            suppressHydrationWarning
           >
             {showPassword ? (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -128,6 +129,7 @@ export default function RegisterForm() {
         type="submit"
         className="flex items-center justify-center w-full py-3 px-6 mt-2 bg-brand-700 text-white font-semibold rounded-xl hover:bg-brand-800 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
         disabled={isPending}
+        suppressHydrationWarning
       >
         {isPending ? 'Creating account...' : 'Create Account'}
       </button>
