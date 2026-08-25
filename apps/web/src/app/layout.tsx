@@ -1,13 +1,6 @@
 import type { Metadata } from 'next';
-import { Poppins } from 'next/font/google';
 import './globals.css';
-
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700', '800', '900'],
-  display: 'swap',
-  variable: '--font-poppins',
-});
+import Providers from './providers';
 
 export const metadata: Metadata = {
   title: 'Amman Communications | Simplify Your Service Applications',
@@ -27,8 +20,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={poppins.variable}>
-      <body className="font-poppins">{children}</body>
+    <html lang="en" data-scroll-behavior="smooth">
+      <body className="font-sans antialiased text-slate-800 bg-[#F4F6FB]">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

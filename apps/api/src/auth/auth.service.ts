@@ -32,7 +32,7 @@ export class AuthService {
 
     const accessToken = await this.jwt.signAsync(
       { sub: user.id, role },
-      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' }
+      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '7d' }
     );
 
     return { 
@@ -69,7 +69,7 @@ export class AuthService {
 
     const accessToken = await this.jwt.signAsync(
       { sub: customer.id, role: 'CUSTOMER' },
-      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' }
+      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '7d' }
     );
 
     return {

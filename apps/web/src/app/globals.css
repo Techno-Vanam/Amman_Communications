@@ -1,132 +1,52 @@
-/* Poppins is loaded via next/font/google in layout.tsx — no @import needed here */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Design Tokens (kept for any remaining inline-style usage) ── */
 :root {
-  --green-900: #0a1f15;
-  --green-800: #0f2d1e;
-  --green-700: #12372A;
-  --green-600: #1a4d3a;
-  --green-500: #236649;
-  --green-400: #2e8a60;
-  --green-200: #a8d5b9;
-  --green-100: #d8ebdd;
-  --green-50:  #f0f7f2;
+  --bg-page: #F4F6FB;
+  --bg-card: #FFFFFF;
+  --bg-subtle: #F8FAFC;
+  
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-primary-soft-bg: #EFF6FF;
+  --color-primary-soft-text: #1D4ED8;
 
-  --white:     #ffffff;
-  --gray-50:   #f8f9fa;
-  --gray-100:  #f1f3f5;
-  --gray-200:  #e9ecef;
-  --gray-300:  #dee2e6;
-  --gray-400:  #ced4da;
-  --gray-500:  #adb5bd;
-  --gray-600:  #6c757d;
-  --gray-700:  #495057;
-  --gray-800:  #343a40;
-  --gray-900:  #212529;
+  --status-pending-bg: #FEF3E2;   --status-pending-text: #B45309;
+  --status-confirmed-bg: #E0F2FE; --status-confirmed-text: #075985;
+  --status-completed-bg: #DCFCE7; --status-completed-text: #15803D;
+  --status-cancelled-bg: #FEE2E2; --status-cancelled-text: #B91C1C;
+  --status-rescheduled-bg: #FCE7F3; --status-rescheduled-text: #BE185D;
 
-  --amber: #f59e0b;
-  --blue:  #3b82f6;
-  --rose:  #f43f5e;
+  --text-heading: #0F172A;
+  --text-body: #334155;
+  --text-muted: #64748B;
+  --text-placeholder: #94A3B8;
 
-  --font: 'Poppins', system-ui, -apple-system, sans-serif;
-
-  --max-w:  1200px;
-  --gutter: 1.5rem;
-
-  /* Legacy aliases used by login/register */
-  --color-dark-green:      #12372A;
-  --color-dark-green-dark: #0f2d1e;
-  --color-light-green:     #a8d5b9;
-  --color-white:           #ffffff;
-  --color-bg-alt:          #f8f9fa;
-  --color-border:          #dee2e6;
-  --color-blue:            #3b82f6;
-  --color-text-primary:    #212529;
-  --color-text-secondary:  #6c757d;
-  --color-neutral-100:     #f1f3f5;
-  --color-neutral-400:     #ced4da;
-  --color-neutral-500:     #adb5bd;
-  --color-neutral-700:     #495057;
-  --color-neutral-800:     #343a40;
-  --color-neutral-900:     #212529;
-
-  --space-1:  0.25rem; --space-2:  0.5rem;  --space-3:  0.75rem;
-  --space-4:  1rem;    --space-5:  1.25rem; --space-6:  1.5rem;
-  --space-8:  2rem;    --space-10: 2.5rem;  --space-12: 3rem;
-
-  --font-size-sm:   0.875rem; --font-size-base: 1rem;
-  --font-size-lg:   1.125rem; --font-size-xl:   1.25rem;
-  --font-size-2xl:  1.5rem;   --font-size-4xl:  2.25rem;
-
-  --radius-sm: 6px; --radius-md: 10px; --radius-xl: 24px;
-  --transition-fast: 150ms cubic-bezier(.4,0,.2,1);
-  --shadow-lg: 0 10px 15px rgba(0,0,0,.06), 0 4px 6px rgba(0,0,0,.04);
+  --border-default: #E2E8F0;
+  --radius-card: 16px;
+  --radius-control: 8px;
+  --shadow-card: 0 1px 2px rgba(15,23,42,0.04), 0 1px 8px rgba(15,23,42,0.04);
 }
 
-/* ─── Reset ──────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  font-size: 16px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 
 body {
-  font-family: var(--font);
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #212529;
-  background: #ffffff;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #334155;
+  background: #F4F6FB;
+  min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
-img, picture, video, canvas, svg { display: block; max-width: 100%; }
-input, button, textarea, select { font: inherit; }
-p, h1, h2, h3, h4, h5, h6 { overflow-wrap: break-word; }
-a { color: inherit; text-decoration: none; }
-ul, ol { list-style: none; }
-button { cursor: pointer; border: none; background: none; }
-
 :focus-visible {
-  outline: 2px solid #12372A;
-  outline-offset: 3px;
-  border-radius: 6px;
-}
-
-/* ─── Layout helpers ─────────────────────────────── */
-.container {
-  width: 100%;
-  max-width: var(--max-w);
-  margin-inline: auto;
-  padding-inline: var(--gutter);
-}
-
-.sr-only {
-  position: absolute; width: 1px; height: 1px; padding: 0;
-  margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
-  white-space: nowrap; border-width: 0;
-}
-
-/* ─── Keyframes ──────────────────────────────────── */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-8px); }
-}
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes pulse-green {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(18,55,42,.3); }
-  50%       { box-shadow: 0 0 0 8px rgba(18,55,42,.0); }
+  outline: 2px solid #2563EB;
+  outline-offset: 2px;
 }

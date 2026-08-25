@@ -40,12 +40,12 @@ export function middleware(request: NextRequest) {
 
   // Authorization rules
   if (pathname.startsWith('/admin') && role !== 'ADMIN') {
-    return NextResponse.redirect(new URL('/portal', request.url));
+    return NextResponse.redirect(new URL('/portal/appointments', request.url));
   }
 
   if (pathname.startsWith('/portal') && role !== 'CUSTOMER') {
-    // Admin trying to access portal should go to admin, or login if unauthorized
-    return NextResponse.redirect(new URL('/admin', request.url));
+    // Admin trying to access portal should go to admin dashboard
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url));
   }
 
   return NextResponse.next();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { loginAction } from './actions';
 import Link from 'next/link';
 
@@ -8,6 +8,15 @@ export default function LoginForm() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('expired') === 'true') {
+        setError('Your session expired. Please sign in again.');
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -20,6 +29,10 @@ export default function LoginForm() {
       if (result?.error) {
         setError(result.error);
       } else if (result?.success && result.redirectTo) {
+        if (result.accessToken) {
+          localStorage.setItem('access_token', result.accessToken);
+          document.cookie = `access_token=${result.accessToken}; path=/; max-age=604800; SameSite=Lax`;
+        }
         window.location.href = result.redirectTo;
       }
     });

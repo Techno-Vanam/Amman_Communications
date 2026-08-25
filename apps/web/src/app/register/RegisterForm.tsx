@@ -20,6 +20,10 @@ export default function RegisterForm() {
       if (result?.error) {
         setError(result.error);
       } else if (result?.success && result.redirectTo) {
+        if (result.accessToken) {
+          localStorage.setItem('access_token', result.accessToken);
+          document.cookie = `access_token=${result.accessToken}; path=/; max-age=900; SameSite=Lax`;
+        }
         window.location.href = result.redirectTo;
       }
     });
