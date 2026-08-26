@@ -17,7 +17,14 @@ import {
   CheckCircle2,
   Trash2,
   Download,
-  History
+  History,
+  Clock,
+  Calendar,
+  AlertCircle,
+  ArrowUpRight,
+  Eye,
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 
@@ -30,89 +37,87 @@ interface ApplicationItem {
   status: 'Verification' | 'Documents Received' | 'Processing' | 'Awaiting Approval' | 'Completed';
   stepPhase: number; // 1 to 8
   adminRemarks?: string;
+  assignedOfficer?: string;
+  estimatedDays?: string;
 }
 
 const INITIAL_APPLICATIONS: ApplicationItem[] = [
   {
     id: 'AMC-2026-000001',
-    serviceType: 'Passport Renewal',
-    submittedDate: '18 May 2026',
-    updatedDate: '21 May 2026',
+    serviceType: 'Patta Transfer & Property Verification',
+    submittedDate: 'May 12, 2026',
+    updatedDate: 'Today, 14:00',
     addedBy: 'You',
     status: 'Verification',
     stepPhase: 3,
-    adminRemarks: 'Document image is blurred. Please re-upload a cleaner copy.'
+    adminRemarks: 'Field inspection completed. Awaiting revenue department clearance.',
+    assignedOfficer: 'Officer Rajesh Kumar',
+    estimatedDays: '7 days left'
   },
   {
     id: 'AMC-2026-000002',
-    serviceType: 'Property Registration',
-    submittedDate: '15 May 2026',
-    updatedDate: '16 May 2026',
-    addedBy: 'Admin',
-    status: 'Documents Received',
-    stepPhase: 2,
-    adminRemarks: 'All initial deeds received. Verification queued.'
+    serviceType: 'Property Deed Registration',
+    submittedDate: 'May 08, 2026',
+    updatedDate: '21 March, 14:00',
+    addedBy: 'You',
+    status: 'Processing',
+    stepPhase: 5,
+    adminRemarks: 'Documents verified. Stamp duty payment processed.',
+    assignedOfficer: 'Officer Piotr Wisni...',
+    estimatedDays: '4 days left'
   },
   {
     id: 'AMC-2026-000003',
-    serviceType: 'Driving License',
-    submittedDate: '10 May 2026',
-    updatedDate: '12 May 2026',
+    serviceType: 'Encumbrance Certificate (EC)',
+    submittedDate: 'May 01, 2026',
+    updatedDate: '23 March, 11:00',
     addedBy: 'You',
-    status: 'Processing',
-    stepPhase: 4,
-    adminRemarks: 'RTO verification in progress.'
+    status: 'Documents Received',
+    stepPhase: 2,
+    adminRemarks: 'Aadhaar copy uploaded. Verification in progress.',
+    assignedOfficer: 'Officer Sarah Lee',
+    estimatedDays: '12 days left'
   },
   {
     id: 'AMC-2026-000004',
-    serviceType: 'PAN Card',
-    submittedDate: '05 May 2026',
-    updatedDate: '08 May 2026',
+    serviceType: 'Passport Renewal Fast-Track',
+    submittedDate: 'Apr 25, 2026',
+    updatedDate: 'May 10, 2026',
     addedBy: 'Admin',
-    status: 'Awaiting Approval',
-    stepPhase: 6,
-    adminRemarks: 'Pending final sign-off from authority officer.'
+    status: 'Completed',
+    stepPhase: 8,
+    adminRemarks: 'Passport dispatched via speed post. Tracking ID: SP904128.',
+    assignedOfficer: 'Officer Anna Nowak',
+    estimatedDays: 'Completed'
   },
   {
     id: 'AMC-2026-000005',
-    serviceType: 'Aadhaar Update',
-    submittedDate: '01 May 2026',
-    updatedDate: '04 May 2026',
+    serviceType: 'Legal Heirship Certificate',
+    submittedDate: 'Apr 18, 2026',
+    updatedDate: 'May 02, 2026',
     addedBy: 'You',
     status: 'Completed',
     stepPhase: 8,
-    adminRemarks: 'Certificate ready for download.'
-  },
+    adminRemarks: 'Certificate issued successfully.',
+    assignedOfficer: 'Officer Anna Nowak',
+    estimatedDays: 'Completed'
+  }
 ];
 
 const SERVICES = [
-  { id: 'passport', name: 'Passport Renewal', icon: BookOpen, desc: 'Complete passport renewal application, fresh issuance, and verification support.' },
-  { id: 'property', name: 'Property Registration', icon: Home, desc: 'Property title deed verification, EC certificate processing, and revenue clearance.' },
-  { id: 'dl', name: 'Driving License', icon: Car, desc: 'New driving license application, renewal, and RTO slot booking assistance.' },
-  { id: 'pan', name: 'PAN Card', icon: CreditCard, desc: 'Fresh PAN card issuance, updates, and correction of identity details.' },
-  { id: 'aadhaar', name: 'Aadhaar Update', icon: Fingerprint, desc: 'Aadhaar address update, mobile number linking, and biometric updates.' },
-  { id: 'ec_patta', name: 'EC / Patta / Chitta', icon: FileText, desc: 'Encumbrance Certificate issuance, Patta transfer extract, and land records.' },
-  { id: 'legal', name: 'Legal & Affidavit', icon: Scale, desc: 'Legal heirship affidavit preparation, notary attestation, and legal consultation.' },
-  { id: 'other', name: 'Other Services', icon: MoreHorizontal, desc: 'Custom documentation, income certificate, and general government service help.' },
+  { id: 'passport', name: 'Passport Services & Renewal', desc: 'New passport issuance, renewal, address change & tatkal booking.', icon: BookOpen, tag: 'Popular' },
+  { id: 'property', name: 'Patta Transfer & Property Verification', desc: 'Patta name transfer, legal opinion & encumbrance certificate.', icon: Home, tag: 'Fast Track' },
+  { id: 'vehicle', name: 'RTO Vehicle Registration & Clearance', desc: 'Vehicle RC transfer, NOC issuance & fitness certification.', icon: Car, tag: 'Standard' },
+  { id: 'pan', name: 'PAN & Aadhaar Updates', desc: 'Name correction, address update, mobile linking & new card creation.', icon: CreditCard, tag: 'Express' },
+  { id: 'biometric', name: 'Biometric & Identity Verification', desc: 'In-person physical document verification & fingerprint scan.', icon: Fingerprint, tag: 'In-Person' },
+  { id: 'legal', name: 'Legal Documentation & Notary', desc: 'Affidavits, rental agreements, power of attorney & notarization.', icon: Scale, tag: 'Legal' },
 ];
 
 const WIZARD_STEPS = [
-  { id: 1, label: 'Service' },
-  { id: 2, label: 'Details' },
-  { id: 3, label: 'Documents' },
-  { id: 4, label: 'Review' },
-  { id: 5, label: 'Success' },
-];
-
-const TRACKER_STEPS = [
-  { step: 1, title: 'Application Submitted', date: '18 May 2026' },
-  { step: 2, title: 'Documents Received', date: '19 May 2026' },
-  { step: 3, title: 'Verification', date: '' },
-  { step: 4, title: 'Processing', date: '' },
-  { step: 5, title: 'Government Submission', date: '' },
-  { step: 6, title: 'Awaiting Approval', date: '' },
-  { step: 7, title: 'Completed', date: '' },
-  { step: 8, title: 'Ready for Collection', date: '' },
+  { id: 1, label: 'Select Service' },
+  { id: 2, label: 'Applicant Info' },
+  { id: 3, label: 'Upload Documents' },
+  { id: 4, label: 'Review & Submit' }
 ];
 
 interface RequiredDocItem {
@@ -120,8 +125,8 @@ interface RequiredDocItem {
   name: string;
   required: 'Required' | 'Optional';
   uploadedFile: string;
-  uploaded: 'Yes' | 'No';
-  status: 'Under Review' | 'Approved' | 'Not Uploaded';
+  uploaded?: 'Yes' | 'No';
+  status: 'Not Uploaded' | 'Uploaded' | 'Under Review' | 'Approved';
 }
 
 const DETAIL_DOCS_DATA: Record<string, RequiredDocItem[]> = {
@@ -143,6 +148,7 @@ export default function ApplicationsPage() {
   const [mode, setMode] = useState<'list' | 'create' | 'view'>('list');
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedService, setSelectedService] = useState('passport');
+  const [activeTabFilter, setActiveTabFilter] = useState<'All' | 'Verification' | 'Processing' | 'Completed'>('All');
 
   // History modal toggle
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -167,22 +173,14 @@ export default function ApplicationsPage() {
 
   const serviceObj = SERVICES.find((s) => s.id === selectedService) || SERVICES[0];
 
-  const getStatusBadgeClass = (status: ApplicationItem['status']) => {
-    switch (status) {
-      case 'Verification':
-        return 'bg-[#d8ebdd] text-[#12372A] border border-[#a8d5b9]';
-      case 'Documents Received':
-        return 'bg-blue-50 text-blue-700 border border-blue-200';
-      case 'Processing':
-        return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
-      case 'Awaiting Approval':
-        return 'bg-amber-50 text-amber-800 border border-amber-200';
-      case 'Completed':
-        return 'bg-emerald-100 text-emerald-900 border border-emerald-300';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  };
+  // Filter applications by tab
+  const filteredApps = applications.filter((app) => {
+    if (activeTabFilter === 'All') return true;
+    if (activeTabFilter === 'Verification') return app.status === 'Verification' || app.status === 'Documents Received';
+    if (activeTabFilter === 'Processing') return app.status === 'Processing' || app.status === 'Awaiting Approval';
+    if (activeTabFilter === 'Completed') return app.status === 'Completed';
+    return true;
+  });
 
   const handleOpenView = (app: ApplicationItem) => {
     setSelectedApp(app);
@@ -223,7 +221,9 @@ export default function ApplicationsPage() {
       addedBy: 'You',
       status: 'Verification',
       stepPhase: 3,
-      adminRemarks: 'Application received and under initial verification.'
+      adminRemarks: 'Application received and under initial verification.',
+      assignedOfficer: 'Officer Rajesh Kumar',
+      estimatedDays: '7 days left'
     };
     setApplications([newApp, ...applications]);
     setMode('list');
@@ -241,751 +241,403 @@ export default function ApplicationsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12">
-      {/* MODE 1: MAIN TABLE LIST VIEW */}
-      {mode === 'list' && (
-        <>
-          {/* Header Section */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
-                My Applications
-              </h1>
-              <p className="mt-1 text-sm text-gray-600">
-                Track all your applications
-              </p>
+      {/* 4 Metric Summary Cards Grid matching Pillio UI */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1 */}
+        <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-gray-400" />
+              <span>Avg. adherence</span>
             </div>
+            <button className="text-gray-400 hover:text-gray-600">
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">87%</h3>
+            <span className="text-[11px] font-bold text-emerald-600">↑ +4% W-o-W</span>
+          </div>
+        </div>
 
+        {/* Card 2 */}
+        <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-gray-400" />
+              <span>Active applications</span>
+            </div>
+            <button className="text-gray-400 hover:text-gray-600">
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">10</h3>
+            <span className="text-[11px] font-semibold text-gray-400">1 recently added</span>
+          </div>
+        </div>
+
+        {/* Card 3 */}
+        <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-gray-400" />
+              <span>Pending documents</span>
+            </div>
+            <button className="text-gray-400 hover:text-gray-600">
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">2</h3>
+            <span className="text-[11px] font-semibold text-gray-400">Within 7 days</span>
+          </div>
+        </div>
+
+        {/* Card 4 */}
+        <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
+          <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-500" />
+              <span>Verification alerts</span>
+            </div>
+            <button className="text-gray-400 hover:text-gray-600">
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">1</h3>
+            <span className="text-[11px] font-bold text-amber-600">• Moderate risk</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Container Card matching Pillio UI */}
+      <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-2xs space-y-6">
+        {/* Top Control Bar inside Main Card */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Pill Tab Bar */}
+          <div className="bg-gray-100/80 p-1 rounded-full inline-flex items-center space-x-1 text-xs font-semibold">
+            {(['All', 'Verification', 'Processing', 'Completed'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTabFilter(tab)}
+                className={`px-5 py-2 rounded-full transition-all whitespace-nowrap ${
+                  activeTabFilter === tab
+                    ? 'bg-white text-gray-900 font-bold shadow-xs'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {/* Action Button */}
+          {mode === 'list' && (
             <button
               onClick={() => {
                 setMode('create');
                 setCurrentStep(1);
               }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl transition-colors shadow-sm self-start sm:self-auto"
+              className="bg-[#12372A] hover:bg-[#1a4a38] text-white px-6 py-2.5 rounded-full font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2 self-start sm:self-auto"
             >
-              <Plus className="w-4 h-4 text-[#a8d5b9]" />
-              <span>+ Add New Application</span>
+              <Plus className="w-4 h-4" />
+              <span>Add Application</span>
             </button>
-          </div>
+          )}
+        </div>
 
-          {/* Applications Data Table */}
-          <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 md:p-8 space-y-6">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[750px]">
-                <thead>
-                  <tr className="border-b border-gray-200 text-[11px] font-bold uppercase tracking-wider text-gray-500 bg-gray-50/50">
-                    <th className="py-3.5 px-4">Application ID</th>
-                    <th className="py-3.5 px-4">Service Type</th>
-                    <th className="py-3.5 px-4">Submitted Date</th>
-                    <th className="py-3.5 px-4">Added By</th>
-                    <th className="py-3.5 px-4">Current Status</th>
-                    <th className="py-3.5 px-4 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 text-xs text-gray-800">
-                  {applications.map((app) => (
-                    <tr key={app.id} className="hover:bg-gray-50/80 transition-colors">
-                      <td className="py-4 px-4 font-mono font-bold text-gray-900">
-                        {app.id}
-                      </td>
-                      <td className="py-4 px-4 font-medium text-gray-800">
-                        {app.serviceType}
-                      </td>
-                      <td className="py-4 px-4 text-gray-600">
-                        {app.submittedDate}
-                      </td>
-                      <td className="py-4 px-4 font-semibold text-gray-700">
-                        {app.addedBy}
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className={`inline-block text-[11px] font-bold px-3 py-1 rounded-full ${getStatusBadgeClass(app.status)}`}>
-                          {app.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        <button
-                          onClick={() => handleOpenView(app)}
-                          className="px-4 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs transition-all shadow-2xs"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Bottom Information Note Banner */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-center gap-3 text-xs text-gray-600">
-            <Info className="w-4 h-4 text-gray-400 shrink-0" />
-            <p>
-              <strong>Note:</strong> Click on &quot;View&quot; to see detailed status, required documents, history and payments.
-            </p>
-          </div>
-        </>
-      )}
-
-      {/* MODE 2: APPLICATION DETAIL + TRACKING VIEW (Matching Attached Screenshot) */}
-      {mode === 'view' && selectedApp && (
-        <div className="space-y-6">
-          {/* Top Breadcrumb & Download Summary Action Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-xs font-semibold text-gray-600">
-              <button
-                onClick={() => setMode('list')}
-                className="hover:text-[#12372A] hover:underline transition-colors flex items-center gap-1 font-bold text-gray-800"
-              >
-                My Applications
-              </button>
-              <span>&gt;</span>
-              <span className="font-bold text-gray-900 font-mono">{selectedApp.id}</span>
-            </div>
-
-            <button
-              onClick={() => alert(`Downloading Application Summary for ${selectedApp.id}...`)}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-bold text-xs rounded-xl transition-colors shadow-2xs self-start sm:self-auto"
-            >
-              <Download className="w-4 h-4 text-[#12372A]" />
-              <span>Download Application Summary</span>
-            </button>
-          </div>
-
-          {/* Top Grid (2 Cards: Application Info & Current Status) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Card: Application Info (8/12) */}
-            <div className="lg:col-span-8 bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 space-y-4">
-              <h2 className="text-base font-bold text-gray-900 pb-3 border-b border-gray-100">
-                Application Info
-              </h2>
-
-              <div className="space-y-2.5 text-xs font-medium text-gray-800 max-w-lg">
-                <div className="flex items-center">
-                  <span className="w-36 text-gray-500">Application ID</span>
-                  <span className="font-mono font-bold text-gray-900">: {selectedApp.id}</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-36 text-gray-500">Service Type</span>
-                  <span className="font-bold text-[#12372A]">: {selectedApp.serviceType}</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-36 text-gray-500">Submitted On</span>
-                  <span className="text-gray-900">: {selectedApp.submittedDate}</span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-36 text-gray-500">Added By</span>
-                  <span className="text-gray-900">: {selectedApp.addedBy}</span>
-                </div>
+        {/* LIST VIEW: 3-Column Card Grid matching Pillio UI */}
+        {mode === 'list' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredApps.length === 0 ? (
+              <div className="col-span-full p-12 text-center text-xs text-gray-400">
+                No applications found in this filter category.
               </div>
-            </div>
+            ) : (
+              filteredApps.map((app) => {
+                const isCompleted = app.status === 'Completed';
+                const progressPercent = Math.min(100, Math.round((app.stepPhase / 8) * 100));
 
-            {/* Right Card: Current Status (4/12) */}
-            <div className="lg:col-span-4 bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 flex flex-col justify-between items-center text-center">
-              <h2 className="text-base font-bold text-gray-900 self-start pb-2">
-                Current Status
-              </h2>
-
-              <div className="my-auto py-3">
-                <span className={`inline-block px-6 py-2.5 rounded-xl text-base font-bold shadow-2xs ${getStatusBadgeClass(selectedApp.status)}`}>
-                  {selectedApp.status}
-                </span>
-                <p className="text-[11px] text-gray-500 mt-2 font-medium">
-                  Updated on: {selectedApp.updatedDate}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Middle Section: Application Status Tracker (8 Steps Timeline) */}
-          <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 md:p-8 space-y-6">
-            <h2 className="text-base font-bold text-gray-900">
-              Application Status Tracker
-            </h2>
-
-            <div className="overflow-x-auto pb-4">
-              <div className="min-w-[800px] flex items-center justify-between relative px-4">
-                {/* Connector Line */}
-                <div className="absolute top-5 left-[5%] right-[5%] h-0.5 bg-gray-200 -z-0" />
-
-                {TRACKER_STEPS.map((stepItem) => {
-                  const isDone = stepItem.step < selectedApp.stepPhase;
-                  const isCurrent = stepItem.step === selectedApp.stepPhase;
-
-                  return (
-                    <div key={stepItem.step} className="relative z-10 flex flex-col items-center text-center max-w-[90px]">
-                      <div
-                        className={`
-                          w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 shadow-2xs
-                          ${isDone
-                            ? 'bg-[#12372A] text-white border-2 border-[#12372A]'
-                            : isCurrent
-                            ? 'bg-blue-600 text-white border-2 border-blue-600 ring-4 ring-blue-50'
-                            : 'bg-white text-gray-400 border-2 border-gray-200'
-                          }
-                        `}
-                      >
-                        {isDone ? <Check className="w-5 h-5 text-[#a8d5b9]" /> : stepItem.step}
+                return (
+                  <div
+                    key={app.id}
+                    className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-4 group"
+                  >
+                    {/* Top Row: Icon + Title + Status Tag */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-2xl bg-[#f0f7f2] text-[#12372A] flex items-center justify-center shrink-0 border border-[#a8d5b9]/40 font-bold">
+                          <FileText className="w-5 h-5 text-[#12372A]" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-900 group-hover:text-[#12372A] transition-colors leading-snug">
+                            {app.serviceType}
+                          </h3>
+                          <p className="text-[11px] text-gray-400 font-medium">
+                            {app.id}
+                          </p>
+                        </div>
                       </div>
 
+                      {/* Status Tag */}
                       <span
-                        className={`mt-2 text-[11px] leading-tight font-semibold ${
-                          isCurrent
-                            ? 'text-blue-600 font-bold'
-                            : isDone
-                            ? 'text-[#12372A] font-bold'
-                            : 'text-gray-400'
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ${
+                          isCompleted
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-[#d8ebdd] text-[#12372A]'
                         }`}
                       >
-                        {stepItem.title}
+                        • {app.status}
                       </span>
-                      {stepItem.date && (
-                        <span className="text-[10px] text-gray-400 mt-0.5 block">
-                          {stepItem.date}
+                    </div>
+
+                    {/* Progress Track Bar Section */}
+                    <div className="space-y-1.5 pt-2">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-gray-500">
+                        <span>Phase {app.stepPhase} of 8</span>
+                        <span className="text-gray-400 font-normal">{app.estimatedDays || '7 days left'}</span>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-[#12372A] via-[#2e8a60] to-[#3b9f71] h-full rounded-full transition-all duration-500"
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Footer Metadata & Arrow Circle Action Button */}
+                    <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
+                      <div>
+                        <p className="font-semibold text-gray-700">Synced from</p>
+                        <p className="text-gray-400 font-medium truncate max-w-[130px]">{app.assignedOfficer || 'Officer Rajesh'}</p>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-700">Next update</p>
+                        <p className="text-gray-400 font-medium">{app.updatedDate}</p>
+                      </div>
+
+                      <button
+                        onClick={() => handleOpenView(app)}
+                        className="w-9 h-9 rounded-full bg-gray-50 hover:bg-[#12372A] hover:text-white border border-gray-200/80 flex items-center justify-center text-gray-700 transition-all shrink-0 ml-2 shadow-2xs"
+                        title="View Details"
+                      >
+                        <ArrowUpRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {/* WIZARD MODE: Create New Application */}
+        {mode === 'create' && (
+          <div className="space-y-6 pt-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">New Service Application</h2>
+                <p className="text-xs text-gray-500">Follow the steps below to submit a new service request.</p>
+              </div>
+              <button
+                onClick={() => setMode('list')}
+                className="text-xs font-bold text-gray-500 hover:text-gray-800 border border-gray-200 rounded-xl px-4 py-2 bg-gray-50"
+              >
+                Back to Applications
+              </button>
+            </div>
+
+            {/* Stepper Header */}
+            <div className="flex items-center justify-between max-w-xl mx-auto py-4">
+              {WIZARD_STEPS.map((step) => (
+                <div key={step.id} className="flex items-center space-x-2">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                      currentStep === step.id
+                        ? 'bg-[#12372A] text-white shadow-sm'
+                        : currentStep > step.id
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-gray-100 text-gray-400'
+                    }`}
+                  >
+                    {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
+                  </div>
+                  <span className={`text-xs font-semibold hidden sm:inline ${currentStep === step.id ? 'text-[#12372A]' : 'text-gray-400'}`}>
+                    {step.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Step 1: Select Service */}
+            {currentStep === 1 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {SERVICES.map((srv) => {
+                  const Icon = srv.icon;
+                  const isSelected = selectedService === srv.id;
+                  return (
+                    <div
+                      key={srv.id}
+                      onClick={() => setSelectedService(srv.id)}
+                      className={`p-5 rounded-2xl border transition-all cursor-pointer space-y-3 ${
+                        isSelected
+                          ? 'border-[#12372A] bg-[#f0f7f2] shadow-sm'
+                          : 'border-gray-200/80 bg-white hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="w-10 h-10 rounded-xl bg-white text-[#12372A] flex items-center justify-center border border-gray-200">
+                          <Icon className="w-5 h-5 text-[#12372A]" />
+                        </div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                          {srv.tag}
                         </span>
-                      )}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-900">{srv.name}</h3>
+                        <p className="text-xs text-gray-500 mt-1 leading-relaxed">{srv.desc}</p>
+                      </div>
                     </div>
                   );
                 })}
               </div>
-            </div>
-          </div>
-
-          {/* Bottom Grid (Left: Documents Required Table | Right: Admin Remarks & History) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left: Documents Required Table (8/12) */}
-            <div className="lg:col-span-8 bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 space-y-4">
-              <h2 className="text-base font-bold text-gray-900 pb-3 border-b border-gray-100">
-                Documents Required
-              </h2>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[550px]">
-                  <thead>
-                    <tr className="border-b border-gray-200 text-[11px] font-bold uppercase tracking-wider text-gray-500 bg-gray-50/50">
-                      <th className="py-3 px-3">Document</th>
-                      <th className="py-3 px-3">Required</th>
-                      <th className="py-3 px-3">Uploaded</th>
-                      <th className="py-3 px-3">Status</th>
-                      <th className="py-3 px-3 text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 text-xs text-gray-800">
-                    {currentDetailDocs.map((doc) => (
-                      <tr key={doc.id} className="hover:bg-gray-50/50">
-                        <td className="py-3.5 px-3 font-bold text-gray-900">
-                          {doc.name}
-                        </td>
-                        <td className="py-3.5 px-3 text-gray-500">
-                          {doc.required}
-                        </td>
-                        <td className="py-3.5 px-3 font-semibold text-gray-700">
-                          {doc.uploaded}
-                        </td>
-                        <td className="py-3.5 px-3">
-                          {doc.status === 'Approved' ? (
-                            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#e6f4ea] text-[#137333]">
-                              Approved
-                            </span>
-                          ) : doc.status === 'Under Review' ? (
-                            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
-                              Under Review
-                            </span>
-                          ) : (
-                            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                              Not Uploaded
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-3 text-center">
-                          {doc.uploaded === 'Yes' ? (
-                            <button
-                              onClick={() => alert(`Previewing ${doc.name}...`)}
-                              className="px-3 py-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold text-[11px] rounded-lg transition-colors"
-                            >
-                              View
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => alert(`Uploading ${doc.name}...`)}
-                              className="px-3 py-1 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-[11px] rounded-lg transition-colors shadow-2xs"
-                            >
-                              Upload
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Right: Stacked Cards (Admin Remarks & Application History) (4/12) */}
-            <div className="lg:col-span-4 space-y-6">
-              {/* Admin Remarks Card */}
-              <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 space-y-3">
-                <h2 className="text-base font-bold text-gray-900 pb-2 border-b border-gray-100">
-                  Admin Remarks
-                </h2>
-                <p className="text-xs text-gray-600 leading-relaxed font-medium">
-                  {selectedApp.adminRemarks || 'No admin notes at this time.'}
-                </p>
-              </div>
-
-              {/* Application History Card */}
-              <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 space-y-4">
-                <h2 className="text-base font-bold text-gray-900 pb-2 border-b border-gray-100">
-                  Application History
-                </h2>
-                <button
-                  onClick={() => setShowHistoryModal(true)}
-                  className="w-full py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-800 font-bold text-xs rounded-xl transition-colors shadow-2xs flex items-center justify-center gap-2"
-                >
-                  <History className="w-4 h-4 text-[#12372A]" />
-                  <span>View Full History</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODE 3: WIZARD MODE: Add New Application */}
-      {mode === 'create' && (
-        <div className="max-w-5xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-              Add New Application
-            </h1>
-            <button
-              onClick={() => setMode('list')}
-              className="text-xs font-bold text-gray-500 hover:text-gray-800 underline"
-            >
-              Back to Applications List
-            </button>
-          </div>
-
-          {/* 5-Step Stepper Progress Bar */}
-          <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 md:p-8 overflow-hidden">
-            <div className="flex items-center justify-between max-w-3xl mx-auto relative px-5">
-              {/* Background Track Line */}
-              <div className="absolute top-5 left-9 right-9 h-1 bg-gray-200 -z-0 rounded-full" />
-
-              {/* Animated Active Progress Line */}
-              <div
-                className="absolute top-5 left-9 h-1 bg-gradient-to-r from-[#12372A] via-[#1b4d3a] to-[#2d6a4f] -z-0 rounded-full transition-all duration-700 ease-in-out shadow-sm"
-                style={{
-                  width: `calc(${((currentStep - 1) / (WIZARD_STEPS.length - 1)) * 100}% - ${
-                    ((currentStep - 1) / (WIZARD_STEPS.length - 1)) * 36
-                  }px)`
-                }}
-              />
-
-              {WIZARD_STEPS.map((step) => {
-                const isCompleted = step.id < currentStep;
-                const isCurrent = step.id === currentStep;
-
-                return (
-                  <div key={step.id} className="relative z-10 flex flex-col items-center group">
-                    <button
-                      onClick={() => step.id < currentStep && setCurrentStep(step.id)}
-                      disabled={step.id > currentStep}
-                      className={`
-                        w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 transform
-                        ${isCompleted
-                          ? 'bg-[#12372A] text-white border-2 border-[#12372A] shadow-md scale-100'
-                          : isCurrent
-                          ? 'bg-white text-[#12372A] border-2 border-[#12372A] ring-4 ring-[#12372A]/20 scale-110 shadow-md animate-step-pulse'
-                          : 'bg-white text-gray-400 border-2 border-gray-200 scale-95 hover:border-gray-300'
-                        }
-                      `}
-                    >
-                      {isCompleted ? (
-                        <Check className="w-5 h-5 text-[#a8d5b9] animate-tick-pop stroke-[3]" />
-                      ) : (
-                        <span className={`transition-transform duration-300 ${isCurrent ? 'scale-110 font-extrabold' : ''}`}>
-                          {step.id}
-                        </span>
-                      )}
-                    </button>
-                    <span
-                      className={`mt-2 text-xs transition-all duration-300 tracking-wide ${
-                        isCurrent
-                          ? 'text-[#12372A] font-bold scale-105'
-                          : isCompleted
-                          ? 'text-gray-800 font-semibold'
-                          : 'text-gray-400 font-normal'
-                      }`}
-                    >
-                      {step.label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Card Content Container */}
-          <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 md:p-8 space-y-8">
-            {/* STEP 1: Select Service */}
-            {currentStep === 1 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">Step 1: Select Service</h2>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Choose the service you want to apply for.
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Select Service</label>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {SERVICES.map((srv) => {
-                      const Icon = srv.icon;
-                      const isSelected = selectedService === srv.id;
-
-                      return (
-                        <button
-                          key={srv.id}
-                          type="button"
-                          onClick={() => setSelectedService(srv.id)}
-                          className={`
-                            p-6 rounded-2xl border text-center flex flex-col items-center justify-center space-y-3 transition-all duration-200 group relative
-                            ${isSelected
-                              ? 'border-[#12372A] bg-[#f0f7f2] ring-2 ring-[#12372A]/20 shadow-sm'
-                              : 'border-gray-200 hover:border-[#12372A]/50 bg-white hover:bg-gray-50/50'
-                            }
-                          `}
-                        >
-                          {isSelected && (
-                            <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[#12372A] text-white flex items-center justify-center">
-                              <Check className="w-3 h-3 text-[#a8d5b9]" />
-                            </div>
-                          )}
-                          <div
-                            className={`
-                              w-12 h-12 rounded-xl flex items-center justify-center transition-colors
-                              ${isSelected
-                                ? 'bg-[#12372A] text-white'
-                                : 'bg-gray-100 text-gray-700 group-hover:bg-[#12372A]/10 group-hover:text-[#12372A]'
-                              }
-                            `}
-                          >
-                            <Icon className="w-6 h-6" />
-                          </div>
-                          <span className={`text-xs font-bold ${isSelected ? 'text-[#12372A]' : 'text-gray-800'}`}>
-                            {srv.name}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 pt-2 border-t border-gray-100">
-                  <h3 className="text-xs font-bold text-gray-900">Service Description</h3>
-                  <p className="text-xs text-gray-500 leading-relaxed">
-                    {serviceObj.desc}
-                  </p>
-                </div>
-              </div>
             )}
 
-            {/* STEP 2: Details */}
+            {/* Step 2: Applicant Info */}
             {currentStep === 2 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">Step 2: Application Details</h2>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Provide applicant details for <strong className="text-[#12372A]">{serviceObj.name}</strong>.
-                  </p>
+              <div className="max-w-xl mx-auto bg-gray-50 p-6 rounded-2xl border border-gray-200 space-y-4 text-xs">
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-gray-700">Applicant Full Name *</label>
+                  <input
+                    type="text"
+                    value={details.applicantName}
+                    onChange={(e) => setDetails({ ...details, applicantName: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white"
+                  />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Applicant Full Name</label>
-                    <input
-                      type="text"
-                      value={details.applicantName}
-                      onChange={(e) => setDetails({ ...details, applicantName: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Phone Number</label>
-                    <input
-                      type="text"
-                      value={details.applicantPhone}
-                      onChange={(e) => setDetails({ ...details, applicantPhone: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Email Address</label>
-                    <input
-                      type="email"
-                      value={details.applicantEmail}
-                      onChange={(e) => setDetails({ ...details, applicantEmail: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Reference Number (Optional)</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. EC-88210-2026"
-                      value={details.refNumber}
-                      onChange={(e) => setDetails({ ...details, refNumber: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Additional Remarks</label>
-                    <textarea
-                      rows={3}
-                      value={details.remarks}
-                      onChange={(e) => setDetails({ ...details, remarks: e.target.value })}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800"
-                    />
-                  </div>
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-gray-700">Contact Phone Number *</label>
+                  <input
+                    type="text"
+                    value={details.applicantPhone}
+                    onChange={(e) => setDetails({ ...details, applicantPhone: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-gray-700">Remarks / Special Notes</label>
+                  <textarea
+                    value={details.remarks}
+                    onChange={(e) => setDetails({ ...details, remarks: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white"
+                  />
                 </div>
               </div>
             )}
 
-            {/* STEP 3: Required Documents Table */}
+            {/* Step 3: Upload Documents */}
             {currentStep === 3 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">Step 3: Required Documents</h2>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Upload the documents required for the selected service.
-                  </p>
-                </div>
-
-                <div className="overflow-x-auto border border-gray-200/80 rounded-xl">
-                  <table className="w-full text-left border-collapse min-w-[700px]">
-                    <thead>
-                      <tr className="border-b border-gray-200 text-[11px] font-bold uppercase tracking-wider text-gray-500 bg-gray-50/70">
-                        <th className="py-3 px-4">Document Name</th>
-                        <th className="py-3 px-4">Required</th>
-                        <th className="py-3 px-4">Upload</th>
-                        <th className="py-3 px-4">Uploaded File</th>
-                        <th className="py-3 px-4">Status</th>
-                        <th className="py-3 px-4 text-center">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 text-xs text-gray-800">
-                      {requiredDocs.map((doc) => (
-                        <tr key={doc.id} className="hover:bg-gray-50/50">
-                          <td className="py-3.5 px-4 font-bold text-gray-900">
-                            {doc.name}
-                          </td>
-                          <td className="py-3.5 px-4 text-gray-500">
-                            {doc.required}
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <label className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-[11px] font-semibold rounded-lg cursor-pointer transition-colors inline-flex items-center gap-1 shadow-2xs">
-                              <span>Choose File</span>
-                              <input
-                                type="file"
-                                onChange={(e) => handleFileUploadInWizard(doc.id, e)}
-                                className="hidden"
-                              />
-                            </label>
-                          </td>
-                          <td className="py-3.5 px-4 text-gray-700 font-mono">
-                            {doc.uploadedFile}
-                          </td>
-                          <td className="py-3.5 px-4">
-                            {doc.status === 'Uploaded' ? (
-                              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#e6f4ea] text-[#137333]">
-                                Uploaded
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
-                                Not Uploaded
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-3.5 px-4 text-center">
-                            {doc.status === 'Uploaded' ? (
-                              <button
-                                onClick={() => handleDeleteFileInWizard(doc.id)}
-                                className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition-colors"
-                                title="Remove file draft"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            ) : (
-                              <span className="text-gray-300">-</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <p className="text-[11px] text-gray-500 font-medium">
-                  Supported formats: PDF, JPG, PNG | Max file size: 10MB
-                </p>
+              <div className="max-w-2xl mx-auto space-y-3 text-xs">
+                {requiredDocs.map((doc) => (
+                  <div key={doc.id} className="p-4 bg-white border border-gray-200 rounded-2xl flex items-center justify-between gap-4">
+                    <div>
+                      <h4 className="font-bold text-gray-900">{doc.name}</h4>
+                      <p className="text-[11px] text-gray-400">
+                        {doc.status === 'Uploaded' ? `Uploaded: ${doc.uploadedFile}` : 'Not Uploaded Yet'}
+                      </p>
+                    </div>
+                    <label className="px-4 py-2 bg-[#12372A] text-white rounded-full font-bold text-xs cursor-pointer hover:bg-[#1a4a38] transition-colors">
+                      <span>Upload</span>
+                      <input type="file" onChange={(e) => handleFileUploadInWizard(doc.id, e)} className="hidden" />
+                    </label>
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* STEP 4: Review */}
+            {/* Step 4: Review & Submit */}
             {currentStep === 4 && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">Step 4: Review Application</h2>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Please review your application summary before final submission.
-                  </p>
-                </div>
-
-                <div className="bg-[#f0f7f2] border border-[#a8d5b9] rounded-2xl p-6 space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#a8d5b9]/50">
-                    <span className="text-xs text-gray-600 font-medium">Applied Service</span>
-                    <span className="text-sm font-bold text-[#12372A]">{serviceObj.name}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between pb-3 border-b border-[#a8d5b9]/50">
-                    <span className="text-xs text-gray-600 font-medium">Applicant Name</span>
-                    <span className="text-sm font-bold text-gray-900">{details.applicantName}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between pb-3 border-b border-[#a8d5b9]/50">
-                    <span className="text-xs text-gray-600 font-medium">Contact Number</span>
-                    <span className="text-sm font-bold text-gray-900">{details.applicantPhone}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between pb-3 border-b border-[#a8d5b9]/50">
-                    <span className="text-xs text-gray-600 font-medium">Uploaded Files</span>
-                    <span className="text-sm font-bold text-gray-900">
-                      {requiredDocs.filter((d) => d.status === 'Uploaded').length} of {requiredDocs.length} files uploaded
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600 font-medium">Processing SLA</span>
-                    <span className="text-sm font-bold text-[#12372A]">3-5 Business Days</span>
-                  </div>
+              <div className="max-w-xl mx-auto bg-gray-50 p-6 rounded-2xl border border-gray-200 space-y-4 text-xs">
+                <h3 className="font-bold text-sm text-gray-900 border-b pb-2">Review Application Summary</h3>
+                <div className="space-y-2">
+                  <p><span className="text-gray-500">Service:</span> <strong className="text-gray-900">{serviceObj.name}</strong></p>
+                  <p><span className="text-gray-500">Applicant:</span> <strong className="text-gray-900">{details.applicantName}</strong></p>
+                  <p><span className="text-gray-500">Phone:</span> <strong className="text-gray-900">{details.applicantPhone}</strong></p>
                 </div>
               </div>
             )}
 
-            {/* STEP 5: Success */}
-            {currentStep === 5 && (
-              <div className="text-center py-8 space-y-5">
-                <div className="w-16 h-16 bg-[#f0f7f2] border border-[#a8d5b9] text-[#12372A] rounded-full flex items-center justify-center mx-auto shadow-inner">
-                  <CheckCircle2 className="w-8 h-8" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900">Application Submitted Successfully!</h2>
-                <p className="text-sm text-gray-600 max-w-md mx-auto">
-                  Your Application ID is <strong className="text-[#12372A] font-mono">AMC-2026-00000{applications.length + 1}</strong>. Current status is set to <strong className="text-blue-600 font-semibold">Verification</strong>.
-                </p>
+            {/* Step Control Buttons */}
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <button
+                disabled={currentStep === 1}
+                onClick={() => setCurrentStep(currentStep - 1)}
+                className="px-6 py-2.5 border border-gray-300 rounded-full font-semibold text-xs text-gray-700 disabled:opacity-40"
+              >
+                Back
+              </button>
 
-                <div className="pt-6">
-                  <button
-                    onClick={handleFinishCreate}
-                    className="px-6 py-3 bg-[#12372A] hover:bg-[#1a4a38] text-white text-xs font-bold rounded-xl transition-colors shadow-md"
-                  >
-                    Back to Applications List
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Bottom Controls */}
-            {currentStep < 5 && (
-              <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-                {currentStep > 1 ? (
-                  <button
-                    onClick={() => setCurrentStep(currentStep - 1)}
-                    className="px-6 py-2.5 border border-gray-300 text-gray-700 font-semibold text-xs rounded-full hover:bg-gray-50 transition-colors"
-                  >
-                    Back
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setMode('list')}
-                    className="px-6 py-2.5 border border-gray-300 text-gray-700 font-semibold text-xs rounded-full hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                )}
-
+              {currentStep < 4 ? (
                 <button
                   onClick={() => setCurrentStep(currentStep + 1)}
-                  className="px-8 py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-sm flex items-center gap-2"
+                  className="px-6 py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-full hover:bg-[#1a4a38] shadow-md"
                 >
-                  <span>{currentStep === 4 ? 'Submit Application' : 'Next'}</span>
-                  <ChevronRight className="w-4 h-4 text-[#a8d5b9]" />
+                  Next Step
                 </button>
-              </div>
-            )}
+              ) : (
+                <button
+                  onClick={handleFinishCreate}
+                  className="px-6 py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-full hover:bg-[#1a4a38] shadow-md"
+                >
+                  Submit Application
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* History Log Modal */}
-      {showHistoryModal && selectedApp && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-gray-200 max-w-md w-full p-6 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-900">
-                Application History Log
-              </h3>
+        {/* VIEW MODE: Detailed Application Drawer */}
+        {mode === 'view' && selectedApp && (
+          <div className="space-y-6 pt-2">
+            <div className="flex items-center justify-between border-b pb-4">
+              <div>
+                <span className="text-xs font-bold text-[#12372A] uppercase tracking-wider">{selectedApp.id}</span>
+                <h2 className="text-xl font-bold text-gray-900 mt-0.5">{selectedApp.serviceType}</h2>
+              </div>
               <button
-                onClick={() => setShowHistoryModal(false)}
-                className="text-gray-400 hover:text-gray-700 text-xs font-bold"
+                onClick={() => setMode('list')}
+                className="px-4 py-2 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 hover:bg-gray-100"
               >
-                ✕
+                Close View
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-                <span className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-                <div>
-                  <p className="font-bold text-gray-900">Status changed to &quot;{selectedApp.status}&quot;</p>
-                  <p className="text-gray-500 text-[11px]">{selectedApp.updatedDate} by System</p>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-1">
+                <p className="text-gray-500 font-medium">Current Status</p>
+                <p className="text-sm font-bold text-[#12372A]">{selectedApp.status}</p>
               </div>
-
-              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                <div>
-                  <p className="font-bold text-gray-900">Documents Submitted</p>
-                  <p className="text-gray-500 text-[11px]">19 May 2026 by {selectedApp.addedBy}</p>
-                </div>
+              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-1">
+                <p className="text-gray-500 font-medium">Assigned Officer</p>
+                <p className="text-sm font-bold text-gray-900">{selectedApp.assignedOfficer || 'Officer Rajesh Kumar'}</p>
               </div>
-
-              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
-                <span className="w-2 h-2 rounded-full bg-[#12372A] mt-1.5 shrink-0" />
-                <div>
-                  <p className="font-bold text-gray-900">Application Created ({selectedApp.id})</p>
-                  <p className="text-gray-500 text-[11px]">{selectedApp.submittedDate} by {selectedApp.addedBy}</p>
-                </div>
+              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-1">
+                <p className="text-gray-500 font-medium">Estimated Time</p>
+                <p className="text-sm font-bold text-gray-900">{selectedApp.estimatedDays || '7 days left'}</p>
               </div>
             </div>
 
-            <div className="pt-2 flex justify-end">
-              <button
-                onClick={() => setShowHistoryModal(false)}
-                className="px-4 py-2 bg-[#12372A] text-white text-xs font-bold rounded-xl"
-              >
-                Close History
-              </button>
+            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 space-y-3">
+              <h4 className="font-bold text-sm text-gray-900">Official Admin Remarks</h4>
+              <p className="text-xs text-gray-700 leading-relaxed">{selectedApp.adminRemarks}</p>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

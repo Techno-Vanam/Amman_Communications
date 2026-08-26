@@ -4,6 +4,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html, body {
+    font-family: var(--font-poppins), 'Poppins', system-ui, -apple-system, sans-serif;
+  }
+}
+
 /* ─── Design Tokens (kept for any remaining inline-style usage) ── */
 :root {
   --green-900: #0a1f15;

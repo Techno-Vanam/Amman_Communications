@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   User,
   Lock,
@@ -16,10 +17,21 @@ import {
 
 import { useNotifications } from '@/context/NotificationContext';
 
-export default function ProfileSettingsPage() {
+function ProfileSettingsContent() {
   const { showToast } = useNotifications();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams ? searchParams.get('tab') : null;
+
   const [activeTab, setActiveTab] = useState<'Personal Details' | 'Change Password' | 'Contact Information' | 'Preferences'>('Personal Details');
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (tabParam === 'Preferences') {
+      setActiveTab('Preferences');
+    } else if (tabParam === 'Profile' || tabParam === 'Personal Details') {
+      setActiveTab('Personal Details');
+    }
+  }, [tabParam]);
 
   // Form State
   const [personalDetails, setPersonalDetails] = useState({
@@ -58,7 +70,7 @@ export default function ProfileSettingsPage() {
     <div className="max-w-6xl mx-auto space-y-6 font-sans pb-12">
       {/* Top Title */}
       <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#0e2a47]">
-        Profile Settings
+        {activeTab === 'Preferences' ? 'Settings & Preferences' : 'Profile Settings'}
       </h1>
 
       {/* Toast Notification on Save */}
@@ -139,7 +151,7 @@ export default function ProfileSettingsPage() {
                 }`}
               >
                 <Sliders className="w-4 h-4 text-gray-500" />
-                <span>Preferences</span>
+                <span>Preferences &amp; Settings</span>
               </button>
             </nav>
           </div>
@@ -148,7 +160,7 @@ export default function ProfileSettingsPage() {
         {/* Right Column (8/12) - Active Form Card */}
         <div className="lg:col-span-8">
           <div className="bg-white rounded-2xl border border-gray-200/80 p-6 md:p-8 shadow-2xs space-y-6">
-            {/* TAB 1: Personal Details (Matching Screenshot) */}
+            {/* TAB 1: Personal Details */}
             {activeTab === 'Personal Details' && (
               <form onSubmit={handleSave} className="space-y-6">
                 <div>
@@ -383,16 +395,16 @@ export default function ProfileSettingsPage() {
               </form>
             )}
 
-            {/* TAB 4: Preferences */}
+            {/* TAB 4: Preferences & Settings */}
             {activeTab === 'Preferences' && (
               <form onSubmit={handleSave} className="space-y-6">
                 <div>
                   <div className="flex items-center gap-2">
                     <Sliders className="w-5 h-5 text-[#1c3a63]" />
-                    <h2 className="text-lg font-bold text-gray-900">Preferences</h2>
+                    <h2 className="text-lg font-bold text-gray-900">Preferences &amp; Portal Settings</h2>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Customize notification channels and portal language options.
+                    Customize notification channels, language options, and portal preferences.
                   </p>
                   <div className="mt-4 border-b border-gray-100" />
                 </div>
@@ -453,5 +465,13 @@ export default function ProfileSettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfileSettingsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-xs text-gray-400">Loading settings...</div>}>
+      <ProfileSettingsContent />
+    </Suspense>
   );
 }
