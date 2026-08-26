@@ -1,6 +1,12 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { getAuthenticatedRole } from '@/lib/server-auth';
 
-export default function PortalLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function PortalLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const role = await getAuthenticatedRole();
+  if (!role) redirect('/login');
+  if (role !== 'CUSTOMER') redirect('/forbidden?area=portal');
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 md:flex">
       <aside className="w-full bg-brand-700 p-5 text-white md:min-h-screen md:w-64 md:shrink-0">

@@ -2,6 +2,8 @@
 
 import { cookies } from 'next/headers';
 
+const apiBaseUrl = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3003';
+
 export async function registerAction(formData: FormData) {
   const name = formData.get('name');
   const email = formData.get('email');
@@ -20,7 +22,7 @@ export async function registerAction(formData: FormData) {
   }
 
   try {
-    const res = await fetch('http://localhost:3003/v1/auth/register', {
+    const res = await fetch(`${apiBaseUrl}/v1/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -53,8 +55,8 @@ export async function registerAction(formData: FormData) {
       maxAge: 15 * 60, // 15 minutes in seconds
     });
 
-    // Registration automatically logs in and redirects to portal
-    return { success: true, redirectTo: '/portal' };
+    // Registration automatically logs in and redirects to the customer dashboard.
+    return { success: true, redirectTo: '/portal/dashboard' };
 
   } catch (error) {
     console.error('Registration action error:', error);

@@ -8,9 +8,10 @@ export class AuthService {
   constructor(private readonly prisma: PrismaService, private readonly jwt: JwtService) {}
 
   async login(email: string, password: string) {
+    const normalizedEmail = email.toLowerCase().trim();
     const [admin, customer] = await Promise.all([
-      this.prisma.admin.findUnique({ where: { email } }),
-      this.prisma.customer.findUnique({ where: { email } }),
+      this.prisma.admin.findUnique({ where: { email: normalizedEmail } }),
+      this.prisma.customer.findUnique({ where: { email: normalizedEmail } }),
     ]);
 
     if (admin && customer) {

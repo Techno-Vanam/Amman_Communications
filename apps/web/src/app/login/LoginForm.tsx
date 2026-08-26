@@ -64,7 +64,6 @@ export default function LoginForm() {
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-baseline">
           <label htmlFor="password" className="text-sm font-medium text-gray-800">Password</label>
-          <Link href="/forgot-password" className="text-sm text-brand-700 font-medium hover:underline">Forgot password?</Link>
         </div>
         <div className="relative flex items-center">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="absolute left-3 text-gray-400 pointer-events-none">
