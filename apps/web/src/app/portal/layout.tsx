@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   CalendarPlus,
@@ -17,8 +17,6 @@ import {
   X,
   LogOut,
   ShieldCheck,
-  Search,
-  MessageSquare,
   ChevronDown
 } from 'lucide-react';
 import { NotificationProvider, useNotifications } from '@/context/NotificationContext';
@@ -35,13 +33,11 @@ const MAIN_NAV_ITEMS = [
 
 function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen: boolean; setMobileMenuOpen: (v: boolean) => void }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const currentTab = searchParams ? searchParams.get('tab') : null;
   const { unreadCount } = useNotifications();
 
-  // Distinguish Profile vs Settings tabs so ONLY ONE gets highlighted
-  const isProfileActive = pathname === '/portal/settings' && currentTab !== 'Preferences';
-  const isSettingsActive = pathname === '/portal/settings' && currentTab === 'Preferences';
+  // Distinguish Profile vs Settings pages so ONLY ONE gets highlighted
+  const isProfileActive = pathname === '/portal/profile';
+  const isSettingsActive = pathname === '/portal/settings';
 
   return (
     <aside
@@ -116,7 +112,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
         
         {/* Profile Link */}
         <Link
-          href="/portal/settings?tab=Profile"
+          href="/portal/profile"
           onClick={() => setMobileMenuOpen(false)}
           className={`
             flex items-center space-x-3 px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-200 group
@@ -132,7 +128,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
 
         {/* Settings Link */}
         <Link
-          href="/portal/settings?tab=Preferences"
+          href="/portal/settings"
           onClick={() => setMobileMenuOpen(false)}
           className={`
             flex items-center space-x-3 px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-200 group
@@ -173,33 +169,9 @@ function PortalTopHeader() {
   const { unreadCount } = useNotifications();
 
   return (
-    <header className="bg-transparent pb-6 flex flex-col md:flex-row items-center justify-between gap-4">
-      {/* Sleek Pill Search Bar */}
-      <div className="relative w-full md:w-80">
-        <div className="flex items-center gap-2.5 bg-white border border-gray-200/80 rounded-full px-4 py-2.5 shadow-2xs text-xs text-gray-400 focus-within:border-[#12372A] focus-within:ring-2 focus-within:ring-[#12372A]/10 transition-all">
-          <Search className="w-4 h-4 text-gray-400 shrink-0" />
-          <input
-            type="text"
-            placeholder="Search services, applications..."
-            className="w-full bg-transparent text-gray-800 focus:outline-none text-xs font-medium placeholder:text-gray-400"
-          />
-          <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-bold bg-gray-100 text-gray-500 rounded-md border border-gray-200 shrink-0">
-            ⌘K
-          </kbd>
-        </div>
-      </div>
-
-      {/* Right User Controls */}
-      <div className="flex items-center space-x-3 self-end md:self-auto">
-        {/* Support Chat Icon Button */}
-        <Link
-          href="/portal/settings?tab=Preferences"
-          className="w-9 h-9 rounded-full bg-white border border-gray-200/80 flex items-center justify-center text-gray-500 hover:text-[#12372A] hover:bg-gray-50 transition-all shadow-2xs"
-          title="Support Chat"
-        >
-          <MessageSquare className="w-4 h-4" />
-        </Link>
-
+    <header className="bg-transparent pb-6 flex items-center justify-end">
+      {/* Right User Controls: Notification Bell & Profile Badge */}
+      <div className="flex items-center space-x-3">
         {/* Notification Bell */}
         <Link
           href="/portal/notifications"
@@ -216,7 +188,7 @@ function PortalTopHeader() {
 
         {/* User Profile Pill Badge */}
         <Link
-          href="/portal/settings?tab=Profile"
+          href="/portal/profile"
           className="flex items-center gap-3 bg-white border border-gray-200/80 rounded-full pl-2 pr-4 py-1.5 shadow-2xs hover:border-[#12372A] transition-all"
         >
           <div className="w-7 h-7 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-xs flex items-center justify-center border border-[#a8d5b9]/30">
