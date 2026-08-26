@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState } from 'react';
-import { CheckCircle2, X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 
 export interface NotificationItem {
   id: string;
@@ -94,9 +94,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const showToast = (title: string, message?: string, type: 'success' | 'info' | 'warning' = 'success') => {
     const id = Date.now().toString();
     setToast({ id, title, message, type });
-    setTimeout(() => {
-      setToast((current) => (current?.id === id ? null : current));
-    }, 4000);
   };
 
   const markAsRead = (id: string) => {
@@ -142,24 +139,49 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     >
       {children}
 
-      {/* Floating Success Toast Notification Pop-up */}
+      {/* Centered Modal Success Notification Pop-up matching Reference Image */}
       {toast && (
-        <div className="fixed top-6 right-6 z-50 max-w-md w-full bg-[#12372A] text-white p-4 rounded-2xl shadow-2xl border border-[#a8d5b9]/40 flex items-start justify-between gap-3 animate-in slide-in-from-top-4 fade-in duration-300">
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#a8d5b9]/20 text-[#a8d5b9] flex items-center justify-center shrink-0 border border-[#a8d5b9]/30">
-              <CheckCircle2 className="w-5 h-5 text-[#a8d5b9]" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] shadow-2xl border border-emerald-100 max-w-sm w-full p-8 text-center relative overflow-hidden animate-in zoom-in-95 duration-200 space-y-4">
+            {/* Soft Green Pattern Header Overlay */}
+            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#e8f8ef] via-[#f2faf5] to-transparent pointer-events-none" />
+
+            {/* Dismiss X Button */}
+            <button
+              onClick={() => setToast(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100/80 transition-colors z-20"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* 3D Green Checkmark Circle Badge */}
+            <div className="relative z-10 w-20 h-20 rounded-full bg-gradient-to-tr from-[#00b05b] to-[#10b981] text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/30 border-4 border-white ring-4 ring-emerald-50/80 my-2">
+              <Check className="w-10 h-10 stroke-[3] text-white" />
             </div>
-            <div>
-              <h4 className="text-sm font-bold text-white">{toast.title}</h4>
-              {toast.message && <p className="text-xs text-[#a8d5b9] mt-0.5">{toast.message}</p>}
+
+            {/* Content Text */}
+            <div className="relative z-10 space-y-2">
+              <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">
+                {toast.title} 🎉
+              </h3>
+              {toast.message && (
+                <p className="text-xs text-gray-500 font-medium leading-relaxed max-w-xs mx-auto">
+                  {toast.message}
+                </p>
+              )}
+            </div>
+
+            {/* Action Continue Button */}
+            <div className="relative z-10 pt-2">
+              <button
+                onClick={() => setToast(null)}
+                className="w-full py-3 px-6 bg-gradient-to-r from-[#00b05b] to-[#10b981] hover:from-[#009b50] hover:to-[#059669] text-white font-bold text-xs rounded-2xl shadow-md shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Continue
+              </button>
             </div>
           </div>
-          <button
-            onClick={() => setToast(null)}
-            className="p-1 text-white/60 hover:text-white rounded-lg transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
       )}
     </NotificationContext.Provider>
