@@ -26,6 +26,7 @@ model Customer {
   name         String
   applications Application[]
   documents    Document[]
+  appointments Appointment[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
@@ -83,6 +84,7 @@ model Service {
   status            ServiceStatus      @default(DRAFT)
   requiredDocuments RequiredDocument[]
   applications      Application[]
+  appointments      Appointment[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -96,5 +98,46 @@ model RequiredDocument {
   isRequired   Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+}
+
+enum AppointmentMode {
+  OFFLINE
+  ONLINE
+}
+
+enum OnlineMeetingType {
+  PHONE
+  VIDEO
+  MEETING
+}
+
+model Appointment {
+  id               String            @id @default(cuid())
+  customer         Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerId       String?
+  customerName     String
+  customerEmail    String
+  customerPhone    String
+  service          Service?          @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceId        String?
+  appointmentDate  DateTime
+  durationMinutes  Int               @default(30)
+  mode             AppointmentMode   @default(OFFLINE)
+  onlineType       OnlineMeetingType?
+  meetingLink      String?
+  status           AppointmentStatus @default(CONFIRMED)
+  notes            String?
+  rescheduledFrom  DateTime?
+  rescheduleReason String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 }
 
