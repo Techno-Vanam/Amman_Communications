@@ -44,9 +44,9 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
   return (
     <aside
       className={`
-        fixed inset-y-0 left-0 z-40 w-72 bg-white text-gray-800 flex flex-col justify-between transition-transform duration-300 ease-in-out md:static md:translate-x-0
+        fixed inset-y-0 left-0 z-40 w-72 bg-white text-gray-800 flex flex-col justify-between transition-transform duration-300 ease-in-out md:static md:translate-x-0 print:hidden
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:sticky md:top-4 overflow-hidden
+        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:sticky md:top-4 overflow-hidden print:hidden
       `}
     >
       {/* Scrollable Top Area: Brand & Navigation */}
@@ -268,7 +268,7 @@ function PortalTopHeader() {
   const { title, subtitle, action } = getHeaderInfo();
 
   return (
-    <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
       {/* Title & Subtitle - Aligned at top left on exact same row as Notification Icon */}
       <div>
         <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
@@ -324,9 +324,9 @@ export default function PortalLayout({ children }: Readonly<{ children: React.Re
   return (
     <UserProvider>
       <NotificationProvider>
-        <div className="min-h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans">
+        <div className="min-h-screen bg-[#f4f6f8] print:bg-white text-gray-900 flex flex-col md:flex-row font-sans print:p-0 print:m-0">
           {/* Mobile Header */}
-          <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c]">
+          <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c] print:hidden">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 rounded-xl bg-[#a8d5b9]/20 flex items-center justify-center border border-[#a8d5b9]/40 text-[#a8d5b9]">
                 <ShieldCheck className="w-5 h-5" />
@@ -349,7 +349,7 @@ export default function PortalLayout({ children }: Readonly<{ children: React.Re
           <PortalSidebarContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
           {/* Main Content Area */}
-          <main className="min-w-0 flex-1 p-4 md:p-5 lg:p-6">
+          <main className="min-w-0 flex-1 p-4 md:p-5 lg:p-6 print:p-0 print:m-0 print:bg-white print:w-full">
             <PortalTopHeader />
             {children}
           </main>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import {
   CheckCircle2,
   Clock,
@@ -14,7 +15,8 @@ import {
   ChevronDown,
   X,
   Building,
-  RotateCcw
+  RotateCcw,
+  FileText
 } from 'lucide-react';
 
 interface TransactionItem {
@@ -494,22 +496,25 @@ Digital Tax Reference: TAX-INV-${txn.id}
 
                       {/* Action Button */}
                       <td className="py-4 px-6 text-center">
-                        {txn.status === 'Paid' ? (
-                          <button
-                            onClick={() => setSelectedTxnForReceipt(txn)}
-                            className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-[#0e2a47] hover:text-blue-700 hover:underline transition-all"
+                        <div className="flex items-center justify-center gap-2">
+                          <Link
+                            href={`/portal/payments/${txn.id}`}
+                            className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl transition-all shadow-2xs"
+                            title="View Official Invoice"
                           >
-                            <Receipt className="w-4 h-4 text-[#0e2a47]" />
-                            <span>Receipt</span>
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => setSelectedTxnForPayNow(txn)}
-                            className="inline-flex items-center justify-center px-4 py-1.5 bg-[#0e2a47] hover:bg-[#153e68] text-white font-bold text-xs rounded-full transition-all shadow-xs"
-                          >
-                            Pay Now
-                          </button>
-                        )}
+                            <FileText className="w-3.5 h-3.5 text-white" />
+                            <span>Invoice</span>
+                          </Link>
+
+                          {txn.status !== 'Paid' && (
+                            <button
+                              onClick={() => setSelectedTxnForPayNow(txn)}
+                              className="inline-flex items-center gap-1 px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition-all shadow-2xs"
+                            >
+                              <span>Pay Now</span>
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -696,77 +701,6 @@ Digital Tax Reference: TAX-INV-${txn.id}
                 className="px-6 py-2.5 bg-[#0e2a47] hover:bg-[#153e68] text-white font-bold text-xs rounded-xl transition-all shadow-sm"
               >
                 Pay {formatCurrency(selectedTxnForPayNow.pendingAmount || selectedTxnForPayNow.totalAmount)} Now
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 3: View & Download Receipt */}
-      {selectedTxnForReceipt && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-6 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <Receipt className="w-5 h-5 text-[#0e2a47]" />
-                <h3 className="text-base font-bold text-gray-900">Official Payment Receipt</h3>
-              </div>
-              <button
-                onClick={() => setSelectedTxnForReceipt(null)}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="bg-[#f8fafc] border border-gray-200 rounded-2xl p-6 space-y-4 text-xs">
-              <div className="flex justify-between items-start pb-3 border-b border-gray-200">
-                <div>
-                  <h4 className="font-extrabold text-gray-900 text-sm">Amman Communications HQ</h4>
-                  <p className="text-gray-500 text-[11px]">Government Services Portal</p>
-                </div>
-                <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[10px]">
-                  VERIFIED PAID
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-gray-500 font-medium">Receipt No:</span>
-                  <p className="font-mono font-bold text-gray-900">{selectedTxnForReceipt.id}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500 font-medium">Payment Date:</span>
-                  <p className="font-bold text-gray-900">{selectedTxnForReceipt.date}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500 font-medium">Service Type:</span>
-                  <p className="font-bold text-gray-900">{selectedTxnForReceipt.service}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500 font-medium">Payment Mode:</span>
-                  <p className="font-bold text-gray-900">{selectedTxnForReceipt.paymentMode}</p>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
-                <span className="text-sm font-bold text-gray-800">Total Paid Amount:</span>
-                <span className="text-lg font-extrabold text-[#0e2a47]">
-                  {formatCurrency(selectedTxnForReceipt.paidAmount)}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] text-gray-400">
-                Digital tax invoice ready for download.
-              </span>
-              <button
-                onClick={() => handleDownloadReceipt(selectedTxnForReceipt)}
-                className="px-5 py-2.5 bg-[#0e2a47] hover:bg-[#153e68] text-white font-bold text-xs rounded-xl transition-all flex items-center gap-2 shadow-sm"
-              >
-                <Download className="w-4 h-4 text-blue-200" />
-                <span>Download Receipt File</span>
               </button>
             </div>
           </div>
