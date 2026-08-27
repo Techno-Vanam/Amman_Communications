@@ -1,42 +1,23 @@
-import styles from './TrustSection.module.css';
+import { ShieldCheck, LayoutDashboard, ClipboardList, MessageSquare } from 'lucide-react';
 
 const TRUST_ITEMS = [
   {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7l-9-5z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
+    icon: <ShieldCheck size={20} strokeWidth={1.8} />,
     title: 'Secure Document Handling',
     description: 'Your documents are stored and processed with care.',
   },
   {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" strokeWidth="1.8" />
-        <path d="M7 9h10M7 13h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      </svg>
-    ),
+    icon: <LayoutDashboard size={20} strokeWidth={1.8} />,
     title: 'Clear Application Tracking',
     description: 'See exactly where your application stands at all times.',
   },
   {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-        <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
+    icon: <ClipboardList size={20} strokeWidth={1.8} />,
     title: 'Organised Process',
     description: 'A structured workflow guides you from start to finish.',
   },
   {
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-      </svg>
-    ),
+    icon: <MessageSquare size={20} strokeWidth={1.8} />,
     title: 'Dedicated Support',
     description: 'Help is available whenever you need assistance.',
   },
@@ -44,17 +25,21 @@ const TRUST_ITEMS = [
 
 export default function TrustSection() {
   return (
-    <section className={styles.section} aria-label="Key benefits">
-      <div className={`${styles.inner} container`}>
-        {TRUST_ITEMS.map(({ icon, title, description }) => (
-          <div key={title} className={styles.item}>
-            <div className={styles.iconWrap}>{icon}</div>
-            <div className={styles.text}>
-              <p className={styles.title}>{title}</p>
-              <p className={styles.description}>{description}</p>
+    <section className="bg-brand-50 border-y border-brand-100 py-10" aria-label="Key benefits">
+      <div className="container">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {TRUST_ITEMS.map(({ icon, title, description }) => (
+            <div key={title} className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-white text-brand-700 flex items-center justify-center shadow-sm border border-brand-100">
+                {icon}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900 mb-0.5">{title}</p>
+                <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </section>
   );

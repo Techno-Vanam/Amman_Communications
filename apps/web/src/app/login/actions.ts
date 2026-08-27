@@ -2,6 +2,8 @@
 
 import { cookies } from 'next/headers';
 
+const apiBaseUrl = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3003';
+
 export async function loginAction(formData: FormData) {
   const email = formData.get('email');
   const password = formData.get('password');
@@ -11,7 +13,7 @@ export async function loginAction(formData: FormData) {
   }
 
   try {
-    const res = await fetch('http://localhost:3003/v1/auth/login', {
+    const res = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -26,25 +28,40 @@ export async function loginAction(formData: FormData) {
       return { error: 'An error occurred during login. Please try again later.' };
     }
 
-    const data = await res.json();
-    const { accessToken, user } = data;
+    const json = await res.json();
+    const payload = json.data ?? json;
+    const { accessToken, user } = payload;
 
     if (!accessToken || !user || !user.role) {
       return { error: 'Invalid response from server' };
     }
 
-    // Set HttpOnly cookie
+    // Set cookies
     const cookieStore = await cookies();
     cookieStore.set('access_token', accessToken, {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 15 * 60, // 15 minutes in seconds
+      maxAge: 7 * 24 * 60 * 60,
     });
+    if (user.role === 'CUSTOMER') {
+      cookieStore.set('customer_access_token', accessToken, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60,
+      });
+    }
 
     // Return success and where to redirect to let the client handle router.push
-    return { success: true, redirectTo: user.role === 'ADMIN' ? '/admin' : '/portal' };
+    return {
+      success: true,
+      redirectTo: user.role === 'ADMIN' ? '/admin/dashboard' : '/portal/dashboard',
+      accessToken,
+      user,
+    };
 
   } catch (error) {
     console.error('Login action error:', error);

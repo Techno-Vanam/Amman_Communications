@@ -1,7 +1,16 @@
-name: Frontend deployment (placeholder)
-on: { workflow_dispatch: {} }
+name: Frontend Deployment
+
+on:
+  workflow_dispatch:
+
 jobs:
-  placeholder:
+  deploy-frontend:
+    name: Deploy Next.js Web App
     runs-on: ubuntu-latest
+
     steps:
-      - run: echo "Future workflow: build Next.js applications and publish them to the frontend hosting platform."
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log Placeholder Action
+        run: echo "Future workflow: build Next.js applications and publish them to frontend hosting."

@@ -8,9 +8,10 @@ export class AuthService {
   constructor(private readonly prisma: PrismaService, private readonly jwt: JwtService) {}
 
   async login(email: string, password: string) {
+    const normalizedEmail = email.toLowerCase().trim();
     const [admin, customer] = await Promise.all([
-      this.prisma.admin.findUnique({ where: { email } }),
-      this.prisma.customer.findUnique({ where: { email } }),
+      this.prisma.admin.findUnique({ where: { email: normalizedEmail } }),
+      this.prisma.customer.findUnique({ where: { email: normalizedEmail } }),
     ]);
 
     if (admin && customer) {
@@ -30,6 +31,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (customer && customer.status === 'INACTIVE') {
+      throw new UnauthorizedException('Account is deactivated. Please contact support.');
+    }
+
     const accessToken = await this.jwt.signAsync(
       { sub: user.id, role },
       { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' }
@@ -39,6 +44,8 @@ export class AuthService {
       accessToken,
       user: {
         id: user.id,
+        name: user.name,
+        email: user.email,
         role,
       }
     };
@@ -76,6 +83,8 @@ export class AuthService {
       accessToken,
       user: {
         id: customer.id,
+        name: customer.name,
+        email: customer.email,
         role: 'CUSTOMER',
       }
     };

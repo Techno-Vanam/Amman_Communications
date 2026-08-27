@@ -1,87 +1,81 @@
 import Link from 'next/link';
-import styles from './Footer.module.css';
+import { Layers, Mail, Phone, MapPin } from 'lucide-react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className={styles.footer} aria-labelledby="footer-heading">
-      <h2 id="footer-heading" className="sr-only">
-        Site footer
-      </h2>
-      <div className={`${styles.inner} container`}>
-        <div className={styles.main}>
-          <div className={styles.brandCol}>
-            <Link href="/" className={styles.logo} aria-label="Home">
-              {/* Replace with actual logo if available */}
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span>Amman Communications</span>
+    <footer className="bg-[#0a1f15] text-brand-200/70" aria-labelledby="footer-heading">
+      <h2 id="footer-heading" className="sr-only">Site footer</h2>
+      <div className="container py-16 pb-6">
+        {/* Main grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] gap-10 pb-12 border-b border-brand-200/10 mb-6">
+          {/* Brand col */}
+          <div className="flex flex-col gap-4">
+            <Link href="/" className="inline-flex items-center gap-2 text-brand-200/90 font-bold text-base no-underline" aria-label="Home">
+              <span className="flex items-center justify-center w-8 h-8 bg-brand-100 text-brand-700 rounded-lg">
+                <Layers size={18} strokeWidth={2} />
+              </span>
+              <span>Amman <strong className="text-brand-200">Communications</strong></span>
             </Link>
-            <p className={styles.description}>
+            <p className="text-sm leading-relaxed text-brand-200/55 max-w-[34ch]">
               The unified platform for managing your service applications safely,
               securely, and efficiently.
             </p>
+            <div className="flex flex-col gap-2 mt-1">
+              {[
+                { icon: <Mail size={13} strokeWidth={2} />, text: 'support@ammancomm.in' },
+                { icon: <Phone size={13} strokeWidth={2} />, text: '+91 00000 00000' },
+                { icon: <MapPin size={13} strokeWidth={2} />, text: 'Tamil Nadu, India' },
+              ].map(({ icon, text }) => (
+                <span key={text} className="flex items-center gap-2 text-xs text-brand-200/50">
+                  {icon} {text}
+                </span>
+              ))}
+            </div>
           </div>
 
-          <nav className={styles.navCol} aria-label="Quick links">
-            <h3 className={styles.colTitle}>Platform</h3>
-            <ul className={styles.navList}>
-              <li>
-                <Link href="/#services">Services</Link>
-              </li>
-              <li>
-                <Link href="/#how-it-works">How It Works</Link>
-              </li>
-              <li>
-                <Link href="/#about">About</Link>
-              </li>
-              <li>
-                <Link href="/#contact">FAQ</Link>
-              </li>
+          {/* Platform links */}
+          <nav aria-label="Quick links">
+            <h3 className="text-xs font-bold tracking-widest uppercase text-brand-200 mb-4">Platform</h3>
+            <ul className="flex flex-col gap-2.5 list-none">
+              {[['Services', '/#services'], ['How It Works', '/#how-it-works'], ['About', '/#about'], ['FAQ', '/#contact']].map(([label, href]) => (
+                <li key={label}>
+                  <Link href={href} className="text-sm text-brand-200/50 hover:text-white transition-colors duration-150">{label}</Link>
+                </li>
+              ))}
             </ul>
           </nav>
 
-          <nav className={styles.navCol} aria-label="Account links">
-            <h3 className={styles.colTitle}>Account</h3>
-            <ul className={styles.navList}>
-              <li>
-                <Link href="/login">Sign In</Link>
-              </li>
-              <li>
-                <Link href="/register">Create Account</Link>
-              </li>
-              <li>
-                <Link href="/portal">Customer Portal</Link>
-              </li>
+          {/* Account links */}
+          <nav aria-label="Account links">
+            <h3 className="text-xs font-bold tracking-widest uppercase text-brand-200 mb-4">Account</h3>
+            <ul className="flex flex-col gap-2.5 list-none">
+              {[['Sign In', '/login'], ['Create Account', '/register'], ['Customer Portal', '/portal']].map(([label, href]) => (
+                <li key={label}>
+                  <Link href={href} className="text-sm text-brand-200/50 hover:text-white transition-colors duration-150">{label}</Link>
+                </li>
+              ))}
             </ul>
           </nav>
 
-          <nav className={styles.navCol} aria-label="Support links">
-            <h3 className={styles.colTitle}>Support</h3>
-            <ul className={styles.navList}>
-              <li>
-                <Link href="/#contact">Contact Us</Link>
-              </li>
-              <li>
-                <Link href="/privacy">Privacy Policy</Link>
-              </li>
-              <li>
-                <Link href="/terms">Terms of Service</Link>
-              </li>
+          {/* Support links */}
+          <nav aria-label="Support links">
+            <h3 className="text-xs font-bold tracking-widest uppercase text-brand-200 mb-4">Support</h3>
+            <ul className="flex flex-col gap-2.5 list-none">
+              {[['Contact Us', '/#contact'], ['Privacy Policy', '/privacy'], ['Terms of Service', '/terms']].map(([label, href]) => (
+                <li key={label}>
+                  <Link href={href} className="text-sm text-brand-200/50 hover:text-white transition-colors duration-150">{label}</Link>
+                </li>
+              ))}
             </ul>
           </nav>
         </div>
 
-        <div className={styles.bottom}>
-          <p className={styles.copyright}>
-            &copy; {currentYear} Amman Communications. All rights reserved.
-          </p>
-          <div className={styles.legal}>
-            {/* Additional legal links if necessary */}
-          </div>
-        </div>
+        {/* Bottom bar */}
+        <p className="text-xs text-brand-200/30">
+          &copy; {currentYear} Amman Communications. All rights reserved.
+        </p>
       </div>
     </footer>
   );

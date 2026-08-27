@@ -1,61 +1,75 @@
+export type ServiceStatus = 'DRAFT' | 'ACTIVE' | 'INACTIVE';
+
+export interface RequiredDocument {
+  id?: string;
+  serviceId?: string;
+  name: string;
+  displayOrder: number;
+  isRequired: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Service {
   id: string;
   name: string;
-  description: string;
-  category?: string;
+  description?: string | null;
+  governmentFee: number;
+  serviceFee: number;
+  totalFee: number;
+  estimatedTime?: string | null;
+  status: ServiceStatus;
+  requiredDocuments: RequiredDocument[];
+  applicationsCount?: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface ServicesResponse {
-  data: Service[];
+export interface ServiceStats {
+  total: number;
+  active: number;
+  inactive: number;
+  draft: number;
 }
 
+export interface CreateServiceInput {
+  name: string;
+  description?: string;
+  governmentFee: number;
+  serviceFee: number;
+  estimatedTime?: string;
+  status?: ServiceStatus;
+  requiredDocuments?: {
+    name: string;
+    displayOrder?: number;
+    isRequired?: boolean;
+  }[];
+}
 
-// Temporary mock data since backend API is not implemented yet
-const MOCK_SERVICES: Service[] = [
-  {
-    id: 'srv_1',
-    name: 'New Installation',
-    description: 'Request a new service installation for your premises. Includes site survey and equipment setup.',
-    category: 'Installation'
-  },
-  {
-    id: 'srv_2',
-    name: 'Service Relocation',
-    description: 'Move your existing service to a new address with minimal downtime and disruption.',
-    category: 'Modifications'
-  },
-  {
-    id: 'srv_3',
-    name: 'Bandwidth Upgrade',
-    description: 'Upgrade your current connection speed to support higher data demands and more devices.',
-    category: 'Upgrades'
-  },
-  {
-    id: 'srv_4',
-    name: 'Equipment Replacement',
-    description: 'Request replacement for faulty, damaged, or outdated communication equipment.',
-    category: 'Maintenance'
-  },
-  {
-    id: 'srv_5',
-    name: 'Technical Inspection',
-    description: 'Schedule a thorough on-site technical inspection to diagnose connectivity issues.',
-    category: 'Support'
-  },
-  {
-    id: 'srv_6',
-    name: 'Account Transfer',
-    description: 'Transfer ownership of an active service account to a different individual or entity.',
-    category: 'Administration'
+export interface UpdateServiceInput {
+  name?: string;
+  description?: string;
+  governmentFee?: number;
+  serviceFee?: number;
+  estimatedTime?: string;
+  status?: ServiceStatus;
+  requiredDocuments?: {
+    id?: string;
+    name: string;
+    displayOrder?: number;
+    isRequired?: boolean;
+  }[];
+}
+
+export async function fetchPublicServices(): Promise<Service[] | null> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003'}/api/v1/admin/services?status=ACTIVE`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return (json.data ?? json) as Service[];
+  } catch {
+    return null;
   }
-];
-
-/**
- * Fetch available services from the API.
- * Returns null on any failure so the UI can show an appropriate fallback.
- */
-export async function fetchServices(): Promise<Service[] | null> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return MOCK_SERVICES;
 }
+
+export const fetchServices = fetchPublicServices;

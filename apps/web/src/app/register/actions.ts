@@ -2,6 +2,8 @@
 
 import { cookies } from 'next/headers';
 
+const apiBaseUrl = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3003';
+
 export async function registerAction(formData: FormData) {
   const name = formData.get('name');
   const email = formData.get('email');
@@ -20,7 +22,7 @@ export async function registerAction(formData: FormData) {
   }
 
   try {
-    const res = await fetch('http://localhost:3003/v1/auth/register', {
+    const res = await fetch(`${apiBaseUrl}/api/v1/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -36,25 +38,33 @@ export async function registerAction(formData: FormData) {
       return { error: 'An error occurred during registration. Please try again later.' };
     }
 
-    const data = await res.json();
-    const { accessToken, user } = data;
+    const json = await res.json();
+    const payload = json.data ?? json;
+    const { accessToken, user } = payload;
 
     if (!accessToken || !user || !user.role) {
       return { error: 'Invalid response from server' };
     }
 
-    // Set HttpOnly cookie
+    // Set cookies
     const cookieStore = await cookies();
     cookieStore.set('access_token', accessToken, {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 15 * 60, // 15 minutes in seconds
+      maxAge: 7 * 24 * 60 * 60,
+    });
+    cookieStore.set('customer_access_token', accessToken, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60,
     });
 
-    // Registration automatically logs in and redirects to portal
-    return { success: true, redirectTo: '/portal' };
+    // Registration automatically logs in and redirects to the customer dashboard.
+    return { success: true, redirectTo: '/portal/dashboard', accessToken, user };
 
   } catch (error) {
     console.error('Registration action error:', error);

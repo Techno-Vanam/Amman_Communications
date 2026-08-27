@@ -1,3 +1,13 @@
+import React from 'react';
+import PortalSidebar from './PortalSidebar';
+
 export default function PortalLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <section><nav><strong>Amman Communications</strong> <a href="/portal/dashboard">Portal</a> <a href="/portal/documents">Documents</a></nav>{children}</section>;
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
+      <PortalSidebar />
+      <main style={{ flex: 1, minWidth: 0, overflowY: 'auto' }}>
+        {children}
+      </main>
+    </div>
+  );
 }

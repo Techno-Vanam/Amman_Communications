@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import styles from './FAQSection.module.css';
+import { ChevronDown } from 'lucide-react';
 
 const FAQS = [
   {
@@ -32,69 +32,58 @@ const FAQS = [
 ];
 
 export default function FAQSection() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0); // First open by default
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const toggle = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
   return (
-    <section id="contact" className={styles.section} aria-labelledby="faq-heading">
-      <div className={`${styles.inner} container`}>
-        <div className={styles.header}>
-          <p className="section-label">Common Questions</p>
-          <h2 id="faq-heading" className="section-heading">
-            Contact & FAQ
+    <section id="contact" className="bg-white py-24" aria-labelledby="faq-heading">
+      <div className="container">
+        <div className="text-center max-w-2xl mx-auto mb-14">
+          <p className="text-xs font-bold tracking-widest uppercase text-brand-500 mb-3">Common Questions</p>
+          <h2 id="faq-heading" className="text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight mb-4">
+            Contact &amp; FAQ
           </h2>
-          <p className="section-subheading">
-            Find answers to common questions about using the Amman Communications
-            platform.
+          <p className="text-gray-500 leading-relaxed">
+            Find answers to common questions about using the Amman Communications platform.
           </p>
         </div>
 
-        <div className={styles.faqList}>
+        <div className="max-w-2xl mx-auto flex flex-col gap-3">
           {FAQS.map((faq, i) => {
             const isOpen = openIndex === i;
             return (
               <div
                 key={i}
-                className={`${styles.faqItem} ${isOpen ? styles.open : ''}`}
+                className={`border rounded-2xl overflow-hidden transition-colors duration-200 ${
+                  isOpen ? 'border-brand-700' : 'border-gray-200'
+                }`}
               >
                 <button
                   type="button"
-                  className={styles.questionBtn}
+                  className="flex items-center justify-between w-full px-5 py-4 text-left"
                   onClick={() => toggle(i)}
                   aria-expanded={isOpen}
                 >
-                  <span className={styles.questionText}>{faq.question}</span>
-                  <span className={styles.iconWrap} aria-hidden="true">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                  <span className="text-sm font-semibold text-gray-900">{faq.question}</span>
+                  <span className="ml-4 flex-shrink-0 text-brand-700" aria-hidden="true">
+                    <ChevronDown
+                      size={18}
+                      strokeWidth={2}
                       style={{
                         transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                        transition: 'transform var(--transition-base)',
+                        transition: 'transform 250ms ease',
                       }}
-                    >
-                      <path d="M6 9l6 6 6-6" />
-                    </svg>
+                    />
                   </span>
                 </button>
-                <div
-                  className={styles.answerWrap}
-                  hidden={!isOpen}
-                  style={{
-                    display: isOpen ? 'block' : 'none',
-                  }}
-                >
-                  <p className={styles.answerText}>{faq.answer}</p>
-                </div>
+                {isOpen && (
+                  <div className="px-5 pb-5">
+                    <p className="text-sm text-gray-500 leading-relaxed">{faq.answer}</p>
+                  </div>
+                )}
               </div>
             );
           })}

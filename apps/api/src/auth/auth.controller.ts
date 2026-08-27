@@ -13,7 +13,7 @@ class RegisterDto {
   @IsString() @MinLength(8) password!: string;
 }
 
-@Controller('v1/auth')
+@Controller('auth')
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 

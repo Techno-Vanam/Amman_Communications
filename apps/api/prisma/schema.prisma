@@ -13,21 +13,38 @@ model HealthCheck {
   createdAt DateTime @default(now())
 }
 
-enum DocumentVerificationStatus {
-  PENDING
+enum DocumentStatus {
+  UPLOADED
+  UNDER_REVIEW
   VERIFIED
+  REJECTED
+  ACTION_REQUIRED
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
   REJECTED
 }
 
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model Customer {
-  id           String        @id @default(cuid())
-  email        String        @unique
+  id           String         @id @default(cuid())
+  email        String         @unique
   passwordHash String
   name         String
+  phone        String?
+  status       CustomerStatus @default(ACTIVE)
   applications Application[]
   documents    Document[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
 
 model Admin {
@@ -40,26 +57,80 @@ model Admin {
 }
 
 model Application {
-  id         String     @id @default(cuid())
-  customer   Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  customerId String
-  documents  Document[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id                String            @id @default(cuid())
+  applicationNumber String?           @unique
+  customer          Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId        String
+  service           Service?          @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceId         String?
+  title             String?
+  serviceType       String?
+  fullName          String?
+  email             String?
+  phone             String?
+  dateOfBirth       String?
+  nationality       String?
+  address           String?
+  notes             String?
+  status            ApplicationStatus @default(DRAFT)
+  documents         Document[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 }
 
 model Document {
-  id                  String                    @id @default(cuid())
-  customer            Customer                  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  customerId          String
-  application         Application               @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  applicationId       String
-  documentType        String
-  storagePath         String
-  fileName            String
-  mimeType             String
-  fileSize            Int
-  verificationStatus  DocumentVerificationStatus @default(PENDING)
-  verificationRemarks String?
-  uploadedAt          DateTime                  @default(now())
+  id               String         @id @default(cuid())
+  customer         Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId       String
+  application      Application    @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId    String
+  documentType     String
+  originalFileName String?
+  fileName         String
+  storagePath      String
+  fileUrl          String?
+  mimeType         String
+  fileSize         Int
+  isEncrypted      Boolean        @default(true)
+  status           DocumentStatus @default(UPLOADED)
+  version          Int            @default(1)
+  verifiedAt       DateTime?
+  verifiedBy       String?
+  rejectionReason  String?
+  uploadedAt       DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
+
+  @@unique([applicationId, documentType])
+}
+
+enum ServiceStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+}
+
+model Service {
+  id                String             @id @default(cuid())
+  name              String
+  description       String?
+  governmentFee     Decimal            @db.Decimal(10, 2)
+  serviceFee        Decimal            @db.Decimal(10, 2)
+  totalFee          Decimal            @db.Decimal(10, 2)
+  estimatedTime     String?
+  status            ServiceStatus      @default(DRAFT)
+  requiredDocuments RequiredDocument[]
+  applications      Application[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model RequiredDocument {
+  id           String   @id @default(cuid())
+  service      Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId    String
+  name         String
+  displayOrder Int      @default(0)
+  isRequired   Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
