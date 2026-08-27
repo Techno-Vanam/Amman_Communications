@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Sparkles, Star, Shield, Calendar, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Star, Shield, Calendar, ArrowRight, ChevronDown } from 'lucide-react';
 
 interface HeroProps {
   onOpenAppointmentModal: () => void;
@@ -7,33 +7,38 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ onOpenAppointmentModal }) => {
   return (
-    <section id="hero" className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden bg-white">
-      {/* Subtle Background Glows */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[380px] bg-gradient-to-tr from-brand-50/70 via-accent-skySoft/30 to-transparent blur-3xl rounded-full -z-10 pointer-events-none" />
-      <div className="absolute top-32 right-10 w-64 h-64 bg-brand-100/40 blur-2xl rounded-full -z-10 pointer-events-none" />
+    <section
+      id="hero"
+      className="relative min-h-screen min-h-[100dvh] flex flex-col justify-center items-center pt-24 pb-12 sm:pt-28 sm:pb-16 overflow-hidden bg-white"
+    >
+      {/* Subtle Ambient Background Glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[500px] bg-gradient-to-tr from-brand-50/80 via-accent-skySoft/30 to-brand-100/40 blur-3xl rounded-full -z-10 pointer-events-none" />
+      <div className="absolute top-20 right-10 w-72 h-72 bg-brand-100/50 blur-3xl rounded-full -z-10 pointer-events-none" />
+      <div className="absolute bottom-10 left-10 w-72 h-72 bg-accent-skySoft/40 blur-3xl rounded-full -z-10 pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
-        <div className="text-center space-y-6 max-w-5xl mx-auto">
-          {/* Top Pill Badge without icon */}
-          <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-brand-50 border border-brand-100 text-brand-700 text-xs sm:text-sm font-semibold shadow-xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20 w-full flex-grow flex items-center justify-center">
+        <div className="text-center space-y-6 sm:space-y-7 max-w-4xl mx-auto my-auto">
+          {/* Top Pill Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-50/90 border border-brand-100 text-brand-700 text-xs sm:text-sm font-semibold shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
             <span>Official Documentation & Registration Consultancy</span>
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brand-700 tracking-tight leading-[1.15]">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brand-700 tracking-tight leading-[1.12]">
             Streamlined Property Registration & Document Verification
           </h1>
 
           {/* Description */}
-          <p className="text-lg sm:text-xl text-slate-600 max-w-4xl mx-auto leading-relaxed font-normal">
+          <p className="text-base sm:text-lg lg:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed font-normal">
             Amman Communications delivers professional advisory, pre-audit verification, deed drafting, and online filing to streamline your registration workflows with 100% precision.
           </p>
 
-          {/* Action Buttons - Book Appointment on LEFT, Explore Services on RIGHT */}
+          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <button
               onClick={onOpenAppointmentModal}
-              className="w-full sm:w-auto px-6 py-3.5 h-12 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-base shadow-sm hover:shadow-brand-glow transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer"
+              className="w-full sm:w-auto px-7 py-3.5 h-12 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-base shadow-sm hover:shadow-brand-glow transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer hover:scale-[1.02]"
             >
               <Calendar className="w-4 h-4 text-white" />
               <span>Book Appointment</span>
@@ -42,7 +47,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenAppointmentModal }) => {
 
             <a
               href="#services"
-              className="w-full sm:w-auto px-6 py-3.5 h-12 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-base border border-slate-200/90 shadow-xs transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-7 py-3.5 h-12 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-base border border-slate-200/90 shadow-xs transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Explore Services</span>
             </a>
@@ -65,6 +70,16 @@ export const Hero: React.FC<HeroProps> = ({ onOpenAppointmentModal }) => {
           </div>
         </div>
       </div>
+
+      {/* Bottom Scroll Cue */}
+      <a
+        href="#services"
+        className="mt-auto pt-4 flex flex-col items-center gap-1 text-slate-400 hover:text-brand-600 transition-colors text-xs font-medium cursor-pointer animate-bounce"
+        aria-label="Scroll to services"
+      >
+        <span>Explore</span>
+        <ChevronDown className="w-4 h-4" />
+      </a>
     </section>
   );
 };
