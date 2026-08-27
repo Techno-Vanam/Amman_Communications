@@ -6,82 +6,137 @@ import {
   CalendarPlus,
   Phone,
   MessageSquare,
-  Building
+  Building,
+  Video,
+  Calendar as CalendarIcon,
+  X,
+  XCircle,
+  Eye,
+  Clock,
+  AlertTriangle,
+  RotateCcw
 } from 'lucide-react';
+import { useNotifications } from '@/context/NotificationContext';
 
 interface AppointmentItem {
   id: string;
   originalDateTime: string;
   newDateTime: string;
   serviceType: string;
-  consultationType: 'Office Visit' | 'Phone Consultation' | 'WhatsApp Consultation';
+  consultationType: string;
   status: 'Rescheduled' | 'Cancelled' | 'Completed' | 'Pending' | 'Confirmed';
   reasonAdminNote: string;
   adminNote?: string;
   location?: string;
 }
 
-const APPOINTMENTS_DATA: AppointmentItem[] = [
-  {
-    id: 'APT-2026-081',
-    originalDateTime: '25 May 2026 02:00 PM',
-    newDateTime: '27 May 2026 11:00 AM',
-    serviceType: 'Property Registration',
-    consultationType: 'Office Visit',
-    status: 'Rescheduled',
-    reasonAdminNote: 'Admin unavailable at the requested time.',
-    adminNote: 'We apologize for the inconvenience. Our senior verification officer will meet you on 27 May.',
-    location: 'Main Branch - Amman Comm HQ'
-  },
-  {
-    id: 'APT-2026-074',
-    originalDateTime: '20 May 2026 11:00 AM',
-    newDateTime: '-',
-    serviceType: 'Passport Renewal',
-    consultationType: 'Office Visit',
-    status: 'Cancelled',
-    reasonAdminNote: 'Cancelled by customer',
-    adminNote: 'Appointment cancelled per customer request on 19 May.',
-    location: 'West Regional Hub'
-  },
-  {
-    id: 'APT-2026-062',
-    originalDateTime: '22 May 2026 03:00 PM',
-    newDateTime: '-',
-    serviceType: 'Driving License',
-    consultationType: 'Phone Consultation',
-    status: 'Completed',
-    reasonAdminNote: '-',
-    adminNote: 'Phone consultation completed successfully. Verification code sent via SMS.',
-  },
-  {
-    id: 'APT-2026-059',
-    originalDateTime: '30 May 2026 10:30 AM',
-    newDateTime: '-',
-    serviceType: 'PAN Card',
-    consultationType: 'WhatsApp Consultation',
-    status: 'Pending',
-    reasonAdminNote: '-',
-    adminNote: 'Awaiting officer assignment.',
-  },
-  {
-    id: 'APT-2026-090',
-    originalDateTime: '28 Aug 2026 02:00 PM',
-    newDateTime: '-',
-    serviceType: 'EC / Patta / Chitta',
-    consultationType: 'Office Visit',
-    status: 'Confirmed',
-    reasonAdminNote: 'Appointment confirmed',
-    adminNote: 'Please carry original property deeds and ID proof.',
-    location: 'Main Branch - Amman Comm HQ'
-  }
-];
+const APPOINTMENTS_DATA: AppointmentItem[] = [];
 
 export default function AppointmentsPage() {
+  const { showToast } = useNotifications();
+  const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
   const [activeTab, setActiveTab] = useState<'All' | 'Upcoming' | 'Completed' | 'Cancelled' | 'Rescheduled'>('All');
-  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentItem | null>(APPOINTMENTS_DATA[0]);
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentItem | null>(null);
 
-  const filteredAppointments = APPOINTMENTS_DATA.filter((item) => {
+  // Modals state
+  const [rescheduleModalItem, setRescheduleModalItem] = useState<AppointmentItem | null>(null);
+  const [cancelModalItem, setCancelModalItem] = useState<AppointmentItem | null>(null);
+
+  // Form state for Reschedule Modal
+  const [rescheduleDate, setRescheduleDate] = useState('2026-09-01');
+  const [rescheduleTime, setRescheduleTime] = useState('10:30 AM');
+  const [rescheduleReason, setRescheduleReason] = useState('');
+
+  // Form state for Cancel Modal
+  const [cancelReason, setCancelReason] = useState('Schedule conflict / Change of plans');
+
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('amman_user_appointments');
+      if (saved) {
+        const parsed: AppointmentItem[] = JSON.parse(saved);
+        setAppointments(parsed);
+        if (parsed.length > 0) {
+          setSelectedAppointment(parsed[0]);
+        }
+      }
+    } catch (e) {
+      console.error('Error loading appointments:', e);
+    }
+  }, []);
+
+  const saveAppointmentsToStorage = (updated: AppointmentItem[]) => {
+    try {
+      localStorage.setItem('amman_user_appointments', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error saving appointments:', e);
+    }
+  };
+
+  const handleConfirmReschedule = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rescheduleModalItem) return;
+
+    const newDateTimeStr = `${rescheduleDate} ${rescheduleTime}`;
+    const updated = appointments.map((apt) =>
+      apt.id === rescheduleModalItem.id
+        ? {
+            ...apt,
+            status: 'Rescheduled' as const,
+            newDateTime: newDateTimeStr,
+            reasonAdminNote: rescheduleReason || 'Rescheduled by customer',
+            adminNote: `Customer requested rescheduling to ${newDateTimeStr}.`
+          }
+        : apt
+    );
+
+    setAppointments(updated);
+    saveAppointmentsToStorage(updated);
+
+    if (selectedAppointment?.id === rescheduleModalItem.id) {
+      setSelectedAppointment({
+        ...rescheduleModalItem,
+        status: 'Rescheduled',
+        newDateTime: newDateTimeStr,
+        reasonAdminNote: rescheduleReason || 'Rescheduled by customer'
+      });
+    }
+
+    showToast('Appointment Rescheduled Successfully!', `Updated to ${newDateTimeStr}.`);
+    setRescheduleModalItem(null);
+  };
+
+  const handleConfirmCancel = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cancelModalItem) return;
+
+    const updated = appointments.map((apt) =>
+      apt.id === cancelModalItem.id
+        ? {
+            ...apt,
+            status: 'Cancelled' as const,
+            reasonAdminNote: cancelReason || 'Cancelled by customer',
+            adminNote: 'Appointment cancelled by customer request.'
+          }
+        : apt
+    );
+
+    setAppointments(updated);
+    saveAppointmentsToStorage(updated);
+
+    if (selectedAppointment?.id === cancelModalItem.id) {
+      setSelectedAppointment({
+        ...cancelModalItem,
+        status: 'Cancelled',
+        reasonAdminNote: cancelReason || 'Cancelled by customer'
+      });
+    }
+
+    showToast('Appointment Cancelled', `Appointment ${cancelModalItem.id} has been cancelled.`);
+    setCancelModalItem(null);
+  };
+
+  const filteredAppointments = appointments.filter((item) => {
     if (activeTab === 'All') return true;
     if (activeTab === 'Upcoming') return item.status === 'Confirmed' || item.status === 'Pending';
     if (activeTab === 'Completed') return item.status === 'Completed';
@@ -107,15 +162,17 @@ export default function AppointmentsPage() {
     }
   };
 
-  const getConsultationIcon = (type: AppointmentItem['consultationType']) => {
-    switch (type) {
-      case 'Office Visit':
-        return <Building className="w-3.5 h-3.5 text-gray-500" />;
-      case 'Phone Consultation':
-        return <Phone className="w-3.5 h-3.5 text-gray-500" />;
-      case 'WhatsApp Consultation':
-        return <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />;
+  const getConsultationIcon = (type: string) => {
+    if (type.includes('Video')) {
+      return <Video className="w-3.5 h-3.5 text-purple-600" />;
     }
+    if (type.includes('WhatsApp')) {
+      return <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />;
+    }
+    if (type.includes('Phone')) {
+      return <Phone className="w-3.5 h-3.5 text-blue-600" />;
+    }
+    return <Building className="w-3.5 h-3.5 text-gray-500" />;
   };
 
   return (
@@ -127,7 +184,7 @@ export default function AppointmentsPage() {
             My Appointments
           </h1>
           <p className="mt-1 text-sm text-gray-600">
-            View all your appointments
+            View, reschedule, or cancel your scheduled appointments.
           </p>
         </div>
 
@@ -176,13 +233,14 @@ export default function AppointmentsPage() {
             <tbody className="divide-y divide-gray-100 text-xs text-gray-800">
               {filteredAppointments.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-500">
+                  <td colSpan={7} className="py-12 text-center text-gray-500 font-medium">
                     No appointments found in this category.
                   </td>
                 </tr>
               ) : (
                 filteredAppointments.map((apt) => {
                   const isSelected = selectedAppointment?.id === apt.id;
+                  const canModify = apt.status !== 'Cancelled' && apt.status !== 'Completed';
 
                   return (
                     <tr
@@ -213,18 +271,48 @@ export default function AppointmentsPage() {
                         {apt.reasonAdminNote}
                       </td>
                       <td className="py-4 px-4 text-center">
-                        <button
-                          onClick={() => setSelectedAppointment(apt)}
-                          className={`
-                            px-3.5 py-1.5 rounded-lg border text-xs font-bold transition-all
-                            ${isSelected
-                              ? 'bg-[#12372A] text-white border-[#12372A]'
-                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                            }
-                          `}
-                        >
-                          View Details
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          {/* View Details Icon Button */}
+                          <button
+                            onClick={() => setSelectedAppointment(apt)}
+                            className={`p-2 rounded-xl border transition-all shadow-2xs ${
+                              isSelected
+                                ? 'bg-[#12372A] text-white border-[#12372A]'
+                                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                            }`}
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+
+                          {canModify && (
+                            <>
+                              {/* Reschedule Icon Button */}
+                              <button
+                                onClick={() => {
+                                  setRescheduleModalItem(apt);
+                                  setRescheduleReason('');
+                                }}
+                                className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl transition-all shadow-2xs"
+                                title="Reschedule Appointment"
+                              >
+                                <RotateCcw className="w-4 h-4" />
+                              </button>
+
+                              {/* Cancel Icon Button */}
+                              <button
+                                onClick={() => {
+                                  setCancelModalItem(apt);
+                                  setCancelReason('Schedule conflict / Change of plans');
+                                }}
+                                className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl transition-all shadow-2xs"
+                                title="Cancel Appointment"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -234,14 +322,41 @@ export default function AppointmentsPage() {
           </table>
         </div>
 
-        {/* Selected Appointment Details Section (Matching Screenshot) */}
+        {/* Selected Appointment Details Section with Reschedule / Cancel Actions */}
         {selectedAppointment && (
           <div className="pt-6 border-t border-gray-200 space-y-4">
-            <h2 className="text-base font-bold text-gray-900">
-              {selectedAppointment.status === 'Rescheduled'
-                ? 'Rescheduled Appointment Details'
-                : `${selectedAppointment.status} Appointment Details`}
-            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h2 className="text-base font-bold text-gray-900">
+                {selectedAppointment.status === 'Rescheduled'
+                  ? 'Rescheduled Appointment Details'
+                  : `${selectedAppointment.status} Appointment Details`}
+              </h2>
+
+              {selectedAppointment.status !== 'Cancelled' && selectedAppointment.status !== 'Completed' && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setRescheduleModalItem(selectedAppointment);
+                      setRescheduleReason('');
+                    }}
+                    className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Reschedule</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCancelModalItem(selectedAppointment);
+                      setCancelReason('Schedule conflict / Change of plans');
+                    }}
+                    className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Cancel Appointment</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             <div className="bg-[#f8faf9] border border-gray-200/80 rounded-xl p-5 space-y-2.5 text-xs text-gray-800 font-medium max-w-2xl">
               <div className="flex items-start gap-2">
@@ -279,6 +394,146 @@ export default function AppointmentsPage() {
           </div>
         )}
       </div>
+
+      {/* MODAL 1: Reschedule Appointment */}
+      {rescheduleModalItem && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <CalendarIcon className="w-5 h-5 text-blue-600" />
+                <h3 className="text-base font-bold text-gray-900">Reschedule Appointment</h3>
+              </div>
+              <button
+                onClick={() => setRescheduleModalItem(null)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmReschedule} className="space-y-4 text-xs">
+              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-1">
+                <p className="font-bold text-[#12372A]">{rescheduleModalItem.serviceType}</p>
+                <p className="text-[11px] text-gray-600">Current Slot: {rescheduleModalItem.originalDateTime}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-gray-700">New Date *</label>
+                  <input
+                    type="date"
+                    value={rescheduleDate}
+                    onChange={(e) => setRescheduleDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-gray-700">New Time Slot *</label>
+                  <select
+                    value={rescheduleTime}
+                    onChange={(e) => setRescheduleTime(e.target.value)}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  >
+                    <option value="09:30 AM">09:30 AM</option>
+                    <option value="10:30 AM">10:30 AM</option>
+                    <option value="11:30 AM">11:30 AM</option>
+                    <option value="02:00 PM">02:00 PM</option>
+                    <option value="03:30 PM">03:30 PM</option>
+                    <option value="04:30 PM">04:30 PM</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block font-bold text-gray-700">Reason for Rescheduling (Optional)</label>
+                <input
+                  type="text"
+                  value={rescheduleReason}
+                  onChange={(e) => setRescheduleReason(e.target.value)}
+                  placeholder="e.g. Personal emergency, schedule conflict"
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRescheduleModalItem(null)}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm"
+                >
+                  Confirm Reschedule
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Cancel Appointment */}
+      {cancelModalItem && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-rose-600" />
+                <h3 className="text-base font-bold text-gray-900">Cancel Appointment</h3>
+              </div>
+              <button
+                onClick={() => setCancelModalItem(null)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmCancel} className="space-y-4 text-xs">
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl space-y-1">
+                <p className="font-bold text-rose-900">Are you sure you want to cancel this booking?</p>
+                <p className="text-[11px] text-rose-700">{cancelModalItem.serviceType} ({cancelModalItem.originalDateTime})</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block font-bold text-gray-700">Reason for Cancellation</label>
+                <select
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500"
+                >
+                  <option value="Schedule conflict / Change of plans">Schedule conflict / Change of plans</option>
+                  <option value="No longer required">No longer required</option>
+                  <option value="Booked another time slot">Booked another time slot</option>
+                  <option value="Incorrect service selected">Incorrect service selected</option>
+                </select>
+              </div>
+
+              <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setCancelModalItem(null)}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl"
+                >
+                  Keep Booking
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-sm"
+                >
+                  Confirm Cancellation
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

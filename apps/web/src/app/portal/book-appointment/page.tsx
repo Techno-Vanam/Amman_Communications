@@ -23,7 +23,14 @@ import {
   Building,
   Lock,
   Info,
-  Trash2
+  Trash2,
+  Video,
+  Globe,
+  PhoneCall,
+  Laptop,
+  Mail,
+  User,
+  Clock
 } from 'lucide-react';
 
 const SERVICES = [
@@ -46,23 +53,56 @@ const STEPS = [
 ];
 
 import { useNotifications } from '@/context/NotificationContext';
+import { useUser } from '@/context/UserContext';
 
 export default function BookAppointmentPage() {
   const { showToast } = useNotifications();
+  const { user } = useUser();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedService, setSelectedService] = useState('property');
 
   // Form State
   const [details, setDetails] = useState({
-    consultationType: 'Office Visit' as 'Office Visit' | 'Phone Consultation' | 'WhatsApp Consultation',
+    mainMode: 'Office Visit' as 'Office Visit' | 'Online Consultation',
+    onlineSubMode: 'Phone Call' as 'Phone Call' | 'WhatsApp' | 'Video Call',
+    videoPlatform: 'Google Meet' as 'Google Meet' | 'Zoom' | 'Microsoft Teams',
+    whatsappNumber: user.phone || '+91 ',
+    phoneCallNumber: user.phone || '+91 ',
+    whatsappOption: 'WhatsApp Voice Call' as 'WhatsApp Voice Call' | 'WhatsApp Video Call' | 'WhatsApp Text Chat',
     date: '2026-08-28',
     timeSlot: '10:30 AM',
     location: 'Main Branch - Amman Comm HQ',
-    applicantName: 'John Doe',
-    applicantEmail: 'john@example.com',
-    applicantPhone: '+91 98765 43210',
-    notes: 'Requesting fast-track verification clearance.'
+    applicantName: user.name,
+    applicantEmail: user.email,
+    applicantPhone: user.phone || '+91 ',
+    address: user.address,
+    description: ''
   });
+
+  React.useEffect(() => {
+    setDetails((prev) => ({
+      ...prev,
+      applicantName: user.name,
+      applicantEmail: user.email,
+      applicantPhone: user.phone || '+91 ',
+      address: user.address,
+      whatsappNumber: user.phone || prev.whatsappNumber || '+91 ',
+      phoneCallNumber: user.phone || prev.phoneCallNumber || '+91 '
+    }));
+  }, [user]);
+
+  const getFormattedConsultationType = () => {
+    if (details.mainMode === 'Office Visit') {
+      return 'Office Visit';
+    }
+    if (details.onlineSubMode === 'Phone Call') {
+      return `Online Consultation (Phone Call - ${details.phoneCallNumber})`;
+    }
+    if (details.onlineSubMode === 'WhatsApp') {
+      return `Online Consultation (WhatsApp - ${details.whatsappNumber})`;
+    }
+    return `Online Consultation (Video Call via ${details.videoPlatform})`;
+  };
 
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
 
@@ -70,7 +110,26 @@ export default function BookAppointmentPage() {
 
   const handleNext = () => {
     if (currentStep === 4) {
-      showToast('Appointment Booked Successfully!', 'Reference ID: APT-2026-9042 has been scheduled.');
+      const aptId = `APT-2026-${Math.floor(100 + Math.random() * 900)}`;
+      const newApt = {
+        id: aptId,
+        originalDateTime: `${details.date} ${details.timeSlot}`,
+        newDateTime: '-',
+        serviceType: serviceObj.name,
+        consultationType: getFormattedConsultationType(),
+        status: 'Confirmed' as const,
+        reasonAdminNote: 'Booking Confirmed',
+        adminNote: 'Your appointment has been scheduled. Officer assigned.',
+        location: details.location
+      };
+      try {
+        const saved = localStorage.getItem('amman_user_appointments');
+        const existing = saved ? JSON.parse(saved) : [];
+        localStorage.setItem('amman_user_appointments', JSON.stringify([newApt, ...existing]));
+      } catch (e) {
+        console.error('Error saving appointment:', e);
+      }
+      showToast('Appointment Booked Successfully!', `Reference ID: ${aptId} has been scheduled.`);
     }
     if (currentStep < 5) setCurrentStep(currentStep + 1);
   };
@@ -224,71 +283,156 @@ export default function BookAppointmentPage() {
             <div>
               <h2 className="text-lg font-bold text-gray-900">Step 2: Appointment Details</h2>
               <p className="text-xs text-gray-500 mt-1">
-                Selected Service: <strong className="text-[#12372A]">{serviceObj.name}</strong>. Select consultation mode and date/time.
+                Selected Service: <strong className="text-[#12372A]">{serviceObj.name}</strong>. Choose consultation type and schedule.
               </p>
             </div>
 
-            {/* Consultation Type Selector */}
-            <div className="space-y-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Select Consultation Type</label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Top Level: Main Consultation Type Options (Office Visit vs Online Consultation) */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                Select Consultation Category
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Option 1: Office Visit */}
                 <button
                   type="button"
-                  onClick={() => setDetails({ ...details, consultationType: 'Office Visit' })}
-                  className={`p-4 rounded-xl border flex items-center gap-3 text-left transition-all ${
-                    details.consultationType === 'Office Visit'
-                      ? 'border-[#12372A] bg-[#f0f7f2] ring-2 ring-[#12372A]/20'
+                  onClick={() => setDetails({ ...details, mainMode: 'Office Visit' })}
+                  className={`p-5 rounded-2xl border text-left flex items-start gap-4 transition-all duration-200 ${
+                    details.mainMode === 'Office Visit'
+                      ? 'border-[#12372A] bg-[#f0f7f2] ring-2 ring-[#12372A]/20 shadow-sm'
                       : 'border-gray-200 hover:border-gray-300 bg-white'
                   }`}
                 >
-                  <div className="w-9 h-9 rounded-lg bg-[#12372A] text-white flex items-center justify-center shrink-0">
-                    <Building className="w-5 h-5 text-[#a8d5b9]" />
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                    details.mainMode === 'Office Visit' ? 'bg-[#12372A] text-white' : 'bg-emerald-50 text-emerald-700'
+                  }`}>
+                    <Building className="w-6 h-6" />
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-900">Office Visit</p>
-                    <p className="text-[10px] text-gray-500">In-person branch session</p>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-bold text-gray-900">Office Visit</p>
+                      {details.mainMode === 'Office Visit' && (
+                        <span className="w-4 h-4 rounded-full bg-[#12372A] text-white flex items-center justify-center text-[10px]">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">In-person session at our physical branch location.</p>
                   </div>
                 </button>
 
+                {/* Option 2: Online Consultation */}
                 <button
                   type="button"
-                  onClick={() => setDetails({ ...details, consultationType: 'Phone Consultation' })}
-                  className={`p-4 rounded-xl border flex items-center gap-3 text-left transition-all ${
-                    details.consultationType === 'Phone Consultation'
-                      ? 'border-[#12372A] bg-[#f0f7f2] ring-2 ring-[#12372A]/20'
+                  onClick={() => setDetails({ ...details, mainMode: 'Online Consultation' })}
+                  className={`p-5 rounded-2xl border text-left flex items-start gap-4 transition-all duration-200 ${
+                    details.mainMode === 'Online Consultation'
+                      ? 'border-[#12372A] bg-[#f0f7f2] ring-2 ring-[#12372A]/20 shadow-sm'
                       : 'border-gray-200 hover:border-gray-300 bg-white'
                   }`}
                 >
-                  <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
-                    <Phone className="w-5 h-5" />
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                    details.mainMode === 'Online Consultation' ? 'bg-[#12372A] text-white' : 'bg-blue-50 text-blue-600'
+                  }`}>
+                    <Globe className="w-6 h-6" />
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-900">Phone Consultation</p>
-                    <p className="text-[10px] text-gray-500">Voice call with officer</p>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setDetails({ ...details, consultationType: 'WhatsApp Consultation' })}
-                  className={`p-4 rounded-xl border flex items-center gap-3 text-left transition-all ${
-                    details.consultationType === 'WhatsApp Consultation'
-                      ? 'border-[#12372A] bg-[#f0f7f2] ring-2 ring-[#12372A]/20'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
-                  }`}
-                >
-                  <div className="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                    <MessageSquare className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-900">WhatsApp Consultation</p>
-                    <p className="text-[10px] text-gray-500">Chat / Video support</p>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-bold text-gray-900">Online Consultation</p>
+                      {details.mainMode === 'Online Consultation' && (
+                        <span className="w-4 h-4 rounded-full bg-[#12372A] text-white flex items-center justify-center text-[10px]">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">Remote session via Phone, WhatsApp, or Video Call.</p>
                   </div>
                 </button>
               </div>
             </div>
 
+            {/* Sub Options when Online Consultation is selected */}
+            {details.mainMode === 'Online Consultation' && (
+              <div className="p-5 bg-[#f8faf9] border border-emerald-200/80 rounded-2xl space-y-4 animate-in fade-in duration-300">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[#12372A]">
+                    Select Online Consultation Method
+                  </label>
+                  <span className="text-[11px] font-medium text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                    3 Channels Available
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Phone Option */}
+                  <button
+                    type="button"
+                    onClick={() => setDetails({ ...details, onlineSubMode: 'Phone Call' })}
+                    className={`p-4 rounded-xl border flex flex-col items-center text-center space-y-2 transition-all ${
+                      details.onlineSubMode === 'Phone Call'
+                        ? 'border-[#12372A] bg-white ring-2 ring-[#12372A]/30 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300 bg-white/70'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                      details.onlineSubMode === 'Phone Call' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600'
+                    }`}>
+                      <Phone className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-gray-900">Phone Call</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">Voice Call with Officer</p>
+                    </div>
+                  </button>
+
+                  {/* WhatsApp Option */}
+                  <button
+                    type="button"
+                    onClick={() => setDetails({ ...details, onlineSubMode: 'WhatsApp' })}
+                    className={`p-4 rounded-xl border flex flex-col items-center text-center space-y-2 transition-all ${
+                      details.onlineSubMode === 'WhatsApp'
+                        ? 'border-[#12372A] bg-white ring-2 ring-[#12372A]/30 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300 bg-white/70'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                      details.onlineSubMode === 'WhatsApp' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600'
+                    }`}>
+                      <MessageSquare className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-gray-900">WhatsApp</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">WhatsApp Call / Chat</p>
+                    </div>
+                  </button>
+
+                  {/* Video Call Option */}
+                  <button
+                    type="button"
+                    onClick={() => setDetails({ ...details, onlineSubMode: 'Video Call' })}
+                    className={`p-4 rounded-xl border flex flex-col items-center text-center space-y-2 transition-all ${
+                      details.onlineSubMode === 'Video Call'
+                        ? 'border-[#12372A] bg-white ring-2 ring-[#12372A]/30 shadow-sm'
+                        : 'border-gray-200 hover:border-gray-300 bg-white/70'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
+                      details.onlineSubMode === 'Video Call' ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-600'
+                    }`}>
+                      <Video className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-gray-900">Video Call</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">Google Meet / Zoom</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* DYNAMIC FIELDS based on mainMode & onlineSubMode */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Preferred Date */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Preferred Date</label>
                 <input
@@ -299,6 +443,7 @@ export default function BookAppointmentPage() {
                 />
               </div>
 
+              {/* Time Slot */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Time Slot</label>
                 <select
@@ -313,7 +458,8 @@ export default function BookAppointmentPage() {
                 </select>
               </div>
 
-              {details.consultationType === 'Office Visit' && (
+              {/* DYNAMIC CASE 1: Office Visit Location Selector */}
+              {details.mainMode === 'Office Visit' && (
                 <div className="md:col-span-2 space-y-2">
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Select Branch Office</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -350,6 +496,116 @@ export default function BookAppointmentPage() {
                 </div>
               )}
 
+              {/* DYNAMIC CASE 2: Online Consultation -> Phone Call Fields */}
+              {details.mainMode === 'Online Consultation' && details.onlineSubMode === 'Phone Call' && (
+                <div className="md:col-span-2 space-y-4 p-4 bg-blue-50/60 border border-blue-200/80 rounded-xl">
+                  <div className="flex items-center gap-2 text-blue-900">
+                    <Phone className="w-4 h-4 text-blue-600" />
+                    <span className="text-xs font-bold">Phone Consultation Setup</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-gray-700">Call Receiver Phone Number</label>
+                      <input
+                        type="text"
+                        value={details.phoneCallNumber}
+                        onChange={(e) => setDetails({ ...details, phoneCallNumber: e.target.value })}
+                        placeholder="+91 98765 43210"
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-blue-500 bg-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-gray-700">Preferred Call Type</label>
+                      <select className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-blue-500 bg-white">
+                        <option>Direct Voice Call</option>
+                        <option>IVR Callback Confirmation</option>
+                      </select>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-blue-800 flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    Our officer will call your provided phone number directly at the scheduled time slot.
+                  </p>
+                </div>
+              )}
+
+              {/* DYNAMIC CASE 3: Online Consultation -> WhatsApp Fields */}
+              {details.mainMode === 'Online Consultation' && details.onlineSubMode === 'WhatsApp' && (
+                <div className="md:col-span-2 space-y-4 p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-xl">
+                  <div className="flex items-center gap-2 text-emerald-900">
+                    <MessageSquare className="w-4 h-4 text-emerald-600" />
+                    <span className="text-xs font-bold">WhatsApp Consultation Setup</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-gray-700">WhatsApp Contact Number</label>
+                      <input
+                        type="text"
+                        value={details.whatsappNumber}
+                        onChange={(e) => setDetails({ ...details, whatsappNumber: e.target.value })}
+                        placeholder="+91 98765 43210"
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-emerald-500 bg-white"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-gray-700">WhatsApp Mode Preference</label>
+                      <select
+                        value={details.whatsappOption}
+                        onChange={(e) => setDetails({ ...details, whatsappOption: e.target.value as any })}
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-emerald-500 bg-white"
+                      >
+                        <option value="WhatsApp Voice Call">WhatsApp Voice Call</option>
+                        <option value="WhatsApp Video Call">WhatsApp Video Call</option>
+                        <option value="WhatsApp Text Chat">WhatsApp Text Chat</option>
+                      </select>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-emerald-800 flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    A WhatsApp message and connection link will be sent to this number 10 minutes prior to appointment.
+                  </p>
+                </div>
+              )}
+
+              {/* DYNAMIC CASE 4: Online Consultation -> Video Call Fields */}
+              {details.mainMode === 'Online Consultation' && details.onlineSubMode === 'Video Call' && (
+                <div className="md:col-span-2 space-y-4 p-4 bg-purple-50/60 border border-purple-200/80 rounded-xl">
+                  <div className="flex items-center gap-2 text-purple-900">
+                    <Video className="w-4 h-4 text-purple-600" />
+                    <span className="text-xs font-bold">Video Call Consultation Setup</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-gray-700">Preferred Video Platform</label>
+                      <select
+                        value={details.videoPlatform}
+                        onChange={(e) => setDetails({ ...details, videoPlatform: e.target.value as any })}
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-purple-500 bg-white"
+                      >
+                        <option value="Google Meet">Google Meet (Recommended)</option>
+                        <option value="Zoom">Zoom Meeting</option>
+                        <option value="Microsoft Teams">Microsoft Teams</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-gray-700">Email for Video Link Invite</label>
+                      <input
+                        type="email"
+                        value={details.applicantEmail}
+                        onChange={(e) => setDetails({ ...details, applicantEmail: e.target.value })}
+                        placeholder="john@example.com"
+                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-purple-500 bg-white"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-purple-800 flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                    A secure {details.videoPlatform} link will be generated and emailed to {details.applicantEmail} before the appointment.
+                  </p>
+                </div>
+              )}
+
+              {/* Applicant Full Name */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Applicant Full Name</label>
                 <input
@@ -360,13 +616,45 @@ export default function BookAppointmentPage() {
                 />
               </div>
 
+              {/* Contact Phone */}
               <div className="space-y-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Contact Phone / WhatsApp</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Primary Mobile Phone</label>
                 <input
                   type="text"
                   value={details.applicantPhone}
                   onChange={(e) => setDetails({ ...details, applicantPhone: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800"
+                />
+              </div>
+
+              {/* Full Address */}
+              <div className="md:col-span-2 space-y-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Residential / Contact Address</label>
+                <input
+                  type="text"
+                  value={details.address}
+                  onChange={(e) => setDetails({ ...details, address: e.target.value })}
+                  placeholder="Enter full street address, city & pincode"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800"
+                />
+              </div>
+
+              {/* Description / Additional Notes (Optional) */}
+              <div className="md:col-span-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Description / Purpose of Appointment
+                  </label>
+                  <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full border border-gray-200">
+                    Optional
+                  </span>
+                </div>
+                <textarea
+                  rows={3}
+                  value={details.description}
+                  onChange={(e) => setDetails({ ...details, description: e.target.value })}
+                  placeholder="Add any specific requests, details, or context for your officer..."
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800 resize-none"
                 />
               </div>
             </div>
@@ -468,8 +756,13 @@ export default function BookAppointmentPage() {
               </div>
 
               <div className="flex items-center justify-between pb-3 border-b border-[#a8d5b9]/50">
-                <span className="text-xs text-gray-600 font-medium">Consultation Type</span>
-                <span className="text-sm font-bold text-gray-900">{details.consultationType}</span>
+                <span className="text-xs text-gray-600 font-medium">Consultation Category</span>
+                <span className="text-sm font-bold text-gray-900">{details.mainMode}</span>
+              </div>
+
+              <div className="flex items-center justify-between pb-3 border-b border-[#a8d5b9]/50">
+                <span className="text-xs text-gray-600 font-medium">Consultation Details</span>
+                <span className="text-sm font-bold text-gray-900">{getFormattedConsultationType()}</span>
               </div>
 
               <div className="flex items-center justify-between pb-3 border-b border-[#a8d5b9]/50">
@@ -477,7 +770,7 @@ export default function BookAppointmentPage() {
                 <span className="text-sm font-bold text-gray-900">{details.date} ({details.timeSlot})</span>
               </div>
 
-              {details.consultationType === 'Office Visit' && (
+              {details.mainMode === 'Office Visit' && (
                 <div className="flex items-center justify-between pb-3 border-b border-[#a8d5b9]/50">
                   <span className="text-xs text-gray-600 font-medium">Branch Location</span>
                   <span className="text-sm font-bold text-gray-900">{details.location}</span>
@@ -487,6 +780,16 @@ export default function BookAppointmentPage() {
               <div className="flex items-center justify-between pb-3 border-b border-[#a8d5b9]/50">
                 <span className="text-xs text-gray-600 font-medium">Applicant Details</span>
                 <span className="text-sm font-bold text-gray-900">{details.applicantName} ({details.applicantPhone})</span>
+              </div>
+
+              <div className="flex items-center justify-between pb-3 border-b border-[#a8d5b9]/50">
+                <span className="text-xs text-gray-600 font-medium">Contact Address</span>
+                <span className="text-sm font-bold text-gray-900 truncate max-w-xs">{details.address || 'Not provided'}</span>
+              </div>
+
+              <div className="flex items-start justify-between pb-3 border-b border-[#a8d5b9]/50">
+                <span className="text-xs text-gray-600 font-medium shrink-0 pt-0.5">Description / Purpose</span>
+                <span className="text-xs font-semibold text-gray-900 text-right max-w-xs">{details.description || 'None (Optional)'}</span>
               </div>
 
               <div className="flex items-center justify-between">

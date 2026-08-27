@@ -30,76 +30,33 @@ interface TransactionItem {
   date: string; // YYYY-MM-DD
 }
 
-const INITIAL_TRANSACTIONS: TransactionItem[] = [
-  {
-    id: 'TXN-2023-6503',
-    appId: 'APP-2023-6503',
-    service: 'Visa Processing - Type D',
-    totalAmount: 150.0,
-    paidAmount: 150.0,
-    pendingAmount: 0.0,
-    paymentMode: 'UPI / NetBanking',
-    status: 'Paid',
-    date: '2023-10-25'
-  },
-  {
-    id: 'TXN-2023-0892',
-    appId: 'APP-2023-0892',
-    service: 'Visa Processing - Type D',
-    totalAmount: 1200.0,
-    paidAmount: 1200.0,
-    pendingAmount: 0.0,
-    paymentMode: 'Credit Card',
-    status: 'Paid',
-    date: '2023-10-15'
-  },
-  {
-    id: 'TXN-2023-0914',
-    appId: 'APP-2023-0914',
-    service: 'Work Permit Renewal',
-    totalAmount: 850.0,
-    paidAmount: 850.0,
-    pendingAmount: 0.0,
-    paymentMode: 'Bank Transfer',
-    status: 'Paid',
-    date: '2023-10-18'
-  },
-  {
-    id: 'TXN-2023-1002',
-    appId: 'APP-2023-1002',
-    service: 'Legal Document Translation',
-    totalAmount: 150.0,
-    paidAmount: 150.0,
-    pendingAmount: 0.0,
-    paymentMode: 'Credit Card',
-    status: 'Paid',
-    date: '2023-10-22'
-  },
-  {
-    id: 'TXN-2023-0755',
-    appId: 'APP-2023-0755',
-    service: 'Corporate Registration Fee',
-    totalAmount: 2500.0,
-    paidAmount: 2500.0,
-    pendingAmount: 0.0,
-    paymentMode: 'Wire Transfer',
-    status: 'Paid',
-    date: '2023-10-05'
-  }
-];
+const INITIAL_TRANSACTIONS: TransactionItem[] = [];
 
 import { useNotifications } from '@/context/NotificationContext';
+import { useUser } from '@/context/UserContext';
 
 export default function PaymentsPage() {
   const { showToast } = useNotifications();
+  const { user } = useUser();
   const [transactions, setTransactions] = useState<TransactionItem[]>(INITIAL_TRANSACTIONS);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('All Services/Applications');
   
   // Date Filtering State
-  const [datePreset, setDatePreset] = useState('Oct 1, 2023 - Oct 31, 2023');
-  const [customStartDate, setCustomStartDate] = useState('2023-10-01');
-  const [customEndDate, setCustomEndDate] = useState('2023-10-31');
+  const [datePreset, setDatePreset] = useState('All Time');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
   const [showDatePickerModal, setShowDatePickerModal] = useState(false);
+
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('amman_user_payments');
+      if (saved) {
+        setTransactions(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Error loading payments:', e);
+    }
+  }, []);
 
   // More Filters State
   const [showMoreFilters, setShowMoreFilters] = useState(false);
@@ -122,7 +79,7 @@ export default function PaymentsPage() {
     service: 'Visa Processing - Type D',
     amount: '150.00',
     mode: 'Credit Card' as TransactionItem['paymentMode'],
-    applicantName: 'John Doe',
+    applicantName: user.name,
   });
 
   const formatCurrency = (val: number) => {
@@ -186,8 +143,8 @@ Digital Tax Reference: TAX-INV-${txn.id}
     e.preventDefault();
     const amt = parseFloat(newPaymentForm.amount) || 150.0;
     const newTxn: TransactionItem = {
-      id: `TXN-2023-${Math.floor(1000 + Math.random() * 9000)}`,
-      appId: `APP-2023-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: `TXN-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+      appId: `AMC-2026-${Math.floor(1000 + Math.random() * 9000)}`,
       service: newPaymentForm.service,
       totalAmount: amt,
       paidAmount: amt,
@@ -196,7 +153,13 @@ Digital Tax Reference: TAX-INV-${txn.id}
       status: 'Paid',
       date: new Date().toISOString().split('T')[0]
     };
-    setTransactions([newTxn, ...transactions]);
+    const updated = [newTxn, ...transactions];
+    setTransactions(updated);
+    try {
+      localStorage.setItem('amman_user_payments', JSON.stringify(updated));
+    } catch (err) {
+      console.error(err);
+    }
     setShowNewPaymentModal(false);
     showToast('Payment Completed Successfully!', `$${amt.toFixed(2)} payment processed.`);
   };

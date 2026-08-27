@@ -31,6 +31,7 @@ import {
   FileCheck
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
+import { useUser } from '@/context/UserContext';
 
 interface ApplicationItem {
   id: string;
@@ -40,73 +41,13 @@ interface ApplicationItem {
   addedBy: 'You' | 'Admin';
   status: 'Verification' | 'Documents Received' | 'Processing' | 'Awaiting Approval' | 'Completed';
   stepPhase: number; // 1 to 8
+  phaseDates?: Record<number, string>;
   adminRemarks?: string;
   assignedOfficer?: string;
   estimatedDays?: string;
 }
 
-const INITIAL_APPLICATIONS: ApplicationItem[] = [
-  {
-    id: 'AMC-2026-000001',
-    serviceType: 'Patta Transfer & Property Verification',
-    submittedDate: '18 May 2026',
-    updatedDate: '21 May 2026',
-    addedBy: 'You',
-    status: 'Verification',
-    stepPhase: 3,
-    adminRemarks: 'Document Image is blurred. Please re-upload a clearer copy.',
-    assignedOfficer: 'Officer Rajesh Kumar',
-    estimatedDays: '7 days left'
-  },
-  {
-    id: 'AMC-2026-000002',
-    serviceType: 'Property Deed Registration',
-    submittedDate: '08 May 2026',
-    updatedDate: '15 May 2026',
-    addedBy: 'You',
-    status: 'Processing',
-    stepPhase: 4,
-    adminRemarks: 'Documents verified. Stamp duty payment processed successfully.',
-    assignedOfficer: 'Officer Piotr Wisni...',
-    estimatedDays: '4 days left'
-  },
-  {
-    id: 'AMC-2026-000003',
-    serviceType: 'Encumbrance Certificate (EC)',
-    submittedDate: '01 May 2026',
-    updatedDate: '05 May 2026',
-    addedBy: 'You',
-    status: 'Documents Received',
-    stepPhase: 2,
-    adminRemarks: 'Aadhaar copy uploaded. Verification in progress.',
-    assignedOfficer: 'Officer Sarah Lee',
-    estimatedDays: '12 days left'
-  },
-  {
-    id: 'AMC-2026-000004',
-    serviceType: 'Passport Renewal Fast-Track',
-    submittedDate: '25 Apr 2026',
-    updatedDate: '10 May 2026',
-    addedBy: 'Admin',
-    status: 'Completed',
-    stepPhase: 7,
-    adminRemarks: 'Passport dispatched via speed post. Tracking ID: SP904128.',
-    assignedOfficer: 'Officer Anna Nowak',
-    estimatedDays: 'Completed'
-  },
-  {
-    id: 'AMC-2026-000005',
-    serviceType: 'Legal Heirship Certificate',
-    submittedDate: '18 Apr 2026',
-    updatedDate: '02 May 2026',
-    addedBy: 'You',
-    status: 'Completed',
-    stepPhase: 8,
-    adminRemarks: 'Certificate issued successfully and ready for collection.',
-    assignedOfficer: 'Officer Anna Nowak',
-    estimatedDays: 'Completed'
-  }
-];
+const INITIAL_APPLICATIONS: ApplicationItem[] = [];
 
 const SERVICES = [
   { id: 'passport', name: 'Passport Services & Renewal', desc: 'New passport issuance, renewal, address change & tatkal booking.', icon: BookOpen, tag: 'Popular' },
@@ -125,14 +66,14 @@ const WIZARD_STEPS = [
 ];
 
 const TRACKER_PHASES = [
-  { step: 1, title: 'Application Submitted', date: '18 May 2026' },
-  { step: 2, title: 'Documents Received', date: '19 May 2026' },
-  { step: 3, title: 'Verification', date: '' },
-  { step: 4, title: 'Processing', date: '' },
-  { step: 5, title: 'Government Submission', date: '' },
-  { step: 6, title: 'Awaiting Approval', date: '' },
-  { step: 7, title: 'Completed', date: '' },
-  { step: 8, title: 'Ready for Collection', date: '' }
+  { step: 1, title: 'Application Submitted' },
+  { step: 2, title: 'Documents Received' },
+  { step: 3, title: 'Verification' },
+  { step: 4, title: 'Processing' },
+  { step: 5, title: 'Government Submission' },
+  { step: 6, title: 'Awaiting Approval' },
+  { step: 7, title: 'Completed' },
+  { step: 8, title: 'Ready for Collection' }
 ];
 
 interface RequiredDocItem {
@@ -144,18 +85,59 @@ interface RequiredDocItem {
   status: 'Not Uploaded' | 'Uploaded' | 'Under Review' | 'Approved';
 }
 
-const DETAIL_DOCS_DATA: Record<string, RequiredDocItem[]> = {
-  'AMC-2026-000001': [
-    { id: 'd1', name: 'Aadhaar Card', required: 'Required', uploadedFile: 'Aadhaar.pdf', uploaded: 'Yes', status: 'Under Review' },
-    { id: 'd2', name: 'PAN Card', required: 'Required', uploadedFile: 'PAN.jpg', uploaded: 'Yes', status: 'Approved' },
-    { id: 'd3', name: 'Passport Photo', required: 'Required', uploadedFile: 'Photo.jpg', uploaded: 'Yes', status: 'Approved' },
-    { id: 'd4', name: 'Old Passport (if any)', required: 'Optional', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
-    { id: 'd5', name: 'Any Supporting Document', required: 'Optional', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+const SERVICE_REQUIRED_DOCS: Record<string, RequiredDocItem[]> = {
+  passport: [
+    { id: 'p1', name: 'Aadhaar Card (Identity Proof)', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'p2', name: 'Proof of Address (Utility Bill / Passbook)', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'p3', name: 'Passport Size Photo (White Background)', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'p4', name: 'Old Passport Copy (For Re-issue)', required: 'Optional', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'p5', name: 'Birth / Educational Certificate', required: 'Optional', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+  ],
+  property: [
+    { id: 'pr1', name: 'Registered Sale Deed / Title Deed Copy', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'pr2', name: 'Encumbrance Certificate (EC)', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'pr3', name: 'Applicant Aadhaar Card', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'pr4', name: 'Latest Property Tax Receipt', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'pr5', name: 'Parent Document Copy', required: 'Optional', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+  ],
+  vehicle: [
+    { id: 'v1', name: 'Original Vehicle RC (Registration Certificate)', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'v2', name: 'Valid Insurance Copy', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'v3', name: 'Pollution Under Control (PUC) Certificate', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'v4', name: 'Vehicle Owner Aadhaar & PAN Card', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'v5', name: 'RTO Form 28 / Form 29 & 30 (If Transfer)', required: 'Optional', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+  ],
+  pan: [
+    { id: 'pn1', name: 'Current Aadhaar Card Copy', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'pn2', name: 'Existing PAN Card Copy (If Update)', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'pn3', name: 'Recent Passport Size Photograph', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'pn4', name: 'Proof of Name Change / Gazetted Officer Cert', required: 'Optional', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+  ],
+  biometric: [
+    { id: 'b1', name: 'Government Photo ID (Aadhaar / Passport)', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'b2', name: 'Appointment Confirmation Slip', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'b3', name: 'Physical Verification Consent Form', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+  ],
+  legal: [
+    { id: 'l1', name: 'Draft Agreement / Document Copy', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'l2', name: 'First Party Aadhaar & PAN Card', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'l3', name: 'Second Party Aadhaar Card', required: 'Required', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'l4', name: 'Stamp Paper Purchase Receipt', required: 'Optional', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
+    { id: 'l5', name: 'Witness Identity Proof Copy', required: 'Optional', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
   ]
+};
+
+const DETAIL_DOCS_DATA: Record<string, RequiredDocItem[]> = {
+  'AMC-2026-000001': SERVICE_REQUIRED_DOCS.passport,
+  'AMC-2026-000002': SERVICE_REQUIRED_DOCS.property,
+  'AMC-2026-000003': SERVICE_REQUIRED_DOCS.vehicle,
+  'AMC-2026-000004': SERVICE_REQUIRED_DOCS.pan,
+  'AMC-2026-000005': SERVICE_REQUIRED_DOCS.legal,
 };
 
 export default function ApplicationsPage() {
   const { showToast } = useNotifications();
+  const { user } = useUser();
   const [applications, setApplications] = useState<ApplicationItem[]>(INITIAL_APPLICATIONS);
   const [selectedApp, setSelectedApp] = useState<ApplicationItem | null>(null);
 
@@ -171,20 +153,37 @@ export default function ApplicationsPage() {
 
   // Wizard Details
   const [details, setDetails] = useState({
-    applicantName: 'John Doe',
-    applicantPhone: '+91 98765 43210',
-    applicantEmail: 'john@example.com',
-    refNumber: '',
-    remarks: 'Urgent processing requested.'
+    applicantName: user.name || '',
+    applicantPhone: user.phone || '+91 ',
+    applicantEmail: user.email || '',
+    altPhone: user.altPhone || '+91 ',
+    address: user.address || '',
+    idDocType: 'Aadhaar Card' as 'Aadhaar Card' | 'PAN Card' | 'Passport Number' | 'Voter ID',
+    idDocNumber: user.aadhaarNumber || '',
+    dob: user.dob || '',
+    remarks: ''
   });
 
-  const [requiredDocs, setRequiredDocs] = useState<RequiredDocItem[]>([
-    { id: 'd1', name: 'Aadhaar Card', required: 'Required', uploadedFile: 'Aadhaar.pdf', uploaded: 'Yes', status: 'Under Review' },
-    { id: 'd2', name: 'PAN Card', required: 'Required', uploadedFile: 'PAN.jpg', uploaded: 'Yes', status: 'Approved' },
-    { id: 'd3', name: 'Passport Photo', required: 'Required', uploadedFile: 'Photo.jpg', uploaded: 'Yes', status: 'Approved' },
-    { id: 'd4', name: 'Old Passport (if any)', required: 'Optional', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
-    { id: 'd5', name: 'Any Supporting Document', required: 'Optional', uploadedFile: '-', uploaded: 'No', status: 'Not Uploaded' },
-  ]);
+  React.useEffect(() => {
+    setDetails((prev) => ({
+      ...prev,
+      applicantName: user.name || '',
+      applicantPhone: user.phone || '+91 ',
+      applicantEmail: user.email || '',
+      altPhone: user.altPhone || '+91 ',
+      address: user.address || prev.address,
+      idDocNumber: user.aadhaarNumber || prev.idDocNumber,
+      dob: user.dob || prev.dob
+    }));
+  }, [user]);
+
+  const [requiredDocs, setRequiredDocs] = useState<RequiredDocItem[]>(SERVICE_REQUIRED_DOCS.passport);
+
+  // Sync required documents whenever selectedService changes
+  React.useEffect(() => {
+    const docsForService = SERVICE_REQUIRED_DOCS[selectedService] || SERVICE_REQUIRED_DOCS.passport;
+    setRequiredDocs(docsForService);
+  }, [selectedService]);
 
   const serviceObj = SERVICES.find((s) => s.id === selectedService) || SERVICES[0];
 
@@ -245,21 +244,43 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
     showToast('Summary Downloaded Successfully!', `Application-Summary-${selectedApp.id}.txt saved.`);
   };
 
+  // Hydrate applications from localStorage
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('amman_user_applications');
+      if (saved) {
+        setApplications(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Error loading applications:', e);
+    }
+  }, []);
+
   const handleFinishCreate = () => {
-    const newId = `AMC-2026-00000${applications.length + 1}`;
+    const newId = `AMC-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+    const todayDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     const newApp: ApplicationItem = {
       id: newId,
       serviceType: serviceObj.name,
-      submittedDate: '18 May 2026',
-      updatedDate: 'Just now',
+      submittedDate: todayDate,
+      updatedDate: todayDate,
       addedBy: 'You',
       status: 'Verification',
-      stepPhase: 3,
-      adminRemarks: 'Application received and under initial verification.',
+      stepPhase: 1,
+      phaseDates: {
+        1: todayDate
+      },
+      adminRemarks: 'Application submitted successfully. Verification officer assigned.',
       assignedOfficer: 'Officer Rajesh Kumar',
       estimatedDays: '7 days left'
     };
-    setApplications([newApp, ...applications]);
+    const updated = [newApp, ...applications];
+    setApplications(updated);
+    try {
+      localStorage.setItem('amman_user_applications', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Error saving application:', e);
+    }
     setMode('list');
     setCurrentStep(1);
     showToast('Application Submitted Successfully!', `Application ${newId} registered for verification.`);
@@ -272,45 +293,29 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
       {/* ======================================================== */}
       {mode === 'list' && (
         <>
-          {/* Top 4 Summary Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Top 3 Summary Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
             <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
               <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-gray-400" />
-                  <span>Avg. adherence</span>
+                  <Calendar className="w-4 h-4 text-[#12372A]" />
+                  <span>Active Applications</span>
                 </div>
                 <button className="text-gray-400 hover:text-gray-600">
                   <MoreHorizontal className="w-4 h-4" />
                 </button>
               </div>
               <div className="flex items-baseline justify-between">
-                <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">87%</h3>
-                <span className="text-[11px] font-bold text-emerald-600">↑ +4% W-o-W</span>
+                <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">{applications.length}</h3>
+                <span className="text-[11px] font-semibold text-[#12372A] bg-[#d8ebdd] px-2.5 py-0.5 rounded-full">In Progress</span>
               </div>
             </div>
 
             <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
               <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                  <span>Active applications</span>
-                </div>
-                <button className="text-gray-400 hover:text-gray-600">
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex items-baseline justify-between">
-                <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">10</h3>
-                <span className="text-[11px] font-semibold text-gray-400">1 recently added</span>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
-              <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-gray-400" />
-                  <span>Pending documents</span>
+                  <FileText className="w-4 h-4 text-blue-500" />
+                  <span>Pending Documents</span>
                 </div>
                 <button className="text-gray-400 hover:text-gray-600">
                   <MoreHorizontal className="w-4 h-4" />
@@ -318,7 +323,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
               </div>
               <div className="flex items-baseline justify-between">
                 <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">2</h3>
-                <span className="text-[11px] font-semibold text-gray-400">Within 7 days</span>
+                <span className="text-[11px] font-semibold text-blue-600">Within 7 days</span>
               </div>
             </div>
 
@@ -326,7 +331,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
               <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
                 <div className="flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-amber-500" />
-                  <span>Verification alerts</span>
+                  <span>Verification Status</span>
                 </div>
                 <button className="text-gray-400 hover:text-gray-600">
                   <MoreHorizontal className="w-4 h-4" />
@@ -334,7 +339,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
               </div>
               <div className="flex items-baseline justify-between">
                 <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">1</h3>
-                <span className="text-[11px] font-bold text-amber-600">• Moderate risk</span>
+                <span className="text-[11px] font-bold text-amber-600">• Review Active</span>
               </div>
             </div>
           </div>
@@ -374,8 +379,26 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             {/* 3-Column Application Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredApps.length === 0 ? (
-                <div className="col-span-full p-12 text-center text-xs text-gray-400">
-                  No applications found in this filter category.
+                <div className="col-span-full bg-white rounded-3xl border border-gray-200/80 p-12 text-center space-y-4 shadow-2xs">
+                  <div className="w-16 h-16 rounded-full bg-[#f0f7ff] text-[#12372A] flex items-center justify-center mx-auto border border-blue-100">
+                    <FileText className="w-8 h-8 text-[#12372A]" />
+                  </div>
+                  <div className="max-w-md mx-auto">
+                    <h3 className="text-lg font-bold text-gray-900">No Applications Found</h3>
+                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                      You haven&apos;t created any applications in this view. Click below to submit a new service request for property, passport, RTO, or legal documentation.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setMode('create');
+                      setCurrentStep(1);
+                    }}
+                    className="px-6 py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-sm inline-flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Start New Application</span>
+                  </button>
                 </div>
               ) : (
                 filteredApps.map((app) => {
@@ -543,6 +566,16 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                   const isCompleted = phase.step < selectedApp.stepPhase;
                   const isActive = phase.step === selectedApp.stepPhase;
 
+                  // Dynamic completion date logic (no hardcoded mock dates)
+                  let phaseDate = '';
+                  if (selectedApp.phaseDates && selectedApp.phaseDates[phase.step]) {
+                    phaseDate = selectedApp.phaseDates[phase.step];
+                  } else if (phase.step === 1) {
+                    phaseDate = selectedApp.submittedDate;
+                  } else if (phase.step <= selectedApp.stepPhase) {
+                    phaseDate = selectedApp.updatedDate || selectedApp.submittedDate;
+                  }
+
                   return (
                     <div key={phase.step} className="flex flex-col items-center text-center space-y-2 z-10 w-24">
                       {/* Step Circle */}
@@ -563,8 +596,8 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                         <p className={`text-[11px] font-bold leading-tight ${isActive ? 'text-[#1c3a63]' : isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
                           {phase.title}
                         </p>
-                        {phase.date && (
-                          <p className="text-[10px] text-gray-400 font-medium">{phase.date}</p>
+                        {phaseDate && (
+                          <p className="text-[10px] text-gray-500 font-medium">{phaseDate}</p>
                         )}
                       </div>
                     </div>
@@ -744,63 +777,185 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
           )}
 
           {currentStep === 2 && (
-            <div className="max-w-xl mx-auto bg-gray-50 p-6 rounded-2xl border border-gray-200 space-y-4 text-xs">
+            <div className="max-w-2xl mx-auto bg-gray-50 p-6 md:p-8 rounded-2xl border border-gray-200 space-y-5 text-xs">
+              <div>
+                <h3 className="font-bold text-sm text-gray-900">Applicant Personal &amp; Contact Details</h3>
+                <p className="text-gray-500 text-[11px] mt-0.5">Please fill in all mandatory applicant credentials for official service filing.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Applicant Full Name */}
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-gray-700">Applicant Full Name *</label>
+                  <input
+                    type="text"
+                    value={details.applicantName}
+                    onChange={(e) => setDetails({ ...details, applicantName: e.target.value })}
+                    placeholder="Full official name"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#12372A]"
+                    required
+                  />
+                </div>
+
+                {/* Email Address */}
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-gray-700">Email Address *</label>
+                  <input
+                    type="email"
+                    value={details.applicantEmail}
+                    onChange={(e) => setDetails({ ...details, applicantEmail: e.target.value })}
+                    placeholder="applicant.email@example.com"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#12372A]"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Contact Phone Number */}
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-gray-700">Primary Mobile Number *</label>
+                  <input
+                    type="text"
+                    value={details.applicantPhone}
+                    onChange={(e) => setDetails({ ...details, applicantPhone: e.target.value })}
+                    placeholder="+91 Mobile Number"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#12372A]"
+                    required
+                  />
+                </div>
+
+                {/* Alternate Phone Number */}
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-gray-700">Alternate Contact Number</label>
+                  <input
+                    type="text"
+                    value={details.altPhone}
+                    onChange={(e) => setDetails({ ...details, altPhone: e.target.value })}
+                    placeholder="+91 Alternate Number"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#12372A]"
+                  />
+                </div>
+              </div>
+
+              {/* Residential Address */}
               <div className="space-y-1.5">
-                <label className="block font-bold text-gray-700">Applicant Full Name *</label>
+                <label className="block font-bold text-gray-700">Residential / Communication Address *</label>
                 <input
                   type="text"
-                  value={details.applicantName}
-                  onChange={(e) => setDetails({ ...details, applicantName: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white"
+                  value={details.address}
+                  onChange={(e) => setDetails({ ...details, address: e.target.value })}
+                  placeholder="House No, Building, Street, City, State & Pincode"
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#12372A]"
+                  required
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="block font-bold text-gray-700">Contact Phone Number *</label>
-                <input
-                  type="text"
-                  value={details.applicantPhone}
-                  onChange={(e) => setDetails({ ...details, applicantPhone: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white"
-                />
+
+              {/* Government ID Reference */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-gray-700">Government Identification Type</label>
+                  <select
+                    value={details.idDocType}
+                    onChange={(e) => setDetails({ ...details, idDocType: e.target.value as any })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#12372A]"
+                  >
+                    <option value="Aadhaar Card">Aadhaar Card</option>
+                    <option value="PAN Card">PAN Card</option>
+                    <option value="Passport Number">Passport Number</option>
+                    <option value="Voter ID">Voter ID</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-gray-700">ID Document Number / Reference</label>
+                  <input
+                    type="text"
+                    value={details.idDocNumber}
+                    onChange={(e) => setDetails({ ...details, idDocNumber: e.target.value })}
+                    placeholder="Enter document reference number"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#12372A]"
+                  />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="block font-bold text-gray-700">Remarks / Special Notes</label>
-                <textarea
-                  value={details.remarks}
-                  onChange={(e) => setDetails({ ...details, remarks: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white"
-                />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Date of Birth */}
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-gray-700">Date of Birth</label>
+                  <input
+                    type="date"
+                    value={details.dob}
+                    onChange={(e) => setDetails({ ...details, dob: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#12372A]"
+                  />
+                </div>
+
+                {/* Remarks */}
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-gray-700">Special Notes / Remarks (Optional)</label>
+                  <input
+                    type="text"
+                    value={details.remarks}
+                    onChange={(e) => setDetails({ ...details, remarks: e.target.value })}
+                    placeholder="e.g. Urgent processing, special request"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#12372A]"
+                  />
+                </div>
               </div>
             </div>
           )}
 
           {currentStep === 3 && (
-            <div className="max-w-2xl mx-auto space-y-3 text-xs">
-              {requiredDocs.map((doc) => (
-                <div key={doc.id} className="p-4 bg-white border border-gray-200 rounded-2xl flex items-center justify-between gap-4">
-                  <div>
-                    <h4 className="font-bold text-gray-900">{doc.name}</h4>
-                    <p className="text-[11px] text-gray-400">
-                      {doc.uploaded === 'Yes' ? `Uploaded: ${doc.uploadedFile}` : 'Not Uploaded Yet'}
-                    </p>
+            <div className="max-w-2xl mx-auto space-y-4 text-xs">
+              <div className="p-4 bg-[#f0f7ff] border border-blue-200 rounded-2xl">
+                <h3 className="font-bold text-sm text-[#12372A]">Required Documentation for {serviceObj.name}</h3>
+                <p className="text-gray-600 text-[11px] mt-0.5">Please upload clear scans or photos for the documents required for this specific service.</p>
+              </div>
+
+              <div className="space-y-3">
+                {requiredDocs.map((doc) => (
+                  <div key={doc.id} className="p-4 bg-white border border-gray-200 rounded-2xl flex items-center justify-between gap-4 shadow-2xs">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-gray-900">{doc.name}</h4>
+                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                          doc.required === 'Required' ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {doc.required}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-400 mt-1">
+                        {doc.uploaded === 'Yes' ? `Uploaded: ${doc.uploadedFile}` : 'Not Uploaded Yet'}
+                      </p>
+                    </div>
+                    <label className="px-4 py-2 bg-[#12372A] text-white rounded-full font-bold text-xs cursor-pointer hover:bg-[#1a4a38] transition-colors shrink-0">
+                      <span>{doc.uploaded === 'Yes' ? 'Replace' : 'Upload'}</span>
+                      <input type="file" onChange={(e) => handleFileUploadInDetail(doc.id, e)} className="hidden" />
+                    </label>
                   </div>
-                  <label className="px-4 py-2 bg-[#12372A] text-white rounded-full font-bold text-xs cursor-pointer hover:bg-[#1a4a38] transition-colors">
-                    <span>Upload</span>
-                    <input type="file" onChange={(e) => handleFileUploadInDetail(doc.id, e)} className="hidden" />
-                  </label>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
           {currentStep === 4 && (
             <div className="max-w-xl mx-auto bg-gray-50 p-6 rounded-2xl border border-gray-200 space-y-4 text-xs">
               <h3 className="font-bold text-sm text-gray-900 border-b pb-2">Review Application Summary</h3>
-              <div className="space-y-2">
-                <p><span className="text-gray-500">Service:</span> <strong className="text-gray-900">{serviceObj.name}</strong></p>
-                <p><span className="text-gray-500">Applicant:</span> <strong className="text-gray-900">{details.applicantName}</strong></p>
-                <p><span className="text-gray-500">Phone:</span> <strong className="text-gray-900">{details.applicantPhone}</strong></p>
+              <div className="space-y-2.5">
+                <p className="flex justify-between"><span className="text-gray-500 font-medium">Selected Service:</span> <strong className="text-gray-900 font-bold">{serviceObj.name}</strong></p>
+                <p className="flex justify-between"><span className="text-gray-500 font-medium">Applicant Name:</span> <strong className="text-gray-900 font-bold">{details.applicantName}</strong></p>
+                <p className="flex justify-between"><span className="text-gray-500 font-medium">Primary Phone:</span> <strong className="text-gray-900 font-bold">{details.applicantPhone}</strong></p>
+                <p className="flex justify-between"><span className="text-gray-500 font-medium">Email Address:</span> <strong className="text-gray-900 font-bold">{details.applicantEmail}</strong></p>
+                {details.address && (
+                  <p className="flex justify-between"><span className="text-gray-500 font-medium">Address:</span> <strong className="text-gray-900 font-bold max-w-[240px] text-right">{details.address}</strong></p>
+                )}
+                {details.idDocNumber && (
+                  <p className="flex justify-between"><span className="text-gray-500 font-medium">{details.idDocType}:</span> <strong className="text-gray-900 font-bold">{details.idDocNumber}</strong></p>
+                )}
+                {details.remarks && (
+                  <p className="flex justify-between"><span className="text-gray-500 font-medium">Remarks:</span> <strong className="text-gray-900 font-bold">{details.remarks}</strong></p>
+                )}
               </div>
             </div>
           )}

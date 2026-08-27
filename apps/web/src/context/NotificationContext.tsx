@@ -21,58 +21,7 @@ interface ToastMessage {
   type?: 'success' | 'info' | 'warning';
 }
 
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'n1',
-    title: 'Appointment Confirmed',
-    message: 'Your appointment on 22 May 2026 is confirmed.',
-    time: '1 min ago',
-    actionText: 'View',
-    actionUrl: '/portal/appointments',
-    read: false,
-    iconType: 'calendar-dark'
-  },
-  {
-    id: 'n2',
-    title: 'Appointment Rescheduled',
-    message: 'Your appointment on 25 May 2026 is rescheduled.',
-    time: '2 hours ago',
-    actionText: 'View',
-    actionUrl: '/portal/appointments',
-    read: false,
-    iconType: 'calendar-light'
-  },
-  {
-    id: 'n3',
-    title: 'Documents Re-upload Required',
-    message: 'EC Certificate image is blurred. Please re-upload.',
-    time: '1 day ago',
-    actionText: 'View',
-    actionUrl: '/portal/documents',
-    read: true,
-    iconType: 'document-red'
-  },
-  {
-    id: 'n4',
-    title: 'Application Status Updated',
-    message: 'Application AMC-2026-000001 status changed to "Verification".',
-    time: '2 days ago',
-    actionText: 'View',
-    actionUrl: '/portal/applications',
-    read: true,
-    iconType: 'info-gray'
-  },
-  {
-    id: 'n5',
-    title: 'Payment Successful',
-    message: 'Payment of ₹ 1,200 received for AMC-2026-000002.',
-    time: '3 days ago',
-    actionText: 'View Receipt',
-    actionUrl: '/portal/payments',
-    read: true,
-    iconType: 'check-blue'
-  }
-];
+const INITIAL_NOTIFICATIONS: NotificationItem[] = [];
 
 interface NotificationContextType {
   notifications: NotificationItem[];
@@ -89,22 +38,64 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('amman_user_notifications');
+      if (saved) {
+        setNotifications(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Error loading notifications:', e);
+    }
+  }, []);
+
+  const saveNotificationsToStorage = (items: NotificationItem[]) => {
+    try {
+      localStorage.setItem('amman_user_notifications', JSON.stringify(items));
+    } catch (e) {
+      console.error('Error saving notifications:', e);
+    }
+  };
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const showToast = (title: string, message?: string, type: 'success' | 'info' | 'warning' = 'success') => {
     const id = Date.now().toString();
     setToast({ id, title, message, type });
+
+    // Automatically push a real notification item into user's notification list
+    const newNotif: NotificationItem = {
+      id: `n-${Date.now()}`,
+      title,
+      message: message || title,
+      time: 'Just now',
+      actionText: 'View Details',
+      actionUrl: '/portal/dashboard',
+      read: false,
+      iconType: type === 'warning' ? 'document-red' : 'check-blue'
+    };
+
+    setNotifications((prev) => {
+      const updated = [newNotif, ...prev];
+      saveNotificationsToStorage(updated);
+      return updated;
+    });
   };
 
   const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+    setNotifications((prev) => {
+      const updated = prev.map((n) => (n.id === id ? { ...n, read: true } : n));
+      saveNotificationsToStorage(updated);
+      return updated;
+    });
   };
 
   const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    showToast('Notifications Marked as Read', 'All notifications are now marked as read.');
+    setNotifications((prev) => {
+      const updated = prev.map((n) => ({ ...n, read: true }));
+      saveNotificationsToStorage(updated);
+      return updated;
+    });
   };
 
   const loadMore = () => {

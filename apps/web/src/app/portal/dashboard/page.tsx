@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   FileText,
@@ -9,24 +9,46 @@ import {
   Calendar,
   RefreshCw,
   AlertCircle,
-  CreditCard,
   Info,
   ArrowUpRight,
   MoreHorizontal,
   Plus
 } from 'lucide-react';
 
+import { useUser } from '@/context/UserContext';
+
 export default function PortalDashboardPage() {
+  const { user } = useUser();
+  const [applications, setApplications] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<any[]>([]);
+
+  useEffect(() => {
+    try {
+      const savedApps = localStorage.getItem('amman_user_applications');
+      if (savedApps) setApplications(JSON.parse(savedApps));
+
+      const savedApts = localStorage.getItem('amman_user_appointments');
+      if (savedApts) setAppointments(JSON.parse(savedApts));
+    } catch (e) {
+      console.error('Error loading dashboard state:', e);
+    }
+  }, []);
+
+  const activeAppsCount = applications.filter((a) => a.status !== 'Completed').length;
+  const completedAppsCount = applications.filter((a) => a.status === 'Completed').length;
+  const pendingActionsCount = applications.filter((a) => a.status === 'Verification' || a.status === 'Documents Received').length;
+  const appointmentsCount = appointments.length;
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12">
       {/* Welcome Header & Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-2">
-            Good day, John Doe <span className="inline-block animate-bounce">👋</span>
+            Good day, {user.name} <span className="inline-block animate-bounce">👋</span>
           </h1>
           <p className="mt-1 text-xs md:text-sm text-gray-500 font-medium">
-            Here&apos;s a quick overview of your current applications and account status.
+            Here&apos;s a real-time overview of your current applications and scheduled appointments.
           </p>
         </div>
 
@@ -39,13 +61,13 @@ export default function PortalDashboardPage() {
         </Link>
       </div>
 
-      {/* 4 KPI Summary Cards Grid matching Pillio UI */}
+      {/* 4 KPI Summary Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1 */}
+        {/* Card 1: Active Applications */}
         <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
           <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-gray-400" />
+              <FileText className="w-4 h-4 text-[#12372A]" />
               <span>Active applications</span>
             </div>
             <button className="text-gray-400 hover:text-gray-600">
@@ -53,12 +75,14 @@ export default function PortalDashboardPage() {
             </button>
           </div>
           <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">5</h3>
-            <span className="text-[11px] font-bold text-emerald-600">↑ 2 active phase</span>
+            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">{applications.length}</h3>
+            <span className="text-[11px] font-bold text-emerald-600">
+              {activeAppsCount > 0 ? `${activeAppsCount} active` : 'No active apps'}
+            </span>
           </div>
         </div>
 
-        {/* Card 2 */}
+        {/* Card 2: Pending Actions */}
         <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
           <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
             <div className="flex items-center gap-2">
@@ -70,12 +94,14 @@ export default function PortalDashboardPage() {
             </button>
           </div>
           <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">3</h3>
-            <span className="text-[11px] font-semibold text-amber-600">Action required</span>
+            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">{pendingActionsCount}</h3>
+            <span className="text-[11px] font-semibold text-amber-600">
+              {pendingActionsCount > 0 ? 'Verification in progress' : 'Up to date'}
+            </span>
           </div>
         </div>
 
-        {/* Card 3 */}
+        {/* Card 3: Completed Services */}
         <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
           <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
             <div className="flex items-center gap-2">
@@ -87,12 +113,12 @@ export default function PortalDashboardPage() {
             </button>
           </div>
           <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">7</h3>
-            <span className="text-[11px] font-semibold text-gray-400">100% verified</span>
+            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">{completedAppsCount}</h3>
+            <span className="text-[11px] font-semibold text-gray-400">Total completed</span>
           </div>
         </div>
 
-        {/* Card 4 */}
+        {/* Card 4: Appointments */}
         <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
           <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
             <div className="flex items-center gap-2">
@@ -104,8 +130,8 @@ export default function PortalDashboardPage() {
             </button>
           </div>
           <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">4</h3>
-            <span className="text-[11px] font-semibold text-blue-600">This month</span>
+            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">{appointmentsCount}</h3>
+            <span className="text-[11px] font-semibold text-blue-600">Booked sessions</span>
           </div>
         </div>
       </div>
@@ -127,44 +153,45 @@ export default function PortalDashboardPage() {
             </div>
 
             <div className="mt-4 space-y-3">
-              {/* Activity Item 1 */}
-              <div className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/60 hover:border-[#a8d5b9] transition-all flex items-start gap-4">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
-                  <RefreshCw className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-800 font-semibold leading-relaxed">
-                    Application <span className="font-bold text-[#12372A]">AMC-2026-000001</span> status changed to <span className="font-bold text-[#12372A]">&quot;Verification&quot;</span>.
+              {applications.length === 0 && appointments.length === 0 ? (
+                <div className="p-8 text-center bg-gray-50/70 border border-gray-200/60 rounded-2xl space-y-2">
+                  <Info className="w-6 h-6 text-gray-400 mx-auto" />
+                  <p className="text-xs font-bold text-gray-800">No Recent Activity Recorded</p>
+                  <p className="text-[11px] text-gray-500 max-w-sm mx-auto">
+                    Create an application or schedule an appointment to track status updates and verification milestones in real-time.
                   </p>
-                  <span className="text-[10px] text-gray-400 block mt-0.5">2 hours ago</span>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {applications.slice(0, 2).map((app: any) => (
+                    <div key={app.id} className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/60 flex items-start gap-4">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                        <RefreshCw className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-800 font-semibold leading-relaxed">
+                          Application <span className="font-bold text-[#12372A]">{app.id}</span> ({app.serviceType}) is currently in <span className="font-bold text-[#12372A]">&quot;{app.status}&quot;</span>.
+                        </p>
+                        <span className="text-[10px] text-gray-400 block mt-0.5">Submitted: {app.submittedDate}</span>
+                      </div>
+                    </div>
+                  ))}
 
-              {/* Activity Item 2 */}
-              <div className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/60 hover:border-[#a8d5b9] transition-all flex items-start gap-4">
-                <div className="w-9 h-9 rounded-xl bg-[#f0f7f2] text-[#12372A] flex items-center justify-center shrink-0 border border-[#a8d5b9]/50">
-                  <CheckCircle2 className="w-4 h-4 text-[#12372A]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-800 font-semibold leading-relaxed">
-                    Document <span className="font-bold text-gray-900">&quot;EC Certificate&quot;</span> uploaded successfully.
-                  </p>
-                  <span className="text-[10px] text-gray-400 block mt-0.5">Yesterday, 10:30 AM</span>
-                </div>
-              </div>
-
-              {/* Activity Item 3 */}
-              <div className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/60 hover:border-[#a8d5b9] transition-all flex items-start gap-4">
-                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
-                  <Calendar className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-800 font-semibold leading-relaxed">
-                    Appointment on <span className="font-bold text-gray-900">25 May 2026</span> is confirmed.
-                  </p>
-                  <span className="text-[10px] text-gray-400 block mt-0.5">2 days ago</span>
-                </div>
-              </div>
+                  {appointments.slice(0, 2).map((apt: any) => (
+                    <div key={apt.id} className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/60 flex items-start gap-4">
+                      <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-800 font-semibold leading-relaxed">
+                          Appointment scheduled for <span className="font-bold text-gray-900">{apt.serviceType}</span> via <span className="font-bold text-gray-900">{apt.consultationType}</span>.
+                        </p>
+                        <span className="text-[10px] text-gray-400 block mt-0.5">{apt.originalDateTime}</span>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           </div>
 
@@ -182,8 +209,8 @@ export default function PortalDashboardPage() {
             <div className="flex items-center justify-between pb-4 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-gray-900">Alerts &amp; Reminders</h2>
-                <span className="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  2 New
+                <span className="bg-[#12372A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  {applications.length > 0 ? '1 Active' : '0 New'}
                 </span>
               </div>
               <Link href="/portal/notifications" className="text-xs font-bold text-[#12372A] hover:underline">
@@ -192,25 +219,23 @@ export default function PortalDashboardPage() {
             </div>
 
             <div className="mt-4 space-y-3 text-xs">
-              <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-gray-900">Upload Missing Document</span>
-                  <span className="text-[10px] text-gray-400">Just now</span>
+              {applications.length > 0 ? (
+                <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-gray-900">Application Under Verification</span>
+                    <span className="text-[10px] text-gray-400">Active</span>
+                  </div>
+                  <p className="text-gray-600 text-[11px] leading-relaxed">
+                    Your application {applications[0].id} for {applications[0].serviceType} is being verified by officer {applications[0].assignedOfficer}.
+                  </p>
                 </div>
-                <p className="text-gray-600 text-[11px] leading-relaxed">
-                  Your application AMC-2026-000003 is missing a valid ID proof.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200/70 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-gray-900">Payment Receipt Ready</span>
-                  <span className="text-[10px] text-gray-400">5 hours ago</span>
+              ) : (
+                <div className="p-6 text-center bg-gray-50 border border-gray-200/70 rounded-2xl space-y-2">
+                  <AlertCircle className="w-5 h-5 text-gray-400 mx-auto" />
+                  <p className="font-bold text-gray-800 text-xs">No Action Alerts</p>
+                  <p className="text-gray-500 text-[11px]">Your account status and documents are up to date.</p>
                 </div>
-                <p className="text-gray-600 text-[11px] leading-relaxed">
-                  Payment of $150.00 for Property Registration has been processed.
-                </p>
-              </div>
+              )}
             </div>
           </div>
 

@@ -20,6 +20,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { NotificationProvider, useNotifications } from '@/context/NotificationContext';
+import { UserProvider, useUser } from '@/context/UserContext';
 
 const MAIN_NAV_ITEMS = [
   { name: 'Dashboard', href: '/portal/dashboard', icon: LayoutDashboard },
@@ -28,12 +29,12 @@ const MAIN_NAV_ITEMS = [
   { name: 'My Applications', href: '/portal/applications', icon: FileText },
   { name: 'Document Upload', href: '/portal/documents', icon: Upload },
   { name: 'Payments & Receipts', href: '/portal/payments', icon: CreditCard },
-  { name: 'Notifications', href: '/portal/notifications', icon: Bell },
 ];
 
 function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen: boolean; setMobileMenuOpen: (v: boolean) => void }) {
   const pathname = usePathname();
   const { unreadCount } = useNotifications();
+  const { logoutUser } = useUser();
 
   // Distinguish Profile vs Settings pages so ONLY ONE gets highlighted
   const isProfileActive = pathname === '/portal/profile';
@@ -47,7 +48,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
         shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:sticky md:top-4 overflow-hidden
       `}
     >
-      {/* Scrollable Top Area: Brand & Main Navigation */}
+      {/* Scrollable Top Area: Brand & Navigation */}
       <div className="p-6 space-y-6 overflow-y-auto flex-1">
         {/* Brand Header */}
         <div className="flex items-center space-x-3 pb-2 border-b border-gray-100">
@@ -146,6 +147,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
         <div className="pt-2 border-t border-gray-100 mt-1">
           <Link
             href="/login"
+            onClick={logoutUser}
             className="flex items-center space-x-3 px-4 py-2.5 rounded-2xl text-xs font-semibold text-gray-600 hover:bg-rose-50 hover:text-rose-600 transition-colors group"
           >
             <LogOut className="w-4 h-4 text-gray-400 group-hover:text-rose-600 transition-colors" />
@@ -167,6 +169,7 @@ function PortalSidebarContent(props: { mobileMenuOpen: boolean; setMobileMenuOpe
 
 function PortalTopHeader() {
   const { unreadCount } = useNotifications();
+  const { user } = useUser();
 
   return (
     <header className="bg-transparent pb-6 flex items-center justify-end">
@@ -192,11 +195,11 @@ function PortalTopHeader() {
           className="flex items-center gap-3 bg-white border border-gray-200/80 rounded-full pl-2 pr-4 py-1.5 shadow-2xs hover:border-[#12372A] transition-all"
         >
           <div className="w-7 h-7 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-xs flex items-center justify-center border border-[#a8d5b9]/30">
-            JD
+            {user.initials}
           </div>
           <div className="text-left leading-tight hidden sm:block">
-            <p className="text-xs font-bold text-gray-900">John Doe</p>
-            <p className="text-[10px] text-gray-400 font-medium">@john_doe</p>
+            <p className="text-xs font-bold text-gray-900">{user.name}</p>
+            <p className="text-[10px] text-gray-500 font-medium">View Profile</p>
           </div>
           <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
         </Link>
@@ -209,45 +212,47 @@ export default function PortalLayout({ children }: Readonly<{ children: React.Re
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <NotificationProvider>
-      <div className="min-h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans">
-        {/* Mobile Header */}
-        <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c]">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-xl bg-[#a8d5b9]/20 flex items-center justify-center border border-[#a8d5b9]/40 text-[#a8d5b9]">
-              <ShieldCheck className="w-5 h-5" />
+    <UserProvider>
+      <NotificationProvider>
+        <div className="min-h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans">
+          {/* Mobile Header */}
+          <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c]">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-xl bg-[#a8d5b9]/20 flex items-center justify-center border border-[#a8d5b9]/40 text-[#a8d5b9]">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="font-bold text-base tracking-tight text-white block leading-none">Amman Comm</span>
+                <span className="text-[10px] text-[#a8d5b9] font-medium tracking-wide">SERVICES MANAGEMENT</span>
+              </div>
             </div>
-            <div>
-              <span className="font-bold text-base tracking-tight text-white block leading-none">Amman Comm</span>
-              <span className="text-[10px] text-[#a8d5b9] font-medium tracking-wide">SERVICES MANAGEMENT</span>
-            </div>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-[#a8d5b9] transition-colors"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
+            </button>
           </div>
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-[#a8d5b9] transition-colors"
-            aria-label="Toggle navigation menu"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
-          </button>
+
+          {/* Sidebar Navigation */}
+          <PortalSidebarContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+
+          {/* Main Content Area */}
+          <main className="min-w-0 flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+            <PortalTopHeader />
+            {children}
+          </main>
+
+          {/* Backdrop for Mobile */}
+          {mobileMenuOpen && (
+            <div
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
+            />
+          )}
         </div>
-
-        {/* Sidebar Navigation */}
-        <PortalSidebarContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
-
-        {/* Main Content Area */}
-        <main className="min-w-0 flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
-          <PortalTopHeader />
-          {children}
-        </main>
-
-        {/* Backdrop for Mobile */}
-        {mobileMenuOpen && (
-          <div
-            onClick={() => setMobileMenuOpen(false)}
-            className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
-          />
-        )}
-      </div>
-    </NotificationProvider>
+      </NotificationProvider>
+    </UserProvider>
   );
 }

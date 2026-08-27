@@ -13,6 +13,8 @@ export default function RegisterForm() {
     e.preventDefault();
     setError(null);
     const formData = new FormData(e.currentTarget);
+    const nameVal = (formData.get('name') as string) || '';
+    const emailVal = (formData.get('email') as string) || '';
 
     startTransition(async () => {
       const result = await registerAction(formData);
@@ -20,6 +22,23 @@ export default function RegisterForm() {
       if (result?.error) {
         setError(result.error);
       } else if (result?.success && result.redirectTo) {
+        if (emailVal) {
+          try {
+            localStorage.setItem('user_email', emailVal);
+            const nameToUse = nameVal || emailVal.split('@')[0];
+            const formattedName = nameToUse.charAt(0).toUpperCase() + nameToUse.slice(1);
+            localStorage.setItem('amman_user_profile', JSON.stringify({
+              name: formattedName,
+              email: emailVal,
+              phone: '+91 ',
+              address: '',
+              handle: `@${emailVal.split('@')[0]}`,
+              initials: formattedName.charAt(0).toUpperCase()
+            }));
+          } catch (e) {
+            console.error('LocalStorage save error:', e);
+          }
+        }
         window.location.href = result.redirectTo;
       }
     });
