@@ -13,7 +13,7 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"src/**/*.ts\" --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "tsx --test src/auth/authorization.spec.ts src/settings/business-profile/business-profile.spec.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -22,8 +22,7 @@
     "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/platform-express": "^11.0.1",
-    "@nestjs/swagger": "^11.0.6",
-    "@nestjs/throttler": "^6.4.0",
+    "@nestjs/swagger": "^11.4.7",
     "@prisma/client": "^6.19.3",
     "@repo/shared-types": "workspace:*",
     "bcryptjs": "^3.0.2",

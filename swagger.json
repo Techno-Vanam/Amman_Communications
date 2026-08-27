@@ -1,409 +1,1166 @@
 {
-  "openapi": "3.0.3",
-  "info": {
-    "title": "Amman Communications — Application & Document Management API",
-    "description": "API specification for Amman Communications service applications, client-encrypted document storage (AES-256-GCM), live synchronization, and admin verification desk.",
-    "version": "1.0.0",
-    "contact": {
-      "name": "Amman Communications Support",
-      "email": "support@ammancommunications.com"
-    }
-  },
-  "servers": [
-    {
-      "url": "http://localhost:3000/api/v1",
-      "description": "Local Web Proxy (Port 3000)"
-    },
-    {
-      "url": "http://localhost:3003/api/v1",
-      "description": "Direct API Server (Port 3003)"
-    }
-  ],
-  "components": {
-    "securitySchemes": {
-      "BearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "description": "Enter JWT access token"
-      }
-    },
-    "schemas": {
-      "StandardResponse": {
-        "type": "object",
-        "properties": {
-          "success": { "type": "boolean", "example": true },
-          "message": { "type": "string", "example": "Operation successful" },
-          "data": { "type": "object" }
-        }
-      },
-      "CreateApplicationDto": {
-        "type": "object",
-        "required": ["serviceType", "fullName", "email", "phone"],
-        "properties": {
-          "serviceType": {
-            "type": "string",
-            "example": "PASSPORT_SERVICE",
-            "enum": [
-              "PASSPORT_SERVICE",
-              "VISA_SERVICE",
-              "COMPANY_REGISTRATION",
-              "CITIZEN_SERVICES",
-              "DOCUMENT_ATTESTATION"
-            ]
-          },
-          "title": { "type": "string", "example": "Passport Application & Renewal" },
-          "fullName": { "type": "string", "example": "Ashwath Krishna" },
-          "email": { "type": "string", "format": "email", "example": "ashwath@example.com" },
-          "phone": { "type": "string", "example": "+91 9876543210" },
-          "dateOfBirth": { "type": "string", "example": "1998-05-15" },
-          "nationality": { "type": "string", "example": "Indian" },
-          "address": { "type": "string", "example": "123 Anna Salai, Chennai" },
-          "notes": { "type": "string", "example": "Urgent renewal requested" }
-        }
-      },
-      "UpdateApplicationDto": {
-        "type": "object",
-        "properties": {
-          "title": { "type": "string" },
-          "serviceType": { "type": "string" },
-          "fullName": { "type": "string" },
-          "email": { "type": "string" },
-          "phone": { "type": "string" },
-          "dateOfBirth": { "type": "string" },
-          "nationality": { "type": "string" },
-          "address": { "type": "string" },
-          "notes": { "type": "string" },
-          "status": {
-            "type": "string",
-            "enum": ["DRAFT", "SUBMITTED", "UNDER_REVIEW", "APPROVED", "REJECTED"]
-          }
-        }
-      },
-      "DirectUploadDocumentDto": {
-        "type": "object",
-        "required": ["documentType", "fileName", "mimeType", "fileSize", "base64Data"],
-        "properties": {
-          "documentType": { "type": "string", "example": "NATIONAL_ID_PROOF" },
-          "fileName": { "type": "string", "example": "aadhaar_card_scan.pdf" },
-          "mimeType": { "type": "string", "example": "application/pdf" },
-          "fileSize": { "type": "integer", "example": 204800 },
-          "base64Data": {
-            "type": "string",
-            "description": "Base64 data URL string (max 10MB file size)",
-            "example": "data:application/pdf;base64,VGhpcyBpcyBhbiBhYWRoYWFyIGNhcmQgc2NhbiBjb250ZW50..."
-          }
-        }
-      },
-      "UpdateDocumentStatusDto": {
-        "type": "object",
-        "required": ["status"],
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": ["UPLOADED", "UNDER_REVIEW", "VERIFIED", "REJECTED", "ACTION_REQUIRED"],
-            "example": "VERIFIED"
-          },
-          "rejectionReason": {
-            "type": "string",
-            "example": "Photo background has glare. Please upload a clear 300 DPI scan."
-          }
-        }
-      },
-      "LoginDto": {
-        "type": "object",
-        "required": ["email", "password"],
-        "properties": {
-          "email": { "type": "string", "format": "email", "example": "customer@amman.com" },
-          "password": { "type": "string", "example": "password123" }
-        }
-      }
-    }
-  },
+  "openapi": "3.0.0",
   "paths": {
     "/health": {
       "get": {
-        "tags": ["System"],
-        "summary": "Health Check",
-        "description": "Verify API server and database availability",
+        "operationId": "HealthController_check",
+        "parameters": [],
         "responses": {
           "200": {
-            "description": "System is healthy",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/StandardResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/customer/auth/login": {
-      "post": {
-        "tags": ["Authentication"],
-        "summary": "Customer Login",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/LoginDto" }
-            }
+            "description": ""
           }
         },
-        "responses": {
-          "200": {
-            "description": "Login successful, returns JWT access token"
-          },
-          "401": {
-            "description": "Invalid credentials"
-          }
-        }
+        "tags": [
+          "Health"
+        ]
       }
     },
-    "/admin/auth/login": {
+    "/v1/auth/login": {
       "post": {
-        "tags": ["Authentication"],
-        "summary": "Admin Login",
+        "description": "Authenticates admin or customer and returns JWT access token.",
+        "operationId": "AuthController_login",
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/LoginDto" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Admin login successful, returns JWT access token"
-          },
-          "401": {
-            "description": "Invalid credentials"
-          }
-        }
-      }
-    },
-    "/customer/services-catalog": {
-      "get": {
-        "tags": ["Services Catalog"],
-        "summary": "Get Services & Required Document Checklist",
-        "description": "Returns all 5 services and their required document specifications",
-        "responses": {
-          "200": {
-            "description": "List of services with requirements",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/StandardResponse" }
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
               }
-            }
-          }
-        }
-      }
-    },
-    "/customer/applications": {
-      "get": {
-        "tags": ["Customer Applications"],
-        "summary": "List Customer Applications",
-        "description": "Get all service applications submitted by the customer with attached document counts",
-        "security": [{ "BearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "List of customer applications"
-          }
-        }
-      },
-      "post": {
-        "tags": ["Customer Applications"],
-        "summary": "Create New Service Application",
-        "description": "Submit applicant details to initialize a new application record in the database",
-        "security": [{ "BearerAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateApplicationDto" }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Application created successfully"
-          }
-        }
-      }
-    },
-    "/customer/applications/{applicationId}": {
-      "get": {
-        "tags": ["Customer Applications"],
-        "summary": "Get Application Details",
-        "description": "Retrieve full details and all attached documents for a specific application",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "applicationId",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" },
-            "example": "cmt8pm1210001mcycos1l034k"
-          }
-        ],
-        "responses": {
-          "200": { "description": "Application details" },
-          "404": { "description": "Application not found" }
-        }
-      },
-      "put": {
-        "tags": ["Customer Applications"],
-        "summary": "Update Application",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "applicationId",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateApplicationDto" }
-            }
+            "description": "Authentication successful. Returns access token and user role."
+          },
+          "401": {
+            "description": "Invalid credentials."
           }
         },
-        "responses": {
-          "200": { "description": "Application updated" }
-        }
+        "summary": "User Login",
+        "tags": [
+          "Auth"
+        ]
       }
     },
-    "/customer/documents": {
-      "get": {
-        "tags": ["Customer Documents"],
-        "summary": "Get All Grouped Documents (Document Center)",
-        "description": "Returns all customer applications grouped with their uploaded documents, status, and download links",
-        "security": [{ "BearerAuth": [] }],
-        "responses": {
-          "200": { "description": "Grouped applications with documents" }
-        }
-      }
-    },
-    "/customer/applications/{applicationId}/documents/upload": {
+    "/v1/auth/register": {
       "post": {
-        "tags": ["Customer Documents"],
-        "summary": "Upload and Encrypt Application Document (AES-256-GCM)",
-        "description": "Direct upload endpoint that encrypts the document on-the-fly and saves metadata to PostgreSQL. Allows up to 10MB per file.",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          {
-            "name": "applicationId",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
+        "description": "Registers a new customer account.",
+        "operationId": "AuthController_register",
+        "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/DirectUploadDocumentDto" }
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
             }
           }
         },
         "responses": {
-          "200": { "description": "Document encrypted and saved successfully" },
-          "400": { "description": "Validation error or file exceeds 10MB" }
-        }
+          "201": {
+            "description": "Registration successful. Returns access token and user info."
+          },
+          "400": {
+            "description": "Bad Request - Validation error or duplicate email."
+          }
+        },
+        "summary": "Customer Registration",
+        "tags": [
+          "Auth"
+        ]
       }
     },
-    "/customer/documents/download-stream": {
+    "/customer/documents/upload-url": {
+      "post": {
+        "operationId": "DocumentsController_uploadUrl",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/customer/documents/complete": {
+      "post": {
+        "operationId": "DocumentsController_complete",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/customer/documents/{id}/download": {
       "get": {
-        "tags": ["Customer Documents"],
-        "summary": "Stream Decrypted Document",
-        "description": "Decrypts an AES-256 encrypted file and streams it directly to the browser for inline preview or download",
-        "security": [{ "BearerAuth": [] }],
+        "operationId": "DocumentsController_download",
         "parameters": [
           {
-            "name": "path",
-            "in": "query",
+            "name": "id",
             "required": true,
-            "schema": { "type": "string" },
-            "description": "Storage path of the encrypted document",
-            "example": "documents/cust_default_amman_2026/cmt8pm1210001mcycos1l034k/NATIONAL_ID_PROOF_1787665051487_aadhaar_card_scan.pdf"
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Decrypted binary document stream (PDF / Image)",
-            "content": {
-              "application/octet-stream": {
-                "schema": { "type": "string", "format": "binary" }
-              }
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/admin/dashboard/summary": {
+      "get": {
+        "operationId": "AdminDashboardController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AdminDashboard"
+        ]
+      }
+    },
+    "/customer/dashboard/summary": {
+      "get": {
+        "operationId": "CustomerDashboardController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CustomerDashboard"
+        ]
+      }
+    },
+    "/v1/admin/services/stats": {
+      "get": {
+        "operationId": "ServicesController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Service Statistics",
+        "tags": [
+          "Admin - Services"
+        ]
+      }
+    },
+    "/v1/admin/services": {
+      "get": {
+        "operationId": "ServicesController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
-          "403": { "description": "Access denied / unauthorized customer" }
-        }
-      }
-    },
-    "/customer/applications/{applicationId}/documents/{documentId}": {
-      "get": {
-        "tags": ["Customer Documents"],
-        "summary": "Get Single Document Details",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          { "name": "applicationId", "in": "path", "required": true, "schema": { "type": "string" } },
-          { "name": "documentId", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Document details with downloadUrl" }
-        }
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List Services",
+        "tags": [
+          "Admin - Services"
+        ]
       },
-      "delete": {
-        "tags": ["Customer Documents"],
-        "summary": "Delete Document",
-        "security": [{ "BearerAuth": [] }],
-        "parameters": [
-          { "name": "applicationId", "in": "path", "required": true, "schema": { "type": "string" } },
-          { "name": "documentId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
+      "post": {
+        "operationId": "ServicesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateServiceDto"
+              }
+            }
+          }
+        },
         "responses": {
-          "200": { "description": "Document deleted" }
-        }
+          "201": {
+            "description": "Service created successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create New Service",
+        "tags": [
+          "Admin - Services"
+        ]
       }
     },
-    "/admin/applications/{applicationId}/documents": {
+    "/v1/admin/services/{id}": {
       "get": {
-        "tags": ["Admin Verification Desk"],
-        "summary": "Admin: List Documents for Application",
-        "security": [{ "BearerAuth": [] }],
+        "operationId": "ServicesController_findOne",
         "parameters": [
-          { "name": "applicationId", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "responses": {
-          "200": { "description": "Application documents for verification" }
-        }
-      }
-    },
-    "/admin/applications/{applicationId}/documents/{documentId}/status": {
-      "put": {
-        "tags": ["Admin Verification Desk"],
-        "summary": "Admin: Update Document Verification Status",
-        "description": "Verify or reject a customer document. If rejected, a rejectionReason is attached.",
-        "security": [{ "BearerAuth": [] }],
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Service Details",
+        "tags": [
+          "Admin - Services"
+        ]
+      },
+      "patch": {
+        "operationId": "ServicesController_update",
         "parameters": [
-          { "name": "applicationId", "in": "path", "required": true, "schema": { "type": "string" } },
-          { "name": "documentId", "in": "path", "required": true, "schema": { "type": "string" } }
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateDocumentStatusDto" }
+              "schema": {
+                "$ref": "#/components/schemas/UpdateServiceDto"
+              }
             }
           }
         },
         "responses": {
-          "200": { "description": "Document status updated" }
-        }
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update Service Details",
+        "tags": [
+          "Admin - Services"
+        ]
+      },
+      "delete": {
+        "operationId": "ServicesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete Service",
+        "tags": [
+          "Admin - Services"
+        ]
+      }
+    },
+    "/v1/admin/services/{id}/status": {
+      "patch": {
+        "operationId": "ServicesController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateServiceStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update Service Status",
+        "tags": [
+          "Admin - Services"
+        ]
+      }
+    },
+    "/v1/admin/appointments/stats": {
+      "get": {
+        "operationId": "AppointmentsController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Appointment Statistics",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/v1/admin/appointments": {
+      "get": {
+        "operationId": "AppointmentsController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mode",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "timeframe",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List Appointments",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      },
+      "post": {
+        "operationId": "AppointmentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create New Appointment",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/v1/admin/appointments/{id}": {
+      "get": {
+        "operationId": "AppointmentsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Appointment Details",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      },
+      "patch": {
+        "operationId": "AppointmentsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update Appointment Details",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      },
+      "delete": {
+        "operationId": "AppointmentsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel/Delete Appointment",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/v1/admin/appointments/{id}/reschedule": {
+      "patch": {
+        "operationId": "AppointmentsController_reschedule",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescheduleAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reschedule Appointment",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/v1/admin/appointments/{id}/status": {
+      "patch": {
+        "operationId": "AppointmentsController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAppointmentStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update Appointment Status",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/v1/admin/settings/business-profile": {
+      "get": {
+        "description": "Returns the organization profile.",
+        "operationId": "BusinessProfileController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Business Profile details."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admins only"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current Business Profile",
+        "tags": [
+          "Admin - Business Profile Settings"
+        ]
+      },
+      "patch": {
+        "description": "Updates organization profile details.",
+        "operationId": "BusinessProfileController_updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBusinessProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Business profile successfully updated."
+          },
+          "400": {
+            "description": "Bad Request - Validation failure."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admins only"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update or Create Business Profile",
+        "tags": [
+          "Admin - Business Profile Settings"
+        ]
+      }
+    },
+    "/v1/admin/settings/business-profile/logo": {
+      "post": {
+        "description": "Accepts PNG, JPG, JPEG, WebP up to 5MB.",
+        "operationId": "BusinessProfileController_uploadLogo",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file (PNG, JPG, JPEG, WebP)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Logo successfully uploaded."
+          },
+          "400": {
+            "description": "Invalid file type or size."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admins only"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload or Replace Business Logo",
+        "tags": [
+          "Admin - Business Profile Settings"
+        ]
+      },
+      "delete": {
+        "description": "Removes active logo from business profile.",
+        "operationId": "BusinessProfileController_deleteLogo",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Logo successfully removed."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admins only"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove Active Business Logo",
+        "tags": [
+          "Admin - Business Profile Settings"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Amman Communications API",
+    "description": "API documentation and interactive endpoint specification for Amman Communications Business Platform.",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "description": "Enter Admin JWT access token"
+      }
+    },
+    "schemas": {
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Account email address",
+            "example": "admin@test.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Account password",
+            "example": "password123"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Full name of the user",
+            "example": "Test Customer"
+          },
+          "email": {
+            "type": "string",
+            "description": "Account email address",
+            "example": "customer@test.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Account password",
+            "example": "password123"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ]
+      },
+      "RequiredDocumentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Required document ID",
+            "example": "doc-1"
+          },
+          "name": {
+            "type": "string",
+            "description": "Document name",
+            "example": "Commercial License Copy"
+          },
+          "displayOrder": {
+            "type": "number",
+            "description": "Display order index",
+            "example": 1
+          },
+          "isRequired": {
+            "type": "boolean",
+            "description": "Is this document mandatory",
+            "example": true
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CreateServiceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Service title",
+            "example": "Commercial Fiber Connectivity"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the service",
+            "example": "High-speed dedicated commercial fiber connectivity."
+          },
+          "governmentFee": {
+            "type": "number",
+            "description": "Government processing fee",
+            "example": 250
+          },
+          "serviceFee": {
+            "type": "number",
+            "description": "Service provider fee",
+            "example": 750
+          },
+          "estimatedTime": {
+            "type": "string",
+            "description": "Estimated fulfillment timeframe",
+            "example": "2-3 Working Days"
+          },
+          "status": {
+            "type": "string",
+            "description": "Service publishing status",
+            "enum": [
+              "DRAFT",
+              "ACTIVE",
+              "INACTIVE"
+            ],
+            "example": "ACTIVE"
+          },
+          "requiredDocuments": {
+            "description": "List of required documents",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequiredDocumentDto"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "governmentFee",
+          "serviceFee"
+        ]
+      },
+      "UpdateServiceDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateServiceStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "New status for the service",
+            "enum": [
+              "DRAFT",
+              "ACTIVE",
+              "INACTIVE"
+            ],
+            "example": "ACTIVE"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "CreateAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "customerName": {
+            "type": "string",
+            "description": "Full name of the customer",
+            "example": "Test Customer"
+          },
+          "customerEmail": {
+            "type": "string",
+            "description": "Customer email address",
+            "example": "customer@test.com"
+          },
+          "customerPhone": {
+            "type": "string",
+            "description": "Customer contact phone number",
+            "example": "+91 9876543210"
+          },
+          "customerId": {
+            "type": "string",
+            "description": "Customer ID if registered",
+            "example": "cust-123"
+          },
+          "serviceId": {
+            "type": "string",
+            "description": "Associated Service ID",
+            "example": "serv-456"
+          },
+          "appointmentDate": {
+            "type": "string",
+            "description": "ISO Date string for appointment",
+            "example": "2026-09-01T10:00:00.000Z"
+          },
+          "durationMinutes": {
+            "type": "number",
+            "description": "Duration in minutes",
+            "example": 30
+          },
+          "mode": {
+            "type": "string",
+            "description": "Appointment mode",
+            "enum": [
+              "OFFLINE",
+              "ONLINE"
+            ],
+            "example": "OFFLINE"
+          },
+          "onlineType": {
+            "type": "string",
+            "description": "Online meeting channel type",
+            "enum": [
+              "PHONE",
+              "VIDEO",
+              "MEETING"
+            ],
+            "example": "PHONE"
+          },
+          "meetingLink": {
+            "type": "string",
+            "description": "Meeting URL for online appointments",
+            "example": "https://meet.google.com/abc-defg-hij"
+          },
+          "status": {
+            "type": "string",
+            "description": "Initial appointment status",
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "COMPLETED",
+              "CANCELLED",
+              "RESCHEDULED"
+            ],
+            "example": "CONFIRMED"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional notes or instructions",
+            "example": "Discuss commercial fiber deployment schedule."
+          }
+        },
+        "required": [
+          "customerName",
+          "customerEmail",
+          "customerPhone",
+          "appointmentDate",
+          "mode"
+        ]
+      },
+      "UpdateAppointmentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RescheduleAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "newDate": {
+            "type": "string",
+            "description": "New proposed date/time ISO string",
+            "example": "2026-09-05T14:00:00.000Z"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason for rescheduling",
+            "example": "Customer requested afternoon slot."
+          },
+          "mode": {
+            "type": "string",
+            "description": "Updated appointment mode",
+            "enum": [
+              "OFFLINE",
+              "ONLINE"
+            ],
+            "example": "ONLINE"
+          },
+          "onlineType": {
+            "type": "string",
+            "description": "Online meeting channel type",
+            "enum": [
+              "PHONE",
+              "VIDEO",
+              "MEETING"
+            ],
+            "example": "VIDEO"
+          },
+          "meetingLink": {
+            "type": "string",
+            "description": "Meeting link if mode is online",
+            "example": "https://meet.google.com/xyz-uvwx-rst"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Updated notes",
+            "example": "Rescheduled per customer email."
+          }
+        },
+        "required": [
+          "newDate"
+        ]
+      },
+      "UpdateAppointmentStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "New appointment status",
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "COMPLETED",
+              "CANCELLED",
+              "RESCHEDULED"
+            ],
+            "example": "CONFIRMED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "UpdateBusinessProfileDto": {
+        "type": "object",
+        "properties": {
+          "businessName": {
+            "type": "string",
+            "description": "Name of the business organization",
+            "example": "Amman Communications"
+          },
+          "registrationNumber": {
+            "type": "string",
+            "description": "Official business registration number",
+            "example": "AC-2023-894"
+          },
+          "officeAddress": {
+            "type": "string",
+            "description": "Physical office address of the business",
+            "example": "124 Main Street, Business District"
+          },
+          "primaryPhone": {
+            "type": "string",
+            "description": "Primary contact phone number",
+            "example": "+91 9876543210"
+          },
+          "supportEmail": {
+            "type": "string",
+            "description": "Support email address",
+            "example": "support@example.com"
+          }
+        },
+        "required": [
+          "businessName",
+          "officeAddress",
+          "primaryPhone",
+          "supportEmail"
+        ]
       }
     }
   }

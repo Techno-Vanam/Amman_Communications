@@ -1,0 +1,560 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "description": "Authenticates admin or customer and returns JWT access token.",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Authentication successful. Returns access token and user role."
+          },
+          "401": {
+            "description": "Invalid credentials."
+          }
+        },
+        "summary": "User Login",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/v1/auth/register": {
+      "post": {
+        "description": "Registers a new customer account.",
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Registration successful. Returns access token and user info."
+          },
+          "400": {
+            "description": "Bad Request - Validation error or duplicate email."
+          }
+        },
+        "summary": "Customer Registration",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/customer/documents/upload-url": {
+      "post": {
+        "operationId": "DocumentsController_uploadUrl",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/customer/documents/complete": {
+      "post": {
+        "operationId": "DocumentsController_complete",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/customer/documents/{id}/download": {
+      "get": {
+        "operationId": "DocumentsController_download",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/admin/dashboard/summary": {
+      "get": {
+        "operationId": "AdminDashboardController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AdminDashboard"
+        ]
+      }
+    },
+    "/customer/dashboard/summary": {
+      "get": {
+        "operationId": "CustomerDashboardController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "CustomerDashboard"
+        ]
+      }
+    },
+    "/v1/admin/services/stats": {
+      "get": {
+        "operationId": "ServicesController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Service Statistics",
+        "tags": [
+          "Admin - Services"
+        ]
+      }
+    },
+    "/v1/admin/services": {
+      "get": {
+        "operationId": "ServicesController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List Services",
+        "tags": [
+          "Admin - Services"
+        ]
+      },
+      "post": {
+        "operationId": "ServicesController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Service created successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create New Service",
+        "tags": [
+          "Admin - Services"
+        ]
+      }
+    },
+    "/v1/admin/services/{id}": {
+      "get": {
+        "operationId": "ServicesController_findOne",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Service Details",
+        "tags": [
+          "Admin - Services"
+        ]
+      },
+      "patch": {
+        "operationId": "ServicesController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update Service Details",
+        "tags": [
+          "Admin - Services"
+        ]
+      },
+      "delete": {
+        "operationId": "ServicesController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete Service",
+        "tags": [
+          "Admin - Services"
+        ]
+      }
+    },
+    "/v1/admin/services/{id}/status": {
+      "patch": {
+        "operationId": "ServicesController_updateStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update Service Status",
+        "tags": [
+          "Admin - Services"
+        ]
+      }
+    },
+    "/v1/admin/appointments/stats": {
+      "get": {
+        "operationId": "AppointmentsController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Appointment Statistics",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/v1/admin/appointments": {
+      "get": {
+        "operationId": "AppointmentsController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List Appointments",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      },
+      "post": {
+        "operationId": "AppointmentsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create New Appointment",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/v1/admin/appointments/{id}": {
+      "get": {
+        "operationId": "AppointmentsController_findOne",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Appointment Details",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      },
+      "patch": {
+        "operationId": "AppointmentsController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update Appointment Details",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      },
+      "delete": {
+        "operationId": "AppointmentsController_remove",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel/Delete Appointment",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/v1/admin/appointments/{id}/reschedule": {
+      "patch": {
+        "operationId": "AppointmentsController_reschedule",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reschedule Appointment",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/v1/admin/appointments/{id}/status": {
+      "patch": {
+        "operationId": "AppointmentsController_updateStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update Appointment Status",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/v1/admin/settings/business-profile": {
+      "get": {
+        "description": "Returns the organization profile.",
+        "operationId": "BusinessProfileController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Business Profile details."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admins only"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current Business Profile",
+        "tags": [
+          "Admin - Business Profile Settings"
+        ]
+      },
+      "patch": {
+        "description": "Updates organization profile details.",
+        "operationId": "BusinessProfileController_updateProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Business profile successfully updated."
+          },
+          "400": {
+            "description": "Bad Request - Validation failure."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admins only"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update or Create Business Profile",
+        "tags": [
+          "Admin - Business Profile Settings"
+        ]
+      }
+    },
+    "/v1/admin/settings/business-profile/logo": {
+      "post": {
+        "description": "Accepts PNG, JPG, JPEG, WebP up to 5MB.",
+        "operationId": "BusinessProfileController_uploadLogo",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file (PNG, JPG, JPEG, WebP)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Logo successfully uploaded."
+          },
+          "400": {
+            "description": "Invalid file type or size."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admins only"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload or Replace Business Logo",
+        "tags": [
+          "Admin - Business Profile Settings"
+        ]
+      },
+      "delete": {
+        "description": "Removes active logo from business profile.",
+        "operationId": "BusinessProfileController_deleteLogo",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Logo successfully removed."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admins only"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove Active Business Logo",
+        "tags": [
+          "Admin - Business Profile Settings"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Amman Communications API",
+    "description": "API Specification with full request body examples.",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {}
+  }
+}
