@@ -11,16 +11,32 @@ import {
   AlertCircle,
   Info,
   ArrowUpRight,
-  MoreHorizontal,
   Plus
 } from 'lucide-react';
 
 import { useUser, getUserStorageKey } from '@/context/UserContext';
 
+interface DashboardAppItem {
+  id: string;
+  serviceType: string;
+  status: string;
+  submittedDate: string;
+  assignedOfficer?: string;
+  [key: string]: unknown;
+}
+
+interface DashboardAptItem {
+  id: string;
+  serviceType: string;
+  consultationType: string;
+  originalDateTime: string;
+  [key: string]: unknown;
+}
+
 export default function PortalDashboardPage() {
   const { user } = useUser();
-  const [applications, setApplications] = useState<any[]>([]);
-  const [appointments, setAppointments] = useState<any[]>([]);
+  const [applications, setApplications] = useState<DashboardAppItem[]>([]);
+  const [appointments, setAppointments] = useState<DashboardAptItem[]>([]);
 
   useEffect(() => {
     try {
@@ -175,7 +191,7 @@ export default function PortalDashboardPage() {
                 </div>
               ) : (
                 <>
-                  {applications.slice(0, 2).map((app: any) => (
+                  {applications.slice(0, 2).map((app: DashboardAppItem) => (
                     <div key={app.id} className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/60 flex items-start gap-4">
                       <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
                         <RefreshCw className="w-4 h-4" />
@@ -189,7 +205,7 @@ export default function PortalDashboardPage() {
                     </div>
                   ))}
 
-                  {appointments.slice(0, 2).map((apt: any) => (
+                  {appointments.slice(0, 2).map((apt: DashboardAptItem) => (
                     <div key={apt.id} className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/60 flex items-start gap-4">
                       <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
                         <Calendar className="w-4 h-4" />

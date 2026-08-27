@@ -12,7 +12,6 @@ import {
   X,
   XCircle,
   Eye,
-  Clock,
   AlertTriangle,
   RotateCcw,
   Search
@@ -31,8 +30,6 @@ interface AppointmentItem {
   adminNote?: string;
   location?: string;
 }
-
-const APPOINTMENTS_DATA: AppointmentItem[] = [];
 
 export default function AppointmentsPage() {
   const { showToast } = useNotifications();

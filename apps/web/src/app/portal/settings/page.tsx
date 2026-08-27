@@ -2,17 +2,12 @@
 
 import React, { useState } from 'react';
 import {
-  Settings,
-  Lock,
   Bell,
-  Globe,
   Shield,
   Save,
   CheckCircle2,
-  Moon,
   KeyRound,
-  Download,
-  AlertTriangle
+  Download
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 
