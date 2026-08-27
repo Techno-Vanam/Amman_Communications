@@ -114,10 +114,10 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
     }, 600);
   };
 
-  // Reusable Green Image Panel Component
+  // Integrated Green Image Panel (Completely fills its 50% half of outer container)
   const GreenImagePanel = () => (
-    <div className="lg:w-1/2 bg-brand-700 p-8 sm:p-12 lg:p-14 text-white flex flex-col justify-between relative overflow-hidden rounded-[2rem] shadow-xl min-h-[460px]">
-      {/* Ambient Lighting */}
+    <div className="lg:w-1/2 bg-brand-700 p-8 sm:p-12 lg:p-14 text-white flex flex-col justify-between relative overflow-hidden self-stretch w-full min-h-[440px]">
+      {/* Subtle Ambient Lighting */}
       <div className="absolute -top-[10%] -right-[10%] w-96 h-96 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-[10%] -left-[10%] w-80 h-80 rounded-full bg-emerald-400/15 blur-3xl pointer-events-none" />
 
@@ -153,10 +153,21 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
     </div>
   );
 
-  // Reusable Form Panel Component
+  // Form Panel (Fills its 50% half of outer container)
   const FormPanel = () => (
-    <div className="lg:w-1/2 flex items-center justify-center p-4 sm:p-8 lg:p-14 bg-white">
-      <div className="w-full max-w-lg space-y-8">
+    <div className="lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-12 bg-white self-stretch w-full overflow-y-auto">
+      {/* Back to Home Header inside Form Half */}
+      <div className={`w-full flex items-center mb-4 ${isSignUp ? 'justify-start' : 'justify-end'}`}>
+        <button
+          onClick={onNavigateHome}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 text-xs sm:text-sm font-bold transition-all shadow-xs cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4 text-brand-600" />
+          <span>Back to Home</span>
+        </button>
+      </div>
+
+      <div className="w-full max-w-md mx-auto my-auto space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -177,7 +188,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
 
         {isSignUp ? (
           /* Sign Up Form - Underline Style Input */
-          <form onSubmit={handleRegisterSubmit} className="space-y-6" noValidate>
+          <form onSubmit={handleRegisterSubmit} className="space-y-5" noValidate>
             {/* Full Name */}
             <div className="space-y-1">
               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
@@ -188,7 +199,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
                 placeholder="John Doe"
                 value={regName}
                 onChange={(e) => setRegName(e.target.value)}
-                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-base font-medium outline-none transition-colors"
+                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
               />
             </div>
 
@@ -202,7 +213,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
                 placeholder="name@example.com"
                 value={regEmail}
                 onChange={(e) => setRegEmail(e.target.value)}
-                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-base font-medium outline-none transition-colors"
+                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
               />
             </div>
 
@@ -216,7 +227,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
                 placeholder="+91 98765 43210"
                 value={regMobile}
                 onChange={(e) => setRegMobile(e.target.value)}
-                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-base font-medium outline-none transition-colors"
+                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
               />
             </div>
 
@@ -231,7 +242,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
                   placeholder="At least 8 characters"
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
-                  className="w-full py-2 pr-10 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-base font-medium outline-none transition-colors"
+                  className="w-full py-2 pr-10 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
                 />
                 <button
                   type="button"
@@ -252,7 +263,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
               {isPending ? 'Creating Account...' : 'Create Account'}
             </button>
 
-            <div className="text-center pt-2">
+            <div className="text-center pt-1">
               <p className="text-xs text-slate-500">
                 Already have an account?{' '}
                 <button
@@ -270,7 +281,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
           </form>
         ) : (
           /* Sign In / Login Form - Underline Style Input */
-          <form onSubmit={handleLoginSubmit} className="space-y-6" noValidate>
+          <form onSubmit={handleLoginSubmit} className="space-y-5" noValidate>
             {/* Email Address */}
             <div className="space-y-1">
               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
@@ -281,7 +292,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
                 placeholder="name@example.com"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-base font-medium outline-none transition-colors"
+                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
               />
             </div>
 
@@ -295,12 +306,12 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
                 placeholder="+91 98765 43210"
                 value={loginMobile}
                 onChange={(e) => setLoginMobile(e.target.value)}
-                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-base font-medium outline-none transition-colors"
+                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
               />
             </div>
 
             {/* Password Field with Eye Icon + Forgot Password BELOW */}
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
                 Password <span className="text-red-500">*</span>
               </label>
@@ -310,7 +321,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
                   placeholder="••••••••"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full py-2 pr-10 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-base font-medium outline-none transition-colors"
+                  className="w-full py-2 pr-10 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
                 />
                 <button
                   type="button"
@@ -341,7 +352,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
               {isPending ? 'Signing In...' : 'Sign In'}
             </button>
 
-            <div className="text-center pt-2">
+            <div className="text-center pt-1">
               <p className="text-xs text-slate-500">
                 Don't have an account?{' '}
                 <button
@@ -359,40 +370,28 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
           </form>
         )}
       </div>
+
+      <div />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center py-6 px-4 sm:px-6 lg:px-10">
-      {/* EXPANDED FULL-WIDTH AUTHENTICATION CONTAINER WITH FULL OUTER BORDER */}
-      <div className="w-full max-w-[1440px] bg-white rounded-[2.5rem] border border-slate-200/90 shadow-2xl p-4 sm:p-6 lg:p-8 flex flex-col relative overflow-hidden">
-        {/* Back to Home Button: TOP-LEFT for Sign In (signup), TOP-RIGHT for Login (login) */}
-        <div className={`w-full flex items-center mb-4 z-20 ${isSignUp ? 'justify-start' : 'justify-end'}`}>
-          <button
-            onClick={onNavigateHome}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 text-xs sm:text-sm font-bold transition-all shadow-xs cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4 text-brand-600" />
-            <span>Back to Home</span>
-          </button>
-        </div>
-
-        {/* 50/50 SPLIT CONTAINER */}
-        <div className="flex flex-col lg:flex-row gap-6 items-stretch w-full">
-          {isSignUp ? (
-            /* SIGN IN PAGE: Form on LEFT (50%), Green Image on RIGHT (50%) */
-            <>
-              <FormPanel />
-              <GreenImagePanel />
-            </>
-          ) : (
-            /* LOGIN PAGE: Green Image on LEFT (50%), Form on RIGHT (50%) */
-            <>
-              <GreenImagePanel />
-              <FormPanel />
-            </>
-          )}
-        </div>
+    <div className="h-screen bg-slate-50 flex items-center justify-center p-3 sm:p-5 lg:p-8 overflow-hidden">
+      {/* MAIN AUTHENTICATION CONTAINER: INTEGRATED FULL 50/50 SPLIT WITHOUT FLOATING INTERNAL PADDING */}
+      <div className="w-full max-w-[1400px] h-full max-h-[850px] bg-white rounded-[2.5rem] border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col lg:flex-row items-stretch">
+        {isSignUp ? (
+          /* SIGN UP PAGE: Form on LEFT (50%), Green Image on RIGHT (50%) */
+          <>
+            <FormPanel />
+            <GreenImagePanel />
+          </>
+        ) : (
+          /* LOGIN PAGE: Green Image on LEFT (50%), Form on RIGHT (50%) */
+          <>
+            <GreenImagePanel />
+            <FormPanel />
+          </>
+        )}
       </div>
     </div>
   );
