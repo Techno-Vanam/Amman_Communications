@@ -9,3 +9,5 @@ coverage/
 !.env.example
 *.log
 prisma/*.db
+apps/api/uploads/
+*.tsbuildinfo
