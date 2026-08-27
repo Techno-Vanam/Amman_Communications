@@ -234,7 +234,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                 placeholder="John Doe"
                 value={regName}
                 onChange={(e) => setRegName(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/15 text-slate-900 text-sm font-medium outline-none transition-all"
+                className="w-full px-4 py-3 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
                 disabled={isPending}
               />
             </div>
@@ -253,7 +253,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                 placeholder="name@example.com"
                 value={regEmail}
                 onChange={(e) => setRegEmail(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/15 text-slate-900 text-sm font-medium outline-none transition-all"
+                className="w-full px-4 py-3 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
                 disabled={isPending}
               />
             </div>
@@ -271,7 +271,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                 placeholder="+91 98765 43210"
                 value={regMobile}
                 onChange={(e) => setRegMobile(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/15 text-slate-900 text-sm font-medium outline-none transition-all"
+                className="w-full px-4 py-3 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
                 disabled={isPending}
               />
             </div>
@@ -291,7 +291,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                   placeholder="At least 8 characters"
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 pr-10 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/15 text-slate-900 text-sm font-medium outline-none transition-all"
+                  className="w-full px-4 py-3 pr-10 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
                   disabled={isPending}
                 />
                 <button
@@ -343,7 +343,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                 placeholder="name@example.com"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/15 text-slate-900 text-sm font-medium outline-none transition-all"
+                className="w-full px-4 py-3 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
                 disabled={isPending}
               />
             </div>
@@ -375,7 +375,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                   placeholder="••••••••"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 pr-10 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/15 text-slate-900 text-sm font-medium outline-none transition-all"
+                  className="w-full px-4 py-3 pr-10 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
                   disabled={isPending}
                 />
                 <button
