@@ -180,3 +180,14 @@ model Appointment {
   updatedAt        DateTime          @updatedAt
 }
 
+model BusinessProfile {
+  id                 String   @id @default(cuid())
+  businessName       String
+  registrationNumber String?
+  officeAddress      String
+  primaryPhone       String
+  supportEmail       String
+  logoUrl            String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
