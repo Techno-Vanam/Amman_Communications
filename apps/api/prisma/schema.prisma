@@ -98,7 +98,7 @@ model Document {
   verifiedBy       String?
   rejectionReason  String?
   uploadedAt       DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  updatedAt        DateTime       @default(now()) @updatedAt
 
   @@unique([applicationId, documentType])
 }

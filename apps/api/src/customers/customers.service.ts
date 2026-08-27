@@ -103,7 +103,7 @@ export class CustomersService {
             id: true,
             fileName: true,
             documentType: true,
-            verificationStatus: true,
+            status: true,
             uploadedAt: true,
           },
         },

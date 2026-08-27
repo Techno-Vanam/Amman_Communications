@@ -6,7 +6,7 @@ import { UpdateServiceStatusDto } from './dto/update-service-status.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { ServicesService } from './services.service';
 
-@Controller('v1/admin/services')
+@Controller('admin/services')
 @UseGuards(AdminAuthGuard)
 export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}

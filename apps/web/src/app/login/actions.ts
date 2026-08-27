@@ -13,7 +13,7 @@ export async function loginAction(formData: FormData) {
   }
 
   try {
-    const res = await fetch(`${apiBaseUrl}/v1/auth/login`, {
+    const res = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

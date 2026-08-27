@@ -72,7 +72,12 @@ test('customer document completion rejects another customer application', async 
     application: { findFirst: async () => null },
     document: { create: async () => { throw new Error('must not create'); } },
   } as never;
-  const service = new DocumentsService(prisma);
+  const storageMock = {
+    validateFile: () => {},
+    createDownloadUrl: async () => 'url',
+    deleteFile: async () => {},
+  } as never;
+  const service = new DocumentsService(prisma, storageMock);
 
   await assert.rejects(
     () => service.complete('customer-1', {

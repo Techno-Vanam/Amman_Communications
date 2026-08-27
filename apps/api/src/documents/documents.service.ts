@@ -21,6 +21,16 @@ export class DocumentsService {
     private readonly storage: StorageService,
   ) {}
 
+  async complete(customerId: string, input: { applicationId: string; documentType: string; storagePath: string; fileName: string; mimeType: string; fileSize: number }) {
+    return this.uploadOrReplaceDocument(customerId, input.applicationId, input);
+  }
+
+  async download(customerId: string, id: string) {
+    const document = await this.prisma.document.findFirst({ where: { id, customerId } });
+    if (!document) throw new NotFoundException('Document not found');
+    return this.storage.createDownloadUrl(document.storagePath);
+  }
+
   /**
    * Return available services and their required document specifications
    */
