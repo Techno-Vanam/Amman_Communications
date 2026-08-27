@@ -1,162 +1,82 @@
-import { apiClient } from '../apiClient';
-
-export type AppointmentType = 'OFFICE_VISIT' | 'ONLINE_CONSULTATION';
-export type ConsultationMode = 'PHONE' | 'VIDEO' | 'WHATSAPP';
-export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'RESCHEDULED' | 'COMPLETED' | 'CANCELLED';
-
-export interface Service {
-  id: string;
-  name: string;
-  description?: string;
-  requiredDocuments?: string[];
-  governmentFee?: number;
-  officeCharge?: number;
-  estimatedProcessingTime?: string;
-  isActive: boolean;
-}
-
-export interface Office {
-  id: string;
-  name: string;
-  address: string;
-  isActive: boolean;
-}
-
-export interface CustomerProfile {
-  id: string;
-  name: string;
-  email: string;
-  address?: string;
-  contactNumber?: string;
-}
-
-export interface AppointmentDocument {
-  id: string;
-  appointmentId: string;
-  fileUrl: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  uploadedAt: string;
-}
-
-export interface AppointmentStatusHistory {
-  id: string;
-  appointmentId: string;
-  status: AppointmentStatus;
-  changedBy: string;
-  remarks?: string;
-  changedAt: string;
-}
+export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'RESCHEDULED';
+export type AppointmentMode = 'OFFLINE' | 'ONLINE';
+export type OnlineMeetingType = 'PHONE' | 'VIDEO' | 'MEETING';
 
 export interface Appointment {
   id: string;
-  appointmentNumber: string;
-  customerId: string;
-  serviceId: string;
-  service: Service;
-  appointmentType: AppointmentType;
-  officeId?: string;
-  office?: Office;
-  consultationMode?: ConsultationMode;
-  preferredDate: string;
-  preferredTime: string;
-  contactNumber: string;
-  name: string;
-  email?: string;
-  address?: string;
-  notes?: string;
+  customerId?: string | null;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  serviceId?: string | null;
+  appointmentDate: string; // ISO string
+  durationMinutes: number;
+  mode: AppointmentMode;
+  onlineType?: OnlineMeetingType | null;
+  meetingLink?: string | null;
   status: AppointmentStatus;
-  originalDate?: string;
-  originalTime?: string;
-  rescheduleReason?: string;
-  adminNote?: string;
+  notes?: string | null;
+  rescheduledFrom?: string | null;
+  rescheduleReason?: string | null;
   createdAt: string;
   updatedAt: string;
-  documents?: AppointmentDocument[];
-  statusHistory?: AppointmentStatusHistory[];
+  service?: {
+    id: string;
+    name: string;
+    totalFee: number | string;
+    estimatedTime?: string | null;
+  } | null;
+  customer?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
 }
 
-export interface CreateAppointmentPayload {
-  serviceId: string;
-  appointmentType: AppointmentType;
-  officeId?: string;
-  consultationMode?: ConsultationMode;
-  preferredDate: string;
-  preferredTime: string;
-  contactNumber: string;
-  address?: string;
+export interface AppointmentStats {
+  today: number;
+  upcoming: number;
+  confirmed: number;
+  completed: number;
+  cancelled: number;
+  total: number;
+}
+
+export interface CreateAppointmentInput {
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerId?: string;
+  serviceId?: string;
+  appointmentDate: string;
+  durationMinutes?: number;
+  mode: AppointmentMode;
+  onlineType?: OnlineMeetingType;
+  meetingLink?: string;
+  status?: AppointmentStatus;
   notes?: string;
 }
 
-export async function fetchCustomerProfile(): Promise<CustomerProfile> {
-  return apiClient<CustomerProfile>('/customer/me');
+export interface UpdateAppointmentInput {
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerId?: string;
+  serviceId?: string;
+  appointmentDate?: string;
+  durationMinutes?: number;
+  mode?: AppointmentMode;
+  onlineType?: OnlineMeetingType;
+  meetingLink?: string;
+  status?: AppointmentStatus;
+  notes?: string;
 }
 
-export async function fetchServices(): Promise<Service[]> {
-  return apiClient<Service[]>('/customer/services');
-}
-
-export async function fetchOffices(): Promise<Office[]> {
-  return apiClient<Office[]>('/customer/offices');
-}
-
-export async function createAppointment(payload: CreateAppointmentPayload): Promise<Appointment> {
-  return apiClient<Appointment>('/customer/appointments', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-export async function requestDocumentUploadUrl(
-  appointmentId: string,
-  data: { documentType: string; fileName: string; mimeType: string; fileSize: number }
-): Promise<{ uploadUrl: string; storagePath: string }> {
-  return apiClient<{ uploadUrl: string; storagePath: string }>(
-    `/customer/appointments/${appointmentId}/documents/upload-url`,
-    {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }
-  );
-}
-
-export async function uploadFileToSignedUrl(uploadUrl: string, file: File): Promise<void> {
-  // Direct PUT to signed URL (storage bucket)
-  const response = await fetch(uploadUrl, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': file.type,
-    },
-    body: file,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to upload file to storage bucket (HTTP ${response.status})`);
-  }
-}
-
-export async function completeDocumentUpload(
-  appointmentId: string,
-  data: { storagePath: string; fileName: string; fileType: string; fileSize: number }
-): Promise<AppointmentDocument> {
-  return apiClient<AppointmentDocument>(`/customer/appointments/${appointmentId}/documents`, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-}
-
-export async function fetchAppointments(status?: string): Promise<Appointment[]> {
-  const query = status && status !== 'ALL' ? `?status=${encodeURIComponent(status)}` : '';
-  return apiClient<Appointment[]>(`/customer/appointments${query}`);
-}
-
-export async function fetchAppointmentDetail(id: string): Promise<Appointment> {
-  return apiClient<Appointment>(`/customer/appointments/${id}`);
-}
-
-export async function cancelAppointment(id: string): Promise<Appointment> {
-  return apiClient<Appointment>(`/customer/appointments/${id}`, {
-    method: 'DELETE',
-  });
+export interface RescheduleAppointmentInput {
+  newDate: string;
+  reason?: string;
+  mode?: AppointmentMode;
+  onlineType?: OnlineMeetingType;
+  meetingLink?: string;
+  notes?: string;
 }
