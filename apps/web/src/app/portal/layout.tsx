@@ -15,6 +15,7 @@ export default async function PortalLayout({ children }: Readonly<{ children: Re
         <nav aria-label="Customer navigation" className="grid gap-1">
           <Link href="/portal/dashboard" className="rounded-lg bg-white/15 px-3 py-2 text-sm">Dashboard</Link>
           <Link href="/portal/documents" className="rounded-lg px-3 py-2 text-sm text-white/75 hover:bg-white/10">My documents</Link>
+          <Link href="/portal/payments" className="rounded-lg px-3 py-2 text-sm text-white/75 hover:bg-white/10">Payments & Receipts</Link>
         </nav>
       </aside>
       <main className="min-w-0 flex-1 p-6 md:p-10">{children}</main>
