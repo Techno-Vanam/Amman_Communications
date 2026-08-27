@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AppointmentMode } from '@prisma/client';
 import { AdminAuthGuard } from '../auth/guards/admin-auth.guard';
 import { AppointmentsService } from './appointments.service';
@@ -7,17 +8,21 @@ import { RescheduleAppointmentDto } from './dto/reschedule-appointment.dto';
 import { UpdateAppointmentStatusDto } from './dto/update-appointment-status.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 
+@ApiTags('Admin - Appointments')
+@ApiBearerAuth()
 @Controller('v1/admin/appointments')
 @UseGuards(AdminAuthGuard)
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
   @Get('stats')
+  @ApiOperation({ summary: 'Get Appointment Statistics' })
   async getStats() {
     return this.appointmentsService.getStats();
   }
 
   @Get()
+  @ApiOperation({ summary: 'List Appointments' })
   async findAll(
     @Query('search') search?: string,
     @Query('status') status?: string,
@@ -39,31 +44,37 @@ export class AppointmentsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get Appointment Details' })
   async findOne(@Param('id') id: string) {
     return this.appointmentsService.findOne(id);
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create New Appointment' })
   async create(@Body() dto: CreateAppointmentDto) {
     return this.appointmentsService.create(dto);
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update Appointment Details' })
   async update(@Param('id') id: string, @Body() dto: UpdateAppointmentDto) {
     return this.appointmentsService.update(id, dto);
   }
 
   @Patch(':id/reschedule')
+  @ApiOperation({ summary: 'Reschedule Appointment' })
   async reschedule(@Param('id') id: string, @Body() dto: RescheduleAppointmentDto) {
     return this.appointmentsService.reschedule(id, dto);
   }
 
   @Patch(':id/status')
+  @ApiOperation({ summary: 'Update Appointment Status' })
   async updateStatus(@Param('id') id: string, @Body() dto: UpdateAppointmentStatusDto) {
     return this.appointmentsService.updateStatus(id, dto.status);
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Cancel/Delete Appointment' })
   async remove(@Param('id') id: string) {
     return this.appointmentsService.remove(id);
   }
