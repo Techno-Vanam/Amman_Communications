@@ -34,24 +34,28 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
+import { useUser, getUserStorageKey } from './UserContext';
+
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useUser();
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
   React.useEffect(() => {
     try {
-      const saved = localStorage.getItem('amman_user_notifications');
-      if (saved) {
-        setNotifications(JSON.parse(saved));
-      }
+      const storageKey = getUserStorageKey(user.email, 'amman_user_notifications');
+      const saved = localStorage.getItem(storageKey);
+      setNotifications(saved ? JSON.parse(saved) : []);
     } catch (e) {
       console.error('Error loading notifications:', e);
+      setNotifications([]);
     }
-  }, []);
+  }, [user.email]);
 
   const saveNotificationsToStorage = (items: NotificationItem[]) => {
     try {
-      localStorage.setItem('amman_user_notifications', JSON.stringify(items));
+      const storageKey = getUserStorageKey(user.email, 'amman_user_notifications');
+      localStorage.setItem(storageKey, JSON.stringify(items));
     } catch (e) {
       console.error('Error saving notifications:', e);
     }

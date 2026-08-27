@@ -53,8 +53,8 @@ export async function registerAction(formData: FormData) {
       maxAge: 15 * 60, // 15 minutes in seconds
     });
 
-    // Registration automatically logs in and redirects to portal
-    return { success: true, redirectTo: '/portal' };
+    // Registration automatically logs in and redirects to portal dashboard
+    return { success: true, redirectTo: '/portal/dashboard' };
 
   } catch (error) {
     console.error('Registration action error:', error);

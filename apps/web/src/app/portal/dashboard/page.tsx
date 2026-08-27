@@ -15,7 +15,7 @@ import {
   Plus
 } from 'lucide-react';
 
-import { useUser } from '@/context/UserContext';
+import { useUser, getUserStorageKey } from '@/context/UserContext';
 
 export default function PortalDashboardPage() {
   const { user } = useUser();
@@ -24,15 +24,19 @@ export default function PortalDashboardPage() {
 
   useEffect(() => {
     try {
-      const savedApps = localStorage.getItem('amman_user_applications');
-      if (savedApps) setApplications(JSON.parse(savedApps));
+      const appsKey = getUserStorageKey(user.email, 'amman_user_applications');
+      const savedApps = localStorage.getItem(appsKey);
+      setApplications(savedApps ? JSON.parse(savedApps) : []);
 
-      const savedApts = localStorage.getItem('amman_user_appointments');
-      if (savedApts) setAppointments(JSON.parse(savedApts));
+      const aptsKey = getUserStorageKey(user.email, 'amman_user_appointments');
+      const savedApts = localStorage.getItem(aptsKey);
+      setAppointments(savedApts ? JSON.parse(savedApts) : []);
     } catch (e) {
       console.error('Error loading dashboard state:', e);
+      setApplications([]);
+      setAppointments([]);
     }
-  }, []);
+  }, [user.email]);
 
   const activeAppsCount = applications.filter((a) => a.status !== 'Completed').length;
   const completedAppsCount = applications.filter((a) => a.status === 'Completed').length;
@@ -61,77 +65,85 @@ export default function PortalDashboardPage() {
         </Link>
       </div>
 
-      {/* 4 KPI Summary Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 4 KPI Summary Cards Grid - Matching Payments Card Styling & Size */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card 1: Active Applications */}
-        <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-[#12372A]" />
-              <span>Active applications</span>
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-gray-600 tracking-wide">Active Applications</span>
             </div>
-            <button className="text-gray-400 hover:text-gray-600">
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
+            <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+              {applications.length}
+            </p>
           </div>
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">{applications.length}</h3>
-            <span className="text-[11px] font-bold text-emerald-600">
+          <div>
+            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/60">
               {activeAppsCount > 0 ? `${activeAppsCount} active` : 'No active apps'}
             </span>
           </div>
         </div>
 
         {/* Card 2: Pending Actions */}
-        <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-500" />
-              <span>Pending actions</span>
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-gray-600 tracking-wide">Pending Actions</span>
             </div>
-            <button className="text-gray-400 hover:text-gray-600">
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
+            <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+              {pendingActionsCount}
+            </p>
           </div>
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">{pendingActionsCount}</h3>
-            <span className="text-[11px] font-semibold text-amber-600">
+          <div>
+            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/60">
               {pendingActionsCount > 0 ? 'Verification in progress' : 'Up to date'}
             </span>
           </div>
         </div>
 
         {/* Card 3: Completed Services */}
-        <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              <span>Completed services</span>
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-gray-600 tracking-wide">Completed Services</span>
             </div>
-            <button className="text-gray-400 hover:text-gray-600">
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
+            <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+              {completedAppsCount}
+            </p>
           </div>
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">{completedAppsCount}</h3>
-            <span className="text-[11px] font-semibold text-gray-400">Total completed</span>
+          <div>
+            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
+              Total completed
+            </span>
           </div>
         </div>
 
         {/* Card 4: Appointments */}
-        <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-blue-500" />
-              <span>Appointments</span>
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-gray-600 tracking-wide">Appointments</span>
             </div>
-            <button className="text-gray-400 hover:text-gray-600">
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
+            <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+              {appointmentsCount}
+            </p>
           </div>
-          <div className="flex items-baseline justify-between">
-            <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">{appointmentsCount}</h3>
-            <span className="text-[11px] font-semibold text-blue-600">Booked sessions</span>
+          <div>
+            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-200/60">
+              Booked sessions
+            </span>
           </div>
         </div>
       </div>

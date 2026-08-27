@@ -28,10 +28,11 @@ import {
   UserCheck,
   ArrowLeft,
   X,
-  FileCheck
+  FileCheck,
+  Search
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
-import { useUser } from '@/context/UserContext';
+import { useUser, getUserStorageKey } from '@/context/UserContext';
 
 interface ApplicationItem {
   id: string;
@@ -146,6 +147,8 @@ export default function ApplicationsPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedService, setSelectedService] = useState('passport');
   const [activeTabFilter, setActiveTabFilter] = useState<'All' | 'Verification' | 'Processing' | 'Completed'>('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewModalApp, setViewModalApp] = useState<ApplicationItem | null>(null);
 
   // History modal & document view modal toggles
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -158,24 +161,8 @@ export default function ApplicationsPage() {
     applicantEmail: user.email || '',
     altPhone: user.altPhone || '+91 ',
     address: user.address || '',
-    idDocType: 'Aadhaar Card' as 'Aadhaar Card' | 'PAN Card' | 'Passport Number' | 'Voter ID',
-    idDocNumber: user.aadhaarNumber || '',
-    dob: user.dob || '',
-    remarks: ''
+    description: ''
   });
-
-  React.useEffect(() => {
-    setDetails((prev) => ({
-      ...prev,
-      applicantName: user.name || '',
-      applicantPhone: user.phone || '+91 ',
-      applicantEmail: user.email || '',
-      altPhone: user.altPhone || '+91 ',
-      address: user.address || prev.address,
-      idDocNumber: user.aadhaarNumber || prev.idDocNumber,
-      dob: user.dob || prev.dob
-    }));
-  }, [user]);
 
   const [requiredDocs, setRequiredDocs] = useState<RequiredDocItem[]>(SERVICE_REQUIRED_DOCS.passport);
 
@@ -187,18 +174,38 @@ export default function ApplicationsPage() {
 
   const serviceObj = SERVICES.find((s) => s.id === selectedService) || SERVICES[0];
 
-  // Filter applications by tab
+  // Filter applications by tab and search query
   const filteredApps = applications.filter((app) => {
-    if (activeTabFilter === 'All') return true;
-    if (activeTabFilter === 'Verification') return app.status === 'Verification' || app.status === 'Documents Received';
-    if (activeTabFilter === 'Processing') return app.status === 'Processing' || app.status === 'Awaiting Approval';
-    if (activeTabFilter === 'Completed') return app.status === 'Completed';
-    return true;
+    const matchesTab =
+      activeTabFilter === 'All'
+        ? true
+        : activeTabFilter === 'Verification'
+        ? app.status === 'Verification' || app.status === 'Documents Received'
+        : activeTabFilter === 'Processing'
+        ? app.status === 'Processing' || app.status === 'Awaiting Approval'
+        : activeTabFilter === 'Completed'
+        ? app.status === 'Completed'
+        : true;
+
+    if (!matchesTab) return false;
+
+    if (!searchQuery.trim()) return true;
+
+    const query = searchQuery.toLowerCase().trim();
+    return (
+      app.id.toLowerCase().includes(query) ||
+      app.serviceType.toLowerCase().includes(query) ||
+      app.status.toLowerCase().includes(query) ||
+      app.submittedDate.toLowerCase().includes(query) ||
+      app.addedBy.toLowerCase().includes(query) ||
+      (app.assignedOfficer && app.assignedOfficer.toLowerCase().includes(query)) ||
+      (app.adminRemarks && app.adminRemarks.toLowerCase().includes(query))
+    );
   });
 
   const handleOpenView = (app: ApplicationItem) => {
     setSelectedApp(app);
-    setMode('view');
+    setViewModalApp(app);
   };
 
   const handleFileUploadInDetail = (docId: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -244,17 +251,21 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
     showToast('Summary Downloaded Successfully!', `Application-Summary-${selectedApp.id}.txt saved.`);
   };
 
-  // Hydrate applications from localStorage
+  // Hydrate applications from localStorage per user account
   React.useEffect(() => {
     try {
-      const saved = localStorage.getItem('amman_user_applications');
+      const storageKey = getUserStorageKey(user.email, 'amman_user_applications');
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         setApplications(JSON.parse(saved));
+      } else {
+        setApplications([]);
       }
     } catch (e) {
       console.error('Error loading applications:', e);
+      setApplications([]);
     }
-  }, []);
+  }, [user.email]);
 
   const handleFinishCreate = () => {
     const newId = `AMC-2026-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -277,7 +288,8 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
     const updated = [newApp, ...applications];
     setApplications(updated);
     try {
-      localStorage.setItem('amman_user_applications', JSON.stringify(updated));
+      const storageKey = getUserStorageKey(user.email, 'amman_user_applications');
+      localStorage.setItem(storageKey, JSON.stringify(updated));
     } catch (e) {
       console.error('Error saving application:', e);
     }
@@ -293,70 +305,82 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
       {/* ======================================================== */}
       {mode === 'list' && (
         <>
-          {/* Top 3 Summary Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4">
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
-              <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-[#12372A]" />
-                  <span>Active Applications</span>
+          {/* Top 3 Summary Cards Grid - Matching Payments Card Styling & Size */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Card 1: Active Applications */}
+            <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+              <div>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-bold text-gray-600 tracking-wide">Active Applications</span>
                 </div>
-                <button className="text-gray-400 hover:text-gray-600">
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
+                <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+                  {applications.length}
+                </p>
               </div>
-              <div className="flex items-baseline justify-between">
-                <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">{applications.length}</h3>
-                <span className="text-[11px] font-semibold text-[#12372A] bg-[#d8ebdd] px-2.5 py-0.5 rounded-full">In Progress</span>
+              <div>
+                <span className="inline-block px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200/60">
+                  In Progress
+                </span>
               </div>
             </div>
 
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
-              <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-blue-500" />
-                  <span>Pending Documents</span>
+            {/* Card 2: Pending Documents */}
+            <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+              <div>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-bold text-gray-600 tracking-wide">Pending Documents</span>
                 </div>
-                <button className="text-gray-400 hover:text-gray-600">
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
+                <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+                  2
+                </p>
               </div>
-              <div className="flex items-baseline justify-between">
-                <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">2</h3>
-                <span className="text-[11px] font-semibold text-blue-600">Within 7 days</span>
+              <div>
+                <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
+                  Within 7 days
+                </span>
               </div>
             </div>
 
-            <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-2xs space-y-3">
-              <div className="flex items-center justify-between text-xs text-gray-500 font-semibold">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-500" />
-                  <span>Verification Status</span>
+            {/* Card 3: Verification Status */}
+            <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+              <div>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
+                    <AlertCircle className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-bold text-gray-600 tracking-wide">Verification Status</span>
                 </div>
-                <button className="text-gray-400 hover:text-gray-600">
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
+                <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+                  1
+                </p>
               </div>
-              <div className="flex items-baseline justify-between">
-                <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight">1</h3>
-                <span className="text-[11px] font-bold text-amber-600">• Review Active</span>
+              <div>
+                <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/60">
+                  • Review Active
+                </span>
               </div>
             </div>
           </div>
 
           {/* Main Container Card */}
           <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-2xs space-y-6">
-            {/* Top Control Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="bg-gray-100/80 p-1 rounded-full inline-flex items-center space-x-1 text-xs font-semibold">
+            {/* Top Control Bar with Search */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="bg-gray-100/90 p-1.5 rounded-full inline-flex items-center gap-1 border border-gray-200/60 overflow-x-auto max-w-full shrink-0">
                 {(['All', 'Verification', 'Processing', 'Completed'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTabFilter(tab)}
-                    className={`px-5 py-2 rounded-full transition-all whitespace-nowrap ${
+                    className={`px-4 py-1.5 rounded-full transition-all text-xs whitespace-nowrap ${
                       activeTabFilter === tab
-                        ? 'bg-white text-gray-900 font-bold shadow-xs'
-                        : 'text-gray-500 hover:text-gray-900'
+                        ? 'bg-white text-gray-900 font-extrabold shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900 font-semibold'
                     }`}
                   >
                     {tab}
@@ -364,16 +388,39 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                 ))}
               </div>
 
-              <button
-                onClick={() => {
-                  setMode('create');
-                  setCurrentStep(1);
-                }}
-                className="bg-[#12372A] hover:bg-[#1a4a38] text-white px-6 py-2.5 rounded-full font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2 self-start sm:self-auto"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Application</span>
-              </button>
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                {/* Search Bar Input */}
+                <div className="relative flex-1 md:w-64">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search applications..."
+                    className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200/90 rounded-full text-xs font-medium text-gray-900 focus:outline-none focus:border-[#12372A] focus:ring-2 focus:ring-[#12372A]/10 shadow-2xs transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Add Application Action Button */}
+                <button
+                  onClick={() => {
+                    setMode('create');
+                    setCurrentStep(1);
+                  }}
+                  className="bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2 rounded-full font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2 shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Application</span>
+                </button>
+              </div>
             </div>
 
             {/* 3-Column Application Cards Grid */}
@@ -582,11 +629,15 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                       <div
                         className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-2xs ${
                           isCompleted
-                            ? 'bg-[#12372A] text-white ring-4 ring-emerald-50'
+                            ? 'bg-[#12372A] text-white ring-4 ring-gray-300'
                             : isActive
-                            ? 'bg-[#1c3a63] text-white ring-4 ring-blue-100 scale-110'
-                            : 'bg-white border-2 border-gray-300 text-gray-400'
+                            ? 'bg-[#1c3a63] text-white ring-4 ring-gray-300 scale-110'
+                            : 'bg-white text-gray-800'
                         }`}
+                        style={{
+                          border: '2px solid #6b7280',
+                          backgroundColor: isCompleted ? '#12372A' : isActive ? '#1c3a63' : '#ffffff'
+                        }}
                       >
                         {isCompleted ? <Check className="w-5 h-5 text-white stroke-[3]" /> : phase.step}
                       </div>
@@ -728,11 +779,15 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
                     currentStep === step.id
-                      ? 'bg-[#12372A] text-white shadow-sm'
+                      ? 'bg-[#12372A] text-white ring-2 ring-gray-300 shadow-sm'
                       : currentStep > step.id
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : 'bg-gray-100 text-gray-400'
+                      ? 'bg-[#12372A] text-white shadow-sm'
+                      : 'bg-white text-gray-800'
                   }`}
+                  style={{
+                    border: '2px solid #6b7280',
+                    backgroundColor: currentStep >= step.id ? '#12372A' : '#ffffff'
+                  }}
                 >
                   {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
                 </div>
@@ -1044,6 +1099,125 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             >
               Close Preview
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Centered Application Details Popup */}
+      {viewModalApp && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 space-y-6 shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#f0f7f2] text-[#12372A] flex items-center justify-center font-bold">
+                  <FileText className="w-5 h-5 text-[#12372A]" />
+                </div>
+                <div>
+                  <h3 className="text-base md:text-lg font-bold text-gray-900">
+                    Application Details
+                  </h3>
+                  <p className="text-xs text-gray-400 font-medium">{viewModalApp.id}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewModalApp(null)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Application Overview Grid */}
+            <div className="bg-[#f8faf9] border border-gray-200/80 rounded-2xl p-5 space-y-3 text-xs">
+              <div className="flex items-center justify-between pb-2 border-b border-gray-200/60">
+                <span className="font-bold text-[#12372A] text-sm">{viewModalApp.serviceType}</span>
+                <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-[#d8ebdd] text-[#12372A]">
+                  • {viewModalApp.status}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-gray-700 font-medium pt-1">
+                <div><span className="text-gray-400">Application ID:</span> <span className="font-bold text-gray-900">{viewModalApp.id}</span></div>
+                <div><span className="text-gray-400">Submitted On:</span> <span className="font-bold text-gray-900">{viewModalApp.submittedDate}</span></div>
+                <div><span className="text-gray-400">Added By:</span> <span className="font-bold text-gray-900">{viewModalApp.addedBy}</span></div>
+                <div><span className="text-gray-400">Assigned Officer:</span> <span className="font-bold text-gray-900">{viewModalApp.assignedOfficer || 'Officer Assigned'}</span></div>
+                <div><span className="text-gray-400">Processing Time:</span> <span className="font-bold text-gray-900">{viewModalApp.estimatedDays || '7 days'}</span></div>
+                <div><span className="text-gray-400">Current Phase:</span> <span className="font-bold text-[#12372A]">Phase {viewModalApp.stepPhase} of 8</span></div>
+              </div>
+            </div>
+
+            {/* Status Tracker Stepper Nodes */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Application Status Tracker</h4>
+              <div className="overflow-x-auto pb-2">
+                <div className="flex items-center justify-between min-w-[550px] relative py-2">
+                  <div className="absolute top-5 left-6 right-6 h-1 bg-gray-200 -z-0 rounded-full" />
+                  {TRACKER_PHASES.map((phase) => {
+                    const isCompleted = phase.step < viewModalApp.stepPhase;
+                    const isActive = phase.step === viewModalApp.stepPhase;
+                    return (
+                      <div key={phase.step} className="flex flex-col items-center text-center space-y-1.5 z-10 w-16">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
+                            isCompleted
+                              ? 'bg-[#12372A] text-white'
+                              : isActive
+                              ? 'bg-[#12372A] text-white ring-4 ring-gray-300 scale-110'
+                              : 'bg-white text-gray-800'
+                          }`}
+                          style={{
+                            border: '2px solid #6b7280',
+                            backgroundColor: isCompleted || isActive ? '#12372A' : '#ffffff'
+                          }}
+                        >
+                          {isCompleted ? <Check className="w-4 h-4 text-white stroke-[3]" /> : phase.step}
+                        </div>
+                        <p className={`text-[10px] font-bold leading-tight ${isActive ? 'text-[#12372A]' : isCompleted ? 'text-gray-800' : 'text-gray-400'}`}>
+                          {phase.title}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Required Documents Section */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Required Documents</h4>
+              <div className="divide-y divide-gray-100 border border-gray-200/80 rounded-2xl overflow-hidden bg-white">
+                {(DETAIL_DOCS_DATA[viewModalApp.id] || SERVICE_REQUIRED_DOCS.passport).map((doc) => (
+                  <div key={doc.id} className="p-3 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                      <span className="font-semibold text-gray-800">{doc.name}</span>
+                    </div>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      doc.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {doc.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Actions Footer */}
+            <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-3 sticky bottom-0 bg-white">
+              <button
+                onClick={handleDownloadSummary}
+                className="px-4 py-2 border border-gray-300 rounded-full bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs transition-all shadow-2xs flex items-center gap-2"
+              >
+                <Download className="w-4 h-4 text-gray-600" />
+                <span>Download Summary</span>
+              </button>
+              <button
+                onClick={() => setViewModalApp(null)}
+                className="px-6 py-2 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-sm"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

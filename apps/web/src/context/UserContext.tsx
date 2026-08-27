@@ -24,6 +24,11 @@ interface UserContextType {
   logoutUser: () => void;
 }
 
+export const getUserStorageKey = (email: string | undefined, baseKey: string) => {
+  const safeEmail = email ? email.toLowerCase().trim().replace(/[^a-z0-9]/g, '_') : 'guest';
+  return `${baseKey}_${safeEmail}`;
+};
+
 const DEFAULT_JAI_USER: UserProfile = {
   name: 'Jai',
   email: 'jai@gmail.com',
@@ -45,41 +50,40 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile>(DEFAULT_JAI_USER);
 
   useEffect(() => {
-    // Load persisted user from localStorage if available
     try {
-      const savedUser = localStorage.getItem('amman_user_profile');
+      const savedEmail = localStorage.getItem('user_email');
+      const emailToUse = savedEmail || DEFAULT_JAI_USER.email;
+      const accountKey = getUserStorageKey(emailToUse, 'amman_user_profile');
+      
+      const savedUser = localStorage.getItem(accountKey) || localStorage.getItem('amman_user_profile');
       if (savedUser) {
         const parsed = JSON.parse(savedUser);
         setUser({
           ...parsed,
+          email: parsed.email || emailToUse,
           phone: parsed.phone || '+91 ',
           altPhone: parsed.altPhone || '+91 '
         });
       } else {
-        const savedEmail = localStorage.getItem('user_email');
-        if (savedEmail) {
-          const derivedName = savedEmail.split('@')[0].replace('.', ' ');
-          const formattedName = derivedName.charAt(0).toUpperCase() + derivedName.slice(1);
-          const newUser: UserProfile = {
-            name: formattedName,
-            email: savedEmail,
-            phone: '+91 ',
-            address: '',
-            handle: `@${savedEmail.split('@')[0]}`,
-            initials: formattedName.charAt(0).toUpperCase(),
-            dob: '',
-            aadhaarNumber: '',
-            panNumber: '',
-            occupation: '',
-            altPhone: '+91 ',
-            emergencyContact: ''
-          };
-          setUser(newUser);
-          localStorage.setItem('amman_user_profile', JSON.stringify(newUser));
-        } else {
-          // Default fresh profile
-          localStorage.setItem('amman_user_profile', JSON.stringify(DEFAULT_JAI_USER));
-        }
+        const derivedName = emailToUse.split('@')[0].replace('.', ' ');
+        const formattedName = derivedName.charAt(0).toUpperCase() + derivedName.slice(1);
+        const newUser: UserProfile = {
+          name: formattedName,
+          email: emailToUse,
+          phone: '+91 ',
+          address: '',
+          handle: `@${emailToUse.split('@')[0]}`,
+          initials: formattedName.charAt(0).toUpperCase(),
+          dob: '',
+          aadhaarNumber: '',
+          panNumber: '',
+          occupation: '',
+          altPhone: '+91 ',
+          emergencyContact: ''
+        };
+        setUser(newUser);
+        localStorage.setItem(accountKey, JSON.stringify(newUser));
+        localStorage.setItem('user_email', emailToUse);
       }
     } catch (e) {
       console.error('Error loading user profile from localStorage:', e);
@@ -99,7 +103,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         handle: updates.email ? `@${updates.email.split('@')[0]}` : prev.handle
       };
       try {
+        const accountKey = getUserStorageKey(updated.email, 'amman_user_profile');
+        localStorage.setItem(accountKey, JSON.stringify(updated));
         localStorage.setItem('amman_user_profile', JSON.stringify(updated));
+        localStorage.setItem('user_email', updated.email);
       } catch (e) {
         console.error('Error saving user profile:', e);
       }
@@ -108,6 +115,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginUser = (email: string, name?: string) => {
+    const accountKey = getUserStorageKey(email, 'amman_user_profile');
+    try {
+      const existingProfile = localStorage.getItem(accountKey);
+      if (existingProfile) {
+        const parsed = JSON.parse(existingProfile);
+        setUser(parsed);
+        localStorage.setItem('amman_user_profile', JSON.stringify(parsed));
+        localStorage.setItem('user_email', email);
+        return;
+      }
+    } catch (e) {
+      console.error('Error checking existing user profile:', e);
+    }
+
     const derivedName = name || email.split('@')[0].replace('.', ' ');
     const formattedName = derivedName.charAt(0).toUpperCase() + derivedName.slice(1);
     const newUser: UserProfile = {
@@ -126,6 +147,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
     setUser(newUser);
     try {
+      localStorage.setItem(accountKey, JSON.stringify(newUser));
       localStorage.setItem('amman_user_profile', JSON.stringify(newUser));
       localStorage.setItem('user_email', email);
     } catch (e) {
@@ -135,10 +157,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const logoutUser = () => {
     try {
-      localStorage.removeItem('amman_user_profile');
       localStorage.removeItem('user_email');
     } catch (e) {
-      console.error('Error clearing user profile:', e);
+      console.error('Error clearing user session:', e);
     }
     setUser(DEFAULT_JAI_USER);
   };

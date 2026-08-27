@@ -68,7 +68,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
         {/* Main Nav Section */}
         <div className="space-y-1">
           <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Main Menu</p>
-          <nav aria-label="Customer portal main navigation" className="space-y-1">
+          <nav aria-label="Customer portal main navigation" className="space-y-1.5">
             {MAIN_NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || (item.href !== '/portal/dashboard' && pathname.startsWith(item.href));
@@ -80,23 +80,29 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`
-                    flex items-center justify-between px-4 py-3 rounded-2xl text-xs font-semibold transition-all duration-200 group
+                    flex items-center justify-between px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 group
                     ${isActive
-                      ? 'bg-[#f0f7f2] text-[#12372A] font-bold shadow-2xs'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold shadow-2xs'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-semibold'
                     }
                   `}
                 >
                   <div className="flex items-center space-x-3">
-                    <Icon
-                      className={`w-4 h-4 transition-transform duration-200 group-hover:scale-110 ${
-                        isActive ? 'text-[#12372A]' : 'text-gray-400'
-                      }`}
-                    />
-                    <span>{item.name}</span>
+                    <div
+                      className={`
+                        w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-200
+                        ${isActive
+                          ? 'bg-[#12372A] text-white shadow-xs'
+                          : 'bg-transparent text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-800'
+                        }
+                      `}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs">{item.name}</span>
                   </div>
                   {badgeValue && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500 text-white shadow-2xs">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500 text-white shadow-2xs mr-1">
                       {badgeValue}
                     </span>
                   )}
@@ -108,7 +114,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
       </div>
 
       {/* Bottom Fixed Footer Section: Profile, Settings & Log Out */}
-      <div className="p-4 border-t border-gray-100 bg-white space-y-1 shrink-0 rounded-b-3xl">
+      <div className="p-4 border-t border-gray-100 bg-white space-y-1.5 shrink-0 rounded-b-3xl">
         <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Account &amp; Preferences</p>
         
         {/* Profile Link */}
@@ -116,14 +122,24 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
           href="/portal/profile"
           onClick={() => setMobileMenuOpen(false)}
           className={`
-            flex items-center space-x-3 px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-200 group
+            flex items-center space-x-3 px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 group
             ${isProfileActive
-              ? 'bg-[#f0f7f2] text-[#12372A] font-bold shadow-2xs'
+              ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold shadow-2xs'
               : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }
           `}
         >
-          <User className={`w-4 h-4 transition-transform group-hover:scale-110 ${isProfileActive ? 'text-[#12372A]' : 'text-gray-400'}`} />
+          <div
+            className={`
+              w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-200
+              ${isProfileActive
+                ? 'bg-[#12372A] text-white shadow-xs'
+                : 'bg-transparent text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-800'
+              }
+            `}
+          >
+            <User className="w-4 h-4" />
+          </div>
           <span>Profile</span>
         </Link>
 
@@ -132,14 +148,24 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
           href="/portal/settings"
           onClick={() => setMobileMenuOpen(false)}
           className={`
-            flex items-center space-x-3 px-4 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-200 group
+            flex items-center space-x-3 px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 group
             ${isSettingsActive
-              ? 'bg-[#f0f7f2] text-[#12372A] font-bold shadow-2xs'
+              ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold shadow-2xs'
               : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }
           `}
         >
-          <Settings className={`w-4 h-4 transition-transform group-hover:scale-110 ${isSettingsActive ? 'text-[#12372A]' : 'text-gray-400'}`} />
+          <div
+            className={`
+              w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-200
+              ${isSettingsActive
+                ? 'bg-[#12372A] text-white shadow-xs'
+                : 'bg-transparent text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-800'
+              }
+            `}
+          >
+            <Settings className="w-4 h-4" />
+          </div>
           <span>Settings</span>
         </Link>
 
@@ -148,9 +174,11 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
           <Link
             href="/login"
             onClick={logoutUser}
-            className="flex items-center space-x-3 px-4 py-2.5 rounded-2xl text-xs font-semibold text-gray-600 hover:bg-rose-50 hover:text-rose-600 transition-colors group"
+            className="flex items-center space-x-3 px-2.5 py-1.5 rounded-full text-xs font-semibold text-gray-600 hover:bg-rose-50 hover:text-rose-600 transition-colors group"
           >
-            <LogOut className="w-4 h-4 text-gray-400 group-hover:text-rose-600 transition-colors" />
+            <div className="w-8 h-8 rounded-full bg-transparent text-gray-400 group-hover:bg-rose-100 group-hover:text-rose-600 flex items-center justify-center shrink-0 transition-colors">
+              <LogOut className="w-4 h-4" />
+            </div>
             <span>Log out</span>
           </Link>
         </div>
@@ -174,16 +202,16 @@ function PortalTopHeader() {
   return (
     <header className="bg-transparent pb-6 flex items-center justify-end">
       {/* Right User Controls: Notification Bell & Profile Badge */}
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-4">
         {/* Notification Bell */}
         <Link
           href="/portal/notifications"
-          className="w-9 h-9 rounded-full bg-white border border-gray-200/80 flex items-center justify-center text-gray-500 hover:text-[#12372A] hover:bg-gray-50 transition-all shadow-2xs relative"
+          className="w-12 h-12 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative"
           title="Notifications"
         >
-          <Bell className="w-4 h-4" />
+          <Bell className="w-6 h-6" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center shadow-xs">
+            <span className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1 rounded-full bg-rose-500 text-white text-[11px] font-extrabold flex items-center justify-center shadow-xs border-2 border-white leading-none shrink-0">
               {unreadCount}
             </span>
           )}
@@ -192,16 +220,16 @@ function PortalTopHeader() {
         {/* User Profile Pill Badge */}
         <Link
           href="/portal/profile"
-          className="flex items-center gap-3 bg-white border border-gray-200/80 rounded-full pl-2 pr-4 py-1.5 shadow-2xs hover:border-[#12372A] transition-all"
+          className="flex items-center gap-3.5 bg-white border border-gray-200/90 rounded-full pl-3 pr-6 py-2 shadow-xs hover:bg-[#f0f7f2] hover:border-[#a8d5b9] hover:shadow-sm transition-all"
         >
-          <div className="w-7 h-7 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-xs flex items-center justify-center border border-[#a8d5b9]/30">
+          <div className="w-10 h-10 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-sm flex items-center justify-center border border-[#a8d5b9]/30 shadow-2xs shrink-0">
             {user.initials}
           </div>
           <div className="text-left leading-tight hidden sm:block">
-            <p className="text-xs font-bold text-gray-900">{user.name}</p>
-            <p className="text-[10px] text-gray-500 font-medium">View Profile</p>
+            <p className="text-sm font-extrabold text-gray-900">{user.name}</p>
+            <p className="text-xs text-gray-500 font-semibold mt-0.5">View Profile</p>
           </div>
-          <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-gray-400 ml-1" />
         </Link>
       </div>
     </header>

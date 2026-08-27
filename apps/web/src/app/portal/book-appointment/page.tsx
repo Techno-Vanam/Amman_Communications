@@ -53,7 +53,7 @@ const STEPS = [
 ];
 
 import { useNotifications } from '@/context/NotificationContext';
-import { useUser } from '@/context/UserContext';
+import { useUser, getUserStorageKey } from '@/context/UserContext';
 
 export default function BookAppointmentPage() {
   const { showToast } = useNotifications();
@@ -123,9 +123,10 @@ export default function BookAppointmentPage() {
         location: details.location
       };
       try {
-        const saved = localStorage.getItem('amman_user_appointments');
+        const storageKey = getUserStorageKey(user.email, 'amman_user_appointments');
+        const saved = localStorage.getItem(storageKey);
         const existing = saved ? JSON.parse(saved) : [];
-        localStorage.setItem('amman_user_appointments', JSON.stringify([newApt, ...existing]));
+        localStorage.setItem(storageKey, JSON.stringify([newApt, ...existing]));
       } catch (e) {
         console.error('Error saving appointment:', e);
       }
@@ -164,11 +165,11 @@ export default function BookAppointmentPage() {
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 md:p-8 overflow-hidden">
         <div className="flex items-center justify-between max-w-3xl mx-auto relative px-5">
           {/* Background Track Line */}
-          <div className="absolute top-5 left-9 right-9 h-1 bg-gray-200 -z-0 rounded-full" />
+          <div className="absolute top-[18px] left-9 right-9 h-1 bg-gray-200 z-0 rounded-full" />
 
           {/* Animated Active Progress Line */}
           <div
-            className="absolute top-5 left-9 h-1 bg-gradient-to-r from-[#12372A] via-[#1b4d3a] to-[#2d6a4f] -z-0 rounded-full transition-all duration-700 ease-in-out shadow-sm"
+            className="absolute top-[18px] left-9 h-1 bg-gradient-to-r from-[#12372A] via-[#1b4d3a] to-[#2d6a4f] z-0 rounded-full transition-all duration-700 ease-in-out shadow-sm"
             style={{
               width: `calc(${((currentStep - 1) / (STEPS.length - 1)) * 100}% - ${
                 ((currentStep - 1) / (STEPS.length - 1)) * 36
@@ -179,37 +180,44 @@ export default function BookAppointmentPage() {
           {STEPS.map((step) => {
             const isCompleted = step.id < currentStep;
             const isCurrent = step.id === currentStep;
+            const isClickable = step.id < currentStep;
 
             return (
-              <div key={step.id} className="relative z-10 flex flex-col items-center group">
-                <button
-                  onClick={() => step.id < currentStep && setCurrentStep(step.id)}
-                  disabled={step.id > currentStep}
+              <div
+                key={step.id}
+                onClick={() => isClickable && setCurrentStep(step.id)}
+                className={`relative z-10 flex flex-col items-center group ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
+              >
+                <div
                   className={`
-                    w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 transform
+                    w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm transition-all duration-300 transform
                     ${isCompleted
-                      ? 'bg-[#12372A] text-white border-2 border-[#12372A] shadow-md scale-100'
+                      ? 'bg-[#12372A] text-white shadow-md scale-100'
                       : isCurrent
-                      ? 'bg-white text-[#12372A] border-2 border-[#12372A] ring-4 ring-[#12372A]/20 scale-110 shadow-md animate-step-pulse'
-                      : 'bg-white text-gray-400 border-2 border-gray-200 scale-95 hover:border-gray-300'
+                      ? 'bg-[#12372A] text-white ring-4 ring-gray-300/80 scale-110 shadow-md'
+                      : 'bg-white text-gray-800 shadow-xs scale-95'
                     }
                   `}
+                  style={{
+                    border: '2px solid #6b7280',
+                    backgroundColor: isCompleted || isCurrent ? '#12372A' : '#ffffff'
+                  }}
                 >
                   {isCompleted ? (
-                    <Check className="w-5 h-5 text-[#a8d5b9] animate-tick-pop stroke-[3]" />
+                    <Check className="w-5 h-5 text-[#a8d5b9] stroke-[3]" />
                   ) : (
-                    <span className={`transition-transform duration-300 ${isCurrent ? 'scale-110 font-extrabold' : ''}`}>
+                    <span className={`font-extrabold ${isCurrent || isCompleted ? 'text-white' : 'text-gray-800'}`}>
                       {step.id}
                     </span>
                   )}
-                </button>
+                </div>
                 <span
                   className={`mt-2 text-xs transition-all duration-300 tracking-wide ${
                     isCurrent
                       ? 'text-[#12372A] font-bold scale-105'
                       : isCompleted
                       ? 'text-gray-800 font-semibold'
-                      : 'text-gray-400 font-normal'
+                      : 'text-gray-600 font-medium'
                   }`}
                 >
                   {step.label}

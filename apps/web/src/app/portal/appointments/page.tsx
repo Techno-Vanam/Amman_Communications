@@ -14,9 +14,11 @@ import {
   Eye,
   Clock,
   AlertTriangle,
-  RotateCcw
+  RotateCcw,
+  Search
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
+import { useUser, getUserStorageKey } from '@/context/UserContext';
 
 interface AppointmentItem {
   id: string;
@@ -34,8 +36,10 @@ const APPOINTMENTS_DATA: AppointmentItem[] = [];
 
 export default function AppointmentsPage() {
   const { showToast } = useNotifications();
+  const { user } = useUser();
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
   const [activeTab, setActiveTab] = useState<'All' | 'Upcoming' | 'Completed' | 'Cancelled' | 'Rescheduled'>('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentItem | null>(null);
 
   // Modals state
@@ -52,22 +56,31 @@ export default function AppointmentsPage() {
 
   React.useEffect(() => {
     try {
-      const saved = localStorage.getItem('amman_user_appointments');
+      const storageKey = getUserStorageKey(user.email, 'amman_user_appointments');
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         const parsed: AppointmentItem[] = JSON.parse(saved);
         setAppointments(parsed);
         if (parsed.length > 0) {
           setSelectedAppointment(parsed[0]);
+        } else {
+          setSelectedAppointment(null);
         }
+      } else {
+        setAppointments([]);
+        setSelectedAppointment(null);
       }
     } catch (e) {
       console.error('Error loading appointments:', e);
+      setAppointments([]);
+      setSelectedAppointment(null);
     }
-  }, []);
+  }, [user.email]);
 
   const saveAppointmentsToStorage = (updated: AppointmentItem[]) => {
     try {
-      localStorage.setItem('amman_user_appointments', JSON.stringify(updated));
+      const storageKey = getUserStorageKey(user.email, 'amman_user_appointments');
+      localStorage.setItem(storageKey, JSON.stringify(updated));
     } catch (e) {
       console.error('Error saving appointments:', e);
     }
@@ -137,12 +150,34 @@ export default function AppointmentsPage() {
   };
 
   const filteredAppointments = appointments.filter((item) => {
-    if (activeTab === 'All') return true;
-    if (activeTab === 'Upcoming') return item.status === 'Confirmed' || item.status === 'Pending';
-    if (activeTab === 'Completed') return item.status === 'Completed';
-    if (activeTab === 'Cancelled') return item.status === 'Cancelled';
-    if (activeTab === 'Rescheduled') return item.status === 'Rescheduled';
-    return true;
+    const matchesTab =
+      activeTab === 'All'
+        ? true
+        : activeTab === 'Upcoming'
+        ? item.status === 'Confirmed' || item.status === 'Pending'
+        : activeTab === 'Completed'
+        ? item.status === 'Completed'
+        : activeTab === 'Cancelled'
+        ? item.status === 'Cancelled'
+        : activeTab === 'Rescheduled'
+        ? item.status === 'Rescheduled'
+        : true;
+
+    if (!matchesTab) return false;
+
+    if (!searchQuery.trim()) return true;
+
+    const query = searchQuery.toLowerCase().trim();
+    return (
+      item.id.toLowerCase().includes(query) ||
+      item.serviceType.toLowerCase().includes(query) ||
+      item.consultationType.toLowerCase().includes(query) ||
+      item.status.toLowerCase().includes(query) ||
+      item.originalDateTime.toLowerCase().includes(query) ||
+      (item.newDateTime && item.newDateTime.toLowerCase().includes(query)) ||
+      (item.reasonAdminNote && item.reasonAdminNote.toLowerCase().includes(query)) ||
+      (item.location && item.location.toLowerCase().includes(query))
+    );
   });
 
   const getStatusBadgeClass = (status: AppointmentItem['status']) => {
@@ -176,45 +211,73 @@ export default function AppointmentsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 font-sans pb-12">
-      {/* Title & Subtitle */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
-            My Appointments
-          </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            View, reschedule, or cancel your scheduled appointments.
-          </p>
-        </div>
-
-        <Link
-          href="/portal/book-appointment"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl transition-colors shadow-sm self-start sm:self-auto"
-        >
-          <CalendarPlus className="w-4 h-4 text-[#a8d5b9]" />
-          <span>Book New Appointment</span>
-        </Link>
+    <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12">
+      {/* Page Title & Subtitle */}
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
+          My Appointments
+        </h1>
+        <p className="mt-1 text-sm text-gray-600">
+          View, reschedule, or cancel your scheduled appointments.
+        </p>
       </div>
 
-      {/* Main Container Card */}
-      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 md:p-8 space-y-6">
-        {/* Filter Tabs Bar */}
-        <div className="border-b border-gray-200 flex items-center space-x-6 overflow-x-auto text-sm font-semibold">
-          {(['All', 'Upcoming', 'Completed', 'Cancelled', 'Rescheduled'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`pb-3 border-b-2 transition-colors whitespace-nowrap ${
-                activeTab === tab
-                  ? 'border-[#12372A] text-[#12372A] font-bold'
-                  : 'border-transparent text-gray-500 hover:text-gray-800'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+      {/* Filter Tabs & Search Bar & Book Appointment Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Capsule Filter Tabs (All, Upcoming, Completed, Cancelled, Rescheduled) */}
+        <div className="bg-gray-100/90 p-1.5 rounded-full inline-flex items-center gap-1 border border-gray-200/60 overflow-x-auto max-w-full shrink-0">
+          {(['All', 'Upcoming', 'Completed', 'Cancelled', 'Rescheduled'] as const).map((tab) => {
+            const isActive = activeTab === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all whitespace-nowrap ${
+                  isActive
+                    ? 'bg-white text-gray-900 shadow-xs font-extrabold'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60 font-semibold'
+                }`}
+              >
+                {tab}
+              </button>
+            );
+          })}
         </div>
+
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          {/* Search Bar Input */}
+          <div className="relative flex-1 md:w-64">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search appointments..."
+              className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200/90 rounded-full text-xs font-medium text-gray-900 focus:outline-none focus:border-[#12372A] focus:ring-2 focus:ring-[#12372A]/10 shadow-2xs transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Book Appointment Action Button on Right */}
+          <Link
+            href="/portal/book-appointment"
+            className="inline-flex items-center gap-2 px-5 py-2 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-md shrink-0"
+          >
+            <CalendarPlus className="w-4 h-4 text-[#a8d5b9]" />
+            <span>+ Book Appointment</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Main Table Card (All Required Columns Present Below) */}
+      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs p-6 md:p-8 space-y-6">
 
         {/* Data Table */}
         <div className="overflow-x-auto">
@@ -322,24 +385,92 @@ export default function AppointmentsPage() {
           </table>
         </div>
 
-        {/* Selected Appointment Details Section with Reschedule / Cancel Actions */}
-        {selectedAppointment && (
-          <div className="pt-6 border-t border-gray-200 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h2 className="text-base font-bold text-gray-900">
-                {selectedAppointment.status === 'Rescheduled'
-                  ? 'Rescheduled Appointment Details'
-                  : `${selectedAppointment.status} Appointment Details`}
-              </h2>
+      {/* MODAL 0: View Appointment Details Centered Popup */}
+      {selectedAppointment && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-[#f0f7f2] text-[#12372A] flex items-center justify-center font-bold">
+                  <CalendarIcon className="w-5 h-5 text-[#12372A]" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">
+                    Appointment Details
+                  </h3>
+                  <p className="text-[11px] text-gray-400 font-medium">{selectedAppointment.id}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedAppointment(null)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-              {selectedAppointment.status !== 'Cancelled' && selectedAppointment.status !== 'Completed' && (
-                <div className="flex items-center gap-2">
+            {/* Modal Content */}
+            <div className="space-y-3.5 text-xs text-gray-800 font-medium">
+              <div className="p-3.5 bg-gray-50/80 border border-gray-200/80 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 font-semibold">Service Type</span>
+                  <span className="font-bold text-[#12372A] text-sm">{selectedAppointment.serviceType}</span>
+                </div>
+                <div className="flex items-center justify-between border-t border-gray-200/50 pt-2">
+                  <span className="text-gray-500 font-semibold">Status</span>
+                  <span className={`inline-block text-[11px] font-bold px-3 py-0.5 rounded-full ${getStatusBadgeClass(selectedAppointment.status)}`}>
+                    {selectedAppointment.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2 px-1">
+                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">Original Date &amp; Time</span>
+                  <span className="font-bold text-gray-900">{selectedAppointment.originalDateTime}</span>
+                </div>
+
+                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">New Date &amp; Time</span>
+                  <span className="font-extrabold text-gray-900">{selectedAppointment.newDateTime || '-'}</span>
+                </div>
+
+                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">Consultation Type</span>
+                  <span className="font-semibold text-gray-900">{selectedAppointment.consultationType}</span>
+                </div>
+
+                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">Reason</span>
+                  <span className="font-semibold text-gray-800">{selectedAppointment.reasonAdminNote || '-'}</span>
+                </div>
+
+                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
+                  <span className="text-gray-500 font-medium">Admin Note</span>
+                  <span className="font-semibold text-gray-800">{selectedAppointment.adminNote || 'None'}</span>
+                </div>
+
+                {selectedAppointment.location && (
+                  <div className="flex items-start justify-between py-1.5">
+                    <span className="text-gray-500 font-medium">Office Location</span>
+                    <span className="font-bold text-[#12372A]">{selectedAppointment.location}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Actions Footer */}
+            <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+              {selectedAppointment.status !== 'Cancelled' && selectedAppointment.status !== 'Completed' ? (
+                <div className="flex items-center gap-2 w-full">
                   <button
                     onClick={() => {
                       setRescheduleModalItem(selectedAppointment);
                       setRescheduleReason('');
+                      setSelectedAppointment(null);
                     }}
-                    className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
+                    className="flex-1 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-full font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-2xs"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Reschedule</span>
@@ -348,51 +479,26 @@ export default function AppointmentsPage() {
                     onClick={() => {
                       setCancelModalItem(selectedAppointment);
                       setCancelReason('Schedule conflict / Change of plans');
+                      setSelectedAppointment(null);
                     }}
-                    className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
+                    className="flex-1 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-full font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-2xs"
                   >
                     <X className="w-3.5 h-3.5" />
-                    <span>Cancel Appointment</span>
+                    <span>Cancel Booking</span>
                   </button>
                 </div>
-              )}
-            </div>
-
-            <div className="bg-[#f8faf9] border border-gray-200/80 rounded-xl p-5 space-y-2.5 text-xs text-gray-800 font-medium max-w-2xl">
-              <div className="flex items-start gap-2">
-                <span className="w-36 text-gray-500 font-normal shrink-0">Original Date &amp; Time</span>
-                <span className="text-gray-900">: {selectedAppointment.originalDateTime}</span>
-              </div>
-
-              <div className="flex items-start gap-2">
-                <span className="w-36 text-gray-500 font-normal shrink-0">New Date &amp; Time</span>
-                <span className="text-gray-900 font-bold">: {selectedAppointment.newDateTime}</span>
-              </div>
-
-              <div className="flex items-start gap-2">
-                <span className="w-36 text-gray-500 font-normal shrink-0">Consultation Type</span>
-                <span className="text-gray-900">: {selectedAppointment.consultationType}</span>
-              </div>
-
-              <div className="flex items-start gap-2">
-                <span className="w-36 text-gray-500 font-normal shrink-0">Reason</span>
-                <span className="text-gray-900">: {selectedAppointment.reasonAdminNote}</span>
-              </div>
-
-              <div className="flex items-start gap-2">
-                <span className="w-36 text-gray-500 font-normal shrink-0">Note from Admin</span>
-                <span className="text-gray-900 font-semibold">: {selectedAppointment.adminNote || 'None'}</span>
-              </div>
-
-              {selectedAppointment.location && (
-                <div className="flex items-start gap-2 pt-1 border-t border-gray-200/60">
-                  <span className="w-36 text-gray-500 font-normal shrink-0">Office Location</span>
-                  <span className="text-[#12372A] font-bold">: {selectedAppointment.location}</span>
-                </div>
+              ) : (
+                <button
+                  onClick={() => setSelectedAppointment(null)}
+                  className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-full transition-all"
+                >
+                  Close
+                </button>
               )}
             </div>
           </div>
-        )}
+        </div>
+      )}
       </div>
 
       {/* MODAL 1: Reschedule Appointment */}

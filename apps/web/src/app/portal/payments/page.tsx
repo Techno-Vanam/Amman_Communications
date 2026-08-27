@@ -33,7 +33,7 @@ interface TransactionItem {
 const INITIAL_TRANSACTIONS: TransactionItem[] = [];
 
 import { useNotifications } from '@/context/NotificationContext';
-import { useUser } from '@/context/UserContext';
+import { useUser, getUserStorageKey } from '@/context/UserContext';
 
 export default function PaymentsPage() {
   const { showToast } = useNotifications();
@@ -49,14 +49,14 @@ export default function PaymentsPage() {
 
   React.useEffect(() => {
     try {
-      const saved = localStorage.getItem('amman_user_payments');
-      if (saved) {
-        setTransactions(JSON.parse(saved));
-      }
+      const storageKey = getUserStorageKey(user.email, 'amman_user_payments');
+      const saved = localStorage.getItem(storageKey);
+      setTransactions(saved ? JSON.parse(saved) : []);
     } catch (e) {
       console.error('Error loading payments:', e);
+      setTransactions([]);
     }
-  }, []);
+  }, [user.email]);
 
   // More Filters State
   const [showMoreFilters, setShowMoreFilters] = useState(false);
@@ -83,9 +83,10 @@ export default function PaymentsPage() {
   });
 
   const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'INR',
+      maximumFractionDigits: 2
     }).format(val);
   };
 
@@ -101,9 +102,9 @@ Service        : ${txn.service}
 Payment Mode   : ${txn.paymentMode}
 Status         : ${txn.status}
 -----------------------------------------------------
-Total Amount   : $${txn.totalAmount.toFixed(2)}
-Paid Amount    : $${txn.paidAmount.toFixed(2)}
-Pending Amount : $${txn.pendingAmount.toFixed(2)}
+Total Amount   : ₹${txn.totalAmount.toFixed(2)}
+Paid Amount    : ₹${txn.paidAmount.toFixed(2)}
+Pending Amount : ₹${txn.pendingAmount.toFixed(2)}
 -----------------------------------------------------
 Thank you for using Amman Communications Portal!
 Digital Tax Reference: TAX-INV-${txn.id}
@@ -156,12 +157,13 @@ Digital Tax Reference: TAX-INV-${txn.id}
     const updated = [newTxn, ...transactions];
     setTransactions(updated);
     try {
-      localStorage.setItem('amman_user_payments', JSON.stringify(updated));
+      const storageKey = getUserStorageKey(user.email, 'amman_user_payments');
+      localStorage.setItem(storageKey, JSON.stringify(updated));
     } catch (err) {
       console.error(err);
     }
     setShowNewPaymentModal(false);
-    showToast('Payment Completed Successfully!', `$${amt.toFixed(2)} payment processed.`);
+    showToast('Payment Completed Successfully!', `₹${amt.toFixed(2)} payment processed.`);
   };
 
   const resetAllFilters = () => {
@@ -254,8 +256,7 @@ Digital Tax Reference: TAX-INV-${txn.id}
       {/* 3 Metric Cards - Dynamically reflect transactions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Card 1: Total Paid */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative overflow-hidden flex flex-col justify-between h-44">
-          <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-blue-50/40 pointer-events-none" />
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
@@ -267,12 +268,15 @@ Digital Tax Reference: TAX-INV-${txn.id}
               {formatCurrency(totalPaidSum)}
             </p>
           </div>
-          <p className="text-xs text-gray-500 font-medium">Last 30 days</p>
+          <div>
+            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
+              Last 30 days
+            </span>
+          </div>
         </div>
 
         {/* Card 2: Pending Payments */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative overflow-hidden flex flex-col justify-between h-44">
-          <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-rose-50/40 pointer-events-none" />
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
@@ -284,14 +288,15 @@ Digital Tax Reference: TAX-INV-${txn.id}
               {formatCurrency(pendingPaymentsSum)}
             </p>
           </div>
-          <p className="text-xs font-bold text-rose-600">
-            {overdueInvoicesCount} Invoices Overdue
-          </p>
+          <div>
+            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200/60">
+              {overdueInvoicesCount} Invoices Overdue
+            </span>
+          </div>
         </div>
 
         {/* Card 3: Total Transactions */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative overflow-hidden flex flex-col justify-between h-44">
-          <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full bg-gray-100/50 pointer-events-none" />
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-gray-100 text-gray-700 border border-gray-200 flex items-center justify-center shrink-0">
@@ -303,7 +308,11 @@ Digital Tax Reference: TAX-INV-${txn.id}
               {totalTransactionsCount}
             </p>
           </div>
-          <p className="text-xs text-gray-500 font-medium">All time</p>
+          <div>
+            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200/60">
+              All time
+            </span>
+          </div>
         </div>
       </div>
 
@@ -418,7 +427,7 @@ Digital Tax Reference: TAX-INV-${txn.id}
               </div>
 
               <div className="space-y-1">
-                <label className="block font-bold text-gray-600 text-[11px]">Min Amount ($)</label>
+                <label className="block font-bold text-gray-600 text-[11px]">Min Amount (₹)</label>
                 <input
                   type="number"
                   placeholder="e.g. 100"
@@ -429,7 +438,7 @@ Digital Tax Reference: TAX-INV-${txn.id}
               </div>
 
               <div className="space-y-1">
-                <label className="block font-bold text-gray-600 text-[11px]">Max Amount ($)</label>
+                <label className="block font-bold text-gray-600 text-[11px]">Max Amount (₹)</label>
                 <input
                   type="number"
                   placeholder="e.g. 2000"
@@ -729,7 +738,7 @@ Digital Tax Reference: TAX-INV-${txn.id}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="block font-bold text-gray-700 uppercase tracking-wider text-[10px]">
-                    Amount ($ USD)
+                    Amount (₹ INR)
                   </label>
                   <input
                     type="number"
