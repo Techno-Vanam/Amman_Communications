@@ -13,7 +13,7 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"src/**/*.ts\" --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/**/*.spec.ts"
+    "test": "tsx --test src/auth/authorization.spec.ts src/settings/business-profile/business-profile.spec.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
