@@ -8,38 +8,40 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-poppins)', 'system-ui', '-apple-system', 'sans-serif'],
-        poppins: ['var(--font-poppins)', 'sans-serif'],
+        serif: ['"Source Serif 4"', 'Georgia', 'serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
         brand: {
-          900: '#0a1f15',
-          800: '#0f2d1e',
-          700: '#12372A',
-          600: '#1a4d3a',
-          500: '#236649',
-          400: '#2e8a60',
-          200: '#a8d5b9',
-          100: '#d8ebdd',
-          50:  '#f0f7f2',
+          900: '#0B1638',
+          800: '#16234F',
+          700: '#1D4ED8',
+          600: '#2563EB',
+          500: '#3B82F6',
+          400: '#60A5FA',
+          200: '#BFDBFE',
+          100: '#DBEAFE',
+          50:  '#EFF6FF',
+        },
+        slate: {
+          900: '#0F172A',
+          800: '#1E293B',
+          700: '#334155',
+          600: '#475569',
+          500: '#64748B',
+          400: '#94A3B8',
+          300: '#CBD5E1',
+          200: '#E2E8F0',
+          100: '#F1F5F9',
+          50:  '#F8FAFC',
         },
       },
-      maxWidth: {
-        container: '1200px',
+      boxShadow: {
+        card: '0 1px 2px rgba(15,23,42,0.04), 0 1px 8px rgba(15,23,42,0.04)',
       },
-      animation: {
-        float: 'float 4s ease-in-out infinite',
-        fadeUp: 'fadeUp 0.5s ease forwards',
-      },
-      keyframes: {
-        float: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%':       { transform: 'translateY(-8px)' },
-        },
-        fadeUp: {
-          from: { opacity: 0, transform: 'translateY(20px)' },
-          to:   { opacity: 1, transform: 'translateY(0)' },
-        },
+      borderRadius: {
+        '2xl': '16px',
+        lg: '8px',
       },
     },
   },

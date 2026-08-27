@@ -85,83 +85,116 @@ async function main() {
   });
   console.log('Test duplicate identity created: duplicate@test.com');
 
-  // 4. Seed default services
-  const defaultServices = [
+  // 4. Create Services (using valid v4 UUIDs)
+  const services = [
     {
-      name: 'Commercial Fiber Broadband',
-      description: 'High-speed dedicated fiber optic connectivity for corporate & business premises.',
-      governmentFee: 250,
-      serviceFee: 750,
-      totalFee: 1000,
-      estimatedTime: '3-5 Business Days',
-      status: 'ACTIVE' as const,
-      documents: [
-        { name: 'Commercial Registration Certificate', displayOrder: 1, isRequired: true },
-        { name: 'Authorized Signatory National ID', displayOrder: 2, isRequired: true },
-        { name: 'Lease Agreement / Proof of Address', displayOrder: 3, isRequired: true },
-      ],
+      id: '11111111-0000-4000-8000-000000000001',
+      name: 'Trade License Renewal & Documentation',
+      description: 'Complete assistance for commercial and trade license renewals, document verification, and government submissions.',
+      requiredDocuments: ['trade_license', 'passport_copy', 'lease_agreement'],
+      governmentFee: 150.00,
+      officeCharge: 50.00,
+      estimatedProcessingTime: '3-5 Business Days',
+      isActive: true,
     },
     {
-      name: 'Residential Broadband Setup',
-      description: 'High-speed home internet connection with included Wi-Fi router setup.',
-      governmentFee: 100,
-      serviceFee: 300,
-      totalFee: 400,
-      estimatedTime: '1-2 Business Days',
-      status: 'ACTIVE' as const,
-      documents: [
-        { name: 'National Identification / Passport', displayOrder: 1, isRequired: true },
-        { name: 'Utility Bill (Electricity/Water)', displayOrder: 2, isRequired: true },
-      ],
+      id: '11111111-0000-4000-8000-000000000002',
+      name: 'Company Establishment & Office Registration',
+      description: 'End-to-end registration of new company structures, tax identification setup, and office lease certification.',
+      requiredDocuments: ['identity_card', 'business_plan', 'bank_reference'],
+      governmentFee: 300.00,
+      officeCharge: 100.00,
+      estimatedProcessingTime: '7-10 Business Days',
+      isActive: true,
     },
     {
-      name: 'Enterprise Leased Line (10Gbps)',
-      description: 'Ultra-low latency symmetrical dedicated leased line for data centers.',
-      governmentFee: 1200,
-      serviceFee: 3800,
-      totalFee: 5000,
-      estimatedTime: '7-10 Business Days',
-      status: 'DRAFT' as const,
-      documents: [
-        { name: 'Company Trade License', displayOrder: 1, isRequired: true },
-        { name: 'Network Topology Diagram', displayOrder: 2, isRequired: true },
-        { name: 'Tax Identification Document', displayOrder: 3, isRequired: true },
-      ],
+      id: '11111111-0000-4000-8000-000000000003',
+      name: 'Legal & Tax Clearance Advisory',
+      description: 'Professional consultation regarding corporate taxation, legal compliance, and regulatory documentation.',
+      requiredDocuments: ['tax_returns', 'audit_report'],
+      governmentFee: 75.00,
+      officeCharge: 75.00,
+      estimatedProcessingTime: '1-2 Business Days',
+      isActive: true,
+    },
+    // Also include legacy prefix IDs for existing references
+    {
+      id: 'srv-00000000-0000-0000-0000-000000000001',
+      name: 'Trade License Renewal & Documentation',
+      description: 'Complete assistance for commercial and trade license renewals, document verification, and government submissions.',
+      requiredDocuments: ['trade_license', 'passport_copy', 'lease_agreement'],
+      governmentFee: 150.00,
+      officeCharge: 50.00,
+      estimatedProcessingTime: '3-5 Business Days',
+      isActive: true,
     },
     {
-      name: 'Legacy Copper Landline',
-      description: 'Analog copper voice line connection. (Phased out for new applications).',
-      governmentFee: 50,
-      serviceFee: 150,
-      totalFee: 200,
-      estimatedTime: '5 Business Days',
-      status: 'INACTIVE' as const,
-      documents: [
-        { name: 'Subscriber ID Copy', displayOrder: 1, isRequired: true },
-      ],
+      id: 'srv-00000000-0000-0000-0000-000000000002',
+      name: 'Company Establishment & Office Registration',
+      description: 'End-to-end registration of new company structures, tax identification setup, and office lease certification.',
+      requiredDocuments: ['identity_card', 'business_plan', 'bank_reference'],
+      governmentFee: 300.00,
+      officeCharge: 100.00,
+      estimatedProcessingTime: '7-10 Business Days',
+      isActive: true,
+    },
+    {
+      id: 'srv-00000000-0000-0000-0000-000000000003',
+      name: 'Legal & Tax Clearance Advisory',
+      description: 'Professional consultation regarding corporate taxation, legal compliance, and regulatory documentation.',
+      requiredDocuments: ['tax_returns', 'audit_report'],
+      governmentFee: 75.00,
+      officeCharge: 75.00,
+      estimatedProcessingTime: '1-2 Business Days',
+      isActive: true,
     },
   ];
 
-  for (const s of defaultServices) {
-    const existing = await prisma.service.findFirst({ where: { name: s.name } });
-    if (!existing) {
-      await prisma.service.create({
-        data: {
-          name: s.name,
-          description: s.description,
-          governmentFee: s.governmentFee,
-          serviceFee: s.serviceFee,
-          totalFee: s.totalFee,
-          estimatedTime: s.estimatedTime,
-          status: s.status,
-          requiredDocuments: {
-            create: s.documents,
-          },
-        },
-      });
-    }
+  for (const s of services) {
+    await prisma.service.upsert({
+      where: { id: s.id },
+      update: { ...s },
+      create: { ...s },
+    });
   }
-  console.log('Default services seeded');
+  console.log('Default services created/updated');
+
+  // 5. Create Offices
+  const offices = [
+    {
+      id: '22222222-0000-4000-8000-000000000001',
+      name: 'Amman Central Headquarters',
+      address: 'King Hussein St. Building 45, Suite 301, Amman',
+      isActive: true,
+    },
+    {
+      id: '22222222-0000-4000-8000-000000000002',
+      name: 'North Amman Branch',
+      address: 'University Street, Plaza Center 2nd Floor, Amman',
+      isActive: true,
+    },
+    {
+      id: 'off-00000000-0000-0000-0000-000000000001',
+      name: 'Amman Central Headquarters',
+      address: 'King Hussein St. Building 45, Suite 301, Amman',
+      isActive: true,
+    },
+    {
+      id: 'off-00000000-0000-0000-0000-000000000002',
+      name: 'North Amman Branch',
+      address: 'University Street, Plaza Center 2nd Floor, Amman',
+      isActive: true,
+    },
+  ];
+
+  for (const o of offices) {
+    await prisma.office.upsert({
+      where: { id: o.id },
+      update: { ...o },
+      create: { ...o },
+    });
+  }
+  console.log('Default offices created/updated');
 }
 
 main()

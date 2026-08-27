@@ -74,18 +74,33 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  if (payload) {
-    if (pathname.startsWith('/admin') && payload.role === 'CUSTOMER') {
-      return NextResponse.redirect(new URL('/portal/dashboard', request.url));
-    }
-    if (pathname.startsWith('/portal') && payload.role === 'ADMIN') {
-      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-    }
+  const token = request.cookies.get('access_token')?.value;
+
+  if (!token) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  const payload = decodeJwtPayload(token);
+  const role = payload?.role; // 'CUSTOMER' or 'ADMIN'
+
+  if (!role) {
+    // Invalid or expired token
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  // Authorization rules
+  if (pathname.startsWith('/admin') && role !== 'ADMIN') {
+    return NextResponse.redirect(new URL('/customer/appointments', request.url));
+  }
+
+  if ((pathname.startsWith('/portal') || pathname.startsWith('/customer')) && role !== 'CUSTOMER') {
+    // Admin trying to access customer portal should go to admin dashboard
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/portal/:path*', '/admin/:path*', '/portal', '/admin', '/client/:path*'],
+  matcher: ['/customer/:path*', '/portal/:path*', '/admin/:path*', '/customer', '/portal', '/admin'],
 };
