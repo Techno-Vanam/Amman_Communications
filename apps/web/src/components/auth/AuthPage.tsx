@@ -3,7 +3,7 @@
 import React, { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, ArrowLeft, ShieldCheck, CheckCircle2, Lock, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, ShieldCheck, Lock, Sparkles } from 'lucide-react';
 import { loginAction } from '../../app/login/actions';
 import { registerAction } from '../../app/register/actions';
 
@@ -58,7 +58,6 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
       const result = await loginAction(formData);
 
       if (result?.error) {
-        // If backend is unreachable or returned error, try fallback for demo
         setError(result.error);
       } else if (result?.success && result.redirectTo) {
         try {
@@ -133,9 +132,8 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
     });
   };
 
-  // Integrated Green Image Panel
-  const GreenImagePanel = () => (
-    <div className="lg:w-1/2 bg-gradient-to-br from-brand-700 via-brand-800 to-[#062117] p-8 sm:p-12 lg:p-14 text-white flex flex-col justify-between relative overflow-hidden self-stretch w-full min-h-[420px]">
+  const brandingPanel = (
+    <div className="lg:w-1/2 bg-gradient-to-br from-brand-700 via-brand-800 to-[#062117] p-8 sm:p-12 lg:p-14 text-white flex flex-col justify-between relative overflow-hidden self-stretch w-full min-h-[400px]">
       {/* Subtle Ambient Lighting */}
       <div className="absolute -top-[10%] -right-[10%] w-96 h-96 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-[10%] -left-[10%] w-80 h-80 rounded-full bg-emerald-400/15 blur-3xl pointer-events-none" />
@@ -187,8 +185,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
     </div>
   );
 
-  // Form Panel
-  const FormPanel = () => (
+  const formPanel = (
     <div className="lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-12 bg-white self-stretch w-full overflow-y-auto">
       {/* Back to Home Header */}
       <div className={`w-full flex items-center mb-4 ${isSignUp ? 'justify-start' : 'justify-end'}`}>
@@ -221,71 +218,86 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
         )}
 
         {isSignUp ? (
-          /* Sign Up Form - Underline Style Input */
-          <form onSubmit={handleRegisterSubmit} className="space-y-5" noValidate>
+          /* Sign Up Form */
+          <form onSubmit={handleRegisterSubmit} className="space-y-4" noValidate>
             {/* Full Name */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+            <div className="space-y-1.5">
+              <label htmlFor="reg-name" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Full Name <span className="text-red-500">*</span>
               </label>
               <input
+                id="reg-name"
+                name="name"
                 type="text"
+                autoComplete="name"
+                required
                 placeholder="John Doe"
                 value={regName}
                 onChange={(e) => setRegName(e.target.value)}
-                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/15 text-slate-900 text-sm font-medium outline-none transition-all"
                 disabled={isPending}
               />
             </div>
 
             {/* Email Address */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+            <div className="space-y-1.5">
+              <label htmlFor="reg-email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Email Address <span className="text-red-500">*</span>
               </label>
               <input
+                id="reg-email"
+                name="email"
                 type="email"
+                autoComplete="email"
+                required
                 placeholder="name@example.com"
                 value={regEmail}
                 onChange={(e) => setRegEmail(e.target.value)}
-                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/15 text-slate-900 text-sm font-medium outline-none transition-all"
                 disabled={isPending}
               />
             </div>
 
             {/* Mobile Number */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
-                Mobile Number
+            <div className="space-y-1.5">
+              <label htmlFor="reg-mobile" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Mobile Number (Optional)
               </label>
               <input
+                id="reg-mobile"
+                name="mobile"
                 type="tel"
+                autoComplete="tel"
                 placeholder="+91 98765 43210"
                 value={regMobile}
                 onChange={(e) => setRegMobile(e.target.value)}
-                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/15 text-slate-900 text-sm font-medium outline-none transition-all"
                 disabled={isPending}
               />
             </div>
 
             {/* Password with Eye Icon */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+            <div className="space-y-1.5">
+              <label htmlFor="reg-password" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
+                  id="reg-password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  required
                   placeholder="At least 8 characters"
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
-                  className="w-full py-2 pr-10 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
+                  className="w-full px-3.5 py-2.5 pr-10 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/15 text-slate-900 text-sm font-medium outline-none transition-all"
                   disabled={isPending}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-brand-600 transition-colors cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-brand-600 transition-colors cursor-pointer"
                   aria-label="Toggle password visibility"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -315,62 +327,33 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
             </div>
           </form>
         ) : (
-          /* Sign In Form - Underline Style Input */
-          <form onSubmit={handleLoginSubmit} className="space-y-5" noValidate>
+          /* Sign In Form */
+          <form onSubmit={handleLoginSubmit} className="space-y-4" noValidate>
             {/* Email Address */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+            <div className="space-y-1.5">
+              <label htmlFor="login-email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                 Email Address <span className="text-red-500">*</span>
               </label>
               <input
+                id="login-email"
+                name="email"
                 type="email"
+                autoComplete="email"
+                required
                 placeholder="name@example.com"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/15 text-slate-900 text-sm font-medium outline-none transition-all"
                 disabled={isPending}
               />
             </div>
 
-            {/* Mobile Number */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
-                Mobile Number (Optional)
-              </label>
-              <input
-                type="tel"
-                placeholder="+91 98765 43210"
-                value={loginMobile}
-                onChange={(e) => setLoginMobile(e.target.value)}
-                className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
-                disabled={isPending}
-              />
-            </div>
-
-            {/* Password Field with Eye Icon + Forgot Password */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
-                Password <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full py-2 pr-10 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
-                  disabled={isPending}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-brand-600 transition-colors cursor-pointer"
-                  aria-label="Toggle password visibility"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <div className="flex justify-end pt-1">
+            {/* Password Field with Eye Icon */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label htmlFor="login-password" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Password <span className="text-red-500">*</span>
+                </label>
                 <a
                   href="#forgot"
                   onClick={(e) => {
@@ -381,6 +364,28 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                 >
                   Forgot Password?
                 </a>
+              </div>
+              <div className="relative">
+                <input
+                  id="login-password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  required
+                  placeholder="••••••••"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="w-full px-3.5 py-2.5 pr-10 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:ring-2 focus:ring-brand-500/15 text-slate-900 text-sm font-medium outline-none transition-all"
+                  disabled={isPending}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-brand-600 transition-colors cursor-pointer"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
@@ -417,16 +422,14 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
       {/* MAIN AUTHENTICATION CONTAINER: FULL 50/50 SPLIT */}
       <div className="w-full max-w-[1400px] min-h-[640px] max-h-[850px] bg-white rounded-[2.5rem] border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col lg:flex-row items-stretch my-auto">
         {isSignUp ? (
-          /* SIGN UP PAGE: Form on LEFT (50%), Green Image on RIGHT (50%) */
           <>
-            <FormPanel />
-            <GreenImagePanel />
+            {formPanel}
+            {brandingPanel}
           </>
         ) : (
-          /* LOGIN PAGE: Green Image on LEFT (50%), Form on RIGHT (50%) */
           <>
-            <GreenImagePanel />
-            <FormPanel />
+            {brandingPanel}
+            {formPanel}
           </>
         )}
       </div>
