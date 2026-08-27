@@ -1,16 +1,14 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
+import { PrismaModule } from '../prisma/prisma.module';
+import { AppointmentNumberService } from './appointment-number.service';
 import { CustomerAppointmentsController } from './customer-appointments.controller';
 import { CustomerAppointmentsService } from './customer-appointments.service';
-import { CustomerMeController } from './customer-me.controller';
-import { AppointmentNumberService } from './appointment-number.service';
-import { PrismaModule } from '../prisma/prisma.module';
-import { StorageModule } from '../storage/storage.module';
-import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule, StorageModule, AuthModule],
-  controllers: [CustomerAppointmentsController, CustomerMeController],
+  imports: [PrismaModule, AuthModule],
+  controllers: [CustomerAppointmentsController],
   providers: [CustomerAppointmentsService, AppointmentNumberService],
-  exports: [CustomerAppointmentsService, AppointmentNumberService],
+  exports: [CustomerAppointmentsService],
 })
 export class CustomerAppointmentsModule {}

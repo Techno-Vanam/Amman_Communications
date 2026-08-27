@@ -1,216 +1,158 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import {
-  fetchAppointments,
-  cancelAppointment,
-  Appointment,
-} from '../../../lib/api/appointments';
-import { AppointmentTabs, TabKey } from '../../../components/appointments/AppointmentTabs';
-import { AppointmentTable } from '../../../components/appointments/AppointmentTable';
-import { AppointmentCard } from '../../../components/appointments/AppointmentCard';
-import { ViewDetailsModal } from '../../../components/appointments/ViewDetailsModal';
-import { CancelAppointmentDialog } from '../../../components/appointments/CancelAppointmentDialog';
-import {
-  Plus,
-  AlertCircle,
-  RefreshCw,
-  CalendarX,
-} from 'lucide-react';
+
+interface AppointmentItem {
+  id: string;
+  appointmentNumber: string;
+  appointmentType: string;
+  status: string;
+  preferredDate: string;
+  preferredTime: string;
+  contactNumber: string;
+  service?: {
+    name: string;
+    description?: string;
+  };
+  office?: {
+    name: string;
+    address: string;
+  };
+}
 
 export default function MyAppointmentsPage() {
-  const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<TabKey>('ALL');
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [appointmentToCancel, setAppointmentToCancel] = useState<Appointment | null>(null);
+  const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('ALL');
 
-  // Fetch appointments with status filter
-  const {
-    data: appointments = [],
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['appointments', activeTab],
-    queryFn: () => fetchAppointments(activeTab),
-  });
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003/api/v1').replace(/\/+$/, '');
 
-  // Calculate counts for tabs from all appointments query
-  const { data: allAppointments = [] } = useQuery({
-    queryKey: ['appointments', 'ALL'],
-    queryFn: () => fetchAppointments('ALL'),
-  });
+        const res = await fetch(`${apiBaseUrl}/customer/appointments?status=${filter}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
 
-  const counts: Partial<Record<TabKey, number>> = {
-    ALL: allAppointments.length,
-    UPCOMING: allAppointments.filter(
-      (a) =>
-        (a.status === 'PENDING' || a.status === 'CONFIRMED') &&
-        new Date(a.preferredDate) >= new Date()
-    ).length,
-    RESCHEDULED: allAppointments.filter((a) => a.status === 'RESCHEDULED').length,
-    COMPLETED: allAppointments.filter((a) => a.status === 'COMPLETED').length,
-    CANCELLED: allAppointments.filter((a) => a.status === 'CANCELLED').length,
-  };
+        if (res.ok) {
+          const data = await res.json();
+          setAppointments(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch appointments', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Cancel Mutation
-  const cancelMutation = useMutation({
-    mutationFn: (appointmentId: string) => cancelAppointment(appointmentId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      setIsCancelDialogOpen(false);
-      setAppointmentToCancel(null);
-    },
-  });
+    fetchAppointments();
+  }, [filter]);
 
-  const handleOpenViewModal = (apt: Appointment) => {
-    setSelectedAppointment(apt);
-    setIsViewModalOpen(true);
-  };
-
-  const handleOpenCancelDialog = (apt: Appointment) => {
-    setAppointmentToCancel(apt);
-    setIsCancelDialogOpen(true);
-  };
-
-  const handleConfirmCancel = async (id: string) => {
-    await cancelMutation.mutateAsync(id);
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'CONFIRMED':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'PENDING':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'CANCELLED':
+        return 'bg-red-50 text-red-700 border-red-200';
+      case 'COMPLETED':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      default:
+        return 'bg-slate-50 text-slate-700 border-slate-200';
+    }
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-      {/* 3.1 Page Header Card */}
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 bg-white p-6 md:p-8 rounded-2xl border border-slate-200 shadow-card">
+    <div className="mx-auto max-w-5xl space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="font-serif text-3xl font-bold text-slate-900">My Appointments</h1>
-            <span className="bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">
-              Customer Portal
-            </span>
-          </div>
-          <p className="text-slate-500 text-sm mt-1">
-            View, track, and manage your booked office visits and online consultations.
-          </p>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">My Appointments</h2>
+          <p className="text-sm text-slate-500">Track and manage your scheduled consultations</p>
         </div>
 
         <Link
           href="/customer/appointments/book"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-5 py-2.5 flex items-center justify-center gap-2 shadow-sm transition-all shrink-0"
+          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
         >
-          <Plus className="w-5 h-5" />
-          <span>Book Appointment</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          <span>Book New Appointment</span>
         </Link>
       </div>
 
-      {/* 3.2 Tabs Row */}
-      <AppointmentTabs activeTab={activeTab} onTabChange={setActiveTab} counts={counts} />
-
-      {/* ERROR STATE */}
-      {isError && (
-        <div className="bg-white border border-red-200 rounded-2xl p-8 text-center space-y-3 shadow-card">
-          <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
-            <AlertCircle className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-slate-900">Unable to load appointments</h3>
-            <p className="text-xs text-slate-500 mt-1">
-              {(error as Error)?.message || 'A network error occurred while fetching your appointments.'}
-            </p>
-          </div>
+      {/* Filter Tabs */}
+      <div className="flex border-b border-slate-200 gap-6 text-sm font-semibold text-slate-500">
+        {['ALL', 'UPCOMING', 'PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'].map((tab) => (
           <button
-            onClick={() => refetch()}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold rounded-lg transition-colors"
+            key={tab}
+            onClick={() => setFilter(tab)}
+            className={`pb-3 transition-colors ${
+              filter === tab ? 'border-b-2 border-blue-600 text-blue-600 font-bold' : 'hover:text-slate-800'
+            }`}
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Try Again</span>
+            {tab.charAt(0) + tab.slice(1).toLowerCase()}
           </button>
-        </div>
-      )}
+        ))}
+      </div>
 
-      {/* LOADING SKELETON STATE */}
-      {isLoading && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-card space-y-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="animate-pulse flex items-center justify-between py-3 border-b border-slate-100">
-              <div className="h-4 bg-slate-200 rounded w-1/4" />
-              <div className="h-4 bg-slate-200 rounded w-1/5" />
-              <div className="h-4 bg-slate-200 rounded w-1/6" />
+      {/* Appointments List */}
+      {loading ? (
+        <div className="flex h-48 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+        </div>
+      ) : appointments.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center">
+          <svg className="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <h3 className="mt-4 text-base font-bold text-slate-800">No appointments found</h3>
+          <p className="mt-1 text-sm text-slate-500">You don&apos;t have any appointments matching this filter.</p>
+          <div className="mt-6">
+            <Link
+              href="/customer/appointments/book"
+              className="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
+            >
+              Book Appointment Now
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {appointments.map((apt) => (
+            <div
+              key={apt.id}
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                  <span className="font-bold text-slate-900">{apt.appointmentNumber}</span>
+                  <span
+                    className={`rounded-full border px-3 py-0.5 text-xs font-bold ${getStatusBadgeClass(
+                      apt.status
+                    )}`}
+                  >
+                    {apt.status}
+                  </span>
+                </div>
+                <h4 className="text-lg font-bold text-blue-700">{apt.service?.name || 'General Consultation'}</h4>
+                <p className="text-xs text-slate-500">
+                  {apt.appointmentType === 'OFFICE_VISIT' ? '📍 Office Visit' : '💻 Online Consultation'} •{' '}
+                  {new Date(apt.preferredDate).toLocaleDateString()} at {apt.preferredTime}
+                </p>
+              </div>
+
+              <div className="mt-4 sm:mt-0 flex items-center gap-3">
+                <span className="text-xs font-semibold text-slate-500">{apt.contactNumber}</span>
+              </div>
             </div>
           ))}
         </div>
       )}
-
-      {/* EMPTY STATE */}
-      {!isLoading && !isError && appointments.length === 0 && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center space-y-4 shadow-card">
-          <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto">
-            <CalendarX className="w-8 h-8" />
-          </div>
-          <div className="max-w-md mx-auto">
-            <h3 className="text-lg font-bold text-slate-900">No appointments found</h3>
-            <p className="text-xs text-slate-500 mt-1">
-              {activeTab === 'ALL'
-                ? "You haven't booked any appointments yet. Get started by booking a service."
-                : `There are currently no appointments under the "${activeTab.toLowerCase()}" filter.`}
-            </p>
-          </div>
-          <Link
-            href="/customer/appointments/book"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Book Appointment</span>
-          </Link>
-        </div>
-      )}
-
-      {/* CONTENT: DESKTOP TABLE & MOBILE CARDS */}
-      {!isLoading && !isError && appointments.length > 0 && (
-        <>
-          {/* Desktop Table (≥ 768px) */}
-          <div className="hidden md:block">
-            <AppointmentTable
-              appointments={appointments}
-              onViewDetails={handleOpenViewModal}
-              onCancelClick={handleOpenCancelDialog}
-            />
-          </div>
-
-          {/* Mobile Stacked Cards (< 768px) */}
-          <div className="block md:hidden space-y-4">
-            {appointments.map((apt) => (
-              <AppointmentCard
-                key={apt.id}
-                appointment={apt}
-                onViewDetails={handleOpenViewModal}
-                onCancelClick={handleOpenCancelDialog}
-              />
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* View Details Modal */}
-      <ViewDetailsModal
-        isOpen={isViewModalOpen}
-        appointment={selectedAppointment}
-        onClose={() => setIsViewModalOpen(false)}
-        onCancelClick={handleOpenCancelDialog}
-      />
-
-      {/* Cancel Confirmation Dialog */}
-      <CancelAppointmentDialog
-        isOpen={isCancelDialogOpen}
-        appointment={appointmentToCancel}
-        onClose={() => setIsCancelDialogOpen(false)}
-        onConfirm={handleConfirmCancel}
-        isCancelling={cancelMutation.isPending}
-      />
     </div>
   );
 }

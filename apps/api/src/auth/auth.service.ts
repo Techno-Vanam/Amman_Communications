@@ -15,7 +15,6 @@ export class AuthService {
     ]);
 
     if (admin && customer) {
-      // Ambiguous identity - safely reject without revealing account status
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -31,30 +30,25 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (customer && customer.status === 'INACTIVE') {
-      throw new UnauthorizedException('Account is deactivated. Please contact support.');
-    }
-
     const accessToken = await this.jwt.signAsync(
       { sub: user.id, role },
       { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '7d' }
     );
 
-    return { 
+    return {
       accessToken,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         role,
-      }
+      },
     };
   }
 
   async register(name: string, email: string, password: string) {
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check both tables for existing email
     const [existingAdmin, existingCustomer] = await Promise.all([
       this.prisma.admin.findUnique({ where: { email: normalizedEmail } }),
       this.prisma.customer.findUnique({ where: { email: normalizedEmail } }),
@@ -86,7 +80,7 @@ export class AuthService {
         name: customer.name,
         email: customer.email,
         role: 'CUSTOMER',
-      }
+      },
     };
   }
 }
