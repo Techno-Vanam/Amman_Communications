@@ -1,8 +1,10 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { AdminAuthGuard } from '../auth/guards/admin-auth.guard';
 import { CustomerAuthGuard } from '../auth/guards/customer-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 
+@ApiBearerAuth()
 @Controller('admin/dashboard')
 @UseGuards(AdminAuthGuard)
 export class AdminDashboardController {
@@ -52,6 +54,7 @@ export class AdminDashboardController {
   }
 }
 
+@ApiBearerAuth()
 @Controller('customer/dashboard')
 @UseGuards(CustomerAuthGuard)
 export class CustomerDashboardController {
