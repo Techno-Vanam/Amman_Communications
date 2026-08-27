@@ -157,44 +157,141 @@ async function main() {
       create: { ...s },
     });
   }
-  console.log('Default services created/updated');
+  // 5. Seed Appointments
+  const fiberService = await prisma.service.findFirst({ where: { name: 'Commercial Fiber Broadband' } });
+  const homeService = await prisma.service.findFirst({ where: { name: 'Residential Broadband Setup' } });
+  const testCustomer = await prisma.customer.findUnique({ where: { email: 'customer@test.com' } });
 
-  // 5. Create Offices
-  const offices = [
+  const now = new Date();
+  const today10am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0, 0);
+  const today2pm = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 14, 30, 0);
+  const today4pm = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 16, 0, 0);
+  const tomorrow11am = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 11, 0, 0);
+  const nextWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 4, 15, 0, 0);
+  const nextMonth = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 8, 10, 30, 0);
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 11, 30, 0);
+  const pastWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 5, 14, 0, 0);
+
+  const appointmentsData = [
     {
-      id: '22222222-0000-4000-8000-000000000001',
-      name: 'Amman Central Headquarters',
-      address: 'King Hussein St. Building 45, Suite 301, Amman',
-      isActive: true,
+      customerName: 'Aravind Kumar',
+      customerEmail: 'aravind.k@gmail.com',
+      customerPhone: '+91 98765 43210',
+      customerId: testCustomer?.id,
+      serviceId: fiberService?.id,
+      appointmentDate: today10am,
+      durationMinutes: 45,
+      mode: 'OFFLINE' as const,
+      meetingLink: 'Branch Office - Counter 3, Chennai Hub',
+      status: 'CONFIRMED' as const,
+      notes: 'Initial site survey and commercial document verification.',
     },
     {
-      id: '22222222-0000-4000-8000-000000000002',
-      name: 'North Amman Branch',
-      address: 'University Street, Plaza Center 2nd Floor, Amman',
-      isActive: true,
+      customerName: 'Priya Sundaram',
+      customerEmail: 'priya.sundar@outlook.com',
+      customerPhone: '+91 94432 10987',
+      serviceId: homeService?.id,
+      appointmentDate: today2pm,
+      durationMinutes: 30,
+      mode: 'ONLINE' as const,
+      onlineType: 'VIDEO' as const,
+      meetingLink: 'https://meet.google.com/abc-wxyz-pqr',
+      status: 'CONFIRMED' as const,
+      notes: 'Video KYC and high-speed broadband plan selection.',
     },
     {
-      id: 'off-00000000-0000-0000-0000-000000000001',
-      name: 'Amman Central Headquarters',
-      address: 'King Hussein St. Building 45, Suite 301, Amman',
-      isActive: true,
+      customerName: 'Karthik Raja',
+      customerEmail: 'karthik.raja@techfirm.io',
+      customerPhone: '+91 98401 23456',
+      serviceId: fiberService?.id,
+      appointmentDate: today4pm,
+      durationMinutes: 30,
+      mode: 'ONLINE' as const,
+      onlineType: 'PHONE' as const,
+      meetingLink: '+91 98401 23456 (Direct Call)',
+      status: 'PENDING' as const,
+      notes: 'Consultation on static IP allocation and enterprise SLA.',
     },
     {
-      id: 'off-00000000-0000-0000-0000-000000000002',
-      name: 'North Amman Branch',
-      address: 'University Street, Plaza Center 2nd Floor, Amman',
-      isActive: true,
+      customerName: 'Meenakshi Iyer',
+      customerEmail: 'meenakshi.iyer@gmail.com',
+      customerPhone: '+91 97890 12345',
+      serviceId: homeService?.id,
+      appointmentDate: tomorrow11am,
+      durationMinutes: 30,
+      mode: 'ONLINE' as const,
+      onlineType: 'MEETING' as const,
+      meetingLink: 'https://zoom.us/j/9876543210',
+      status: 'CONFIRMED' as const,
+      notes: 'Optical network terminal installation schedule discussion.',
+    },
+    {
+      customerName: 'Saravanan M',
+      customerEmail: 'saravanan.m@enterprise.com',
+      customerPhone: '+91 99400 55667',
+      serviceId: fiberService?.id,
+      appointmentDate: nextWeek,
+      durationMinutes: 60,
+      mode: 'OFFLINE' as const,
+      meetingLink: 'Headquarters - Conference Room B',
+      status: 'RESCHEDULED' as const,
+      rescheduledFrom: yesterday,
+      rescheduleReason: 'Customer was travelling; requested reschedule to next week.',
+      notes: 'Multi-branch fiber connectivity contract signing.',
+    },
+    {
+      customerName: 'Deepa Natarajan',
+      customerEmail: 'deepa.n@gmail.com',
+      customerPhone: '+91 98840 99887',
+      serviceId: homeService?.id,
+      appointmentDate: nextMonth,
+      durationMinutes: 30,
+      mode: 'ONLINE' as const,
+      onlineType: 'VIDEO' as const,
+      meetingLink: 'https://meet.google.com/uvw-mnop-xyz',
+      status: 'CONFIRMED' as const,
+      notes: 'Apartment complex FTTH connection review.',
+    },
+    {
+      customerName: 'Venkatesh Babu',
+      customerEmail: 'venkat.babu@gmail.com',
+      customerPhone: '+91 97100 11223',
+      serviceId: homeService?.id,
+      appointmentDate: yesterday,
+      durationMinutes: 30,
+      mode: 'OFFLINE' as const,
+      meetingLink: 'Anna Nagar Service Center',
+      status: 'COMPLETED' as const,
+      notes: 'Application verification completed and router handed over.',
+    },
+    {
+      customerName: 'Rajesh Kannan',
+      customerEmail: 'rajesh.k@gmail.com',
+      customerPhone: '+91 96000 44332',
+      serviceId: fiberService?.id,
+      appointmentDate: pastWeek,
+      durationMinutes: 30,
+      mode: 'ONLINE' as const,
+      onlineType: 'PHONE' as const,
+      status: 'CANCELLED' as const,
+      notes: 'Cancelled due to change of commercial location.',
     },
   ];
 
-  for (const o of offices) {
-    await prisma.office.upsert({
-      where: { id: o.id },
-      update: { ...o },
-      create: { ...o },
+  for (const appt of appointmentsData) {
+    const existing = await prisma.appointment.findFirst({
+      where: {
+        customerEmail: appt.customerEmail,
+        appointmentDate: appt.appointmentDate,
+      },
     });
+    if (!existing) {
+      await prisma.appointment.create({
+        data: appt,
+      });
+    }
   }
-  console.log('Default offices created/updated');
+  console.log('Default appointments seeded');
 }
 
 main()

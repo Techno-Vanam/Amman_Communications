@@ -6,27 +6,10 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { StorageModule } from './storage/storage.module';
-import { CustomerAppointmentsModule } from './customer-appointments/customer-appointments.module';
-import { NotificationsModule } from './notifications/notifications.module';
+import { DocumentsModule } from './documents/documents.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { ServicesModule } from './services/services.module';
+import { AppointmentsModule } from './appointments/appointments.module';
 
-@Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: '../../.env' }),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000,
-        limit: 100,
-      },
-    ]),
-    EventEmitterModule.forRoot(),
-    PrismaModule,
-    HealthModule,
-    AuthModule,
-    StorageModule,
-    DocumentsModule,
-    CustomerAppointmentsModule,
-    NotificationsModule,
-  ],
-})
+@Module({ imports: [ConfigModule.forRoot({ isGlobal: true, envFilePath: path.resolve(__dirname, '../.env') }), PrismaModule, HealthModule, AuthModule, DocumentsModule, DashboardModule, ServicesModule, AppointmentsModule] })
 export class AppModule {}
