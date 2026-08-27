@@ -9,4 +9,8 @@ allowBuilds:
   esbuild: true
   sharp: false
   unrs-resolver: false
+<<<<<<< HEAD
   '@firebase/util': true
+=======
+  '@scarf/scarf': set this to true or false
+>>>>>>> origin/feature/admin-expenses

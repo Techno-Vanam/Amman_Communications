@@ -52,6 +52,7 @@ model Admin {
   email        String   @unique
   passwordHash String
   name         String
+  expenses     Expense[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -133,4 +134,47 @@ model RequiredDocument {
   isRequired   Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+enum ExpenseCategory {
+  OFFICE
+  TRAVEL
+  EMPLOYEE
+  PROPERTY
+  UTILITIES
+  MARKETING
+  EQUIPMENT
+  OTHER
+}
+
+
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CREDIT_CARD
+  UPI
+  CHEQUE
+  OTHER
+}
+
+model Expense {
+  id             String          @id @default(cuid())
+  title          String
+  description    String?
+  category       ExpenseCategory
+  amount         Decimal         @db.Decimal(10, 2)
+  expenseDate    DateTime
+  paymentMethod  PaymentMethod?
+  isVoided       Boolean         @default(false)
+  notes          String?
+  
+  createdById    String
+  createdBy      Admin           @relation(fields: [createdById], references: [id])
+  
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([expenseDate])
+  @@index([category])
 }

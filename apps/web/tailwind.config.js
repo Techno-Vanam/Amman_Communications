@@ -1,3 +1,4 @@
+/* global module */
 /** @type {import('tailwindcss').Config} */
 /* global module */
 module.exports = {
