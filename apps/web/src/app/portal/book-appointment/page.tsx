@@ -21,16 +21,10 @@ import {
   Phone,
   MessageSquare,
   Building,
-  Lock,
   Info,
   Trash2,
   Video,
-  Globe,
-  PhoneCall,
-  Laptop,
-  Mail,
-  User,
-  Clock
+  Globe
 } from 'lucide-react';
 
 const SERVICES = [
@@ -559,7 +553,7 @@ export default function BookAppointmentPage() {
                       <label className="block text-xs font-semibold text-gray-700">WhatsApp Mode Preference</label>
                       <select
                         value={details.whatsappOption}
-                        onChange={(e) => setDetails({ ...details, whatsappOption: e.target.value as any })}
+                        onChange={(e) => setDetails({ ...details, whatsappOption: e.target.value as 'WhatsApp Voice Call' | 'WhatsApp Video Call' | 'WhatsApp Text Chat' })}
                         className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-emerald-500 bg-white"
                       >
                         <option value="WhatsApp Voice Call">WhatsApp Voice Call</option>
@@ -587,7 +581,7 @@ export default function BookAppointmentPage() {
                       <label className="block text-xs font-semibold text-gray-700">Preferred Video Platform</label>
                       <select
                         value={details.videoPlatform}
-                        onChange={(e) => setDetails({ ...details, videoPlatform: e.target.value as any })}
+                        onChange={(e) => setDetails({ ...details, videoPlatform: e.target.value as 'Google Meet' | 'Zoom' | 'Microsoft Teams' })}
                         className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-purple-500 bg-white"
                       >
                         <option value="Google Meet">Google Meet (Recommended)</option>

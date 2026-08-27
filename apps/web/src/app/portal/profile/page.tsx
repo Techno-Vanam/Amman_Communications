@@ -9,12 +9,9 @@ import {
   Save,
   CheckCircle2,
   ShieldCheck,
-  CreditCard,
   Calendar,
   Building,
-  FileCheck,
-  Lock,
-  PhoneCall
+  FileCheck
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser } from '@/context/UserContext';

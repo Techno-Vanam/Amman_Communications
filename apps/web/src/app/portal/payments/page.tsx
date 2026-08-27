@@ -756,7 +756,7 @@ Digital Tax Reference: TAX-INV-${txn.id}
                   </label>
                   <select
                     value={newPaymentForm.mode}
-                    onChange={(e) => setNewPaymentForm({ ...newPaymentForm, mode: e.target.value as any })}
+                    onChange={(e) => setNewPaymentForm({ ...newPaymentForm, mode: e.target.value as 'Credit Card' | 'Bank Transfer' | 'Wire Transfer' | 'UPI / NetBanking' })}
                     className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-xs font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
                   >
                     <option value="Credit Card">Credit Card</option>

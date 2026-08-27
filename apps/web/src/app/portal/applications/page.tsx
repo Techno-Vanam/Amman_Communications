@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import {
   Plus,
-  Info,
   BookOpen,
   Home,
   Car,
@@ -12,21 +10,12 @@ import {
   Fingerprint,
   FileText,
   Scale,
-  MoreHorizontal,
   Check,
   ChevronRight,
-  CheckCircle2,
-  Trash2,
   Download,
-  History,
-  Clock,
   Calendar,
   AlertCircle,
   ArrowUpRight,
-  Eye,
-  ShieldCheck,
-  UserCheck,
-  ArrowLeft,
   X,
   FileCheck,
   Search
@@ -161,7 +150,11 @@ export default function ApplicationsPage() {
     applicantEmail: user.email || '',
     altPhone: user.altPhone || '+91 ',
     address: user.address || '',
-    description: ''
+    description: '',
+    idDocType: 'Aadhaar Card',
+    idDocNumber: '',
+    dob: '',
+    remarks: '',
   });
 
   const [requiredDocs, setRequiredDocs] = useState<RequiredDocItem[]>(SERVICE_REQUIRED_DOCS.passport);
@@ -912,7 +905,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                   <label className="block font-bold text-gray-700">Government Identification Type</label>
                   <select
                     value={details.idDocType}
-                    onChange={(e) => setDetails({ ...details, idDocType: e.target.value as any })}
+                    onChange={(e) => setDetails({ ...details, idDocType: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#12372A]"
                   >
                     <option value="Aadhaar Card">Aadhaar Card</option>

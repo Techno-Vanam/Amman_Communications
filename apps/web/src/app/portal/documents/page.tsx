@@ -54,7 +54,7 @@ import { useNotifications } from '@/context/NotificationContext';
 
 export default function PortalDocumentsPage() {
   const { showToast } = useNotifications();
-  const [documents, setDocuments] = useState<typeof INITIAL_DOCS>([]);
+  const [documents, setDocuments] = useState(INITIAL_DOCS);
   const [dragging, setDragging] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('Identity Proof');
 
