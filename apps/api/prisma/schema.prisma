@@ -39,12 +39,13 @@ model Customer {
   email        String         @unique
   passwordHash String
   name         String
-  phone        String?
-  status       CustomerStatus @default(ACTIVE)
+  address      String?
+  contactNumber String?
   applications Application[]
   documents    Document[]
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  appointments Appointment[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 model Admin {
@@ -80,101 +81,116 @@ model Application {
 }
 
 model Document {
-  id               String         @id @default(cuid())
-  customer         Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  customerId       String
-  application      Application    @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  applicationId    String
-  documentType     String
-  originalFileName String?
-  fileName         String
-  storagePath      String
-  fileUrl          String?
-  mimeType         String
-  fileSize         Int
-  isEncrypted      Boolean        @default(true)
-  status           DocumentStatus @default(UPLOADED)
-  version          Int            @default(1)
-  verifiedAt       DateTime?
-  verifiedBy       String?
-  rejectionReason  String?
-  uploadedAt       DateTime       @default(now())
-  updatedAt        DateTime       @default(now()) @updatedAt
-
-  @@unique([applicationId, documentType])
+  id                  String                    @id @default(cuid())
+  customer            Customer                  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId          String
+  application         Application               @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId       String
+  documentType        String
+  storagePath         String
+  fileName            String
+  mimeType            String
+  fileSize            Int
+  verificationStatus  DocumentVerificationStatus @default(PENDING)
+  verificationRemarks String?
+  uploadedAt          DateTime                  @default(now())
 }
 
-enum ServiceStatus {
-  DRAFT
-  ACTIVE
-  INACTIVE
+enum AppointmentType {
+  OFFICE_VISIT
+  ONLINE_CONSULTATION
+}
+
+enum ConsultationMode {
+  PHONE
+  VIDEO
+  WHATSAPP
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  RESCHEDULED
+  COMPLETED
+  CANCELLED
 }
 
 model Service {
-  id                String             @id @default(cuid())
-  name              String
-  description       String?
-  governmentFee     Decimal            @db.Decimal(10, 2)
-  serviceFee        Decimal            @db.Decimal(10, 2)
-  totalFee          Decimal            @db.Decimal(10, 2)
-  estimatedTime     String?
-  status            ServiceStatus      @default(DRAFT)
-  requiredDocuments RequiredDocument[]
-  applications      Application[]
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  id                      String        @id @default(uuid())
+  name                    String
+  description             String?
+  requiredDocuments       Json          // string[] of document type codes
+  governmentFee            Decimal?
+  officeCharge             Decimal?
+  estimatedProcessingTime  String?
+  isActive                 Boolean       @default(true)
+  createdAt                DateTime      @default(now())
+  appointments             Appointment[]
 }
 
-model RequiredDocument {
-  id           String   @id @default(cuid())
-  service      Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  serviceId    String
+model Office {
+  id           String        @id @default(uuid())
   name         String
-  displayOrder Int      @default(0)
-  isRequired   Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  address      String
+  isActive     Boolean       @default(true)
+  appointments Appointment[]
 }
 
-enum ExpenseCategory {
-  OFFICE
-  TRAVEL
-  EMPLOYEE
-  PROPERTY
-  UTILITIES
-  MARKETING
-  EQUIPMENT
-  OTHER
+model AppointmentCounter {
+  year       Int @id
+  lastNumber Int @default(0)
 }
 
+model Appointment {
+  id                 String             @id @default(uuid())
+  appointmentNumber  String             @unique   // e.g. APT-2026-000123
+  customerId         String
+  customer           Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  serviceId          String
+  service            Service            @relation(fields: [serviceId], references: [id])
+  appointmentType    AppointmentType
+  officeId           String?            // required if OFFICE_VISIT
+  office             Office?            @relation(fields: [officeId], references: [id])
+  consultationMode   ConsultationMode?  // required if ONLINE_CONSULTATION
+  preferredDate      DateTime
+  preferredTime      String             // "HH:mm"
+  contactNumber      String
+  name               String
+  email              String?
+  address            String?
+  notes              String?
+  status             AppointmentStatus  @default(PENDING)
 
+  // Reschedule tracking
+  originalDate       DateTime?
+  originalTime       String?
+  rescheduleReason   String?
+  adminNote          String?
 
-enum PaymentMethod {
-  CASH
-  BANK_TRANSFER
-  CREDIT_CARD
-  UPI
-  CHEQUE
-  OTHER
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  documents          AppointmentDocument[]
+  statusHistory      AppointmentStatusHistory[]
 }
 
-model Expense {
-  id             String          @id @default(cuid())
-  title          String
-  description    String?
-  category       ExpenseCategory
-  amount         Decimal         @db.Decimal(10, 2)
-  expenseDate    DateTime
-  paymentMethod  PaymentMethod?
-  isVoided       Boolean         @default(false)
-  notes          String?
-  
-  createdById    String
-  createdBy      Admin           @relation(fields: [createdById], references: [id])
-  
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+model AppointmentDocument {
+  id             String       @id @default(uuid())
+  appointmentId  String
+  appointment    Appointment  @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  fileUrl        String
+  fileName       String
+  fileType       String       // pdf | jpg | png
+  fileSize       Int
+  uploadedAt     DateTime     @default(now())
+}
 
-  @@index([expenseDate])
-  @@index([category])
+model AppointmentStatusHistory {
+  id             String       @id @default(uuid())
+  appointmentId  String
+  appointment    Appointment  @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  status         AppointmentStatus
+  changedBy      String       // admin id or "system" or customerId
+  remarks        String?
+  changedAt      DateTime     @default(now())
 }
