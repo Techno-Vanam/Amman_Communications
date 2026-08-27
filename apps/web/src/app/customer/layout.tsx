@@ -1,5 +1,5 @@
 import PortalLayout from '@/components/layout/PortalLayout';
 
-export default function AppPortalLayout({ children }: { children: React.ReactNode }) {
+export default function CustomerLayout({ children }: { children: React.ReactNode }) {
   return <PortalLayout>{children}</PortalLayout>;
 }
