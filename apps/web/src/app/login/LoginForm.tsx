@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { loginAction } from './actions';
+import { setCustomerToken, setAdminToken } from '@/lib/api';
 import Link from 'next/link';
 
 export default function LoginForm() {
@@ -20,13 +21,20 @@ export default function LoginForm() {
       if (result?.error) {
         setError(result.error);
       } else if (result?.success && result.redirectTo) {
+        if (result.accessToken) {
+          if (result.user?.role === 'ADMIN') {
+            setAdminToken(result.accessToken);
+          } else {
+            setCustomerToken(result.accessToken);
+          }
+        }
         window.location.href = result.redirectTo;
       }
     });
   };
 
   return (
-    <form className="flex flex-col gap-5 w-full" onSubmit={handleSubmit} noValidate>
+    <form className="flex flex-col gap-5 w-full" onSubmit={handleSubmit} noValidate suppressHydrationWarning>
       <div className="text-center mb-2">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome back</h1>
         <p className="text-sm text-gray-500">Sign in to your account to continue</p>
@@ -87,6 +95,7 @@ export default function LoginForm() {
             onClick={() => setShowPassword(!showPassword)}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             disabled={isPending}
+            suppressHydrationWarning
           >
             {showPassword ? (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -105,6 +114,7 @@ export default function LoginForm() {
         type="submit"
         className="flex items-center justify-center w-full py-3 px-6 mt-2 bg-brand-700 text-white font-semibold rounded-xl hover:bg-brand-800 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
         disabled={isPending}
+        suppressHydrationWarning
       >
         {isPending ? 'Signing in...' : 'Sign In'}
       </button>

@@ -5,6 +5,8 @@ import {
   Param,
   Put,
   Req,
+  Res,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { AdminAuthGuard } from '../auth/guards/admin-auth.guard';
@@ -36,6 +38,33 @@ export class AdminDocumentsController {
       applicationId,
       documentId,
     );
+  }
+
+  /**
+   * GET /api/v1/admin/applications/:applicationId/documents/:documentId/stream
+   * Decrypt and stream document for admin review
+   */
+  @Get(':applicationId/documents/:documentId/stream')
+  async streamDocumentById(
+    @Param('applicationId') applicationId: string,
+    @Param('documentId') documentId: string,
+    @Res({ passthrough: true }) res: any,
+  ) {
+    const document = await this.documentsService.adminGetDocumentById(
+      applicationId,
+      documentId,
+    );
+    const { buffer, mimeType, fileName } =
+      await this.documentsService.streamDecryptedDocument(document.storagePath);
+
+    res.set({
+      'Content-Type': mimeType || 'application/pdf',
+      'Content-Disposition': `inline; filename="${fileName}"`,
+      'Content-Length': buffer.length,
+      'Cache-Control': 'private, no-cache',
+    });
+
+    return new StreamableFile(buffer);
   }
 
   /**

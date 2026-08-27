@@ -16,6 +16,9 @@ export interface ServiceDefinition {
   icon: string;
   estimatedProcessingDays: string;
   description: string;
+  governmentFee?: number;
+  serviceFee?: number;
+  totalFee?: number;
   requiredDocuments: RequiredDocumentSpec[];
 }
 

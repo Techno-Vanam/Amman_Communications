@@ -11,12 +11,26 @@ export class CustomerAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<{
-      headers: { authorization?: string };
+      headers: { authorization?: string; cookie?: string };
+      cookies?: Record<string, string>;
       user?: { sub: string; role?: string; aud?: string; email?: string };
     }>();
 
     const authorization = request.headers.authorization;
-    const token = authorization?.match(/^Bearer\s+(\S+)$/i)?.[1] || authorization?.replace(/^Bearer\s+/i, '');
+    let token =
+      authorization?.match(/^Bearer\s+(\S+)$/i)?.[1] ||
+      authorization?.replace(/^Bearer\s+/i, '');
+
+    if (!token && (request.cookies?.customer_access_token || request.cookies?.access_token)) {
+      token = request.cookies.customer_access_token || request.cookies.access_token;
+    }
+
+    if (!token && request.headers.cookie) {
+      const match =
+        request.headers.cookie.match(/customer_access_token=([^;]+)/) ||
+        request.headers.cookie.match(/access_token=([^;]+)/);
+      if (match) token = match[1];
+    }
 
     if (token) {
       try {
@@ -41,39 +55,9 @@ export class CustomerAuthGuard implements CanActivate {
         }
       } catch (error) {
         if (error instanceof ForbiddenException) throw error;
-        // Fall through to check if fallback is permitted in dev
       }
     }
 
-    // Default persistent customer in database for portal session fallback
-    let defaultCustomer = await this.prisma.customer.findFirst({
-      where: { email: 'customer@test.com' },
-    });
-
-    if (!defaultCustomer) {
-      defaultCustomer = await this.prisma.customer.findFirst({
-        where: { email: 'customer@amman.com' },
-      });
-    }
-
-    if (!defaultCustomer) {
-      defaultCustomer = await this.prisma.customer.create({
-        data: {
-          id: 'cust_default_amman_2026',
-          email: 'customer@test.com',
-          name: 'Default Customer',
-          passwordHash: '$2a$10$demoCustomerHashAmman2026',
-        },
-      });
-    }
-
-    request.user = {
-      sub: defaultCustomer.id,
-      role: 'CUSTOMER',
-      aud: 'customer',
-      email: defaultCustomer.email,
-    };
-
-    return true;
+    throw new UnauthorizedException('Authentication required. Please sign in to your account.');
   }
 }

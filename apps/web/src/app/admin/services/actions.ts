@@ -17,7 +17,7 @@ async function getAuthHeader() {
 export async function fetchAdminServiceStats(): Promise<{ stats?: ServiceStats; error?: string }> {
   try {
     const headers = await getAuthHeader();
-    const res = await fetch(`${API_BASE_URL}/v1/admin/services/stats`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/services/stats`, {
       headers,
       cache: 'no-store',
     });
@@ -27,7 +27,8 @@ export async function fetchAdminServiceStats(): Promise<{ stats?: ServiceStats; 
       }
       return { error: 'Failed to fetch service statistics' };
     }
-    const stats: ServiceStats = await res.json();
+    const json = await res.json();
+    const stats: ServiceStats = json.data ?? json;
     return { stats };
   } catch (err) {
     console.error('fetchAdminServiceStats error:', err);
@@ -42,7 +43,7 @@ export async function fetchAdminServices(search?: string, status?: string): Prom
     if (search) params.set('search', search);
     if (status && status !== 'ALL') params.set('status', status);
 
-    const url = `${API_BASE_URL}/v1/admin/services?${params.toString()}`;
+    const url = `${API_BASE_URL}/api/v1/admin/services?${params.toString()}`;
     const res = await fetch(url, { headers, cache: 'no-store' });
 
     if (!res.ok) {
@@ -51,7 +52,8 @@ export async function fetchAdminServices(search?: string, status?: string): Prom
       }
       return { error: 'Failed to fetch services list' };
     }
-    const services: Service[] = await res.json();
+    const json = await res.json();
+    const services: Service[] = json.data ?? json;
     return { services };
   } catch (err) {
     console.error('fetchAdminServices error:', err);
@@ -62,16 +64,16 @@ export async function fetchAdminServices(search?: string, status?: string): Prom
 export async function createAdminService(input: CreateServiceInput): Promise<{ service?: Service; error?: string }> {
   try {
     const headers = await getAuthHeader();
-    const res = await fetch(`${API_BASE_URL}/v1/admin/services`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/services`, {
       method: 'POST',
       headers,
       body: JSON.stringify(input),
     });
-    const data = await res.json();
+    const json = await res.json();
     if (!res.ok) {
-      return { error: data.message || 'Failed to create service' };
+      return { error: json.message || 'Failed to create service' };
     }
-    return { service: data };
+    return { service: json.data ?? json };
   } catch (err) {
     console.error('createAdminService error:', err);
     return { error: 'Network error or backend service unavailable' };
@@ -81,16 +83,16 @@ export async function createAdminService(input: CreateServiceInput): Promise<{ s
 export async function updateAdminService(id: string, input: UpdateServiceInput): Promise<{ service?: Service; error?: string }> {
   try {
     const headers = await getAuthHeader();
-    const res = await fetch(`${API_BASE_URL}/v1/admin/services/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/services/${id}`, {
       method: 'PATCH',
       headers,
       body: JSON.stringify(input),
     });
-    const data = await res.json();
+    const json = await res.json();
     if (!res.ok) {
-      return { error: data.message || 'Failed to update service' };
+      return { error: json.message || 'Failed to update service' };
     }
-    return { service: data };
+    return { service: json.data ?? json };
   } catch (err) {
     console.error('updateAdminService error:', err);
     return { error: 'Network error or backend service unavailable' };
@@ -100,16 +102,16 @@ export async function updateAdminService(id: string, input: UpdateServiceInput):
 export async function updateAdminServiceStatus(id: string, status: 'DRAFT' | 'ACTIVE' | 'INACTIVE'): Promise<{ service?: Service; error?: string }> {
   try {
     const headers = await getAuthHeader();
-    const res = await fetch(`${API_BASE_URL}/v1/admin/services/${id}/status`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/services/${id}/status`, {
       method: 'PATCH',
       headers,
       body: JSON.stringify({ status }),
     });
-    const data = await res.json();
+    const json = await res.json();
     if (!res.ok) {
-      return { error: data.message || 'Failed to update service status' };
+      return { error: json.message || 'Failed to update service status' };
     }
-    return { service: data };
+    return { service: json.data ?? json };
   } catch (err) {
     console.error('updateAdminServiceStatus error:', err);
     return { error: 'Network error or backend service unavailable' };
@@ -119,13 +121,13 @@ export async function updateAdminServiceStatus(id: string, status: 'DRAFT' | 'AC
 export async function deleteAdminService(id: string): Promise<{ success?: boolean; error?: string }> {
   try {
     const headers = await getAuthHeader();
-    const res = await fetch(`${API_BASE_URL}/v1/admin/services/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/services/${id}`, {
       method: 'DELETE',
       headers,
     });
-    const data = await res.json();
+    const json = await res.json();
     if (!res.ok) {
-      return { error: data.message || 'Failed to delete service' };
+      return { error: json.message || 'Failed to delete service' };
     }
     return { success: true };
   } catch (err) {

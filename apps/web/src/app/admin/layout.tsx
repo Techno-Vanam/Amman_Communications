@@ -8,11 +8,11 @@ export default function AdminLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header className="portal-nav" style={{ borderBottomColor: 'rgba(245, 158, 11, 0.3)' }}>
+      <header className="portal-nav" style={{ borderBottomColor: '#e2e8f0' }}>
         <div className="nav-inner">
           <Link href="/admin/dashboard" className="nav-brand">
             <span style={{ fontSize: '1.5rem' }}>🛡️</span>
-            <span style={{ color: '#f59e0b' }}>AMMAN ADMIN CONSOLE</span>
+            <span style={{ color: '#0f172a', fontWeight: 800 }}>AMMAN ADMIN CONSOLE</span>
           </Link>
 
           <nav className="nav-links">
@@ -25,7 +25,7 @@ export default function AdminLayout({
             <Link href="/admin/customers" className="nav-link">
               👥 Customers
             </Link>
-            <Link href="/client/dashboard" className="nav-link" style={{ color: '#06b6d4' }}>
+            <Link href="/portal/dashboard" className="nav-link" style={{ color: '#12372A', fontWeight: 600 }}>
               👤 Customer Portal
             </Link>
           </nav>

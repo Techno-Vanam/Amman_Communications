@@ -33,9 +33,121 @@ export class DocumentsService {
 
   /**
    * Return available services and their required document specifications
+   * Dynamically includes all active services managed in admin/services
    */
-  getServicesCatalog() {
-    return SERVICES_CATALOG;
+  async getServicesCatalog() {
+    try {
+      const dbServices = await this.prisma.service.findMany({
+        where: { status: 'ACTIVE' },
+        include: {
+          requiredDocuments: {
+            orderBy: { displayOrder: 'asc' },
+          },
+        },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      if (dbServices.length > 0) {
+        return dbServices.map((svc) => ({
+          id: svc.id,
+          code: svc.id,
+          title: svc.name,
+          category: svc.name.toLowerCase().includes('commercial') || svc.name.toLowerCase().includes('enterprise')
+            ? 'Corporate Broadband'
+            : 'Residential Broadband',
+          tagline: svc.description || 'Amman Communications high-speed verified connection.',
+          description: svc.description || '',
+          estimatedProcessingDays: svc.estimatedTime || '2-4 Business Days',
+          governmentFee: Number(svc.governmentFee),
+          serviceFee: Number(svc.serviceFee),
+          totalFee: Number(svc.totalFee),
+          icon: svc.name.toLowerCase().includes('commercial') ? '🏢' : '📡',
+          requiredDocuments: svc.requiredDocuments.map((doc) => ({
+            type: doc.name.toUpperCase().replace(/[^A-Z0-9]/g, '_'),
+            name: doc.name,
+            description: `Please upload valid ${doc.name} (PDF or Image, max 10MB).`,
+            required: doc.isRequired,
+            acceptedFormats: ['PDF', 'JPG', 'PNG', 'WEBP'],
+            maxSizeMb: 10,
+          })),
+        }));
+      }
+
+      return [
+        {
+          id: 'svc_commercial_fiber',
+          code: 'svc_commercial_fiber',
+          title: 'Commercial Fiber Broadband',
+          category: 'Corporate Broadband',
+          tagline: 'High-speed dedicated fiber optic connectivity for corporate & business premises.',
+          description: 'High-speed dedicated fiber optic connectivity for corporate & business premises.',
+          estimatedProcessingDays: '3-5 Business Days',
+          governmentFee: 250,
+          serviceFee: 750,
+          totalFee: 1000,
+          icon: '🏢',
+          requiredDocuments: [
+            {
+              type: 'COMMERCIAL_REGISTRATION_CERTIFICATE',
+              name: 'Commercial Registration Certificate',
+              description: 'Please upload Commercial Registration Certificate (PDF/Image max 10MB)',
+              required: true,
+              acceptedFormats: ['PDF', 'JPG', 'PNG', 'WEBP'],
+              maxSizeMb: 10,
+            },
+            {
+              type: 'AUTHORIZED_SIGNATORY_NATIONAL_ID',
+              name: 'Authorized Signatory National ID',
+              description: 'Please upload Authorized Signatory National ID (PDF/Image max 10MB)',
+              required: true,
+              acceptedFormats: ['PDF', 'JPG', 'PNG', 'WEBP'],
+              maxSizeMb: 10,
+            },
+            {
+              type: 'LEASE_AGREEMENT_PROOF_OF_ADDRESS',
+              name: 'Lease Agreement / Proof of Address',
+              description: 'Please upload Lease Agreement / Proof of Address (PDF/Image max 10MB)',
+              required: true,
+              acceptedFormats: ['PDF', 'JPG', 'PNG', 'WEBP'],
+              maxSizeMb: 10,
+            },
+          ],
+        },
+        {
+          id: 'svc_residential_broadband',
+          code: 'svc_residential_broadband',
+          title: 'Residential Broadband Setup',
+          category: 'Home Internet',
+          tagline: 'High-speed home internet connection with included Wi-Fi router setup.',
+          description: 'High-speed home internet connection with included Wi-Fi router setup.',
+          estimatedProcessingDays: '1-2 Business Days',
+          governmentFee: 100,
+          serviceFee: 300,
+          totalFee: 400,
+          icon: '📡',
+          requiredDocuments: [
+            {
+              type: 'NATIONAL_IDENTIFICATION_PASSPORT',
+              name: 'National Identification / Passport',
+              description: 'Please upload National Identification / Passport (PDF/Image max 10MB)',
+              required: true,
+              acceptedFormats: ['PDF', 'JPG', 'PNG', 'WEBP'],
+              maxSizeMb: 10,
+            },
+            {
+              type: 'UTILITY_BILL_ELECTRICITY_WATER',
+              name: 'Utility Bill (Electricity/Water)',
+              description: 'Please upload Utility Bill (Electricity/Water) (PDF/Image max 10MB)',
+              required: true,
+              acceptedFormats: ['PDF', 'JPG', 'PNG', 'WEBP'],
+              maxSizeMb: 10,
+            },
+          ],
+        },
+      ];
+    } catch {
+      return [];
+    }
   }
 
   /**
@@ -96,8 +208,9 @@ export class DocumentsService {
       throw new ForbiddenException('You do not have access to this application');
     }
 
+    const appCustomerId = application.customerId;
     const safeName = dto.fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const storagePath = `documents/${customerId}/${applicationId}/${dto.documentType}_${Date.now()}_${safeName}`;
+    const storagePath = `documents/${appCustomerId}/${applicationId}/${dto.documentType}_${Date.now()}_${safeName}`;
 
     const base64Clean = dto.base64Data.replace(/^data:[^;]+;base64,/, '');
     const buffer = Buffer.from(base64Clean, 'base64');
@@ -132,11 +245,15 @@ export class DocumentsService {
       throw new NotFoundException('Application not found');
     }
 
-    if (application.customerId !== customerId) {
+    const appCustomerId = application.customerId;
+    if (application.customerId !== customerId && customerId !== appCustomerId) {
       throw new ForbiddenException('You do not have access to this application');
     }
 
-    if (!dto.storagePath.startsWith(`documents/${customerId}/${applicationId}/`)) {
+    if (
+      !dto.storagePath.startsWith(`documents/${customerId}/${applicationId}/`) &&
+      !dto.storagePath.startsWith(`documents/${appCustomerId}/${applicationId}/`)
+    ) {
       throw new BadRequestException('Invalid storage path for this customer application');
     }
 
@@ -181,7 +298,7 @@ export class DocumentsService {
 
     const created = await this.prisma.document.create({
       data: {
-        customerId,
+        customerId: application.customerId,
         applicationId,
         documentType: dto.documentType,
         originalFileName: dto.originalFileName || dto.fileName,

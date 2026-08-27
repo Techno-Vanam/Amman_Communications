@@ -406,13 +406,13 @@ export default function DocumentCenterPage() {
 
                         {/* Right — Actions */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-                          {/* View button — only if uploaded & has a download URL */}
-                          {uploaded?.downloadUrl && (
+                          {/* View button — active whenever uploaded */}
+                          {uploaded && (
                             <a
-                              href={uploaded.downloadUrl}
+                              href={uploaded.downloadUrl || `/api/v1/customer/documents/download-stream?path=${encodeURIComponent(uploaded.fileName)}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="btn btn-primary btn-sm"
+                              className="btn btn-secondary btn-sm"
                               style={{ textDecoration: 'none' }}
                             >
                               👁️ View

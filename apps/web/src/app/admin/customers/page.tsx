@@ -92,6 +92,8 @@ export default function AdminCustomersPage() {
 
   useEffect(() => {
     loadData();
+    const interval = setInterval(loadData, 5000);
+    return () => clearInterval(interval);
   }, [loadData]);
 
   // Reset page when search or status tab changes

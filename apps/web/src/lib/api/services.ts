@@ -63,9 +63,10 @@ export interface UpdateServiceInput {
 
 export async function fetchPublicServices(): Promise<Service[] | null> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003'}/v1/admin/services?status=ACTIVE`, { cache: 'no-store' });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003'}/api/v1/admin/services?status=ACTIVE`, { cache: 'no-store' });
     if (!res.ok) return null;
-    return await res.json();
+    const json = await res.json();
+    return (json.data ?? json) as Service[];
   } catch {
     return null;
   }

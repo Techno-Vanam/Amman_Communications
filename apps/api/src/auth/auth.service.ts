@@ -44,6 +44,8 @@ export class AuthService {
       accessToken,
       user: {
         id: user.id,
+        name: user.name,
+        email: user.email,
         role,
       }
     };
@@ -81,6 +83,8 @@ export class AuthService {
       accessToken,
       user: {
         id: customer.id,
+        name: customer.name,
+        email: customer.email,
         role: 'CUSTOMER',
       }
     };

@@ -52,10 +52,10 @@ export default function PortalLayout({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                background: 'rgba(255,255,255,0.05)',
+                background: '#f0fdf4',
                 padding: '0.35rem 0.75rem',
                 borderRadius: '9999px',
-                border: '1px solid var(--border)',
+                border: '1px solid #bbf7d0',
                 fontSize: '0.85rem',
               }}
             >
@@ -64,11 +64,11 @@ export default function PortalLayout({
                   width: '8px',
                   height: '8px',
                   borderRadius: '50%',
-                  background: '#10b981',
-                  boxShadow: '0 0 8px #10b981',
+                  background: '#16a34a',
+                  boxShadow: '0 0 8px rgba(22, 163, 74, 0.4)',
                 }}
               />
-              <span style={{ color: 'var(--text-muted)' }}>Customer Active</span>
+              <span style={{ color: '#166534', fontWeight: 600 }}>Customer Active</span>
             </div>
           </div>
         </div>
@@ -81,15 +81,15 @@ export default function PortalLayout({
           borderTop: '1px solid var(--border)',
           padding: '2rem 1.5rem',
           textAlign: 'center',
-          color: 'var(--text-dim)',
+          color: '#64748b',
           fontSize: '0.85rem',
-          background: 'rgba(11, 15, 25, 0.95)',
+          background: '#ffffff',
         }}
       >
         <p>
           © 2026 Amman Communications & TechnoVanam Platform. Single Source of Truth Document Sync Architecture.
         </p>
-        <p style={{ marginTop: '0.35rem', fontSize: '0.75rem' }}>
+        <p style={{ marginTop: '0.35rem', fontSize: '0.75rem', color: '#94a3b8' }}>
           All customer documents are client-encrypted (AES-256-GCM) with instant bi-directional synchronization.
         </p>
       </footer>

@@ -83,6 +83,17 @@ export class ApplicationsService {
     const applicationNumber =
       dto.applicationNumber || this.generateApplicationNumber();
 
+    // Update authenticated customer's profile if fullName or phone provided
+    if (customerId) {
+      await this.prisma.customer.update({
+        where: { id: customerId },
+        data: {
+          ...(dto.fullName ? { name: dto.fullName } : {}),
+          ...(dto.phone ? { phone: dto.phone } : {}),
+        },
+      }).catch(() => {});
+    }
+
     const application = await this.prisma.application.create({
       data: {
         applicationNumber,
@@ -99,6 +110,7 @@ export class ApplicationsService {
       },
       include: {
         documents: true,
+        customer: true,
       },
     });
 
