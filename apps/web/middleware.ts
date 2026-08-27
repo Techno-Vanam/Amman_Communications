@@ -30,7 +30,12 @@ async function verifyJwt(token: string, secret: string): Promise<JwtPayload | nu
 
     const header = JSON.parse(new TextDecoder().decode(headerBytes)) as { alg?: string; typ?: string };
     const payload = JSON.parse(new TextDecoder().decode(payloadBytes)) as JwtPayload;
-    if (header.alg !== 'HS256' || header.typ !== 'JWT' || !payload.sub || !payload.role) return null;
+    if (
+      header.alg !== 'HS256' ||
+      header.typ !== 'JWT' ||
+      typeof payload.sub !== 'string' ||
+      !['CUSTOMER', 'ADMIN'].includes(payload.role ?? '')
+    ) return null;
 
     const key = await crypto.subtle.importKey(
       'raw',

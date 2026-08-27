@@ -13,6 +13,14 @@ function contextWithToken(token?: string) {
   } as never;
 }
 
+function contextWithAuthorization(authorization: string) {
+  return {
+    switchToHttp: () => ({
+      getRequest: () => ({ headers: { authorization } }),
+    }),
+  } as never;
+}
+
 function jwtFor(payload: { sub: string; role: string }) {
   return { verifyAsync: async () => payload } as never;
 }
@@ -41,6 +49,11 @@ test('missing credentials return 401', async () => {
   await assert.rejects(() => guard.canActivate(contextWithToken()), (error: unknown) => {
     return error instanceof UnauthorizedException && error.getStatus() === 401;
   });
+});
+
+test('malformed bearer credentials return 401', async () => {
+	const guard = new CustomerAuthGuard(jwtFor({ sub: 'customer-1', role: 'CUSTOMER' }), prismaFor({ customer: true }));
+  await assert.rejects(() => guard.canActivate(contextWithAuthorization('Bearer token extra')), UnauthorizedException);
 });
 
 test('CUSTOMER token is accepted only for an existing customer', async () => {
