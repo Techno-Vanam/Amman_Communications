@@ -1,94 +1,133 @@
-'use client';
+import React, { useState } from 'react';
+import { FAQ_DATA } from '../../data/landingData';
+import { Plus, Minus, HelpCircle, MessageSquare } from 'lucide-react';
 
-import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+export const FAQSection: React.FC = () => {
+  const [openFaqId, setOpenFaqId] = useState<string | null>('faq-1');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
-const FAQS = [
-  {
-    question: 'How do I start a new application?',
-    answer:
-      'Log into your customer portal, navigate to the Services section, select the service you require, and click "Start Application". The system will guide you through the required steps.',
-  },
-  {
-    question: 'What happens if a document is rejected?',
-    answer:
-      'You will receive a notification in your portal explaining why the document was rejected. You can then upload a corrected version directly to the same application without having to start over.',
-  },
-  {
-    question: 'How long does the review process take?',
-    answer:
-      'Processing times vary depending on the type of service requested. You can view the estimated processing time for your specific application within your customer portal.',
-  },
-  {
-    question: 'Can I track my application status?',
-    answer:
-      'Yes. The customer portal provides real-time status updates for all your active applications. You can see exactly which stage of the process your application is in.',
-  },
-  {
-    question: 'Is my information secure?',
-    answer:
-      'We take data security seriously. All documents and personal information are encrypted and securely stored. Only authorised personnel involved in processing your application have access to your data.',
-  },
-];
+  const categories = ['All', 'General', 'Documentation', 'Timeline & Status', 'Fees & Billing'];
 
-export default function FAQSection() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
-
-  const toggle = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
+  const toggleFaq = (id: string) => {
+    setOpenFaqId(openFaqId === id ? null : id);
   };
 
+  const filteredFaqs = FAQ_DATA.filter((faq) => {
+    return selectedCategory === 'All' || faq.category === selectedCategory;
+  });
+
   return (
-    <section id="contact" className="bg-white py-24" aria-labelledby="faq-heading">
-      <div className="container">
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <p className="text-xs font-bold tracking-widest uppercase text-brand-500 mb-3">Common Questions</p>
-          <h2 id="faq-heading" className="text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight mb-4">
-            Contact &amp; FAQ
+    <section id="faq" className="py-20 md:py-28 bg-white relative border-t border-slate-100">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="text-center space-y-3 mb-12">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 text-brand-700 text-xs font-semibold uppercase tracking-wider">
+            <HelpCircle className="w-4 h-4 text-brand-600" />
+            <span>Frequently Asked Questions</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-700 tracking-tight">
+            Clear Answers to Your Documentation Questions
           </h2>
-          <p className="text-gray-500 leading-relaxed">
-            Find answers to common questions about using the Amman Communications platform.
+          <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
+            Everything you need to know about our document pre-audits, property registration consultancy, and timelines.
           </p>
         </div>
 
-        <div className="max-w-2xl mx-auto flex flex-col gap-3">
-          {FAQS.map((faq, i) => {
-            const isOpen = openIndex === i;
-            return (
-              <div
-                key={i}
-                className={`border rounded-2xl overflow-hidden transition-colors duration-200 ${
-                  isOpen ? 'border-brand-700' : 'border-gray-200'
+        {/* Category Filter Controls */}
+        <div className="mb-10">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                  selectedCategory === cat
+                    ? 'bg-brand-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 border border-slate-200/60'
                 }`}
               >
-                <button
-                  type="button"
-                  className="flex items-center justify-between w-full px-5 py-4 text-left"
-                  onClick={() => toggle(i)}
-                  aria-expanded={isOpen}
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Accordion List - Single Open Accordion with +/- Button */}
+        <div className="space-y-4">
+          {filteredFaqs.length > 0 ? (
+            filteredFaqs.map((faq) => {
+              const isOpen = openFaqId === faq.id;
+              return (
+                <div
+                  key={faq.id}
+                  onClick={() => toggleFaq(faq.id)}
+                  className={`rounded-2xl border transition-all duration-200 overflow-hidden cursor-pointer select-none ${
+                    isOpen
+                      ? 'bg-white border-brand-300 ring-1 ring-brand-500/20 shadow-sm'
+                      : 'bg-slate-50/70 hover:bg-white border-slate-200/80 hover:border-brand-300 hover:shadow-xs'
+                  }`}
                 >
-                  <span className="text-sm font-semibold text-gray-900">{faq.question}</span>
-                  <span className="ml-4 flex-shrink-0 text-brand-700" aria-hidden="true">
-                    <ChevronDown
-                      size={18}
-                      strokeWidth={2}
-                      style={{
-                        transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                        transition: 'transform 250ms ease',
-                      }}
-                    />
-                  </span>
-                </button>
-                {isOpen && (
-                  <div className="px-5 pb-5">
-                    <p className="text-sm text-gray-500 leading-relaxed">{faq.answer}</p>
+                  <div className="px-6 py-5 flex items-center justify-between gap-4">
+                    <span className="font-bold text-slate-900 text-base sm:text-lg tracking-tight">
+                      {faq.question}
+                    </span>
+
+                    {/* Circular + / - button indicator */}
+                    <div
+                      className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-all duration-200 ${
+                        isOpen
+                          ? 'bg-brand-600 border-brand-600 text-white shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-500'
+                      }`}
+                    >
+                      {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                    </div>
                   </div>
-                )}
-              </div>
-            );
-          })}
+
+                  {isOpen && (
+                    <div className="px-6 pb-6 pt-2 text-slate-600 text-sm sm:text-base leading-relaxed border-t border-slate-100 animate-fade-in space-y-3">
+                      <p>{faq.answer}</p>
+                      <span className="inline-block px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-semibold border border-brand-100/80">
+                        Category: {faq.category}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+              <p className="text-slate-500 font-medium">No matching questions found in this category.</p>
+              <button
+                onClick={() => setSelectedCategory('All')}
+                className="mt-2 text-xs font-semibold text-brand-700 hover:underline cursor-pointer"
+              >
+                View all FAQs
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Ask a Consultant Box */}
+        <div className="mt-12 p-6 rounded-2xl bg-brand-50 border border-brand-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-center sm:text-left">
+            <div className="w-11 h-11 rounded-xl bg-white text-brand-600 border border-brand-200 flex items-center justify-center shrink-0 shadow-xs">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-900 text-base">Have a specific document query?</h4>
+              <p className="text-xs text-slate-600">Our senior consultants provide direct advisory support.</p>
+            </div>
+          </div>
+          <a
+            href="#contact"
+            className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs sm:text-sm transition-colors shrink-0 shadow-xs"
+          >
+            Ask a Consultant
+          </a>
         </div>
       </div>
     </section>
   );
-}
+};
+

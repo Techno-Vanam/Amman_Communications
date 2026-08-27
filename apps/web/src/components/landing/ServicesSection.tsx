@@ -1,116 +1,133 @@
-'use client';
+import React, { useState } from 'react';
+import { SERVICES_DATA } from '../../data/landingData';
+import { ServiceItem } from '../../types/landing';
+import {
+  Building2,
+  ShieldCheck,
+  FileSpreadsheet,
+  Award,
+  UserCheck,
+  Briefcase,
+  CheckCircle2,
+  Clock,
+  ArrowRight,
+  Filter
+} from 'lucide-react';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Layers, ArrowRight, FileText } from 'lucide-react';
-import { fetchServices, type Service } from '@/lib/api/services';
-
-function SkeletonCard() {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col gap-4 animate-pulse" aria-hidden="true">
-      <div className="w-10 h-10 rounded-xl bg-gray-100" />
-      <div className="h-4 bg-gray-100 rounded-full w-3/5" />
-      <div className="h-3 bg-gray-100 rounded-full w-full" />
-      <div className="h-3 bg-gray-100 rounded-full w-4/5" />
-    </div>
-  );
+interface ServicesSectionProps {
+  onSelectService: (service: ServiceItem) => void;
 }
 
-function ServiceCard({ service }: { service: Service }) {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col gap-3 shadow-sm hover:shadow-md hover:border-brand-200 transition-all duration-200 group">
-      <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-700 flex items-center justify-center group-hover:bg-brand-700 group-hover:text-white transition-colors duration-200">
-        <Layers size={22} strokeWidth={1.8} />
-      </div>
-      <h3 className="text-base font-semibold text-gray-900">{service.name}</h3>
-      <p className="text-sm text-gray-500 leading-relaxed flex-1">{service.description}</p>
-      <Link
-        href={`/services/${service.id}`}
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800 transition-colors duration-150 mt-1"
-        aria-label={`View details for ${service.name}`}
-      >
-        View Details
-        <ArrowRight size={14} strokeWidth={2} />
-      </Link>
-    </div>
-  );
-}
+export const ServicesSection: React.FC<ServicesSectionProps> = ({ onSelectService }) => {
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center gap-3 py-16 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-brand-50 text-brand-400 flex items-center justify-center">
-        <FileText size={36} strokeWidth={1.5} />
-      </div>
-      <p className="text-base font-semibold text-gray-800">Services coming soon</p>
-      <p className="text-sm text-gray-500 max-w-sm">
-        Our available services will appear here. Contact us to learn more about what we offer.
-      </p>
-    </div>
-  );
-}
+  const categories = ['All', 'Registration', 'Verification', 'Applications', 'Certificates', 'Consultation'];
 
-function ErrorState({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="flex flex-col items-center gap-4 py-16">
-      <p className="text-sm text-gray-500">Unable to load services at the moment.</p>
-      <button
-        onClick={onRetry}
-        className="px-5 py-2 border-2 border-brand-700 text-brand-700 font-semibold rounded-xl hover:bg-brand-50 transition-colors duration-150"
-      >
-        Try Again
-      </button>
-    </div>
-  );
-}
+  const filteredServices = selectedCategory === 'All'
+    ? SERVICES_DATA
+    : SERVICES_DATA.filter((s) => s.category === selectedCategory);
 
-type FetchState = 'idle' | 'loading' | 'success' | 'error';
-
-export default function ServicesSection() {
-  const [services, setServices] = useState<Service[]>([]);
-  const [state, setState] = useState<FetchState>('loading');
-
-  const load = () => {
-    setState('loading');
-    fetchServices().then((result) => {
-      if (result === null) {
-        setState('error');
-      } else {
-        setServices(result);
-        setState('success');
-      }
-    });
+  const getServiceIconInfo = (iconName: string) => {
+    switch (iconName) {
+      case 'Building2':
+        return { icon: <Building2 className="w-6 h-6" />, bg: 'bg-accent-roseSoft', text: 'text-accent-rose' };
+      case 'ShieldCheck':
+        return { icon: <ShieldCheck className="w-6 h-6" />, bg: 'bg-brand-50', text: 'text-brand-600' };
+      case 'FileSpreadsheet':
+        return { icon: <FileSpreadsheet className="w-6 h-6" />, bg: 'bg-accent-skySoft', text: 'text-accent-sky' };
+      case 'Award':
+        return { icon: <Award className="w-6 h-6" />, bg: 'bg-accent-amberSoft', text: 'text-accent-amber' };
+      case 'UserCheck':
+        return { icon: <UserCheck className="w-6 h-6" />, bg: 'bg-accent-violetSoft', text: 'text-accent-violet' };
+      case 'Briefcase':
+        return { icon: <Briefcase className="w-6 h-6" />, bg: 'bg-brand-50', text: 'text-brand-700' };
+      default:
+        return { icon: <Building2 className="w-6 h-6" />, bg: 'bg-brand-50', text: 'text-brand-600' };
+    }
   };
 
-  useEffect(() => { load(); }, []);
-
   return (
-    <section id="services" className="bg-gray-50 py-24" aria-labelledby="services-heading">
-      <div className="container">
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <p className="text-xs font-bold tracking-widest uppercase text-brand-500 mb-3">What We Offer</p>
-          <h2 id="services-heading" className="text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight mb-4">
-            Services designed around your needs
+    <section id="services" className="py-20 md:py-28 bg-slate-50/50 border-t border-slate-100 relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto space-y-3 mb-16">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 text-brand-700 text-xs font-semibold uppercase tracking-wider">
+            <span>Specialized Services</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-700 tracking-tight">
+            Professional Documentation & Consultancy Services
           </h2>
-          <p className="text-gray-500 leading-relaxed">
-            Browse the services available through the Amman Communications
-            platform and start your application today.
+          <p className="text-base sm:text-lg text-slate-600">
+            From pre-registration document audits to formal application filing, we deliver clarity and reliability.
           </p>
         </div>
 
-        {state === 'loading' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" aria-busy="true" aria-label="Loading services">
-            {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
-          </div>
-        )}
-        {state === 'success' && services.length === 0 && <EmptyState />}
-        {state === 'success' && services.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service) => <ServiceCard key={service.id} service={service} />)}
-          </div>
-        )}
-        {state === 'error' && <ErrorState onRetry={load} />}
+        {/* Services Cards Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-7">
+          {SERVICES_DATA.map((service) => {
+            const iconInfo = getServiceIconInfo(service.iconName);
+            return (
+              <div
+                key={service.id}
+                className="group relative bg-white rounded-2xl p-7 border border-slate-200/80 hover:border-brand-300 shadow-soft hover:shadow-soft-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+              >
+                <div>
+                  {/* Header inside Card */}
+                  <div className="flex items-start justify-between gap-4 mb-5">
+                    <div className={`w-12 h-12 rounded-xl ${iconInfo.bg} ${iconInfo.text} flex items-center justify-center transition-all duration-300 shadow-xs`}>
+                      {iconInfo.icon}
+                    </div>
+                    {service.badge && (
+                      <span className="px-3 py-1 rounded-full bg-brand-50 text-brand-700 border border-brand-100 text-xs font-bold tracking-wide">
+                        {service.badge}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Title & Category */}
+                  <span className="text-xs font-bold text-brand-600 tracking-wider uppercase mb-1 block">
+                    {service.category}
+                  </span>
+                  <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-brand-600 transition-colors">
+                    {service.title}
+                  </h3>
+
+                  {/* Short Description */}
+                  <p className="text-slate-600 text-sm mb-5 leading-relaxed">
+                    {service.shortDesc}
+                  </p>
+
+                  {/* Features list */}
+                  <ul className="space-y-2 mb-6 border-t border-slate-100 pt-4">
+                    {service.features.map((feat, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-700">
+                        <CheckCircle2 className="w-4 h-4 text-brand-600 shrink-0 mt-0.5" />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Card Footer Action */}
+                <div className="border-t border-slate-100 pt-4 mt-2 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                    <Clock className="w-3.5 h-3.5 text-brand-600" />
+                    <span>{service.processingTime}</span>
+                  </div>
+                  <button
+                    onClick={() => onSelectService(service)}
+                    className="text-xs font-semibold text-brand-700 hover:text-brand-800 flex items-center gap-1 group/btn"
+                  >
+                    <span>Request Service</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform text-brand-600" />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
-}
+};
+

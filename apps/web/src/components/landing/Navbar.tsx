@@ -1,134 +1,181 @@
-'use client';
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, Menu, X, LogIn, UserPlus } from 'lucide-react';
 
-import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import { Menu, X, Layers } from 'lucide-react';
+interface NavbarProps {
+  onOpenModal?: () => void;
+  onNavigateLogin: () => void;
+  onNavigateSignUp: () => void;
+}
 
-const NAV_LINKS = [
-  { label: 'Services', href: '/#services' },
-  { label: 'How It Works', href: '/#how-it-works' },
-  { label: 'About', href: '/#about' },
-  { label: 'Contact', href: '/#contact' },
-] as const;
+export const Navbar: React.FC<NavbarProps> = ({
+  onNavigateLogin,
+  onNavigateSignUp,
+}) => {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('hero');
 
-export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
 
-  const handleScroll = useCallback(() => {
-    setScrolled(window.scrollY > 8);
+      const sections = ['hero', 'services', 'how-it-works', 'why-choose-us', 'faq', 'contact'];
+      const scrollPosition = window.scrollY + 180;
+
+      for (const section of sections) {
+        const el = document.getElementById(section);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPosition >= top && scrollPosition < top + height) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
-
-  const closeMenu = () => setMenuOpen(false);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeMenu();
-    };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [menuOpen]);
+  const navLinks = [
+    { label: 'Home', href: '#hero' },
+    { label: 'Services', href: '#services' },
+    { label: 'How It Works', href: '#how-it-works' },
+    { label: 'Why Choose Us', href: '#why-choose-us' },
+    { label: 'FAQ', href: '#faq' },
+    { label: 'Contact', href: '#contact' },
+  ];
 
   return (
-    <header
-      role="banner"
-      className={`sticky top-0 z-50 bg-white transition-all duration-200 ${
-        scrolled ? 'border-b border-gray-200 shadow-sm' : 'border-b border-transparent'
-      }`}
-    >
-      <nav className="container flex items-center gap-8 h-[68px]" aria-label="Main navigation">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 flex-shrink-0 no-underline" onClick={closeMenu}>
-          <span className="flex items-center justify-center w-9 h-9 bg-brand-700 text-white rounded-lg">
-            <Layers size={20} strokeWidth={2} />
-          </span>
-          <span className="text-base font-bold text-gray-900 tracking-tight">
-            Amman <span className="text-brand-700">Communications</span>
-          </span>
-        </Link>
+    <header className="fixed top-0 left-0 right-0 z-50 py-3 sm:py-4 px-3 sm:px-6 transition-all duration-300">
+      {/* OUTER NAVBAR LAYER - Single Rounded Container */}
+      <div
+        className={`max-w-7xl mx-auto rounded-full transition-all duration-300 ${
+          isScrolled
+            ? 'bg-white/95 backdrop-blur-md shadow-md border border-slate-200/90 py-2 px-3 sm:px-5'
+            : 'bg-white/90 backdrop-blur-sm border border-slate-200/80 py-2.5 px-3 sm:px-6 shadow-sm'
+        }`}
+      >
+        <div className="flex items-center justify-between gap-2">
+          {/* Brand Logo */}
+          <a href="#hero" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center shadow-xs shadow-brand-600/20 group-hover:scale-105 transition-transform">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-heading font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 leading-none">
+                AMMAN
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-semibold tracking-widest text-brand-600 uppercase leading-tight">
+                Communications
+              </span>
+            </div>
+          </a>
 
-        {/* Desktop nav links */}
-        <ul className="hidden md:flex items-center gap-1 ml-auto list-none" role="list">
-          {NAV_LINKS.map(({ label, href }) => (
-            <li key={label}>
-              <Link
-                href={href}
-                className="inline-block px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:text-brand-700 hover:bg-brand-50 transition-colors duration-150"
-              >
-                {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-
-        {/* Desktop CTAs */}
-        <div className="hidden md:flex items-center gap-2">
-          <Link
-            href="/login"
-            className="px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-100 hover:text-gray-900 transition-colors duration-150"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="px-4 py-2 text-sm font-semibold text-white bg-brand-700 rounded-lg hover:bg-brand-800 transition-colors duration-150 shadow-sm"
-          >
-            Get Started
-          </Link>
-        </div>
-
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden flex items-center justify-center w-10 h-10 ml-auto border border-gray-200 rounded-lg text-gray-600 hover:border-brand-700 hover:bg-brand-50 hover:text-brand-700 transition-colors duration-150"
-          aria-expanded={menuOpen}
-          aria-controls="mobile-menu"
-          aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-          onClick={() => setMenuOpen((prev) => !prev)}
-        >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
-      </nav>
-
-      {/* Mobile menu */}
-      {menuOpen && (
-        <div id="mobile-menu" className="md:hidden border-t border-gray-100 bg-white px-6 pb-6 pt-3 flex flex-col gap-1">
-          <ul className="flex flex-col gap-0.5 list-none" role="list">
-            {NAV_LINKS.map(({ label, href }) => (
-              <li key={label}>
-                <Link
-                  href={href}
-                  className="block px-3 py-2.5 text-sm font-medium text-gray-600 rounded-lg hover:text-brand-700 hover:bg-brand-50 transition-colors duration-150"
-                  onClick={closeMenu}
+          {/* INNER NAVIGATION LAYER - Layer inside a layer */}
+          <nav className="hidden md:flex items-center gap-1 bg-slate-100/80 p-1.5 rounded-full border border-slate-200/70 shadow-inner">
+            {navLinks.map((link) => {
+              const sectionId = link.href.replace('#', '');
+              const isActive = activeSection === sectionId;
+              return (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className={`px-3.5 py-1.5 text-xs sm:text-sm rounded-full transition-all duration-200 ${
+                    isActive
+                      ? 'bg-brand-600 text-white font-bold shadow-xs'
+                      : 'font-semibold text-slate-700 hover:text-brand-700 hover:bg-white/80'
+                  }`}
                 >
-                  {label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-gray-100">
-            <Link
-              href="/login"
-              className="w-full text-center px-4 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors duration-150"
-              onClick={closeMenu}
+                  {link.label}
+                </a>
+              );
+            })}
+          </nav>
+
+          {/* AUTHENTICATION LAYER - Distinct action group */}
+          <div className="hidden lg:flex items-center gap-1 bg-slate-100/80 p-1 rounded-full border border-slate-200/70">
+            <button
+              onClick={onNavigateLogin}
+              className="px-4 py-1.5 text-xs sm:text-sm font-bold text-slate-700 hover:text-brand-700 hover:bg-white rounded-full transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              Login
-            </Link>
-            <Link
-              href="/register"
-              className="w-full text-center px-4 py-2.5 text-sm font-semibold text-white bg-brand-700 rounded-lg hover:bg-brand-800 transition-colors duration-150"
-              onClick={closeMenu}
+              <LogIn className="w-3.5 h-3.5 text-brand-600" />
+              <span>Login</span>
+            </button>
+
+            <button
+              onClick={onNavigateSignUp}
+              className="px-4 py-1.5 text-xs sm:text-sm font-bold text-white bg-brand-700 hover:bg-brand-800 border border-brand-800/80 rounded-full transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
-              Get Started
-            </Link>
+              <UserPlus className="w-3.5 h-3.5 text-brand-200" />
+              <span>Sign Up</span>
+            </button>
+          </div>
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-full text-slate-700 hover:text-brand-600 hover:bg-slate-100 transition-colors cursor-pointer"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <div className="md:hidden mt-2 bg-white rounded-3xl border border-slate-200 px-4 pt-3 pb-5 shadow-xl animate-fade-in max-w-7xl mx-auto">
+          <div className="flex flex-col space-y-1 mb-4">
+            {navLinks.map((link) => {
+              const sectionId = link.href.replace('#', '');
+              const isActive = activeSection === sectionId;
+              return (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-3 py-2 text-sm rounded-xl transition-colors ${
+                    isActive
+                      ? 'bg-brand-600 text-white font-bold'
+                      : 'font-medium text-slate-700 hover:text-brand-600 hover:bg-brand-50'
+                  }`}
+                >
+                  {link.label}
+                </a>
+              );
+            })}
+          </div>
+          <div className="flex flex-col gap-2 pt-3 border-t border-slate-100">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onNavigateLogin();
+                }}
+                className="py-2.5 px-3 rounded-xl border border-slate-200 text-center font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 text-xs cursor-pointer"
+              >
+                <LogIn className="w-3.5 h-3.5 text-brand-600" />
+                <span>Login</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onNavigateSignUp();
+                }}
+                className="py-2.5 px-3 rounded-xl bg-brand-700 hover:bg-brand-800 text-center font-semibold text-white transition-colors flex items-center justify-center gap-1.5 text-xs cursor-pointer"
+              >
+                <UserPlus className="w-3.5 h-3.5 text-brand-200" />
+                <span>Sign Up</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
     </header>
   );
-}
+};
+

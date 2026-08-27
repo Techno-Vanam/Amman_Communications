@@ -1,116 +1,71 @@
-import Link from 'next/link';
-import { ArrowRight, ShieldCheck } from 'lucide-react';
+import React from 'react';
+import { CheckCircle2, Sparkles, Star, Shield, Calendar, ArrowRight } from 'lucide-react';
 
-function HeroIllustration() {
-  return (
-    <div className="flex-1 flex items-center justify-center p-8 lg:p-12" aria-hidden="true">
-      <svg
-        viewBox="0 0 420 380"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-full max-w-md drop-shadow-xl"
-        aria-hidden="true"
-      >
-        <rect x="40" y="40" width="340" height="300" rx="16" fill="#f0f7f2" />
-        <rect x="80" y="72" width="220" height="240" rx="10" fill="white" />
-        <rect x="80" y="72" width="220" height="240" rx="10" stroke="#d8ebdd" strokeWidth="1.5" />
-        <rect x="80" y="72" width="220" height="44" rx="10" fill="#12372A" />
-        <rect x="80" y="96" width="220" height="20" fill="#12372A" />
-        <rect x="100" y="86" width="120" height="8" rx="4" fill="white" opacity="0.9" />
-        <rect x="100" y="98" width="80" height="6" rx="3" fill="white" opacity="0.5" />
-        {[0, 1, 2, 3, 4].map((i) => (
-          <g key={i}>
-            <rect x="100" y={140 + i * 32} width="18" height="18" rx="4"
-              fill={i < 3 ? '#12372A' : '#e2e5ea'} />
-            {i < 3 && (
-              <path d={`M ${104} ${149 + i * 32} l 4 4 l 6 -7`}
-                stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            )}
-            <rect x="128" y={145 + i * 32} width={i < 3 ? 110 : 90} height="7" rx="3.5"
-              fill={i < 3 ? '#3d4350' : '#b0b8c4'} />
-          </g>
-        ))}
-        <rect x="100" y="305" width="160" height="6" rx="3" fill="#e2e5ea" />
-        <rect x="100" y="305" width="112" height="6" rx="3" fill="#12372A" />
-        <rect x="268" y="302" width="30" height="12" rx="6" fill="#d8ebdd" />
-        <rect x="273" y="305" width="20" height="6" rx="3" fill="#12372A" opacity="0.6" />
-        <rect x="255" y="68" width="90" height="28" rx="14" fill="white" />
-        <rect x="255" y="68" width="90" height="28" rx="14" stroke="#d8ebdd" strokeWidth="1.5" />
-        <circle cx="271" cy="82" r="5" fill="#4D96FF" />
-        <rect x="281" y="78" width="50" height="8" rx="4" fill="#3d4350" />
-        <rect x="290" y="200" width="90" height="70" rx="10" fill="white" />
-        <rect x="290" y="200" width="90" height="70" rx="10" stroke="#d8ebdd" strokeWidth="1.5" />
-        <rect x="302" y="213" width="40" height="6" rx="3" fill="#3d4350" />
-        <rect x="302" y="225" width="55" height="5" rx="2.5" fill="#b0b8c4" />
-        <rect x="302" y="240" width="30" height="14" rx="4" fill="#12372A" />
-        <rect x="307" y="244" width="20" height="6" rx="3" fill="white" />
-        <circle cx="60" cy="60" r="6" fill="#d8ebdd" />
-        <circle cx="380" cy="320" r="8" fill="#12372A" opacity="0.12" />
-        <circle cx="380" cy="60" r="4" fill="#d8ebdd" opacity="0.7" />
-      </svg>
-    </div>
-  );
+interface HeroProps {
+  onOpenAppointmentModal: () => void;
 }
 
-export default function Hero() {
+export const Hero: React.FC<HeroProps> = ({ onOpenAppointmentModal }) => {
   return (
-    <section className="bg-white" aria-labelledby="hero-heading">
-      <div className="container">
-        <div className="flex flex-col lg:flex-row items-center gap-12 py-20 lg:py-28">
-          {/* Content */}
-          <div className="flex-1 flex flex-col gap-7 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-50 text-brand-700 text-xs font-semibold rounded-full border border-brand-100 w-fit">
-              <ShieldCheck size={14} strokeWidth={2.5} />
-              <span>Secure &amp; Trusted Platform</span>
-            </div>
+    <section id="hero" className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden bg-white">
+      {/* Subtle Background Glows */}
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[380px] bg-gradient-to-tr from-brand-50/70 via-accent-skySoft/30 to-transparent blur-3xl rounded-full -z-10 pointer-events-none" />
+      <div className="absolute top-32 right-10 w-64 h-64 bg-brand-100/40 blur-2xl rounded-full -z-10 pointer-events-none" />
 
-            <h1 id="hero-heading" className="text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight">
-              Your services,<br />
-              <span className="text-brand-700">managed in one place.</span>
-            </h1>
-
-            <p className="text-lg text-gray-500 leading-relaxed">
-              Amman Communications gives you a single, secure platform to create
-              applications, upload required documents, and track your progress —
-              every step of the way.
-            </p>
-
-            <div className="flex flex-wrap gap-4">
-              <Link
-                href="/register"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-brand-700 text-white font-semibold rounded-xl hover:bg-brand-800 transition-colors duration-150 shadow-md"
-              >
-                Get Started
-                <ArrowRight size={16} strokeWidth={2} />
-              </Link>
-              <Link
-                href="/#services"
-                className="inline-flex items-center gap-2 px-6 py-3 border-2 border-brand-700 text-brand-700 font-semibold rounded-xl hover:bg-brand-50 transition-colors duration-150"
-              >
-                Explore Services
-              </Link>
-            </div>
-
-            <div className="flex items-center gap-6 pt-2">
-              {[
-                { num: '100%', label: 'Secure' },
-                { num: 'Fast', label: 'Processing' },
-                { num: '24/7', label: 'Accessible' },
-              ].map((s, i) => (
-                <div key={s.num} className="flex items-center gap-6">
-                  <div className="text-center">
-                    <span className="block text-xl font-bold text-brand-700">{s.num}</span>
-                    <span className="text-xs text-gray-500 font-medium">{s.label}</span>
-                  </div>
-                  {i < 2 && <div className="w-px h-8 bg-gray-200" />}
-                </div>
-              ))}
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
+        <div className="text-center space-y-6 max-w-5xl mx-auto">
+          {/* Top Pill Badge without icon */}
+          <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-brand-50 border border-brand-100 text-brand-700 text-xs sm:text-sm font-semibold shadow-xs">
+            <span>Official Documentation & Registration Consultancy</span>
           </div>
 
-          <HeroIllustration />
+          {/* Main Headline */}
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brand-700 tracking-tight leading-[1.15]">
+            Streamlined Property Registration & Document Verification
+          </h1>
+
+          {/* Description */}
+          <p className="text-lg sm:text-xl text-slate-600 max-w-4xl mx-auto leading-relaxed font-normal">
+            Amman Communications delivers professional advisory, pre-audit verification, deed drafting, and online filing to streamline your registration workflows with 100% precision.
+          </p>
+
+          {/* Action Buttons - Book Appointment on LEFT, Explore Services on RIGHT */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+            <button
+              onClick={onOpenAppointmentModal}
+              className="w-full sm:w-auto px-6 py-3.5 h-12 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-base shadow-sm hover:shadow-brand-glow transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer"
+            >
+              <Calendar className="w-4 h-4 text-white" />
+              <span>Book Appointment</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+
+            <a
+              href="#services"
+              className="w-full sm:w-auto px-6 py-3.5 h-12 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-base border border-slate-200/90 shadow-xs transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>Explore Services</span>
+            </a>
+          </div>
+
+          {/* Feature Bullets / Multi-color Trust Markers */}
+          <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-slate-700 text-sm font-medium max-w-xl mx-auto">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-brand-600 shrink-0" />
+              <span>Transparent Fees</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-accent-sky shrink-0" />
+              <span>Verified Pre-Audit</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-accent-amber shrink-0 fill-accent-amber" />
+              <span>Express Filing</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   );
-}
+};
+
