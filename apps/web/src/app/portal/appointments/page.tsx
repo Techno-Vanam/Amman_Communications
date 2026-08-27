@@ -387,7 +387,7 @@ export default function AppointmentsPage() {
 
       {/* MODAL 0: View Appointment Details Centered Popup */}
       {selectedAppointment && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
@@ -573,8 +573,9 @@ export default function AppointmentsPage() {
                   Cancel
                 </button>
                 <button
-                  type="submit"
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm"
+                  type="button"
+                  onClick={handleConfirmReschedule}
+                  className="px-5 py-2 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl shadow-sm"
                 >
                   Confirm Reschedule
                 </button>
@@ -586,7 +587,7 @@ export default function AppointmentsPage() {
 
       {/* MODAL 2: Cancel Appointment */}
       {cancelModalItem && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">

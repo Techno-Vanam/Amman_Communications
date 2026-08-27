@@ -1047,7 +1047,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
       {/* 4. MODALS: HISTORY & DOCUMENT PREVIEW */}
       {/* ======================================================== */}
       {showHistoryModal && selectedApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
           <div className="bg-white rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between border-b pb-3">
               <h3 className="font-bold text-base text-gray-900">Application History - {selectedApp.id}</h3>
@@ -1080,7 +1080,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
       )}
 
       {viewingDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center justify-between border-b pb-3">
               <h3 className="font-bold text-sm text-gray-900">Viewing Document: {viewingDoc.name}</h3>
@@ -1105,7 +1105,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
 
       {/* MODAL: Centered Application Details Popup */}
       {viewModalApp && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 space-y-6 shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-4 border-b border-gray-100 sticky top-0 bg-white z-10">
