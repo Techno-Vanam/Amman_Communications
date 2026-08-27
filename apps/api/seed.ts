@@ -6,17 +6,51 @@ const prisma = new PrismaClient();
 async function main() {
   const passwordHash = await hash('password123', 10);
 
-  // 1. Create a customer
+  // 1. Create customers
   await prisma.customer.upsert({
     where: { email: 'customer@test.com' },
-    update: { passwordHash },
+    update: { passwordHash, status: 'ACTIVE' },
     create: {
       email: 'customer@test.com',
       passwordHash,
       name: 'Test Customer',
+      status: 'ACTIVE',
     },
   });
-  console.log('Test customer created: customer@test.com / password123');
+
+  await prisma.customer.upsert({
+    where: { email: 'sarah.smith@example.com' },
+    update: { passwordHash, status: 'ACTIVE' },
+    create: {
+      email: 'sarah.smith@example.com',
+      passwordHash,
+      name: 'Sarah Smith',
+      status: 'ACTIVE',
+    },
+  });
+
+  await prisma.customer.upsert({
+    where: { email: 'john.doe@example.com' },
+    update: { passwordHash, status: 'INACTIVE' },
+    create: {
+      email: 'john.doe@example.com',
+      passwordHash,
+      name: 'John Doe',
+      status: 'INACTIVE',
+    },
+  });
+
+  await prisma.customer.upsert({
+    where: { email: 'acme.corp@business.com' },
+    update: { passwordHash, status: 'ACTIVE' },
+    create: {
+      email: 'acme.corp@business.com',
+      passwordHash,
+      name: 'Acme Corporation',
+      status: 'ACTIVE',
+    },
+  });
+  console.log('Sample customers created');
 
   // 2. Create an admin
   await prisma.admin.upsert({
@@ -50,6 +84,84 @@ async function main() {
     },
   });
   console.log('Test duplicate identity created: duplicate@test.com');
+
+  // 4. Seed default services
+  const defaultServices = [
+    {
+      name: 'Commercial Fiber Broadband',
+      description: 'High-speed dedicated fiber optic connectivity for corporate & business premises.',
+      governmentFee: 250,
+      serviceFee: 750,
+      totalFee: 1000,
+      estimatedTime: '3-5 Business Days',
+      status: 'ACTIVE' as const,
+      documents: [
+        { name: 'Commercial Registration Certificate', displayOrder: 1, isRequired: true },
+        { name: 'Authorized Signatory National ID', displayOrder: 2, isRequired: true },
+        { name: 'Lease Agreement / Proof of Address', displayOrder: 3, isRequired: true },
+      ],
+    },
+    {
+      name: 'Residential Broadband Setup',
+      description: 'High-speed home internet connection with included Wi-Fi router setup.',
+      governmentFee: 100,
+      serviceFee: 300,
+      totalFee: 400,
+      estimatedTime: '1-2 Business Days',
+      status: 'ACTIVE' as const,
+      documents: [
+        { name: 'National Identification / Passport', displayOrder: 1, isRequired: true },
+        { name: 'Utility Bill (Electricity/Water)', displayOrder: 2, isRequired: true },
+      ],
+    },
+    {
+      name: 'Enterprise Leased Line (10Gbps)',
+      description: 'Ultra-low latency symmetrical dedicated leased line for data centers.',
+      governmentFee: 1200,
+      serviceFee: 3800,
+      totalFee: 5000,
+      estimatedTime: '7-10 Business Days',
+      status: 'DRAFT' as const,
+      documents: [
+        { name: 'Company Trade License', displayOrder: 1, isRequired: true },
+        { name: 'Network Topology Diagram', displayOrder: 2, isRequired: true },
+        { name: 'Tax Identification Document', displayOrder: 3, isRequired: true },
+      ],
+    },
+    {
+      name: 'Legacy Copper Landline',
+      description: 'Analog copper voice line connection. (Phased out for new applications).',
+      governmentFee: 50,
+      serviceFee: 150,
+      totalFee: 200,
+      estimatedTime: '5 Business Days',
+      status: 'INACTIVE' as const,
+      documents: [
+        { name: 'Subscriber ID Copy', displayOrder: 1, isRequired: true },
+      ],
+    },
+  ];
+
+  for (const s of defaultServices) {
+    const existing = await prisma.service.findFirst({ where: { name: s.name } });
+    if (!existing) {
+      await prisma.service.create({
+        data: {
+          name: s.name,
+          description: s.description,
+          governmentFee: s.governmentFee,
+          serviceFee: s.serviceFee,
+          totalFee: s.totalFee,
+          estimatedTime: s.estimatedTime,
+          status: s.status,
+          requiredDocuments: {
+            create: s.documents,
+          },
+        },
+      });
+    }
+  }
+  console.log('Default services seeded');
 }
 
 main()

@@ -1,7 +1,16 @@
-name: Backend deployment (placeholder)
-on: { workflow_dispatch: {} }
+name: Backend Deployment
+
+on:
+  workflow_dispatch:
+
 jobs:
-  placeholder:
+  deploy-backend:
+    name: Deploy Backend API
     runs-on: ubuntu-latest
+
     steps:
-      - run: echo "Future workflow: build API image, push it to ECR, then deploy it to EC2."
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log Placeholder Action
+        run: echo "Future workflow: build API image, push it to ECR/registry, then deploy to server."
