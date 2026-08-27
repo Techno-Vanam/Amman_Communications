@@ -9,15 +9,12 @@ import {
   Save,
   CheckCircle2,
   ShieldCheck,
-  CreditCard,
-  Calendar,
   Building,
-  FileCheck,
-  Lock,
-  PhoneCall
+  FileCheck
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser } from '@/context/UserContext';
+import CustomDatePicker from '@/components/ui/CustomDatePicker';
 
 export default function ProfilePage() {
   const { showToast } = useNotifications();
@@ -78,17 +75,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 font-sans pb-12">
-      {/* Title */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#0e2a47]">
-          My Profile &amp; Identity
-        </h1>
-        <p className="text-xs text-gray-500 font-medium mt-1">
-          Manage your official personal information, government verification status, and contact credentials.
-        </p>
-      </div>
-
+    <div className="max-w-7xl w-full mx-auto space-y-6 font-sans pb-12">
       {/* Save Toast Notification */}
       {saved && (
         <div className="bg-[#e6f4ea] border border-[#a8d5b9] text-[#137333] p-4 rounded-xl flex items-center gap-3 text-xs font-bold animate-in fade-in duration-200">
@@ -253,15 +240,11 @@ export default function ProfilePage() {
                 {/* Date of Birth */}
                 <div className="space-y-1.5">
                   <label className="block font-bold text-gray-700">Date of Birth</label>
-                  <div className="relative">
-                    <Calendar className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />
-                    <input
-                      type="date"
-                      value={profileData.dob}
-                      onChange={(e) => setProfileData({ ...profileData, dob: e.target.value })}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
-                    />
-                  </div>
+                  <CustomDatePicker
+                    value={profileData.dob}
+                    onChange={(val) => setProfileData({ ...profileData, dob: val })}
+                    disableFuture
+                  />
                 </div>
               </div>
 

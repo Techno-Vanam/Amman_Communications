@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   CalendarPlus,
   Phone,
@@ -12,13 +14,14 @@ import {
   X,
   XCircle,
   Eye,
-  Clock,
   AlertTriangle,
   RotateCcw,
   Search
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser, getUserStorageKey } from '@/context/UserContext';
+import CustomDatePicker from '@/components/ui/CustomDatePicker';
+import CustomSelect from '@/components/ui/CustomSelect';
 
 interface AppointmentItem {
   id: string;
@@ -32,19 +35,35 @@ interface AppointmentItem {
   location?: string;
 }
 
-const APPOINTMENTS_DATA: AppointmentItem[] = [];
-
 export default function AppointmentsPage() {
+  const pathname = usePathname();
   const { showToast } = useNotifications();
   const { user } = useUser();
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
   const [activeTab, setActiveTab] = useState<'All' | 'Upcoming' | 'Completed' | 'Cancelled' | 'Rescheduled'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentItem | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Modals state
   const [rescheduleModalItem, setRescheduleModalItem] = useState<AppointmentItem | null>(null);
   const [cancelModalItem, setCancelModalItem] = useState<AppointmentItem | null>(null);
+
+  // Reset all modals whenever pathname changes or component unmounts
+  useEffect(() => {
+    setSelectedAppointment(null);
+    setRescheduleModalItem(null);
+    setCancelModalItem(null);
+    return () => {
+      setSelectedAppointment(null);
+      setRescheduleModalItem(null);
+      setCancelModalItem(null);
+    };
+  }, [pathname]);
 
   // Form state for Reschedule Modal
   const [rescheduleDate, setRescheduleDate] = useState('2026-09-01');
@@ -61,15 +80,10 @@ export default function AppointmentsPage() {
       if (saved) {
         const parsed: AppointmentItem[] = JSON.parse(saved);
         setAppointments(parsed);
-        if (parsed.length > 0) {
-          setSelectedAppointment(parsed[0]);
-        } else {
-          setSelectedAppointment(null);
-        }
       } else {
         setAppointments([]);
-        setSelectedAppointment(null);
       }
+      setSelectedAppointment(null);
     } catch (e) {
       console.error('Error loading appointments:', e);
       setAppointments([]);
@@ -212,16 +226,6 @@ export default function AppointmentsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12">
-      {/* Page Title & Subtitle */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
-          My Appointments
-        </h1>
-        <p className="mt-1 text-sm text-gray-600">
-          View, reschedule, or cancel your scheduled appointments.
-        </p>
-      </div>
-
       {/* Filter Tabs & Search Bar & Book Appointment Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Capsule Filter Tabs (All, Upcoming, Completed, Cancelled, Rescheduled) */}
@@ -384,11 +388,18 @@ export default function AppointmentsPage() {
             </tbody>
           </table>
         </div>
+      </div>
 
       {/* MODAL 0: View Appointment Details Centered Popup */}
-      {selectedAppointment && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100">
+      {mounted && selectedAppointment && createPortal(
+        <div
+          onClick={() => setSelectedAppointment(null)}
+          className="fixed inset-0 z-[999999] bg-black/70 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-gray-200/90 ring-1 ring-black/5 animate-in zoom-in-95 duration-200"
+          >
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2.5">
@@ -497,14 +508,20 @@ export default function AppointmentsPage() {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-      </div>
 
       {/* MODAL 1: Reschedule Appointment */}
-      {rescheduleModalItem && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
+      {mounted && rescheduleModalItem && createPortal(
+        <div
+          onClick={() => setRescheduleModalItem(null)}
+          className="fixed inset-0 z-[999999] bg-black/70 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-gray-200/90 ring-1 ring-black/5 animate-in zoom-in-95 duration-200"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <CalendarIcon className="w-5 h-5 text-blue-600" />
@@ -527,29 +544,21 @@ export default function AppointmentsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="block font-bold text-gray-700">New Date *</label>
-                  <input
-                    type="date"
+                  <CustomDatePicker
                     value={rescheduleDate}
-                    onChange={(e) => setRescheduleDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    onChange={setRescheduleDate}
                     required
+                    disablePast
                   />
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="block font-bold text-gray-700">New Time Slot *</label>
-                  <select
+                  <CustomSelect
                     value={rescheduleTime}
-                    onChange={(e) => setRescheduleTime(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600"
-                  >
-                    <option value="09:30 AM">09:30 AM</option>
-                    <option value="10:30 AM">10:30 AM</option>
-                    <option value="11:30 AM">11:30 AM</option>
-                    <option value="02:00 PM">02:00 PM</option>
-                    <option value="03:30 PM">03:30 PM</option>
-                    <option value="04:30 PM">04:30 PM</option>
-                  </select>
+                    onChange={setRescheduleTime}
+                    options={['09:30 AM', '10:30 AM', '11:30 AM', '02:00 PM', '03:30 PM', '04:30 PM']}
+                  />
                 </div>
               </div>
 
@@ -573,8 +582,7 @@ export default function AppointmentsPage() {
                   Cancel
                 </button>
                 <button
-                  type="button"
-                  onClick={handleConfirmReschedule}
+                  type="submit"
                   className="px-5 py-2 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl shadow-sm"
                 >
                   Confirm Reschedule
@@ -582,13 +590,20 @@ export default function AppointmentsPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL 2: Cancel Appointment */}
-      {cancelModalItem && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
+      {mounted && cancelModalItem && createPortal(
+        <div
+          onClick={() => setCancelModalItem(null)}
+          className="fixed inset-0 z-[999999] bg-black/70 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-gray-200/90 ring-1 ring-black/5 animate-in zoom-in-95 duration-200"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-rose-600" />
@@ -610,16 +625,16 @@ export default function AppointmentsPage() {
 
               <div className="space-y-1.5">
                 <label className="block font-bold text-gray-700">Reason for Cancellation</label>
-                <select
+                <CustomSelect
                   value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500"
-                >
-                  <option value="Schedule conflict / Change of plans">Schedule conflict / Change of plans</option>
-                  <option value="No longer required">No longer required</option>
-                  <option value="Booked another time slot">Booked another time slot</option>
-                  <option value="Incorrect service selected">Incorrect service selected</option>
-                </select>
+                  onChange={setCancelReason}
+                  options={[
+                    'Schedule conflict / Change of plans',
+                    'No longer required',
+                    'Booked another time slot',
+                    'Incorrect service selected'
+                  ]}
+                />
               </div>
 
               <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-3">
@@ -639,7 +654,8 @@ export default function AppointmentsPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

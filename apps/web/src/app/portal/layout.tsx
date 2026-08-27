@@ -17,7 +17,8 @@ import {
   X,
   LogOut,
   ShieldCheck,
-  ChevronDown
+  ChevronDown,
+  Plus
 } from 'lucide-react';
 import { NotificationProvider, useNotifications } from '@/context/NotificationContext';
 import { UserProvider, useUser } from '@/context/UserContext';
@@ -196,22 +197,103 @@ function PortalSidebarContent(props: { mobileMenuOpen: boolean; setMobileMenuOpe
 }
 
 function PortalTopHeader() {
+  const pathname = usePathname();
   const { unreadCount } = useNotifications();
   const { user } = useUser();
 
+  const getHeaderInfo = () => {
+    switch (pathname) {
+      case '/portal/dashboard':
+        return {
+          title: `Good day, ${user.name} 👋`,
+          subtitle: "Here's a real-time overview of your current applications and scheduled appointments.",
+          action: (
+            <Link
+              href="/portal/book-appointment"
+              className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-md shrink-0"
+            >
+              <Plus className="w-4 h-4 text-[#a8d5b9]" />
+              <span>Book New Service</span>
+            </Link>
+          )
+        };
+      case '/portal/appointments':
+        return {
+          title: 'My Appointments',
+          subtitle: 'View, reschedule, or cancel your scheduled appointments.'
+        };
+      case '/portal/applications':
+        return {
+          title: 'My Applications',
+          subtitle: 'Track and manage your submitted service requests.'
+        };
+      case '/portal/documents':
+        return {
+          title: 'Document Upload & Management',
+          subtitle: 'Upload essential certificates, government IDs, and legal deeds for official verification.'
+        };
+      case '/portal/payments':
+        return {
+          title: 'Payments & Receipts',
+          subtitle: 'Manage your financial transactions and documentation.'
+        };
+      case '/portal/book-appointment':
+        return {
+          title: 'Book Appointment',
+          subtitle: 'Follow the steps below to schedule an appointment for your required service.'
+        };
+      case '/portal/profile':
+        return {
+          title: 'My Profile & Identity',
+          subtitle: 'Manage your official personal information, government verification status, and contact credentials.'
+        };
+      case '/portal/settings':
+        return {
+          title: 'System & Security Settings',
+          subtitle: 'Configure security preferences, notifications, and portal settings.'
+        };
+      case '/portal/notifications':
+        return {
+          title: 'Notification Center',
+          subtitle: 'All your notifications and alerts in real-time.'
+        };
+      default:
+        return {
+          title: 'Customer Portal',
+          subtitle: 'Manage your services and account details.'
+        };
+    }
+  };
+
+  const { title, subtitle, action } = getHeaderInfo();
+
   return (
-    <header className="bg-transparent pb-6 flex items-center justify-end">
-      {/* Right User Controls: Notification Bell & Profile Badge */}
-      <div className="flex items-center space-x-4">
+    <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Title & Subtitle - Aligned at top left on exact same row as Notification Icon */}
+      <div>
+        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="mt-1 text-xs md:text-sm text-gray-500 font-medium">
+            {subtitle}
+          </p>
+        )}
+      </div>
+
+      {/* Right Controls: Action Button (if any) + Notification Bell + Profile Pill */}
+      <div className="flex items-center space-x-3 sm:space-x-4 self-end md:self-auto shrink-0">
+        {action}
+
         {/* Notification Bell */}
         <Link
           href="/portal/notifications"
-          className="w-12 h-12 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative"
+          className="w-11 h-11 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative shrink-0"
           title="Notifications"
         >
-          <Bell className="w-6 h-6" />
+          <Bell className="w-5 h-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1 rounded-full bg-rose-500 text-white text-[11px] font-extrabold flex items-center justify-center shadow-xs border-2 border-white leading-none shrink-0">
+            <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs border-2 border-white leading-none shrink-0">
               {unreadCount}
             </span>
           )}
@@ -220,16 +302,16 @@ function PortalTopHeader() {
         {/* User Profile Pill Badge */}
         <Link
           href="/portal/profile"
-          className="flex items-center gap-3.5 bg-white border border-gray-200/90 rounded-full pl-3 pr-6 py-2 shadow-xs hover:bg-[#f0f7f2] hover:border-[#a8d5b9] hover:shadow-sm transition-all"
+          className="flex items-center gap-3 bg-white border border-gray-200/90 rounded-full pl-2.5 pr-5 py-1.5 shadow-xs hover:bg-[#f0f7f2] hover:border-[#a8d5b9] hover:shadow-sm transition-all shrink-0"
         >
-          <div className="w-10 h-10 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-sm flex items-center justify-center border border-[#a8d5b9]/30 shadow-2xs shrink-0">
+          <div className="w-9 h-9 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-xs flex items-center justify-center border border-[#a8d5b9]/30 shadow-2xs shrink-0">
             {user.initials}
           </div>
           <div className="text-left leading-tight hidden sm:block">
-            <p className="text-sm font-extrabold text-gray-900">{user.name}</p>
-            <p className="text-xs text-gray-500 font-semibold mt-0.5">View Profile</p>
+            <p className="text-xs font-extrabold text-gray-900">{user.name}</p>
+            <p className="text-[10px] text-gray-500 font-semibold mt-0.5">View Profile</p>
           </div>
-          <ChevronDown className="w-4 h-4 text-gray-400 ml-1" />
+          <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-0.5" />
         </Link>
       </div>
     </header>
@@ -267,7 +349,7 @@ export default function PortalLayout({ children }: Readonly<{ children: React.Re
           <PortalSidebarContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
           {/* Main Content Area */}
-          <main className="min-w-0 flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+          <main className="min-w-0 flex-1 p-4 md:p-5 lg:p-6">
             <PortalTopHeader />
             {children}
           </main>
