@@ -1,6 +1,6 @@
 import React from 'react';
 import { BENEFITS_DATA } from '../data/landingData';
-import { Lock, Eye, Activity, UserCheck, Sparkles, Clock, Shield } from 'lucide-react';
+import { Lock, Eye, SearchCheck, UserCheck, FileCheck, Clock, Shield } from 'lucide-react';
 
 export const WhyChooseUs: React.FC = () => {
   const getBenefitIconInfo = (iconName: string) => {
@@ -10,11 +10,11 @@ export const WhyChooseUs: React.FC = () => {
       case 'Eye':
         return { icon: <Eye className="w-6 h-6" />, bg: 'bg-accent-violetSoft', text: 'text-accent-violet' };
       case 'Activity':
-        return { icon: <Activity className="w-6 h-6" />, bg: 'bg-accent-amberSoft', text: 'text-accent-amber' };
+        return { icon: <SearchCheck className="w-6 h-6" />, bg: 'bg-accent-amberSoft', text: 'text-accent-amber' };
       case 'UserCheck':
         return { icon: <UserCheck className="w-6 h-6" />, bg: 'bg-brand-50', text: 'text-brand-600' };
       case 'Sparkles':
-        return { icon: <Sparkles className="w-6 h-6" />, bg: 'bg-accent-roseSoft', text: 'text-accent-rose' };
+        return { icon: <FileCheck className="w-6 h-6" />, bg: 'bg-accent-roseSoft', text: 'text-accent-rose' };
       case 'Clock':
         return { icon: <Clock className="w-6 h-6" />, bg: 'bg-brand-50', text: 'text-brand-700' };
       default:
@@ -24,13 +24,13 @@ export const WhyChooseUs: React.FC = () => {
 
   return (
     <section id="why-choose-us" className="py-20 md:py-28 bg-slate-50/60 border-t border-slate-100 relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 text-brand-700 text-xs font-semibold uppercase tracking-wider">
             <span>Why Amman Communications</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-700 tracking-tight">
             Built for Transparency, Speed & Peace of Mind
           </h2>
           <p className="text-base sm:text-lg text-slate-600">

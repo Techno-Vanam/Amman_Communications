@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { FAQ_DATA } from '../data/landingData';
-import { ChevronDown, Search, HelpCircle, MessageSquare } from 'lucide-react';
+import { Plus, Minus, HelpCircle, MessageSquare } from 'lucide-react';
 
 export const FAQSection: React.FC = () => {
   const [openFaqId, setOpenFaqId] = useState<string | null>('faq-1');
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
   const categories = ['All', 'General', 'Documentation', 'Timeline & Status', 'Fees & Billing'];
@@ -14,15 +13,11 @@ export const FAQSection: React.FC = () => {
   };
 
   const filteredFaqs = FAQ_DATA.filter((faq) => {
-    const matchesCategory = selectedCategory === 'All' || faq.category === selectedCategory;
-    const matchesSearch =
-      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return selectedCategory === 'All' || faq.category === selectedCategory;
   });
 
   return (
-    <section id="faq" className="py-20 md:py-28 bg-white relative">
+    <section id="faq" className="py-20 md:py-28 bg-white relative border-t border-slate-100">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center space-y-3 mb-12">
@@ -30,7 +25,7 @@ export const FAQSection: React.FC = () => {
             <HelpCircle className="w-4 h-4 text-brand-600" />
             <span>Frequently Asked Questions</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-700 tracking-tight">
             Clear Answers to Your Documentation Questions
           </h2>
           <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
@@ -38,30 +33,17 @@ export const FAQSection: React.FC = () => {
           </p>
         </div>
 
-        {/* Search & Category Filter Controls */}
-        <div className="space-y-5 mb-10">
-          {/* Search Box */}
-          <div className="relative max-w-md mx-auto">
-            <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search questions or keywords..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-all shadow-xs"
-            />
-          </div>
-
-          {/* Category Pills */}
+        {/* Category Filter Controls */}
+        <div className="mb-10">
           <div className="flex flex-wrap items-center justify-center gap-2">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+                className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer ${
                   selectedCategory === cat
                     ? 'bg-brand-600 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900 border border-slate-200/60'
                 }`}
               >
                 {cat}
@@ -70,41 +52,44 @@ export const FAQSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Accordion List */}
-        <div className="space-y-3.5">
+        {/* Accordion List - Single Open Accordion with +/- Button */}
+        <div className="space-y-4">
           {filteredFaqs.length > 0 ? (
             filteredFaqs.map((faq) => {
               const isOpen = openFaqId === faq.id;
               return (
                 <div
                   key={faq.id}
-                  className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                  onClick={() => toggleFaq(faq.id)}
+                  className={`rounded-2xl border transition-all duration-200 overflow-hidden cursor-pointer select-none ${
                     isOpen
-                      ? 'bg-brand-50/50 border-brand-200 shadow-xs'
-                      : 'bg-white hover:bg-slate-50 border-slate-200/80'
+                      ? 'bg-white border-brand-300 ring-1 ring-brand-500/20 shadow-sm'
+                      : 'bg-slate-50/70 hover:bg-white border-slate-200/80 hover:border-brand-300 hover:shadow-xs'
                   }`}
                 >
-                  <button
-                    onClick={() => toggleFaq(faq.id)}
-                    className="w-full px-6 py-4.5 text-left flex items-center justify-between gap-4 focus:outline-none"
-                  >
-                    <span className="font-bold text-slate-900 text-base sm:text-lg flex items-center gap-3">
-                      <span className="w-2 h-2 rounded-full bg-brand-500 shrink-0" />
+                  <div className="px-6 py-5 flex items-center justify-between gap-4">
+                    <span className="font-bold text-slate-900 text-base sm:text-lg tracking-tight">
                       {faq.question}
                     </span>
-                    <ChevronDown
-                      className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${
-                        isOpen ? 'rotate-180 text-brand-600' : ''
+
+                    {/* Circular + / - button indicator */}
+                    <div
+                      className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-all duration-200 ${
+                        isOpen
+                          ? 'bg-brand-600 border-brand-600 text-white shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-500'
                       }`}
-                    />
-                  </button>
+                    >
+                      {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                    </div>
+                  </div>
 
                   {isOpen && (
-                    <div className="px-6 pb-5 pt-1 text-slate-600 text-sm sm:text-base leading-relaxed border-t border-brand-100/80 animate-fade-in">
+                    <div className="px-6 pb-6 pt-2 text-slate-600 text-sm sm:text-base leading-relaxed border-t border-slate-100 animate-fade-in space-y-3">
                       <p>{faq.answer}</p>
-                      <div className="mt-3 inline-block px-2.5 py-0.5 rounded bg-brand-100 text-brand-800 text-xs font-semibold">
+                      <span className="inline-block px-3 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-semibold border border-brand-100/80">
                         Category: {faq.category}
-                      </div>
+                      </span>
                     </div>
                   )}
                 </div>
@@ -112,15 +97,12 @@ export const FAQSection: React.FC = () => {
             })
           ) : (
             <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
-              <p className="text-slate-500 font-medium">No matching questions found.</p>
+              <p className="text-slate-500 font-medium">No matching questions found in this category.</p>
               <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('All');
-                }}
-                className="mt-2 text-xs font-semibold text-brand-700 hover:underline"
+                onClick={() => setSelectedCategory('All')}
+                className="mt-2 text-xs font-semibold text-brand-700 hover:underline cursor-pointer"
               >
-                Clear search filters
+                View all FAQs
               </button>
             </div>
           )}

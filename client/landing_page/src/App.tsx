@@ -7,15 +7,16 @@ import { WhyChooseUs } from './components/WhyChooseUs';
 import { TrustStats } from './components/TrustStats';
 import { FAQSection } from './components/FAQSection';
 import { ContactSection } from './components/ContactSection';
-import { FinalCTA } from './components/FinalCTA';
 import { Footer } from './components/Footer';
 import { QuickEstimateModal } from './components/QuickEstimateModal';
+import { AppointmentModal } from './components/AppointmentModal';
 import { LoginPlaceholder } from './components/LoginPlaceholder';
 import { ServiceItem } from './types/landing';
 
 export const App: React.FC = () => {
   const [currentRoute, setCurrentRoute] = useState<'landing' | 'login' | 'signup'>('landing');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
 
   // Sync route with window pathname/hash for standard browser navigation
@@ -62,7 +63,11 @@ export const App: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // If viewing Login or Signup route placeholder
+  const handleOpenAppointmentModal = () => {
+    setIsAppointmentModalOpen(true);
+  };
+
+  // If viewing Login or Signup route page
   if (currentRoute === 'login' || currentRoute === 'signup') {
     return (
       <LoginPlaceholder
@@ -84,8 +89,7 @@ export const App: React.FC = () => {
       {/* Main Page Content */}
       <main className="flex-grow">
         <Hero
-          onOpenModal={handleOpenModal}
-          onNavigateSignUp={() => navigateTo('signup')}
+          onOpenAppointmentModal={handleOpenAppointmentModal}
         />
         <ServicesSection onSelectService={handleSelectService} />
         <HowItWorks onOpenModal={handleOpenModal} />
@@ -93,7 +97,6 @@ export const App: React.FC = () => {
         <TrustStats />
         <FAQSection />
         <ContactSection />
-        <FinalCTA onOpenModal={handleOpenModal} />
       </main>
 
       {/* Multi-column Footer */}
@@ -104,6 +107,12 @@ export const App: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         initialService={selectedService}
+      />
+
+      {/* Dedicated Appointment Booking Modal */}
+      <AppointmentModal
+        isOpen={isAppointmentModalOpen}
+        onClose={() => setIsAppointmentModalOpen(false)}
       />
     </div>
   );

@@ -1,12 +1,12 @@
 import React from 'react';
 import { PROCESS_STEPS } from '../data/landingData';
-import { FileText, UploadCloud, Cpu, CheckCircle2, ArrowRight } from 'lucide-react';
+import { FileText, UploadCloud, FileSignature, CheckCircle2, ArrowRight } from 'lucide-react';
 
 interface HowItWorksProps {
-  onOpenModal: () => void;
+  onOpenModal?: () => void;
 }
 
-export const HowItWorks: React.FC<HowItWorksProps> = ({ onOpenModal }) => {
+export const HowItWorks: React.FC<HowItWorksProps> = () => {
   const getStepIconAndBadge = (iconName: string, stepIndex: number) => {
     switch (stepIndex) {
       case 0:
@@ -27,7 +27,7 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ onOpenModal }) => {
         };
       case 2:
         return {
-          icon: <Cpu className="w-6 h-6" />,
+          icon: <FileSignature className="w-6 h-6" />,
           bg: 'bg-accent-amberSoft',
           text: 'text-accent-amber',
           border: 'border-accent-amber/30',
@@ -54,13 +54,13 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ onOpenModal }) => {
 
   return (
     <section id="how-it-works" className="py-20 md:py-28 bg-white relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 text-brand-700 text-xs font-semibold uppercase tracking-wider">
             <span>Simple 4-Step Process</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-700 tracking-tight">
             How Amman Communications Works
           </h2>
           <p className="text-base sm:text-lg text-slate-600">
@@ -116,21 +116,6 @@ export const HowItWorks: React.FC<HowItWorksProps> = ({ onOpenModal }) => {
               </div>
             );
           })}
-        </div>
-
-        {/* CTA Bar below steps with soft white/brand background */}
-        <div className="mt-14 bg-brand-50/70 border border-brand-100 rounded-2xl p-7 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-1 text-center md:text-left">
-            <h4 className="text-xl font-bold text-slate-900">Ready to initiate your requirement?</h4>
-            <p className="text-slate-600 text-sm">Get an instant document checklist and fee estimate in minutes.</p>
-          </div>
-          <button
-            onClick={onOpenModal}
-            className="px-6 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-sm transition-all shrink-0 flex items-center gap-2"
-          >
-            <span>Start Step 1 Now</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
         </div>
       </div>
     </section>

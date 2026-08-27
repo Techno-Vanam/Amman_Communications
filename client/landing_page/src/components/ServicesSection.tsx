@@ -48,13 +48,13 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ onSelectServic
 
   return (
     <section id="services" className="py-20 md:py-28 bg-slate-50/50 border-t border-slate-100 relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3 mb-12">
+        <div className="text-center max-w-3xl mx-auto space-y-3 mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 text-brand-700 text-xs font-semibold uppercase tracking-wider">
             <span>Specialized Services</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-700 tracking-tight">
             Professional Documentation & Consultancy Services
           </h2>
           <p className="text-base sm:text-lg text-slate-600">
@@ -62,30 +62,9 @@ export const ServicesSection: React.FC<ServicesSectionProps> = ({ onSelectServic
           </p>
         </div>
 
-        {/* Category Filters */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-12">
-          <div className="inline-flex items-center gap-1 text-slate-400 text-xs font-semibold mr-2 hidden sm:flex">
-            <Filter className="w-3.5 h-3.5 text-brand-600" />
-            <span>Filter:</span>
-          </div>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 ${
-                selectedCategory === cat
-                  ? 'bg-brand-600 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80 hover:text-slate-900'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
         {/* Services Cards Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-7">
-          {filteredServices.map((service) => {
+          {SERVICES_DATA.map((service) => {
             const iconInfo = getServiceIconInfo(service.iconName);
             return (
               <div
