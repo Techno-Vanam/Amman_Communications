@@ -10,6 +10,10 @@ export class CreateCustomerDto {
   @IsNotEmpty()
   email!: string;
 
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
   @IsString()
   @MinLength(6)
   password!: string;

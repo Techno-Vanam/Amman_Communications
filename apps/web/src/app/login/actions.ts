@@ -2,6 +2,8 @@
 
 import { cookies } from 'next/headers';
 
+const API_BASE_URL = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3003';
+
 export async function loginAction(formData: FormData) {
   const email = formData.get('email');
   const password = formData.get('password');
@@ -11,7 +13,7 @@ export async function loginAction(formData: FormData) {
   }
 
   try {
-    const res = await fetch('http://localhost:3003/v1/auth/login', {
+    const res = await fetch(`${API_BASE_URL}/v1/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -21,7 +23,7 @@ export async function loginAction(formData: FormData) {
 
     if (!res.ok) {
       if (res.status === 401) {
-        return { error: 'Invalid credentials' };
+        return { error: 'Incorrect email or password' };
       }
       return { error: 'An error occurred during login. Please try again later.' };
     }
@@ -52,5 +54,16 @@ export async function loginAction(formData: FormData) {
   } catch (error) {
     console.error('Login action error:', error);
     return { error: 'Network error or backend unavailable' };
+  }
+}
+
+export async function logoutAction() {
+  try {
+    const cookieStore = await cookies();
+    cookieStore.delete('access_token');
+    return { success: true };
+  } catch (error) {
+    console.error('Logout error:', error);
+    return { error: 'Failed to log out' };
   }
 }

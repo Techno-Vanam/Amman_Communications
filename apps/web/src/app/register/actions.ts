@@ -2,13 +2,25 @@
 
 import { cookies } from 'next/headers';
 
+const API_BASE_URL = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:3003';
+
 export async function registerAction(formData: FormData) {
   const name = formData.get('name');
   const email = formData.get('email');
+  const phone = formData.get('phone');
   const password = formData.get('password');
 
   if (!name || !email || !password) {
     return { error: 'Name, email, and password are required' };
+  }
+
+  if (!phone || typeof phone !== 'string' || !phone.trim()) {
+    return { error: 'Phone number is required' };
+  }
+
+  const digitsOnly = phone.replace(/\D/g, '');
+  if (digitsOnly.length < 10) {
+    return { error: 'Please provide a valid 10-digit mobile number' };
   }
 
   if (typeof name !== 'string' || name.length < 2) {
@@ -20,12 +32,17 @@ export async function registerAction(formData: FormData) {
   }
 
   try {
-    const res = await fetch('http://localhost:3003/v1/auth/register', {
+    const res = await fetch(`${API_BASE_URL}/v1/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({
+        name,
+        email,
+        phone: typeof phone === 'string' && phone.trim() ? phone.trim() : undefined,
+        password,
+      }),
     });
 
     if (!res.ok) {

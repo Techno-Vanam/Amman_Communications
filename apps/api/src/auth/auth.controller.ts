@@ -1,5 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 import { AuthService } from './auth.service';
 
 class LoginDto {
@@ -10,6 +10,7 @@ class LoginDto {
 class RegisterDto {
   @IsString() @MinLength(2) name!: string;
   @IsEmail() email!: string;
+  @IsString() @IsNotEmpty() phone!: string;
   @IsString() @MinLength(8) password!: string;
 }
 
@@ -25,7 +26,7 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() dto: RegisterDto) {
-    const { accessToken, user } = await this.auth.register(dto.name, dto.email, dto.password);
+    const { accessToken, user } = await this.auth.register(dto.name, dto.email, dto.password, dto.phone);
     return { accessToken, user };
   }
 }

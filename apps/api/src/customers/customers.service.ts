@@ -10,6 +10,7 @@ const safeCustomerSelect = {
   id: true,
   name: true,
   email: true,
+  phone: true,
   status: true,
   createdAt: true,
   updatedAt: true,
@@ -54,6 +55,7 @@ export class CustomersService {
       where.OR = [
         { name: { contains: searchTerm, mode: 'insensitive' } },
         { email: { contains: searchTerm, mode: 'insensitive' } },
+        { phone: { contains: searchTerm, mode: 'insensitive' } },
       ];
     }
 
@@ -135,6 +137,7 @@ export class CustomersService {
       data: {
         name: dto.name.trim(),
         email: normalizedEmail,
+        phone: dto.phone ? dto.phone.trim() : null,
         passwordHash,
         status: dto.status || CustomerStatus.ACTIVE,
       },
@@ -152,6 +155,10 @@ export class CustomersService {
 
     if (dto.name) {
       dataToUpdate.name = dto.name.trim();
+    }
+
+    if (dto.phone !== undefined) {
+      dataToUpdate.phone = dto.phone ? dto.phone.trim() : null;
     }
 
     if (dto.email && dto.email.toLowerCase().trim() !== existing.email) {
