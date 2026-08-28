@@ -10,6 +10,7 @@ import {
   Download
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
+import CustomSelect from '@/components/ui/CustomSelect';
 
 export default function SettingsPage() {
   const { showToast } = useNotifications();
@@ -56,32 +57,8 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 3000);
   };
 
-  const handleExportData = () => {
-    const dataStr = JSON.stringify({ security: securityForm, notifications: notificationsForm, portal: portalForm }, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'My-Portal-Settings.json';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Data Exported!', 'Your account settings data file has been downloaded.');
-  };
-
   return (
-    <div className="max-w-5xl mx-auto space-y-6 font-sans pb-12">
-      {/* Title */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#0e2a47]">
-          System &amp; Security Settings
-        </h1>
-        <p className="text-xs text-gray-500 font-medium mt-1">
-          Manage your account security, notification alerts, language options, and privacy preferences.
-        </p>
-      </div>
-
+    <div className="max-w-7xl w-full mx-auto space-y-6 font-sans pb-12">
       {/* Save Toast Notification */}
       {saved && (
         <div className="bg-[#e6f4ea] border border-[#a8d5b9] text-[#137333] p-4 rounded-xl flex items-center gap-3 text-xs font-bold animate-in fade-in duration-200">
@@ -237,15 +214,15 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
             <div className="space-y-1.5">
               <label className="block font-bold text-gray-700">Preferred Portal Language</label>
-              <select
+              <CustomSelect
                 value={portalForm.language}
-                onChange={(e) => setPortalForm({ ...portalForm, language: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
-              >
-                <option value="English">English</option>
-                <option value="Tamil">Tamil (தமிழ்)</option>
-                <option value="Hindi">Hindi (हिंदी)</option>
-              </select>
+                onChange={(val) => setPortalForm({ ...portalForm, language: val })}
+                options={[
+                  { value: 'English', label: 'English' },
+                  { value: 'Tamil', label: 'Tamil (தமிழ்)' },
+                  { value: 'Hindi', label: 'Hindi (हिंदी)' }
+                ]}
+              />
             </div>
 
             <div className="space-y-1.5">
@@ -260,15 +237,11 @@ export default function SettingsPage() {
 
             <div className="space-y-1.5">
               <label className="block font-bold text-gray-700">Auto Logout Inactivity</label>
-              <select
+              <CustomSelect
                 value={portalForm.autoLogout}
-                onChange={(e) => setPortalForm({ ...portalForm, autoLogout: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
-              >
-                <option value="15 minutes">15 minutes</option>
-                <option value="30 minutes">30 minutes</option>
-                <option value="1 hour">1 hour</option>
-              </select>
+                onChange={(val) => setPortalForm({ ...portalForm, autoLogout: val })}
+                options={['15 minutes', '30 minutes', '1 hour']}
+              />
             </div>
           </div>
         </div>
@@ -283,30 +256,6 @@ export default function SettingsPage() {
           </button>
         </div>
       </form>
-
-      {/* SECTION 3: Account Data & Privacy */}
-      <div className="bg-white rounded-3xl border border-gray-200/80 p-6 md:p-8 shadow-2xs space-y-4 text-xs">
-        <div>
-          <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-            <Download className="w-4 h-4 text-[#1c3a63]" />
-            <span>Account Data &amp; Privacy</span>
-          </h2>
-          <p className="text-xs text-gray-500 mt-1">Download a copy of your system preferences and account activity data.</p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-200">
-          <div>
-            <p className="font-bold text-gray-900">Export Settings &amp; Logs</p>
-            <p className="text-[11px] text-gray-500 mt-0.5">Download your configuration data as a JSON file.</p>
-          </div>
-          <button
-            onClick={handleExportData}
-            className="px-5 py-2 border border-gray-300 hover:bg-gray-100 text-gray-800 font-bold rounded-xl transition-colors shrink-0"
-          >
-            Export JSON
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   Plus,
   BookOpen,
@@ -18,10 +19,18 @@ import {
   ArrowUpRight,
   X,
   FileCheck,
-  Search
+  Search,
+  CheckCircle2,
+  Lock,
+  Clock,
+  Upload,
+  RefreshCw,
+  Eye
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser, getUserStorageKey } from '@/context/UserContext';
+import CustomDatePicker from '@/components/ui/CustomDatePicker';
+import CustomSelect from '@/components/ui/CustomSelect';
 
 interface ApplicationItem {
   id: string;
@@ -51,8 +60,9 @@ const SERVICES = [
 const WIZARD_STEPS = [
   { id: 1, label: 'Select Service' },
   { id: 2, label: 'Applicant Info' },
-  { id: 3, label: 'Upload Documents' },
-  { id: 4, label: 'Review & Submit' }
+  { id: 3, label: 'Fee Payment' },
+  { id: 4, label: 'Upload Documents' },
+  { id: 5, label: 'Review & Submit' }
 ];
 
 const TRACKER_PHASES = [
@@ -126,6 +136,7 @@ const DETAIL_DOCS_DATA: Record<string, RequiredDocItem[]> = {
 };
 
 export default function ApplicationsPage() {
+  const pathname = usePathname();
   const { showToast } = useNotifications();
   const { user } = useUser();
   const [applications, setApplications] = useState<ApplicationItem[]>(INITIAL_APPLICATIONS);
@@ -143,6 +154,21 @@ export default function ApplicationsPage() {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [viewingDoc, setViewingDoc] = useState<RequiredDocItem | null>(null);
 
+  // Automatically clear open view popups whenever pathname changes or component unmounts
+  useEffect(() => {
+    setSelectedApp(null);
+    setViewModalApp(null);
+    setShowHistoryModal(false);
+    setViewingDoc(null);
+    setMode('list');
+    return () => {
+      setSelectedApp(null);
+      setViewModalApp(null);
+      setShowHistoryModal(false);
+      setViewingDoc(null);
+    };
+  }, [pathname]);
+
   // Wizard Details
   const [details, setDetails] = useState({
     applicantName: user.name || '',
@@ -155,7 +181,12 @@ export default function ApplicationsPage() {
     idDocNumber: '',
     dob: '',
     remarks: '',
+    paymentMode: 'UPI / NetBanking',
+    paymentRef: 'TXN-884920',
+    paymentAmount: '2000.00'
   });
+
+  const [cashVerified, setCashVerified] = useState(false);
 
   const [requiredDocs, setRequiredDocs] = useState<RequiredDocItem[]>(SERVICE_REQUIRED_DOCS.passport);
 
@@ -196,9 +227,25 @@ export default function ApplicationsPage() {
     );
   });
 
+  const appPaymentTxn = React.useMemo(() => {
+    if (!selectedApp) return null;
+    try {
+      const storageKey = getUserStorageKey(user.email, 'amman_user_payments');
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const txns = JSON.parse(saved);
+        const match = txns.find((t: any) => t.appId === selectedApp.id);
+        if (match) return match;
+      }
+    } catch (e) {
+      console.error('Error fetching payment txn for app:', e);
+    }
+    return null;
+  }, [selectedApp, user.email]);
+
   const handleOpenView = (app: ApplicationItem) => {
     setSelectedApp(app);
-    setViewModalApp(app);
+    setMode('view');
   };
 
   const handleFileUploadInDetail = (docId: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,8 +258,33 @@ export default function ApplicationsPage() {
             : doc
         )
       );
-      showToast('Document Uploaded Successfully!', `${fileName} submitted for verification.`);
+      showToast('Document Uploaded / Updated!', `${fileName} submitted for verification.`);
     }
+  };
+
+  const handleDownloadDocFile = (fileName?: string, docName?: string) => {
+    const fileTitle = fileName || docName || 'Application-Document';
+    const content = `=====================================================
+AMMAN COMMUNICATIONS - OFFICIAL SERVICE DOCUMENT
+=====================================================
+Document Title   : ${fileTitle}
+Service Context  : Official Service Document Verification
+Security Code    : ${Math.random().toString(36).substring(2, 12).toUpperCase()}
+Timestamp        : ${new Date().toLocaleString()}
+Status           : Official Verified Record
+=====================================================`;
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const cleanName = fileTitle.includes('.') ? fileTitle : `${fileTitle}.pdf`;
+    link.download = cleanName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Document Download Started', `${cleanName} saved to your device.`);
   };
 
   const handleDownloadSummary = () => {
@@ -286,9 +358,40 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
     } catch (e) {
       console.error('Error saving application:', e);
     }
+
+    // Record payment transaction so Step 3 payment reflects in the Payments & Receipts section
+    try {
+      const paymentStorageKey = getUserStorageKey(user.email, 'amman_user_payments');
+      const savedPayments = localStorage.getItem(paymentStorageKey);
+      const existingPayments = savedPayments ? JSON.parse(savedPayments) : [];
+
+      const parsedAmount = parseFloat(details.paymentAmount) || 2000;
+      const isCashPending = details.paymentMode.includes('Cash') && !cashVerified;
+      const todayISO = new Date().toISOString().split('T')[0];
+
+      const newPaymentTxn = {
+        id: details.paymentRef && details.paymentRef.startsWith('TXN-')
+          ? details.paymentRef
+          : `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
+        appId: newId,
+        service: serviceObj.name,
+        totalAmount: parsedAmount,
+        paidAmount: isCashPending ? 0 : parsedAmount,
+        pendingAmount: isCashPending ? parsedAmount : 0,
+        paymentMode: details.paymentMode,
+        status: isCashPending ? 'Pending' : 'Paid',
+        date: todayISO
+      };
+
+      const updatedPayments = [newPaymentTxn, ...existingPayments];
+      localStorage.setItem(paymentStorageKey, JSON.stringify(updatedPayments));
+    } catch (e) {
+      console.error('Error saving payment transaction:', e);
+    }
+
     setMode('list');
     setCurrentStep(1);
-    showToast('Application Submitted Successfully!', `Application ${newId} registered for verification.`);
+    showToast('Application Submitted Successfully!', `Application ${newId} registered and payment recorded.`);
   };
 
   return (
@@ -544,42 +647,82 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             </button>
           </div>
 
-          {/* Top 2 Cards Grid: Application Info & Current Status */}
+          {/* Top 3 Cards Grid: Application Info, Amount Paid Box & Current Status */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Card 1: Application Info (Left 8/12) */}
-            <div className="lg:col-span-8 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-6 space-y-4">
+            {/* Card 1: Application Info (Left 5/12) */}
+            <div className="lg:col-span-5 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-6 space-y-4">
               <h2 className="text-base font-bold text-gray-900 border-b border-gray-100 pb-3">
                 Application Info
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-3 text-xs">
+              <div className="grid grid-cols-1 gap-2.5 text-xs">
                 <div className="flex items-center">
-                  <span className="w-36 text-gray-500 font-medium">Application ID</span>
+                  <span className="w-32 text-gray-500 font-medium">Application ID</span>
                   <span className="font-bold text-gray-900">: {selectedApp.id}</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="w-36 text-gray-500 font-medium">Service Type</span>
+                  <span className="w-32 text-gray-500 font-medium">Service Type</span>
                   <span className="font-bold text-gray-900">: {selectedApp.serviceType}</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="w-36 text-gray-500 font-medium">Submitted On</span>
+                  <span className="w-32 text-gray-500 font-medium">Submitted On</span>
                   <span className="font-bold text-gray-900">: {selectedApp.submittedDate}</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="w-36 text-gray-500 font-medium">Added By</span>
+                  <span className="w-32 text-gray-500 font-medium">Added By</span>
                   <span className="font-bold text-gray-900">: {selectedApp.addedBy}</span>
+                </div>
+                <div className="flex items-center border-t border-gray-100 pt-2">
+                  <span className="w-32 text-gray-500 font-medium">Amount Paid</span>
+                  <span className="font-extrabold text-[#12372A]">: ₹{(appPaymentTxn?.paidAmount ?? 2000).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
             </div>
 
-            {/* Card 2: Current Status (Right 4/12) */}
-            <div className="lg:col-span-4 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-6 text-center flex flex-col justify-center space-y-3">
+            {/* Card 2: Dedicated Amount Paid Box (Middle 4/12) */}
+            <div className="lg:col-span-4 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-6 flex flex-col justify-between space-y-3">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Amount Paid
+                </h2>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                  (appPaymentTxn?.status || 'Paid') === 'Paid'
+                    ? 'bg-emerald-100 text-emerald-900 border border-emerald-200'
+                    : 'bg-amber-100 text-amber-900 border border-amber-200'
+                }`}>
+                  {appPaymentTxn?.status || 'Paid'}
+                </span>
+              </div>
+
+              <div>
+                <p className="text-2xl md:text-3xl font-extrabold text-[#12372A] tracking-tight">
+                  ₹{(appPaymentTxn?.paidAmount ?? 2000).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </p>
+                <p className="text-[11px] text-gray-500 font-semibold mt-0.5">
+                  Total Service Fee: ₹{(appPaymentTxn?.totalAmount ?? 2000).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-gray-100 text-xs space-y-1 text-gray-600">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 font-medium">Payment Mode:</span>
+                  <span className="font-bold text-gray-800">{appPaymentTxn?.paymentMode || 'UPI / NetBanking'}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 font-medium">Transaction Ref:</span>
+                  <span className="font-bold text-gray-800">{appPaymentTxn?.id || 'TXN-884920'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Current Status (Right 3/12) */}
+            <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-6 text-center flex flex-col justify-center space-y-3">
               <h2 className="text-xs font-bold text-gray-500 uppercase tracking-wider text-left">
                 Current Status
               </h2>
 
               <div className="py-2">
-                <span className="inline-block bg-[#d8ebdd] text-[#12372A] border border-[#a8d5b9] font-extrabold text-base px-8 py-3 rounded-2xl shadow-2xs">
+                <span className="inline-block bg-[#d8ebdd] text-[#12372A] border border-[#a8d5b9] font-extrabold text-base px-6 py-2.5 rounded-2xl shadow-2xs">
                   {selectedApp.status}
                 </span>
               </div>
@@ -695,12 +838,38 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                         </td>
                         <td className="py-3.5 text-right">
                           {doc.uploaded === 'Yes' ? (
-                            <button
-                              onClick={() => setViewingDoc(doc)}
-                              className="px-4 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold text-[11px] rounded-xl transition-all shadow-2xs"
-                            >
-                              View
-                            </button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* View Button */}
+                              <button
+                                onClick={() => setViewingDoc(doc)}
+                                className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold text-[11px] rounded-xl transition-all shadow-2xs flex items-center gap-1"
+                                title="View Document"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-gray-500" />
+                                <span>View</span>
+                              </button>
+
+                              {/* Download Button */}
+                              <button
+                                onClick={() => handleDownloadDocFile(doc.uploadedFile || doc.name, doc.name)}
+                                className="px-3 py-1.5 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 font-bold text-[11px] rounded-xl transition-all shadow-2xs flex items-center gap-1"
+                                title="Download Document"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                                <span>Download</span>
+                              </button>
+
+                              {/* Re-upload Button */}
+                              <label className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-800 font-bold text-[11px] rounded-xl transition-all shadow-2xs cursor-pointer inline-flex items-center gap-1">
+                                <RefreshCw className="w-3.5 h-3.5" />
+                                <span>Re-upload</span>
+                                <input
+                                  type="file"
+                                  onChange={(e) => handleFileUploadInDetail(doc.id, e)}
+                                  className="hidden"
+                                />
+                              </label>
+                            </div>
                           ) : (
                             <label className="px-4 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold text-[11px] rounded-xl transition-all shadow-2xs cursor-pointer inline-block">
                               <span>Upload</span>
@@ -766,25 +935,19 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             </button>
           </div>
 
-          <div className="flex items-center justify-between max-w-xl mx-auto py-4">
+          <div className="flex items-center justify-between max-w-4xl mx-auto py-4 overflow-x-auto gap-3">
             {WIZARD_STEPS.map((step) => (
-              <div key={step.id} className="flex items-center space-x-2">
+              <div key={step.id} className="flex items-center space-x-2 shrink-0">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                    currentStep === step.id
-                      ? 'bg-[#12372A] text-white ring-2 ring-gray-300 shadow-sm'
-                      : currentStep > step.id
-                      ? 'bg-[#12372A] text-white shadow-sm'
-                      : 'bg-white text-gray-800'
+                  className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 transition-all ${
+                    currentStep >= step.id
+                      ? 'bg-[#12372A] text-white border-2 border-[#12372A] shadow-xs'
+                      : 'bg-white text-gray-700 border-2 border-gray-300'
                   }`}
-                  style={{
-                    border: '2px solid #6b7280',
-                    backgroundColor: currentStep >= step.id ? '#12372A' : '#ffffff'
-                  }}
                 >
                   {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
                 </div>
-                <span className={`text-xs font-semibold hidden sm:inline ${currentStep === step.id ? 'text-[#12372A]' : 'text-gray-400'}`}>
+                <span className={`text-xs font-semibold whitespace-nowrap hidden sm:inline ${currentStep === step.id ? 'text-[#12372A]' : 'text-gray-400'}`}>
                   {step.label}
                 </span>
               </div>
@@ -903,16 +1066,11 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="block font-bold text-gray-700">Government Identification Type</label>
-                  <select
+                  <CustomSelect
                     value={details.idDocType}
-                    onChange={(e) => setDetails({ ...details, idDocType: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#12372A]"
-                  >
-                    <option value="Aadhaar Card">Aadhaar Card</option>
-                    <option value="PAN Card">PAN Card</option>
-                    <option value="Passport Number">Passport Number</option>
-                    <option value="Voter ID">Voter ID</option>
-                  </select>
+                    onChange={(val) => setDetails({ ...details, idDocType: val })}
+                    options={['Aadhaar Card', 'PAN Card', 'Passport Number', 'Voter ID']}
+                  />
                 </div>
 
                 <div className="space-y-1.5">
@@ -931,11 +1089,10 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                 {/* Date of Birth */}
                 <div className="space-y-1.5">
                   <label className="block font-bold text-gray-700">Date of Birth</label>
-                  <input
-                    type="date"
+                  <CustomDatePicker
                     value={details.dob}
-                    onChange={(e) => setDetails({ ...details, dob: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#12372A]"
+                    onChange={(val) => setDetails({ ...details, dob: val })}
+                    disableFuture
                   />
                 </div>
 
@@ -954,40 +1111,160 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             </div>
           )}
 
+          {/* STEP 3: Fee Payment */}
           {currentStep === 3 && (
+            <div className="max-w-2xl mx-auto space-y-5 text-xs">
+              <div className="p-4 bg-[#f0f7f2] border border-[#a8d5b9]/70 rounded-2xl flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-sm text-[#12372A]">Fee Payment for {serviceObj.name}</h3>
+                  <p className="text-gray-600 text-[11px] mt-0.5">Statutory government fee & processing charge payment.</p>
+                </div>
+                <span className="px-3 py-1 bg-emerald-100 text-[#12372A] font-extrabold text-xs rounded-full border border-emerald-300">
+                  Total Fee: ₹ 2,000.00
+                </span>
+              </div>
+
+              {/* Payment Breakdown Card */}
+              <div className="p-4 bg-white border border-gray-200 rounded-2xl space-y-2">
+                <h4 className="font-bold text-gray-900 border-b pb-2">Service Fee Breakdown</h4>
+                <div className="flex justify-between text-gray-600"><span>Government Statutory Fee:</span> <span className="font-bold text-gray-800">₹ 1,500.00</span></div>
+                <div className="flex justify-between text-gray-600"><span>Verification & Filing Fee:</span> <span className="font-bold text-gray-800">₹ 350.00</span></div>
+                <div className="flex justify-between text-gray-600"><span>GST & Convenience Charge:</span> <span className="font-bold text-gray-800">₹ 150.00</span></div>
+                <div className="flex justify-between text-sm font-extrabold text-[#12372A] border-t pt-2 mt-1"><span>Total Payable Amount:</span> <span>₹ 2,000.00</span></div>
+              </div>
+
+              {/* Payment Mode Selector */}
+              <div className="space-y-2">
+                <label className="block font-bold text-gray-700">Select Payment Mode *</label>
+                <CustomSelect
+                  value={details.paymentMode}
+                  onChange={(val) => {
+                    setDetails({ ...details, paymentMode: val });
+                    if (!val.includes('Cash')) {
+                      setCashVerified(true);
+                    } else {
+                      setCashVerified(false);
+                    }
+                  }}
+                  options={[
+                    'UPI / NetBanking',
+                    'Credit / Debit Card',
+                    'Bank Transfer / NEFT',
+                    'Cash at Counter'
+                  ]}
+                />
+              </div>
+
+              {/* Reference Number / Cash Notice */}
+              {!details.paymentMode.includes('Cash') ? (
+                <>
+                  <div className="space-y-1.5">
+                    <label className="block font-bold text-gray-700">Payment Reference / Transaction ID</label>
+                    <input
+                      type="text"
+                      value={details.paymentRef}
+                      onChange={(e) => setDetails({ ...details, paymentRef: e.target.value })}
+                      placeholder="Enter transaction reference ID"
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-[#12372A]"
+                    />
+                  </div>
+
+                  <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span className="font-bold text-xs">Online payment selected. Click Next Step to proceed directly to document upload.</span>
+                  </div>
+                </>
+              ) : (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 font-bold text-xs text-amber-950">
+                      <Clock className="w-5 h-5 text-amber-600 shrink-0" />
+                      <span>Cash Payment Selected (Requires Admin Verification)</span>
+                    </div>
+                    {cashVerified ? (
+                      <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-full">
+                        Admin Verified
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setCashVerified(true)}
+                        className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[10px] rounded-full transition-colors"
+                      >
+                        Simulate Admin Verification
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                    Please pay at our office counter or present cash receipt. Document upload in Step 4 will be unlocked once cash payment is verified by Admin.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* STEP 4: Upload Documents */}
+          {currentStep === 4 && (
             <div className="max-w-2xl mx-auto space-y-4 text-xs">
               <div className="p-4 bg-[#f0f7ff] border border-blue-200 rounded-2xl">
                 <h3 className="font-bold text-sm text-[#12372A]">Required Documentation for {serviceObj.name}</h3>
                 <p className="text-gray-600 text-[11px] mt-0.5">Please upload clear scans or photos for the documents required for this specific service.</p>
               </div>
 
-              <div className="space-y-3">
-                {requiredDocs.map((doc) => (
-                  <div key={doc.id} className="p-4 bg-white border border-gray-200 rounded-2xl flex items-center justify-between gap-4 shadow-2xs">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-gray-900">{doc.name}</h4>
-                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                          doc.required === 'Required' ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {doc.required}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-gray-400 mt-1">
-                        {doc.uploaded === 'Yes' ? `Uploaded: ${doc.uploadedFile}` : 'Not Uploaded Yet'}
-                      </p>
-                    </div>
-                    <label className="px-4 py-2 bg-[#12372A] text-white rounded-full font-bold text-xs cursor-pointer hover:bg-[#1a4a38] transition-colors shrink-0">
-                      <span>{doc.uploaded === 'Yes' ? 'Replace' : 'Upload'}</span>
-                      <input type="file" onChange={(e) => handleFileUploadInDetail(doc.id, e)} className="hidden" />
-                    </label>
+              {details.paymentMode.includes('Cash') && !cashVerified ? (
+                <div className="p-8 bg-amber-50/90 border border-amber-200 rounded-2xl text-center space-y-4 shadow-2xs">
+                  <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center mx-auto border border-amber-200">
+                    <Lock className="w-6 h-6" />
                   </div>
-                ))}
-              </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-amber-950">Document Upload Locked</h4>
+                    <p className="text-xs text-amber-800 max-w-md mx-auto mt-1">
+                      You selected <strong className="font-bold">Cash at Counter</strong> payment. Documents can be uploaded once your cash receipt is verified by Admin.
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-center gap-3 pt-1">
+                    <span className="inline-block px-3.5 py-1.5 bg-white border border-amber-300 text-amber-900 font-bold text-xs rounded-full shadow-2xs">
+                      Status: Cash Verification Pending by Admin
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setCashVerified(true)}
+                      className="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-full transition-colors shadow-2xs"
+                    >
+                      Simulate Admin Verification
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {requiredDocs.map((doc) => (
+                    <div key={doc.id} className="p-4 bg-white border border-gray-200 rounded-2xl flex items-center justify-between gap-4 shadow-2xs">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-gray-900">{doc.name}</h4>
+                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                            doc.required === 'Required' ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-600'
+                          }`}>
+                            {doc.required}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-400 mt-1">
+                          {doc.uploaded === 'Yes' ? `Uploaded: ${doc.uploadedFile}` : 'Not Uploaded Yet'}
+                        </p>
+                      </div>
+                      <label className="px-4 py-2 bg-[#12372A] text-white rounded-full font-bold text-xs cursor-pointer hover:bg-[#1a4a38] transition-colors shrink-0">
+                        <span>{doc.uploaded === 'Yes' ? 'Replace' : 'Upload'}</span>
+                        <input type="file" onChange={(e) => handleFileUploadInDetail(doc.id, e)} className="hidden" />
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {currentStep === 4 && (
+          {/* STEP 5: Review & Submit */}
+          {currentStep === 5 && (
             <div className="max-w-xl mx-auto bg-gray-50 p-6 rounded-2xl border border-gray-200 space-y-4 text-xs">
               <h3 className="font-bold text-sm text-gray-900 border-b pb-2">Review Application Summary</h3>
               <div className="space-y-2.5">
@@ -995,6 +1272,16 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                 <p className="flex justify-between"><span className="text-gray-500 font-medium">Applicant Name:</span> <strong className="text-gray-900 font-bold">{details.applicantName}</strong></p>
                 <p className="flex justify-between"><span className="text-gray-500 font-medium">Primary Phone:</span> <strong className="text-gray-900 font-bold">{details.applicantPhone}</strong></p>
                 <p className="flex justify-between"><span className="text-gray-500 font-medium">Email Address:</span> <strong className="text-gray-900 font-bold">{details.applicantEmail}</strong></p>
+                <p className="flex justify-between">
+                  <span className="text-gray-500 font-medium">Payment Mode:</span>
+                  <strong className={details.paymentMode.includes('Cash') && !cashVerified ? "text-amber-700 font-bold" : "text-emerald-700 font-bold"}>
+                    {details.paymentMode.includes('Cash')
+                      ? cashVerified
+                        ? 'Cash at Counter (Admin Verified)'
+                        : 'Cash at Counter (Awaiting Admin Verification)'
+                      : `Paid ₹2,000.00 via ${details.paymentMode} [${details.paymentRef}]`}
+                  </strong>
+                </p>
                 {details.address && (
                   <p className="flex justify-between"><span className="text-gray-500 font-medium">Address:</span> <strong className="text-gray-900 font-bold max-w-[240px] text-right">{details.address}</strong></p>
                 )}
@@ -1017,7 +1304,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
               Back
             </button>
 
-            {currentStep < 4 ? (
+            {currentStep < 5 ? (
               <button
                 onClick={() => setCurrentStep(currentStep + 1)}
                 className="px-6 py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-full hover:bg-[#1a4a38] shadow-md"
@@ -1073,140 +1360,42 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
       )}
 
       {viewingDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl animate-in zoom-in-95">
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl animate-in zoom-in-95 border border-gray-200/90">
             <div className="flex items-center justify-between border-b pb-3">
               <h3 className="font-bold text-sm text-gray-900">Viewing Document: {viewingDoc.name}</h3>
-              <button onClick={() => setViewingDoc(null)} className="p-1 text-gray-400 hover:text-gray-600">
+              <button onClick={() => setViewingDoc(null)} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 bg-gray-50 rounded-2xl border border-gray-200 text-center space-y-2">
               <FileCheck className="w-12 h-12 text-[#12372A] mx-auto" />
-              <p className="text-xs font-bold text-gray-900">{viewingDoc.uploadedFile}</p>
+              <p className="text-xs font-bold text-gray-900">{viewingDoc.uploadedFile || viewingDoc.name}</p>
               <p className="text-[11px] text-emerald-600 font-semibold">• Status: {viewingDoc.status}</p>
             </div>
-            <button
-              onClick={() => setViewingDoc(null)}
-              className="w-full py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-xl hover:bg-[#1a4a38]"
-            >
-              Close Preview
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: Centered Application Details Popup */}
-      {viewModalApp && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 md:p-8 space-y-6 shadow-2xl animate-in zoom-in-95 duration-200 border border-gray-100 max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100 sticky top-0 bg-white z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#f0f7f2] text-[#12372A] flex items-center justify-center font-bold">
-                  <FileText className="w-5 h-5 text-[#12372A]" />
-                </div>
-                <div>
-                  <h3 className="text-base md:text-lg font-bold text-gray-900">
-                    Application Details
-                  </h3>
-                  <p className="text-xs text-gray-400 font-medium">{viewModalApp.id}</p>
-                </div>
-              </div>
+            <div className="flex items-center justify-between gap-3 pt-2">
               <button
-                onClick={() => setViewModalApp(null)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
+                onClick={() => handleDownloadDocFile(viewingDoc.uploadedFile || viewingDoc.name, viewingDoc.name)}
+                className="flex-1 py-2.5 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-2xs"
               >
-                <X className="w-5 h-5" />
+                <Download className="w-4 h-4" />
+                <span>Download</span>
               </button>
-            </div>
-
-            {/* Application Overview Grid */}
-            <div className="bg-[#f8faf9] border border-gray-200/80 rounded-2xl p-5 space-y-3 text-xs">
-              <div className="flex items-center justify-between pb-2 border-b border-gray-200/60">
-                <span className="font-bold text-[#12372A] text-sm">{viewModalApp.serviceType}</span>
-                <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-[#d8ebdd] text-[#12372A]">
-                  • {viewModalApp.status}
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-gray-700 font-medium pt-1">
-                <div><span className="text-gray-400">Application ID:</span> <span className="font-bold text-gray-900">{viewModalApp.id}</span></div>
-                <div><span className="text-gray-400">Submitted On:</span> <span className="font-bold text-gray-900">{viewModalApp.submittedDate}</span></div>
-                <div><span className="text-gray-400">Added By:</span> <span className="font-bold text-gray-900">{viewModalApp.addedBy}</span></div>
-                <div><span className="text-gray-400">Assigned Officer:</span> <span className="font-bold text-gray-900">{viewModalApp.assignedOfficer || 'Officer Assigned'}</span></div>
-                <div><span className="text-gray-400">Processing Time:</span> <span className="font-bold text-gray-900">{viewModalApp.estimatedDays || '7 days'}</span></div>
-                <div><span className="text-gray-400">Current Phase:</span> <span className="font-bold text-[#12372A]">Phase {viewModalApp.stepPhase} of 8</span></div>
-              </div>
-            </div>
-
-            {/* Status Tracker Stepper Nodes */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Application Status Tracker</h4>
-              <div className="overflow-x-auto pb-2">
-                <div className="flex items-center justify-between min-w-[550px] relative py-2">
-                  <div className="absolute top-5 left-6 right-6 h-1 bg-gray-200 -z-0 rounded-full" />
-                  {TRACKER_PHASES.map((phase) => {
-                    const isCompleted = phase.step < viewModalApp.stepPhase;
-                    const isActive = phase.step === viewModalApp.stepPhase;
-                    return (
-                      <div key={phase.step} className="flex flex-col items-center text-center space-y-1.5 z-10 w-16">
-                        <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
-                            isCompleted
-                              ? 'bg-[#12372A] text-white'
-                              : isActive
-                              ? 'bg-[#12372A] text-white ring-4 ring-gray-300 scale-110'
-                              : 'bg-white text-gray-800'
-                          }`}
-                          style={{
-                            border: '2px solid #6b7280',
-                            backgroundColor: isCompleted || isActive ? '#12372A' : '#ffffff'
-                          }}
-                        >
-                          {isCompleted ? <Check className="w-4 h-4 text-white stroke-[3]" /> : phase.step}
-                        </div>
-                        <p className={`text-[10px] font-bold leading-tight ${isActive ? 'text-[#12372A]' : isCompleted ? 'text-gray-800' : 'text-gray-400'}`}>
-                          {phase.title}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Required Documents Section */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Required Documents</h4>
-              <div className="divide-y divide-gray-100 border border-gray-200/80 rounded-2xl overflow-hidden bg-white">
-                {(DETAIL_DOCS_DATA[viewModalApp.id] || SERVICE_REQUIRED_DOCS.passport).map((doc) => (
-                  <div key={doc.id} className="p-3 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2.5">
-                      <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                      <span className="font-semibold text-gray-800">{doc.name}</span>
-                    </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      doc.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      {doc.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Modal Actions Footer */}
-            <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-3 sticky bottom-0 bg-white">
+              <label className="flex-1 py-2.5 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer">
+                <RefreshCw className="w-4 h-4" />
+                <span>Re-upload</span>
+                <input
+                  type="file"
+                  onChange={(e) => {
+                    handleFileUploadInDetail(viewingDoc.id, e);
+                    setViewingDoc(null);
+                  }}
+                  className="hidden"
+                />
+              </label>
               <button
-                onClick={handleDownloadSummary}
-                className="px-4 py-2 border border-gray-300 rounded-full bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs transition-all shadow-2xs flex items-center gap-2"
-              >
-                <Download className="w-4 h-4 text-gray-600" />
-                <span>Download Summary</span>
-              </button>
-              <button
-                onClick={() => setViewModalApp(null)}
-                className="px-6 py-2 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-sm"
+                onClick={() => setViewingDoc(null)}
+                className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition-all"
               >
                 Close
               </button>
@@ -1214,6 +1403,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
           </div>
         </div>
       )}
+
     </div>
   );
 }
