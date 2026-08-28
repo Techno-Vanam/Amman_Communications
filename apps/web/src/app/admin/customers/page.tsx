@@ -65,8 +65,8 @@ export default function AdminCustomersPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Load Data
-  const loadData = useCallback(async () => {
-    setLoading(true);
+  const loadData = useCallback(async (showLoading = false) => {
+    if (showLoading) setLoading(true);
     setError(null);
     const [statsRes, listRes] = await Promise.all([
       fetchAdminCustomerStats(),
@@ -91,8 +91,8 @@ export default function AdminCustomersPage() {
   }, [search, selectedStatus, page, limit]);
 
   useEffect(() => {
-    loadData();
-    const interval = setInterval(loadData, 5000);
+    loadData(true);
+    const interval = setInterval(() => loadData(false), 5000);
     return () => clearInterval(interval);
   }, [loadData]);
 
@@ -286,7 +286,7 @@ export default function AdminCustomersPage() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
-              onClick={() => loadData()}
+              onClick={() => loadData(true)}
               className="inline-flex items-center gap-1.5 rounded-md bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-700 shadow-sm"
             >
               <RefreshCw className="h-3.5 w-3.5" /> Retry

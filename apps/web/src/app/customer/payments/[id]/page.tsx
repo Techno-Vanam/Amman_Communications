@@ -4,7 +4,7 @@ import React, { useEffect, use } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { mockPayments } from '@/lib/mockPayments';
-import { PaymentReceipt } from '@/components/portal/PaymentReceipt';
+import { PaymentReceipt } from '@/components/customer/PaymentReceipt';
 import { ArrowLeft, Printer, Download } from 'lucide-react';
 
 interface ReceiptPageProps {
@@ -35,7 +35,7 @@ export default function ReceiptDetailPage({ params }: ReceiptPageProps) {
         <h1 className="text-2xl font-bold text-gray-900">Receipt Not Found</h1>
         <p className="mt-2 text-gray-600">The requested payment receipt does not exist.</p>
         <Link
-          href="/portal/payments"
+          href="/customer/payments"
           className="mt-6 inline-flex items-center gap-2 rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -54,7 +54,7 @@ export default function ReceiptDetailPage({ params }: ReceiptPageProps) {
       {/* Action Bar (hidden when printing) */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4 print:hidden">
         <Link
-          href="/portal/payments"
+          href="/customer/payments"
           className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900"
         >
           <ArrowLeft className="h-4 w-4" />

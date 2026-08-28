@@ -83,6 +83,56 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
         {/* Navigation Links */}
         <nav className="flex-1 space-y-1 px-4 py-6">
           <Link
+            href="/customer/dashboard"
+            className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+              pathname === '/customer/dashboard'
+                ? 'bg-blue-50 text-blue-700 shadow-sm'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <span className="text-lg">📊</span>
+            <span>Dashboard</span>
+          </Link>
+
+          <Link
+            href="/customer/applications"
+            className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+              pathname.startsWith('/customer/applications')
+                ? 'bg-blue-50 text-blue-700 shadow-sm'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <span className="text-lg">📋</span>
+            <span>My Applications</span>
+          </Link>
+
+          <Link
+            href="/customer/new-application"
+            className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+              pathname.startsWith('/customer/new-application')
+                ? 'bg-blue-50 text-blue-700 shadow-sm'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <span className="text-lg">➕</span>
+            <span>New Application</span>
+          </Link>
+
+          <Link
+            href="/customer/documents"
+            className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
+              pathname.startsWith('/customer/documents')
+                ? 'bg-blue-50 text-blue-700 shadow-sm'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            }`}
+          >
+            <span className="text-lg">📁</span>
+            <span>My Documents</span>
+          </Link>
+
+          <div className="my-2 border-t border-slate-100"></div>
+
+          <Link
             href="/customer/appointments/book"
             className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
               pathname.includes('/book')
@@ -104,7 +154,7 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
           <Link
             href="/customer/appointments"
             className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all ${
-              pathname === '/customer/appointments' || pathname === '/portal/appointments'
+              pathname === '/customer/appointments'
                 ? 'bg-blue-50 text-blue-700 shadow-sm'
                 : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}

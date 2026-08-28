@@ -107,10 +107,10 @@ export default function MyApplicationsPage() {
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <Link href="/portal/documents" className="btn btn-secondary">
+          <Link href="/customer/documents" className="btn btn-secondary">
             📁 Document Center
           </Link>
-          <Link href="/portal/new-application" className="btn btn-primary">
+          <Link href="/customer/new-application" className="btn btn-primary">
             ➕ New Application
           </Link>
         </div>
@@ -184,7 +184,7 @@ export default function MyApplicationsPage() {
               ? 'You have not submitted any service applications yet.'
               : 'No applications match the selected filter category.'}
           </p>
-          <Link href="/portal/new-application" className="btn btn-primary">
+          <Link href="/customer/new-application" className="btn btn-primary">
             Start New Application →
           </Link>
         </div>
@@ -245,7 +245,7 @@ export default function MyApplicationsPage() {
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <Link
-                      href="/portal/documents"
+                      href="/customer/documents"
                       className="btn btn-secondary btn-sm"
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -293,7 +293,7 @@ export default function MyApplicationsPage() {
                         <p style={{ margin: '0 0 1rem', fontSize: '0.9rem' }}>
                           No documents have been uploaded for this application yet.
                         </p>
-                        <Link href="/portal/documents" className="btn btn-primary btn-sm">
+                        <Link href="/customer/documents" className="btn btn-primary btn-sm">
                           Upload Required Documents Now →
                         </Link>
                       </div>
@@ -383,7 +383,7 @@ export default function MyApplicationsPage() {
                                   ↗ Open
                                 </a>
                                 {doc.status === 'ACTION_REQUIRED' && (
-                                  <Link href="/portal/documents" className="btn btn-primary btn-sm">
+                                  <Link href="/customer/documents" className="btn btn-primary btn-sm">
                                     🔄 Replace File
                                   </Link>
                                 )}

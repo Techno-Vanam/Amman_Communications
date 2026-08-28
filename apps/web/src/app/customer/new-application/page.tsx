@@ -929,11 +929,11 @@ export default function NewApplicationPage() {
               padding: '1.5rem',
             }}
           >
-            <Link href="/portal/documents" className="btn btn-secondary">
+            <Link href="/customer/documents" className="btn btn-secondary">
               📁 View in Document Center →
             </Link>
 
-            <Link href="/portal/applications" className="btn btn-primary">
+            <Link href="/customer/applications" className="btn btn-primary">
               ✓ View in My Applications
             </Link>
           </div>

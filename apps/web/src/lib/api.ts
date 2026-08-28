@@ -62,8 +62,23 @@ export async function apiRequest<T = any>(
       headers,
     });
 
-    const data = await res.json();
-    return data;
+    let data;
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      data = await res.text();
+    }
+    
+    if (res.ok) {
+      // If backend already returns { success, data }, don't double wrap
+      if (data && typeof data === 'object' && 'success' in data) {
+        return data;
+      }
+      return { success: true, data };
+    } else {
+      return { success: false, message: data?.message || data?.error || 'Request failed', error: data };
+    }
   } catch (err: any) {
     console.error('API Request failed:', err);
     return {
@@ -83,6 +98,11 @@ export async function adminApiRequest<T = any>(
     ...(options.headers as Record<string, string>),
   };
 
+  // Remove Content-Type if it's explicitly undefined (e.g. for FormData)
+  if (headers['Content-Type'] === 'undefined' || headers['Content-Type'] === undefined) {
+    delete headers['Content-Type'];
+  }
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -95,8 +115,23 @@ export async function adminApiRequest<T = any>(
       headers,
     });
 
-    const data = await res.json();
-    return data;
+    let data;
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      data = await res.text();
+    }
+
+    if (res.ok) {
+      // If backend already returns { success, data }, don't double wrap
+      if (data && typeof data === 'object' && 'success' in data) {
+        return data;
+      }
+      return { success: true, data };
+    } else {
+      return { success: false, message: data?.message || data?.error || 'Request failed', error: data };
+    }
   } catch (err: any) {
     console.error('Admin API Request failed:', err);
     return {

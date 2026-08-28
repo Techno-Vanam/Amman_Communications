@@ -27,15 +27,22 @@ interface ApplicationItem {
 export default function PortalDashboardPage() {
   const [applications, setApplications] = useState<ApplicationItem[]>([]);
   const [profile, setProfile] = useState<{ name?: string; email?: string } | null>(null);
+  const [summary, setSummary] = useState({
+    applications: 0,
+    verifiedDocs: 0,
+    pendingDocs: 0,
+    actionRequiredDocs: 0
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
       try {
-        const [appsRes, profRes] = await Promise.all([
+        const [appsRes, profRes, summaryRes] = await Promise.all([
           apiRequest<ApplicationItem[]>('/api/v1/customer/applications'),
           apiRequest<{ name?: string; email?: string }>('/api/v1/customer/dashboard/profile'),
+          apiRequest<any>('/api/v1/customer/dashboard/summary'),
         ]);
 
         if (appsRes.success && appsRes.data) {
@@ -47,6 +54,15 @@ export default function PortalDashboardPage() {
         if (profRes.success && profRes.data) {
           setProfile(profRes.data);
         }
+
+        if (summaryRes.success && summaryRes.data) {
+          setSummary({
+            applications: summaryRes.data.applications || appsRes.data?.length || 0,
+            verifiedDocs: summaryRes.data.verifiedDocs || 0,
+            pendingDocs: summaryRes.data.pendingDocs || 0,
+            actionRequiredDocs: summaryRes.data.actionRequiredDocs || 0
+          });
+        }
       } catch {
         setApplications([]);
       } finally {
@@ -56,11 +72,7 @@ export default function PortalDashboardPage() {
     loadData();
   }, []);
 
-  const totalApps = applications.length;
-  const allDocs = applications.flatMap((a) => a.documents || []);
-  const verifiedDocs = allDocs.filter((d) => d.status === 'VERIFIED').length;
-  const pendingDocs = allDocs.filter((d) => d.status === 'UPLOADED').length;
-  const actionRequiredDocs = allDocs.filter((d) => d.status === 'ACTION_REQUIRED').length;
+  const { applications: totalApps, verifiedDocs, pendingDocs, actionRequiredDocs } = summary;
 
   return (
     <div style={{ padding: '2rem 2.5rem', maxWidth: '1200px', margin: '0 auto' }}>
@@ -89,10 +101,10 @@ export default function PortalDashboardPage() {
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <Link href="/portal/documents" className="btn btn-secondary">
+          <Link href="/customer/documents" className="btn btn-secondary">
             📁 Document Center
           </Link>
-          <Link href="/portal/new-application" className="btn btn-primary">
+          <Link href="/customer/new-application" className="btn btn-primary">
             ➕ New Application
           </Link>
         </div>
@@ -177,7 +189,7 @@ export default function PortalDashboardPage() {
         </div>
 
         <Link
-          href="/portal/new-application"
+          href="/customer/new-application"
           className="btn"
           style={{
             background: '#ffffff',
@@ -196,7 +208,7 @@ export default function PortalDashboardPage() {
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h2 style={{ fontSize: '1.35rem', color: '#0f172a', margin: 0 }}>Recent Applications</h2>
-          <Link href="/portal/applications" style={{ color: '#12372A', fontWeight: 600, fontSize: '0.9rem' }}>
+          <Link href="/customer/applications" style={{ color: '#12372A', fontWeight: 600, fontSize: '0.9rem' }}>
             View All Applications →
           </Link>
         </div>
@@ -212,7 +224,7 @@ export default function PortalDashboardPage() {
             <p style={{ color: '#64748b', maxWidth: '420px', margin: '0 auto 1.5rem', fontSize: '0.9rem' }}>
               You haven&apos;t created any service applications yet. Start a new application to begin your verification.
             </p>
-            <Link href="/portal/new-application" className="btn btn-primary">
+            <Link href="/customer/new-application" className="btn btn-primary">
               Create First Application
             </Link>
           </div>
@@ -260,10 +272,10 @@ export default function PortalDashboardPage() {
                     </div>
 
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <Link href="/portal/documents" className="btn btn-secondary btn-sm">
+                      <Link href="/customer/documents" className="btn btn-secondary btn-sm">
                         📁 Manage Documents
                       </Link>
-                      <Link href="/portal/applications" className="btn btn-primary btn-sm">
+                      <Link href="/customer/applications" className="btn btn-primary btn-sm">
                         View Details →
                       </Link>
                     </div>

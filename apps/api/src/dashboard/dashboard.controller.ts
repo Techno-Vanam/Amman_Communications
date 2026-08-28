@@ -70,9 +70,19 @@ export class CustomerDashboardController {
     const customerId = request.user.sub;
     const [applications, documents] = await Promise.all([
       this.prisma.application.count({ where: { customerId } }),
-      this.prisma.document.count({ where: { customerId } }),
+      this.prisma.document.findMany({ 
+        where: { customerId },
+        select: { status: true }
+      }),
     ]);
-    return { applications, documents };
+    
+    return { 
+      applications, 
+      documents: documents.length,
+      verifiedDocs: documents.filter(d => d.status === 'VERIFIED').length,
+      pendingDocs: documents.filter(d => d.status === 'UPLOADED' || d.status === 'UNDER_REVIEW').length,
+      actionRequiredDocs: documents.filter(d => d.status === 'ACTION_REQUIRED').length,
+    };
   }
 
   @Get('profile')

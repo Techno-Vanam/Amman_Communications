@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { adminApiRequest } from '@/lib/api';
 import {
   AlertCircle,
   Building,
@@ -59,11 +60,11 @@ export default function BusinessProfileSettingsPage() {
     async function fetchProfile() {
       try {
         setLoading(true);
-        const res = await fetch('/api/admin/settings/business-profile');
-        if (!res.ok) {
-          throw new Error('Failed to load business profile.');
+        const res = await adminApiRequest('/api/v1/admin/settings/business-profile');
+        if (!res.success) {
+          throw new Error(res.message || 'Failed to load business profile.');
         }
-        const data = await res.json();
+        const data = res.data;
         setProfile({
           id: data.id || null,
           businessName: data.businessName || '',
@@ -127,9 +128,8 @@ export default function BusinessProfileSettingsPage() {
 
     try {
       setSaving(true);
-      const res = await fetch('/api/admin/settings/business-profile', {
+      const res = await adminApiRequest('/api/v1/admin/settings/business-profile', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           businessName: profile.businessName.trim(),
           registrationNumber: profile.registrationNumber.trim() || undefined,
@@ -139,12 +139,11 @@ export default function BusinessProfileSettingsPage() {
         }),
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || errorData.error || 'Failed to update business profile');
+      if (!res.success) {
+        throw new Error(res.message || 'Failed to update business profile');
       }
 
-      const updated = await res.json();
+      const updated = res.data;
       setProfile((prev) => ({
         ...prev,
         ...updated,
@@ -180,17 +179,18 @@ export default function BusinessProfileSettingsPage() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch('/api/admin/settings/business-profile/logo', {
+      const res = await adminApiRequest('/api/v1/admin/settings/business-profile/logo', {
         method: 'POST',
+        // Omit Content-Type to let the browser set it to multipart/form-data with boundary
+        headers: { 'Content-Type': undefined as any },
         body: formData,
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || errorData.error || 'Failed to upload logo');
+      if (!res.success) {
+        throw new Error(res.message || 'Failed to upload logo');
       }
 
-      const updated = await res.json();
+      const updated = res.data;
       setProfile((prev) => ({
         ...prev,
         logoUrl: updated.logoUrl,
@@ -212,13 +212,12 @@ export default function BusinessProfileSettingsPage() {
 
     try {
       setDeletingLogo(true);
-      const res = await fetch('/api/admin/settings/business-profile/logo', {
+      const res = await adminApiRequest('/api/v1/admin/settings/business-profile/logo', {
         method: 'DELETE',
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || errorData.error || 'Failed to remove logo');
+      if (!res.success) {
+        throw new Error(res.message || 'Failed to remove logo');
       }
 
       setProfile((prev) => ({
@@ -473,7 +472,7 @@ export default function BusinessProfileSettingsPage() {
                 <div className="space-y-3">
                   <div className="w-32 h-32 mx-auto rounded-2xl overflow-hidden bg-white p-2 border border-gray-200 shadow-sm flex items-center justify-center">
                     <img
-                      src={profile.logoUrl}
+                      src={`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003'}${profile.logoUrl}`}
                       alt="Business Logo"
                       className="max-w-full max-h-full object-contain"
                     />

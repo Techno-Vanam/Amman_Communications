@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { mockPayments } from '@/lib/mockPayments';
-import { PaymentReceipt } from '@/components/portal/PaymentReceipt';
+import { PaymentReceipt } from '@/components/customer/PaymentReceipt';
 
 export default function TempReceiptPreviewPage() {
   return (
