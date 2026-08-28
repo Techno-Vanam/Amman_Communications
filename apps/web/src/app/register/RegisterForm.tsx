@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from 'react';
 import { registerAction } from './actions';
-import { setCustomerToken } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 
 export default function RegisterForm() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const { setSession } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -21,10 +22,7 @@ export default function RegisterForm() {
       if (result?.error) {
         setError(result.error);
       } else if (result?.success && result.redirectTo) {
-        if (result.accessToken) {
-          localStorage.setItem('access_token', result.accessToken);
-          document.cookie = `access_token=${result.accessToken}; path=/; max-age=900; SameSite=Lax`;
-        }
+        if (result.accessToken && result.user) setSession(result.accessToken, result.user);
         window.location.href = result.redirectTo;
       }
     });

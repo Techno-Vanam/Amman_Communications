@@ -60,6 +60,19 @@ model Admin {
   updatedAt    DateTime @updatedAt
 }
 
+model RefreshToken {
+  id        String    @id
+  tokenHash String    @unique
+  userId    String
+  role      String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, role])
+  @@index([expiresAt])
+}
+
 model Application {
   id                String            @id @default(cuid())
   applicationNumber String?           @unique

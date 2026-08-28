@@ -28,7 +28,7 @@ function jwtFor(payload: { sub: string; role: string }) {
 function prismaFor(options: { admin?: boolean; customer?: boolean } = {}) {
   return {
     admin: { findUnique: async () => (options.admin ? { id: 'admin-1' } : null) },
-    customer: { findUnique: async () => (options.customer ? { id: 'customer-1' } : null) },
+    customer: { findUnique: async () => (options.customer ? { id: 'customer-1', status: 'ACTIVE' } : null) },
   } as never;
 }
 
@@ -69,7 +69,7 @@ test('CUSTOMER token is accepted only for an existing customer', async () => {
 
 test('customer document completion rejects another customer application', async () => {
   const prisma = {
-    application: { findFirst: async () => null },
+    application: { findFirst: async () => null, findUnique: async () => null },
     document: { create: async () => { throw new Error('must not create'); } },
   } as never;
   const storageMock = {

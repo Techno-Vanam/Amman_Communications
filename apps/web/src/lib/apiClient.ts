@@ -1,17 +1,21 @@
+import { getInMemoryAccessToken, setInMemoryAccessToken } from './auth-context';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003/api/v1';
+let refreshPromise: Promise<string | null> | null = null;
 
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-
-  // 1. Try reading from localStorage first
-  const localToken = localStorage.getItem('access_token');
-  if (localToken) return localToken;
-
-  // 2. Fallback: Try reading from document.cookie
-  const match = document.cookie.match(/(?:^|; )access_token=([^;]*)/);
-  if (match && match[1]) return decodeURIComponent(match[1]);
-
-  return null;
+async function refreshAccessToken() {
+  if (!refreshPromise) {
+    refreshPromise = fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'include' })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        const session = (await response.json()) as { accessToken?: string };
+        const token = session.accessToken ?? null;
+        setInMemoryAccessToken(token);
+        return token;
+      })
+      .finally(() => { refreshPromise = null; });
+  }
+  return refreshPromise;
 }
 
 export class ApiError extends Error {
@@ -30,7 +34,7 @@ export async function apiClient<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getAuthToken();
+  const token = getInMemoryAccessToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
@@ -42,7 +46,9 @@ export async function apiClient<T>(
 
   const primaryUrl = endpoint.startsWith('http')
     ? endpoint
-    : `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+    : endpoint.startsWith('/api/')
+      ? endpoint
+      : `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
   let response: Response;
 
@@ -79,12 +85,15 @@ export async function apiClient<T>(
     data = await response.text();
   }
 
-  if (!response.ok) {
-    if (response.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-      document.cookie = 'access_token=; Max-Age=0; path=/;';
-      window.location.href = '/login?expired=true';
+  if (!response.ok && response.status === 401 && !endpoint.includes('/auth/refresh')) {
+    const refreshedToken = await refreshAccessToken();
+    if (refreshedToken) {
+      const retryHeaders = { ...headers, Authorization: `Bearer ${refreshedToken}` };
+      return apiClient<T>(endpoint, { ...options, headers: retryHeaders });
     }
+  }
+
+  if (!response.ok) {
 
     const errorMessage =
       data && typeof data === 'object' && 'message' in data && (data as { message: unknown }).message

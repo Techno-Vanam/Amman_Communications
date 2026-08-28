@@ -11,7 +11,31 @@ type JwtPayload = {
 };
 
 export async function getAccessToken() {
-  return (await cookies()).get('access_token')?.value ?? null;
+  const cookieStore = await cookies();
+  const refreshToken = cookieStore.get('refresh_token')?.value;
+  if (!refreshToken) return null;
+  const response = await fetch(`${process.env.API_BASE_URL ?? 'http://localhost:3003'}/v1/auth/refresh`, {
+    method: 'POST',
+    headers: { Cookie: `refresh_token=${refreshToken}` },
+    cache: 'no-store',
+  });
+  if (!response.ok) return null;
+  const session = (await response.json()) as { accessToken?: string };
+  const rotatedRefreshToken = response.headers.get('set-cookie')?.match(/refresh_token=([^;]+)/)?.[1];
+  if (rotatedRefreshToken) {
+    try {
+      cookieStore.set('refresh_token', rotatedRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/api/v1/auth',
+        maxAge: 7 * 24 * 60 * 60,
+      });
+    } catch {
+      // Read-only server components can still use the transient access token.
+    }
+  }
+  return session.accessToken ?? null;
 }
 
 function decodePart(value: string) {
@@ -19,7 +43,7 @@ function decodePart(value: string) {
 }
 
 export async function getAuthenticatedRole(): Promise<UserRole | null> {
-  const token = (await cookies()).get('access_token')?.value;
+  const token = await getAccessToken();
   const secret = process.env.JWT_ACCESS_SECRET;
   if (!token || !secret) return null;
 

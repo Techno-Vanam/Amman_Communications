@@ -5,7 +5,7 @@ import { CustomerAuthGuard } from '../auth/guards/customer-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 
 @ApiBearerAuth()
-@Controller('admin/dashboard')
+@Controller(['v1/admin/dashboard', 'api/v1/admin/dashboard', 'admin/dashboard'])
 @UseGuards(AdminAuthGuard)
 export class AdminDashboardController {
   constructor(private readonly prisma: PrismaService) {}

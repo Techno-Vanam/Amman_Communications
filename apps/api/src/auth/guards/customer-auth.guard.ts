@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -9,7 +9,7 @@ export class CustomerAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<{
       headers: { authorization?: string };
-      user?: { customerId: string; sub: string; role: string };
+      user?: { customerId: string; sub: string; role: 'CUSTOMER' };
     }>();
 
     const authorization = request.headers.authorization;
@@ -17,31 +17,18 @@ export class CustomerAuthGuard implements CanActivate {
 
     if (token) {
       try {
-        let payload: any = null;
-        try {
-          payload = await this.jwt.verifyAsync(token, { secret: process.env.JWT_ACCESS_SECRET });
-        } catch {
-          payload = this.jwt.decode(token);
+        const payload = await this.jwt.verifyAsync<{ sub?: string; role?: string }>(token, {
+          secret: process.env.JWT_ACCESS_SECRET,
+        });
+        if (payload.role !== 'CUSTOMER' || !payload.sub) throw new ForbiddenException('Customer access required');
+        const customer = await this.prisma.customer.findUnique({ where: { id: payload.sub } });
+        if (customer?.status === 'ACTIVE') {
+          request.user = { customerId: customer.id, sub: customer.id, role: 'CUSTOMER' };
+          return true;
         }
-
-        const targetId = payload?.sub || payload?.id;
-        if (targetId) {
-          const customer = await this.prisma.customer.findUnique({ where: { id: targetId } });
-          if (customer) {
-            request.user = { customerId: customer.id, sub: customer.id, role: 'CUSTOMER' };
-            return true;
-          }
-        }
-      } catch {
-        // Fallback to active customer lookups
+      } catch (error) {
+        if (error instanceof ForbiddenException) throw error;
       }
-    }
-
-    // Dev / Session resilience fallback: use existing customer in database so booking never fails
-    const fallbackCustomer = await this.prisma.customer.findFirst({ orderBy: { createdAt: 'desc' } });
-    if (fallbackCustomer) {
-      request.user = { customerId: fallbackCustomer.id, sub: fallbackCustomer.id, role: 'CUSTOMER' };
-      return true;
     }
 
     throw new UnauthorizedException('Authentication token missing or invalid');

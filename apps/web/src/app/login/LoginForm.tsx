@@ -2,13 +2,14 @@
 
 import { useState, useTransition, useEffect } from 'react';
 import { loginAction } from './actions';
-import { setCustomerToken, setAdminToken } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 
 export default function LoginForm() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const { setSession } = useAuth();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -30,10 +31,7 @@ export default function LoginForm() {
       if (result?.error) {
         setError(result.error);
       } else if (result?.success && result.redirectTo) {
-        if (result.accessToken) {
-          localStorage.setItem('access_token', result.accessToken);
-          document.cookie = `access_token=${result.accessToken}; path=/; max-age=604800; SameSite=Lax`;
-        }
+        if (result.accessToken && result.user) setSession(result.accessToken, result.user);
         window.location.href = result.redirectTo;
       }
     });

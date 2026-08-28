@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 import {
   Building2,
   Calendar,
@@ -21,8 +22,26 @@ import {
 
 export default function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { ready, user, clearSession } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  React.useEffect(() => {
+    if (ready && !isSigningOut && (!user || user.role !== 'ADMIN')) router.replace('/login?forbidden=true');
+  }, [isSigningOut, ready, router, user]);
+
+  if (!ready || !user || user.role !== 'ADMIN') {
+    return <div className="min-h-screen bg-gray-50" />;
+  }
+
+  const handleLogout = async () => {
+    setIsSigningOut(true);
+    await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => undefined);
+    clearSession();
+    router.replace('/login');
+  };
 
   const navItems = [
     { name: 'Dashboard', href: '/admin', icon: Home },
@@ -101,8 +120,8 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
                     <span>Settings</span>
                   </Link>
                   <Link
-                    href="/login"
-                    onClick={() => setUserDropdownOpen(false)}
+                    href="#"
+                    onClick={(event) => { event.preventDefault(); void handleLogout(); }}
                     className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
