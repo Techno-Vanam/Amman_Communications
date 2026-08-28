@@ -28,8 +28,10 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
     { name: 'Dashboard', href: '/admin', icon: Home },
     { name: 'Applications', href: '/admin/applications', icon: FileText },
     { name: 'Appointments', href: '/admin/appointments', icon: Calendar },
+    { name: 'Customers', href: '/admin/customers', icon: User },
     { name: 'Services', href: '/admin/services', icon: Building2 },
     { name: 'Expenses', href: '/admin/expenses', icon: Receipt },
+    { name: 'Finance', href: '/admin/finance', icon: Receipt },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 

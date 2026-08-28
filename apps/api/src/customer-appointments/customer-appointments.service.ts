@@ -110,11 +110,12 @@ export class CustomerAppointmentsService {
         officeId: targetOfficeId,
         consultationMode: dto.appointmentType === AppointmentType.ONLINE_CONSULTATION ? dto.consultationMode : null,
         preferredDate,
+        appointmentDate: preferredDate,
         preferredTime: dto.preferredTime,
-        contactNumber: dto.contactNumber || customer.email,
-        name: customer.name,
+        customerPhone: dto.contactNumber || customer.contactNumber || '',
+        customerName: customer.name,
+        customerEmail: customer.email,
         email: customer.email,
-        address: dto.address?.trim() || null,
         notes: dto.notes?.trim() || null,
         status: AppointmentStatus.PENDING,
       },
@@ -153,6 +154,7 @@ export class CustomerAppointmentsService {
     return this.prisma.appointmentDocument.create({
       data: {
         appointmentId,
+        documentType: dto.fileType || 'OTHER',
         fileUrl: dto.storagePath,
         fileName: dto.fileName,
         fileType: dto.fileType,

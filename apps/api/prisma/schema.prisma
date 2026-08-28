@@ -41,9 +41,11 @@ model Customer {
   name         String
   address      String?
   contactNumber String?
+  phone         String?
   applications Application[]
   documents    Document[]
   appointments Appointment[]
+  status       CustomerStatus @default(ACTIVE)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
@@ -91,9 +93,20 @@ model Document {
   fileName            String
   mimeType            String
   fileSize            Int
+  originalFileName    String?
+  version             Int                        @default(1)
+  isEncrypted         Boolean                    @default(false)
+  status              DocumentStatus             @default(UPLOADED)
+  rejectionReason     String?
   verificationStatus  DocumentVerificationStatus @default(PENDING)
   verificationRemarks String?
   uploadedAt          DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+  fileUrl             String?
+  verifiedAt          DateTime?
+  verifiedBy          String?
+
+  @@unique([applicationId, documentType])
 }
 
 enum AppointmentType {
@@ -113,6 +126,12 @@ enum AppointmentStatus {
   RESCHEDULED
   COMPLETED
   CANCELLED
+}
+
+enum ServiceStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
 }
 
 model Service {
@@ -139,14 +158,6 @@ model Office {
   appointments Appointment[]
 }
 
-enum AppointmentStatus {
-  PENDING
-  CONFIRMED
-  COMPLETED
-  CANCELLED
-  RESCHEDULED
-}
-
 enum AppointmentMode {
   OFFLINE
   ONLINE
@@ -160,19 +171,28 @@ enum OnlineMeetingType {
 
 model Appointment {
   id               String            @id @default(cuid())
+  appointmentNumber String?          @unique
   customer         Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
   customerId       String?
   customerName     String
   customerEmail    String
+  email            String?
   customerPhone    String
   service          Service?          @relation(fields: [serviceId], references: [id], onDelete: SetNull)
   serviceId        String?
+  office           Office?           @relation(fields: [officeId], references: [id])
+  officeId         String?
   appointmentDate  DateTime
+  preferredDate    DateTime?
+  preferredTime    String?
   durationMinutes  Int               @default(30)
   mode             AppointmentMode   @default(OFFLINE)
+  appointmentType  AppointmentType   @default(OFFICE_VISIT)
   onlineType       OnlineMeetingType?
+  consultationMode ConsultationMode?
   meetingLink      String?
   status           AppointmentStatus @default(CONFIRMED)
+  documents        AppointmentDocument[]
   notes            String?
   rescheduledFrom  DateTime?
   rescheduleReason String?
@@ -190,4 +210,79 @@ model BusinessProfile {
   logoUrl            String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+}
+
+enum DocumentVerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model RequiredDocument {
+  id           String   @id @default(cuid())
+  service      Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId    String
+  name         String
+  displayOrder Int      @default(0)
+  isRequired   Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+enum ExpenseCategory {
+  OFFICE
+  TRAVEL
+  EMPLOYEE
+  PROPERTY
+  UTILITIES
+  MARKETING
+  EQUIPMENT
+  OTHER
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CREDIT_CARD
+  UPI
+  CHEQUE
+  OTHER
+}
+
+model Expense {
+  id             String          @id @default(cuid())
+  title          String
+  description    String?
+  category       ExpenseCategory
+  amount         Decimal         @db.Decimal(10, 2)
+  expenseDate    DateTime
+  paymentMethod  PaymentMethod?
+  isVoided       Boolean         @default(false)
+  notes          String?
+  
+  createdById    String
+  createdBy      Admin           @relation(fields: [createdById], references: [id])
+  
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([expenseDate])
+  @@index([category])
+}
+
+model AppointmentCounter {
+  year Int @id
+  lastNumber Int @default(0)
+}
+
+model AppointmentDocument {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  documentType  String
+  fileType      String?
+  fileSize      Int?
+  fileUrl       String
+  fileName      String
+  uploadedAt    DateTime    @default(now())
 }

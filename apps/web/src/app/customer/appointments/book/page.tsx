@@ -44,48 +44,31 @@ export default function BookAppointmentPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('access_token');
-        const candidateUrls = [
-          'http://localhost:3003/api/v1/customer',
-          'http://127.0.0.1:3003/api/v1/customer',
-          'http://localhost:3003/v1/customer',
-          'http://127.0.0.1:3003/v1/customer',
-          'http://localhost:3003/customer',
-        ];
-
-        // Fetch customer profile for auto-fill if token exists
-        if (token) {
-          for (const baseUrl of candidateUrls) {
-            try {
-              const profileRes = await fetch(`${baseUrl}/profile`, {
-                headers: { Authorization: `Bearer ${token}` },
-              });
-              if (profileRes.ok) {
-                const profile = await profileRes.json();
-                if (profile.name) setFullName(profile.name);
-                if (profile.email) setEmail(profile.email);
-                if (profile.address) setAddress(profile.address);
-                break;
-              }
-            } catch (e) {}
+      try {
+        // Fetch customer profile for auto-fill
+        try {
+          const profileRes = await fetch('/api/customer/profile');
+          if (profileRes.ok) {
+            const profile = await profileRes.json();
+            if (profile.name) setFullName(profile.name);
+            if (profile.email) setEmail(profile.email);
+            if (profile.address) setAddress(profile.address);
+            if (profile.phone) setContactNumber(profile.phone);
           }
-        }
+        } catch (e) {}
 
         // Fetch Active Services posted/activated by Admin
         let fetchedServices: ServiceItem[] = [];
-        for (const baseUrl of candidateUrls) {
-          try {
-            const servicesRes = await fetch(`${baseUrl}/services`, {
-              headers: token ? { Authorization: `Bearer ${token}` } : {},
-            });
-            if (servicesRes.ok) {
-              const rawServices: ServiceItem[] = await servicesRes.json();
-              // Strict filter: only display ACTIVE services
-              fetchedServices = rawServices.filter((s) => !s.status || s.status === 'ACTIVE');
-              break;
-            }
-          } catch (e) {}
-        }
+        try {
+          // This goes through the proxy
+          const servicesRes = await fetch('/api/customer/services');
+          if (servicesRes.ok) {
+            const rawServices: ServiceItem[] = await servicesRes.json();
+            // Strict filter: only display ACTIVE services
+            fetchedServices = rawServices.filter((s) => !s.status || s.status === 'ACTIVE');
+          }
+        } catch (e) {}
+        
         setServices(fetchedServices);
         if (fetchedServices.length > 0) {
           setServiceId(fetchedServices[0].id);
@@ -93,17 +76,12 @@ export default function BookAppointmentPage() {
 
         // Fetch Offices
         let fetchedOffices: OfficeItem[] = [];
-        for (const baseUrl of candidateUrls) {
-          try {
-            const officesRes = await fetch(`${baseUrl}/offices`, {
-              headers: token ? { Authorization: `Bearer ${token}` } : {},
-            });
-            if (officesRes.ok) {
-              fetchedOffices = await officesRes.json();
-              break;
-            }
-          } catch (e) {}
-        }
+        try {
+          const officesRes = await fetch('/api/customer/offices');
+          if (officesRes.ok) {
+            fetchedOffices = await officesRes.json();
+          }
+        } catch (e) {}
         setOffices(fetchedOffices);
         if (fetchedOffices.length > 0) {
           setOfficeId(fetchedOffices[0].id);
@@ -161,15 +139,6 @@ export default function BookAppointmentPage() {
     setSubmitting(true);
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-      const candidateUrls = [
-        'http://localhost:3003/api/v1/customer',
-        'http://127.0.0.1:3003/api/v1/customer',
-        'http://localhost:3003/v1/customer',
-        'http://127.0.0.1:3003/v1/customer',
-        'http://localhost:3003/customer',
-      ];
-
       const payload = {
         serviceId,
         appointmentType,
@@ -182,28 +151,22 @@ export default function BookAppointmentPage() {
         notes,
       };
 
-      let res: Response | null = null;
-      let errorMsg = 'Failed to submit appointment';
+      const res = await fetch('/api/customer/appointments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
 
-      for (const baseUrl of candidateUrls) {
-        try {
-          res = await fetch(`${baseUrl}/appointments`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            body: JSON.stringify(payload),
-          });
-          if (res.ok) break;
-          const errData = await res.json().catch(() => ({}));
-          if (errData.message) errorMsg = Array.isArray(errData.message) ? errData.message.join(', ') : errData.message;
-        } catch (e) {}
-      }
-
-      if (!res || !res.ok) {
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const errorMsg = errData.message
+          ? (Array.isArray(errData.message) ? errData.message.join(', ') : errData.message)
+          : 'Failed to submit appointment';
         throw new Error(errorMsg);
       }
+
 
       const createdAppointment = await res.json();
       setMessage({
