@@ -9,7 +9,8 @@ import {
   Search,
   X,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  CalendarClock
 } from 'lucide-react';
 import {
   fetchAdminAppointments,
@@ -48,6 +49,14 @@ export default function AdminAppointmentsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Reschedule Modal State
+  const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [rescheduleTime, setRescheduleTime] = useState('');
+  const [rescheduleReason, setRescheduleReason] = useState('');
+  const [isRescheduling, setIsRescheduling] = useState(false);
 
   // Filters
   const [search, setSearch] = useState<string>('');
@@ -110,6 +119,43 @@ export default function AdminAppointmentsPage() {
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
+
+  const handleOpenRescheduleModal = (apt: Appointment) => {
+    setSelectedAppointment(apt);
+    setRescheduleDate(apt.appointmentDate.split('T')[0]); // Default to current date
+    setRescheduleTime(apt.preferredTime || '');
+    setRescheduleReason('');
+    setIsRescheduleModalOpen(true);
+  };
+
+  const handleCloseRescheduleModal = () => {
+    setIsRescheduleModalOpen(false);
+    setSelectedAppointment(null);
+  };
+
+  const submitReschedule = async () => {
+    if (!selectedAppointment || !rescheduleDate || !rescheduleReason.trim()) {
+      setError('Please provide a new date and a reason for rescheduling.');
+      return;
+    }
+
+    setIsRescheduling(true);
+    setError(null);
+    const res = await rescheduleAdminAppointment(selectedAppointment.id, {
+      newDate: new Date(rescheduleDate).toISOString(),
+      reason: rescheduleReason,
+    });
+
+    setIsRescheduling(false);
+
+    if (res.error) {
+      setError(res.error);
+    } else {
+      setSuccessMessage('Appointment rescheduled successfully.');
+      handleCloseRescheduleModal();
+      await loadData();
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -317,8 +363,17 @@ export default function AdminAppointmentsPage() {
                         <option value="COMPLETED">Completed</option>
                         <option value="NO_SHOW">No Show</option>
                         <option value="CANCELLED">Cancelled</option>
+                        <option value="RESCHEDULED">Rescheduled</option>
                       </select>
                       
+                      <button
+                        onClick={() => handleOpenRescheduleModal(apt)}
+                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Reschedule Appointment"
+                      >
+                        <CalendarClock className="w-4 h-4" />
+                      </button>
+
                       <button
                         onClick={() => handleDelete(apt.id)}
                         className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -334,6 +389,88 @@ export default function AdminAppointmentsPage() {
           </table>
         </div>
       </div>
+      {/* Reschedule Modal */}
+      {isRescheduleModalOpen && selectedAppointment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md my-auto relative">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900">Reschedule Appointment</h2>
+              <button
+                onClick={handleCloseRescheduleModal}
+                className="text-gray-400 hover:text-gray-500 p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Customer</p>
+                <p className="font-medium text-gray-900">{selectedAppointment.customerName}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">New Date <span className="text-red-500">*</span></label>
+                  <input
+                    type="date"
+                    required
+                    value={rescheduleDate}
+                    onChange={(e) => setRescheduleDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">New Time</label>
+                  <input
+                    type="time"
+                    value={rescheduleTime}
+                    onChange={(e) => setRescheduleTime(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Rescheduling <span className="text-red-500">*</span></label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="Why is this appointment being rescheduled?"
+                  value={rescheduleReason}
+                  onChange={(e) => setRescheduleReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-2xl">
+              <button
+                onClick={handleCloseRescheduleModal}
+                disabled={isRescheduling}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-xl transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitReschedule}
+                disabled={isRescheduling || !rescheduleDate || !rescheduleReason.trim()}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {isRescheduling ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Rescheduling...
+                  </>
+                ) : (
+                  'Confirm Reschedule'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

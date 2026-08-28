@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { apiRequest } from '@/lib/api';
 
 export default function ProfileSettingsPage() {
   const searchParams = useSearchParams();
@@ -40,13 +41,13 @@ export default function ProfileSettingsPage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`/api/customer/profile`);
+        const res = await apiRequest('/api/v1/customer/profile');
 
-        if (res.ok) {
-          const data = await res.json();
+        if (res.success && res.data) {
+          const data = res.data;
           if (data.name) setName(data.name);
           if (data.email) setEmail(data.email);
-          if (data.contactNumber) setContactNumber(data.contactNumber);
+          if (data.phone) setContactNumber(data.phone); // Assuming phone instead of contactNumber
           if (data.address) setAddress(data.address);
         }
       } catch (err) {
@@ -63,15 +64,12 @@ export default function ProfileSettingsPage() {
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/customer/profile`, {
+      const res = await apiRequest('/api/v1/customer/profile', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, contactNumber, address }),
+        body: JSON.stringify({ name, phone: contactNumber, address }),
       });
 
-      if (!res.ok) throw new Error('Failed to update personal details');
+      if (!res.success) throw new Error(res.message || 'Failed to update personal details');
       setMessage({ type: 'success', text: 'Personal details updated successfully!' });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message });
@@ -92,15 +90,12 @@ export default function ProfileSettingsPage() {
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/customer/password`, {
+      const res = await apiRequest('/api/v1/customer/password', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ currentPassword, newPassword, confirmNewPassword }),
       });
 
-      if (!res.ok) throw new Error('Password change failed. Please check current password.');
+      if (!res.success) throw new Error(res.message || 'Password change failed. Please check current password.');
       setMessage({ type: 'success', text: 'Password changed successfully!' });
       setCurrentPassword('');
       setNewPassword('');
@@ -118,15 +113,13 @@ export default function ProfileSettingsPage() {
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/customer/contact-info`, {
+      const res = await apiRequest('/api/v1/customer/contact-info', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ altContactName, altPhoneNumber, preferredContactMethod }),
       });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to update contact info');
+      if (!res.success) {
+        throw new Error(res.message || 'Failed to update contact info');
       }
 
       setMessage({ type: 'success', text: 'Contact info updated successfully.' });
@@ -143,15 +136,13 @@ export default function ProfileSettingsPage() {
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/customer/preferences`, {
+      const res = await apiRequest('/api/v1/customer/preferences', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ emailNotifications, smsAlerts, whatsappUpdates }),
       });
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to update preferences');
+      if (!res.success) {
+        throw new Error(res.message || 'Failed to update preferences');
       }
 
       setMessage({ type: 'success', text: 'Preferences updated successfully.' });

@@ -20,8 +20,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
-      <body className="font-sans antialiased text-slate-800 bg-[#F4F6FB]">
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <body className="font-sans antialiased text-slate-800 bg-[#F4F6FB]" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

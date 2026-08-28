@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { apiRequest } from '@/lib/api';
 
 interface ServiceItem {
   id: string;
@@ -44,12 +45,11 @@ export default function BookAppointmentPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-      try {
         // Fetch customer profile for auto-fill
         try {
-          const profileRes = await fetch('/api/customer/profile');
-          if (profileRes.ok) {
-            const profile = await profileRes.json();
+          const profileRes = await apiRequest('/api/v1/customer/profile');
+          if (profileRes.success && profileRes.data) {
+            const profile = profileRes.data;
             if (profile.name) setFullName(profile.name);
             if (profile.email) setEmail(profile.email);
             if (profile.address) setAddress(profile.address);
@@ -60,10 +60,9 @@ export default function BookAppointmentPage() {
         // Fetch Active Services posted/activated by Admin
         let fetchedServices: ServiceItem[] = [];
         try {
-          // This goes through the proxy
-          const servicesRes = await fetch('/api/customer/services');
-          if (servicesRes.ok) {
-            const rawServices: ServiceItem[] = await servicesRes.json();
+          const servicesRes = await apiRequest('/api/v1/customer/services');
+          if (servicesRes.success && servicesRes.data) {
+            const rawServices: ServiceItem[] = servicesRes.data;
             // Strict filter: only display ACTIVE services
             fetchedServices = rawServices.filter((s) => !s.status || s.status === 'ACTIVE');
           }
@@ -77,9 +76,9 @@ export default function BookAppointmentPage() {
         // Fetch Offices
         let fetchedOffices: OfficeItem[] = [];
         try {
-          const officesRes = await fetch('/api/customer/offices');
-          if (officesRes.ok) {
-            fetchedOffices = await officesRes.json();
+          const officesRes = await apiRequest('/api/v1/customer/offices');
+          if (officesRes.success && officesRes.data) {
+            fetchedOffices = officesRes.data;
           }
         } catch (e) {}
         setOffices(fetchedOffices);
@@ -151,24 +150,16 @@ export default function BookAppointmentPage() {
         notes,
       };
 
-      const res = await fetch('/api/customer/appointments', {
+      const res = await apiRequest('/api/v1/customer/appointments', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        const errorMsg = errData.message
-          ? (Array.isArray(errData.message) ? errData.message.join(', ') : errData.message)
-          : 'Failed to submit appointment';
-        throw new Error(errorMsg);
+      if (!res.success) {
+        throw new Error(res.message || 'Failed to submit appointment');
       }
 
-
-      const createdAppointment = await res.json();
+      const createdAppointment = res.data;
       setMessage({
         type: 'success',
         text: `Appointment ${createdAppointment.appointmentNumber || ''} confirmed and booked successfully!`,

@@ -15,8 +15,10 @@ import {
   Search,
   Settings,
   Shield,
+  ShieldCheck,
   User,
   X,
+  BarChart3,
 } from 'lucide-react';
 
 export default function AdminLayoutShell({ children }: { children: React.ReactNode }) {
@@ -26,12 +28,14 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
 
   const navItems = [
     { name: 'Dashboard', href: '/admin', icon: Home },
+    { name: 'Verification', href: '/admin/dashboard', icon: ShieldCheck },
     { name: 'Applications', href: '/admin/applications', icon: FileText },
     { name: 'Appointments', href: '/admin/appointments', icon: Calendar },
     { name: 'Customers', href: '/admin/customers', icon: User },
     { name: 'Services', href: '/admin/services', icon: Building2 },
     { name: 'Expenses', href: '/admin/expenses', icon: Receipt },
     { name: 'Finance', href: '/admin/finance', icon: Receipt },
+    { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 

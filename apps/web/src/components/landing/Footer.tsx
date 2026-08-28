@@ -51,7 +51,7 @@ export default function Footer() {
           <nav aria-label="Account links">
             <h3 className="text-xs font-bold tracking-widest uppercase text-brand-200 mb-4">Account</h3>
             <ul className="flex flex-col gap-2.5 list-none">
-              {[['Sign In', '/login'], ['Create Account', '/register'], ['Customer Portal', '/portal']].map(([label, href]) => (
+              {[['Sign In', '/login'], ['Create Account', '/register'], ['Customer Portal', '/customer']].map(([label, href]) => (
                 <li key={label}>
                   <Link href={href} className="text-sm text-brand-200/50 hover:text-white transition-colors duration-150">{label}</Link>
                 </li>

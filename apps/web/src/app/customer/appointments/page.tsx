@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { apiRequest } from '@/lib/api';
 
 interface AppointmentItem {
   id: string;
@@ -29,11 +30,10 @@ export default function MyAppointmentsPage() {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const res = await fetch(`/api/customer/appointments?status=${filter}`);
+        const res = await apiRequest(`/api/v1/customer/appointments?status=${filter}`);
 
-        if (res.ok) {
-          const data = await res.json();
-          setAppointments(data);
+        if (res.success && res.data) {
+          setAppointments(res.data);
         }
       } catch (err) {
         console.error('Failed to fetch appointments', err);

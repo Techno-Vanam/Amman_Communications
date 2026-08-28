@@ -92,7 +92,7 @@ function DashboardMockup() {
         <div className="flex gap-1.5">
           {['#f43f5e','#f59e0b','#22c55e'].map(c => <span key={c} className="w-3 h-3 rounded-full" style={{ background: c }} />)}
         </div>
-        <div className="flex-1 text-center text-xs text-gray-400 font-medium">app.ammancomm.in/portal</div>
+        <div className="flex-1 text-center text-xs text-gray-400 font-medium">app.ammancomm.in/customer</div>
       </div>
       {/* Body */}
       <div className="flex">
@@ -546,7 +546,7 @@ function Footer() {
           <div className="grid grid-cols-3 gap-8">
             {[
               { title: 'Platform', links: [['Services', '#services'], ['How It Works', '#process'], ['Features', '#features'], ['FAQ', '#faq']] },
-              { title: 'Account', links: [['Sign In', '/login'], ['Register', '/register'], ['Portal', '/portal']] },
+              { title: 'Account', links: [['Sign In', '/login'], ['Register', '/register'], ['Portal', '/customer']] },
               { title: 'Legal', links: [['Privacy Policy', '/privacy'], ['Terms', '/terms'], ['Contact', '/#contact']] },
             ].map(col => (
               <div key={col.title} className="flex flex-col gap-3">

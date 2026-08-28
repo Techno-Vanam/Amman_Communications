@@ -9,7 +9,7 @@ export default function PaymentsPage() {
   const handlePrint = (paymentId: string) => {
     // Open the receipt view page in a new window/tab and trigger print, or do it inline.
     // For convenience, we open a print-optimized window or let them click view receipt and click print.
-    window.open(`/portal/payments/${paymentId}?print=true`, '_blank');
+    window.open(`/customer/payments/${paymentId}?print=true`, '_blank');
   };
 
   return (
@@ -54,7 +54,7 @@ export default function PaymentsPage() {
                   <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                     <div className="flex justify-end gap-3">
                       <Link
-                        href={`/portal/payments/${payment.receiptNumber}`}
+                        href={`/customer/payments/${payment.receiptNumber}`}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
                       >
                         <Eye className="h-3.5 w-3.5 text-gray-400" />

@@ -252,10 +252,10 @@ export default function DocumentCenterPage() {
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <Link href="/portal/applications" className="btn btn-secondary">
+          <Link href="/customer/applications" className="btn btn-secondary">
             📋 My Applications
           </Link>
-          <Link href="/portal/new-application" className="btn btn-primary">
+          <Link href="/customer/new-application" className="btn btn-primary">
             ➕ New Application
           </Link>
         </div>
@@ -328,7 +328,7 @@ export default function DocumentCenterPage() {
           <p style={{ maxWidth: '480px', margin: '0 auto 1.5rem', color: '#64748b' }}>
             Create a service application first. Your required documents will appear here for upload and management.
           </p>
-          <Link href="/portal/new-application" className="btn btn-primary">
+          <Link href="/customer/new-application" className="btn btn-primary">
             Create Application & Upload Documents
           </Link>
         </div>
@@ -391,7 +391,7 @@ export default function DocumentCenterPage() {
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <Link
-                      href="/portal/applications"
+                      href="/customer/applications"
                       className="btn btn-secondary btn-sm"
                     >
                       View Application Details →
