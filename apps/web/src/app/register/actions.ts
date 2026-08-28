@@ -1,6 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
+
 const API_BASE_URL =
   process.env.API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
@@ -15,7 +16,7 @@ export async function registerAction(formData: FormData) {
     return { error: 'Name, email, and password are required' };
   }
 
-  if (typeof name !== 'string' || name.length < 2) {
+  if (typeof name !== 'string' || name.trim().length < 2) {
     return { error: 'Name must be at least 2 characters' };
   }
 
@@ -24,24 +25,40 @@ export async function registerAction(formData: FormData) {
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/v1/auth/register`,  {
+    let res = await fetch(`${API_BASE_URL}/v1/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({
+        name: name.trim(),
+        email: String(email).trim().toLowerCase(),
+        password: String(password),
+      }),
     });
 
-    if (!res.ok) {
-      if (res.status === 401 || res.status === 400) {
-        const errorData = await res.json().catch(() => ({}));
-        return { error: errorData.message || 'Registration failed. Email might already exist.' };
-      }
-      return { error: 'An error occurred during registration. Please try again later.' };
+    if (res.status === 404) {
+      res = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: String(email).trim().toLowerCase(),
+          password: String(password),
+        }),
+      });
     }
 
-    const data = await res.json();
-    const { accessToken, user } = data;
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      return { error: data.message || 'Registration failed. Email might already exist.' };
+    }
+
+    const payload = data.data || data;
+    const { accessToken, user } = payload;
 
     if (!accessToken || !user || !user.role) {
       return { error: 'Invalid response from server' };
@@ -54,12 +71,14 @@ export async function registerAction(formData: FormData) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 15 * 60, // 15 minutes in seconds
+      maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
-    // Registration automatically logs in and redirects to portal dashboard
-    return { success: true, redirectTo: '/portal/dashboard' };
-
+    return {
+      success: true,
+      user,
+      redirectTo: '/portal/dashboard',
+    };
   } catch (error) {
     console.error('Registration action error:', error);
     return { error: 'Network error or backend unavailable' };
