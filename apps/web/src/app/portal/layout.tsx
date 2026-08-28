@@ -210,7 +210,7 @@ function PortalTopHeader() {
           action: (
             <Link
               href="/portal/book-appointment"
-              className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-md shrink-0"
+              className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-md shrink-0"
             >
               <Plus className="w-4 h-4 text-[#a8d5b9]" />
               <span>Book New Service</span>
@@ -268,21 +268,21 @@ function PortalTopHeader() {
   const { title, subtitle, action } = getHeaderInfo();
 
   return (
-    <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
-      {/* Title & Subtitle - Aligned at top left on exact same row as Notification Icon */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
+    <header className="mb-6 flex items-center justify-between gap-4 print:hidden">
+      {/* Title & Subtitle - Aligned to the left */}
+      <div className="min-w-0">
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
           {title}
         </h1>
         {subtitle && (
-          <p className="mt-1 text-xs md:text-sm text-gray-500 font-medium">
+          <p className="mt-1 text-xs md:text-sm text-gray-500 font-medium hidden sm:block">
             {subtitle}
           </p>
         )}
       </div>
 
-      {/* Right Controls: Action Button (if any) + Notification Bell + Profile Pill */}
-      <div className="flex items-center space-x-3 sm:space-x-4 self-end md:self-auto shrink-0">
+      {/* Right Controls: Action Button (if any) + Notification Bell + Profile Initials Icon Alone */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {action}
 
         {/* Notification Bell */}
@@ -299,19 +299,13 @@ function PortalTopHeader() {
           )}
         </Link>
 
-        {/* User Profile Pill Badge */}
+        {/* User Profile Initials Icon Alone */}
         <Link
           href="/portal/profile"
-          className="flex items-center gap-3 bg-white border border-gray-200/90 rounded-full pl-2.5 pr-5 py-1.5 shadow-xs hover:bg-[#f0f7f2] hover:border-[#a8d5b9] hover:shadow-sm transition-all shrink-0"
+          className="w-11 h-11 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-xs flex items-center justify-center border border-[#a8d5b9]/30 shadow-2xs hover:bg-[#1a4a38] transition-all shrink-0"
+          title="View Profile"
         >
-          <div className="w-9 h-9 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-xs flex items-center justify-center border border-[#a8d5b9]/30 shadow-2xs shrink-0">
-            {user.initials}
-          </div>
-          <div className="text-left leading-tight hidden sm:block">
-            <p className="text-xs font-extrabold text-gray-900">{user.name}</p>
-            <p className="text-[10px] text-gray-500 font-semibold mt-0.5">View Profile</p>
-          </div>
-          <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-0.5" />
+          {user.initials}
         </Link>
       </div>
     </header>

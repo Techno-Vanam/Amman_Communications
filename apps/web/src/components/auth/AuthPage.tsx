@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, ArrowLeft, ShieldCheck, Lock, Sparkles } from 'lucide-react';
 import { loginAction } from '../../app/login/actions';
@@ -12,7 +11,6 @@ interface AuthPageProps {
 }
 
 export default function AuthPage({ initialMode }: AuthPageProps) {
-  const router = useRouter();
   const [currentMode, setCurrentMode] = useState<'login' | 'signup'>(initialMode);
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -20,7 +18,6 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
 
   // Form states
   const [loginEmail, setLoginEmail] = useState('');
-  const [loginMobile, setLoginMobile] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
 
   const [regName, setRegName] = useState('');
@@ -40,7 +37,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
     e.preventDefault();
     setError(null);
 
-    const emailOrUser = loginEmail.trim() || loginMobile.trim();
+    const emailOrUser = loginEmail.trim();
     if (!emailOrUser) {
       setError('Email address is required');
       return;
@@ -69,7 +66,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
             JSON.stringify({
               name: formattedName,
               email: emailOrUser,
-              phone: loginMobile || '+91 ',
+              phone: '+91 ',
               address: '',
               handle: `@${emailOrUser.split('@')[0]}`,
               initials: formattedName.charAt(0).toUpperCase(),
@@ -139,7 +136,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
       <div className="absolute -bottom-[10%] -left-[10%] w-80 h-80 rounded-full bg-emerald-400/15 blur-3xl pointer-events-none" />
 
       {/* Header Branding */}
-      <div className="relative z-10 flex items-center gap-3">
+      <div className="relative z-10 flex items-center gap-3 mb-5 lg:mb-0">
         <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shadow-xs">
           <ShieldCheck className="w-6 h-6 text-white" />
         </div>
@@ -154,7 +151,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
       </div>
 
       {/* Central Visual Card */}
-      <div className="relative z-10 my-auto max-w-lg bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-xl space-y-4">
+      <div className="relative z-10 my-5 lg:my-auto max-w-lg bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-xl space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-brand-200 text-xs font-semibold">
           <Sparkles className="w-3.5 h-3.5" />
           <span>Unified Client & Admin Portal</span>
@@ -420,7 +417,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-3 sm:p-5 lg:p-8 overflow-y-auto">
       {/* MAIN AUTHENTICATION CONTAINER: FULL 50/50 SPLIT */}
-      <div className="w-full max-w-[1400px] min-h-[640px] max-h-[850px] bg-white rounded-[2.5rem] border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col lg:flex-row items-stretch my-auto">
+      <div className="w-full max-w-[1400px] min-h-[640px] lg:max-h-[850px] bg-white rounded-[2.5rem] border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col lg:flex-row items-stretch my-auto">
         {isSignUp ? (
           <>
             {formPanel}

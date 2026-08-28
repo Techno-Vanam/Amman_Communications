@@ -6,8 +6,7 @@ import {
   Shield,
   Save,
   CheckCircle2,
-  KeyRound,
-  Download
+  KeyRound
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import CustomSelect from '@/components/ui/CustomSelect';

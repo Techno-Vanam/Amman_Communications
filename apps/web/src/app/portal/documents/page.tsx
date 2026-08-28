@@ -124,18 +124,20 @@ Status           : Official Verified Vault Document
           </div>
 
           {/* Select Category */}
-          <div className="flex justify-center items-center gap-3 pt-2 max-w-sm mx-auto">
-            <span className="text-xs font-semibold text-gray-700 shrink-0">Document Type:</span>
-            <CustomSelect
-              value={selectedCategory}
-              onChange={setSelectedCategory}
-              options={[
-                { value: 'Identity Proof', label: 'Identity Proof (Aadhaar/PAN/Passport)' },
-                { value: 'EC Certificate', label: 'EC Certificate' },
-                { value: 'Property Deed', label: 'Property Sale Deed' },
-                { value: 'Revenue Extract', label: 'Revenue Extract / Patta' }
-              ]}
-            />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 pt-2 max-w-xs sm:max-w-sm mx-auto text-left">
+            <span className="text-xs font-semibold text-gray-700 shrink-0 text-center sm:text-left">Document Type:</span>
+            <div className="flex-1 min-w-0">
+              <CustomSelect
+                value={selectedCategory}
+                onChange={setSelectedCategory}
+                options={[
+                  { value: 'Identity Proof', label: 'Identity Proof (Aadhaar/PAN/Passport)' },
+                  { value: 'EC Certificate', label: 'EC Certificate' },
+                  { value: 'Property Deed', label: 'Property Sale Deed' },
+                  { value: 'Revenue Extract', label: 'Revenue Extract / Patta' }
+                ]}
+              />
+            </div>
           </div>
 
           <label className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white text-xs font-bold rounded-xl cursor-pointer transition-colors shadow-sm">

@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Calendar,
   RefreshCw,
-  AlertCircle,
   Info,
   ArrowUpRight
 } from 'lucide-react';
@@ -193,11 +192,11 @@ export default function PortalDashboardPage() {
         {/* Recent Activity (Left Col 7/12) - Perfectly Sized Top 3 Cards */}
         <div className="lg:col-span-7 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-5 flex flex-col justify-between space-y-4">
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <h2 className="text-sm font-bold text-gray-900">Recent Activity &amp; Updates (Top 3)</h2>
+            <div className="flex items-center justify-between gap-3 pb-3 border-b border-gray-100">
+              <h2 className="text-sm font-bold text-gray-900 min-w-0 truncate">Recent Activity &amp; Updates</h2>
               <Link
                 href="/portal/applications"
-                className="text-xs font-bold text-[#12372A] hover:underline flex items-center gap-1"
+                className="text-xs font-bold text-[#12372A] hover:underline flex items-center gap-1 shrink-0 whitespace-nowrap"
               >
                 <span>View All</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />
@@ -255,17 +254,14 @@ export default function PortalDashboardPage() {
           </div>
         </div>
 
-        {/* Action Alerts & Reminders (Right Col 5/12) - Perfectly Sized Top 3 Cards */}
+        {/* Action Alerts & Reminders (Right Col 5/12) - Perfectly Sized Cards */}
         <div className="lg:col-span-5 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-5 flex flex-col justify-between space-y-4">
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-gray-900">Alerts &amp; Reminders (Top 3)</h2>
-                <span className="bg-[#12372A] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-                  Top 3
-                </span>
+            <div className="flex items-center justify-between gap-3 pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="text-sm font-bold text-gray-900 truncate">Alerts &amp; Reminders</h2>
               </div>
-              <Link href="/portal/notifications" className="text-xs font-bold text-[#12372A] hover:underline">
+              <Link href="/portal/notifications" className="text-xs font-bold text-[#12372A] hover:underline shrink-0 whitespace-nowrap">
                 View All
               </Link>
             </div>

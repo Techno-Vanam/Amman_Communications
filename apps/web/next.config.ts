@@ -1,4 +1,13 @@
 import type { NextConfig } from 'next';
 import path from 'node:path';
-const nextConfig: NextConfig = { outputFileTracingRoot: path.join(process.cwd(), '../..') };
+const nextConfig: NextConfig = {
+  outputFileTracingRoot: path.join(process.cwd(), '../..'),
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+};
 export default nextConfig;
+

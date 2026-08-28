@@ -23,7 +23,6 @@ import {
   CheckCircle2,
   Lock,
   Clock,
-  Upload,
   RefreshCw,
   Eye
 } from 'lucide-react';
@@ -127,13 +126,13 @@ const SERVICE_REQUIRED_DOCS: Record<string, RequiredDocItem[]> = {
   ]
 };
 
-const DETAIL_DOCS_DATA: Record<string, RequiredDocItem[]> = {
-  'AMC-2026-000001': SERVICE_REQUIRED_DOCS.passport,
-  'AMC-2026-000002': SERVICE_REQUIRED_DOCS.property,
-  'AMC-2026-000003': SERVICE_REQUIRED_DOCS.vehicle,
-  'AMC-2026-000004': SERVICE_REQUIRED_DOCS.pan,
-  'AMC-2026-000005': SERVICE_REQUIRED_DOCS.legal,
-};
+// const DETAIL_DOCS_DATA: Record<string, RequiredDocItem[]> = {
+//   'AMC-2026-000001': SERVICE_REQUIRED_DOCS.passport,
+//   'AMC-2026-000002': SERVICE_REQUIRED_DOCS.property,
+//   'AMC-2026-000003': SERVICE_REQUIRED_DOCS.vehicle,
+//   'AMC-2026-000004': SERVICE_REQUIRED_DOCS.pan,
+//   'AMC-2026-000005': SERVICE_REQUIRED_DOCS.legal,
+// };
 
 export default function ApplicationsPage() {
   const pathname = usePathname();
@@ -148,8 +147,6 @@ export default function ApplicationsPage() {
   const [selectedService, setSelectedService] = useState('passport');
   const [activeTabFilter, setActiveTabFilter] = useState<'All' | 'Verification' | 'Processing' | 'Completed'>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewModalApp, setViewModalApp] = useState<ApplicationItem | null>(null);
-
   // History modal & document view modal toggles
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [viewingDoc, setViewingDoc] = useState<RequiredDocItem | null>(null);
@@ -157,13 +154,11 @@ export default function ApplicationsPage() {
   // Automatically clear open view popups whenever pathname changes or component unmounts
   useEffect(() => {
     setSelectedApp(null);
-    setViewModalApp(null);
     setShowHistoryModal(false);
     setViewingDoc(null);
     setMode('list');
     return () => {
       setSelectedApp(null);
-      setViewModalApp(null);
       setShowHistoryModal(false);
       setViewingDoc(null);
     };
@@ -234,7 +229,7 @@ export default function ApplicationsPage() {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         const txns = JSON.parse(saved);
-        const match = txns.find((t: any) => t.appId === selectedApp.id);
+        const match = txns.find((t: Record<string, unknown>) => t.appId === selectedApp.id);
         if (match) return match;
       }
     } catch (e) {
@@ -402,7 +397,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
       {mode === 'list' && (
         <>
           {/* Top 3 Summary Cards Grid - Matching Payments Card Styling & Size */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Card 1: Active Applications */}
             <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
               <div>
@@ -467,8 +462,8 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
           {/* Main Container Card */}
           <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-2xs space-y-6">
             {/* Top Control Bar with Search */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="bg-gray-100/90 p-1.5 rounded-full inline-flex items-center gap-1 border border-gray-200/60 overflow-x-auto max-w-full shrink-0">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div className="bg-gray-100/90 p-1.5 rounded-full inline-flex items-center gap-1 border border-gray-200/60 overflow-x-auto max-w-full shrink-0 scrollbar-none">
                 {(['All', 'Verification', 'Processing', 'Completed'] as const).map((tab) => (
                   <button
                     key={tab}
@@ -484,9 +479,9 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                 ))}
               </div>
 
-              <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                 {/* Search Bar Input */}
-                <div className="relative flex-1 md:w-64">
+                <div className="relative flex-1 sm:flex-initial sm:w-64">
                   <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
@@ -511,7 +506,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                     setMode('create');
                     setCurrentStep(1);
                   }}
-                  className="bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2 rounded-full font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2 shrink-0"
+                  className="bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2 rounded-full font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2 shrink-0 ml-auto sm:ml-0"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add Application</span>
@@ -519,8 +514,8 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
               </div>
             </div>
 
-            {/* 3-Column Application Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* Responsive Application Cards Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredApps.length === 0 ? (
                 <div className="col-span-full bg-white rounded-3xl border border-gray-200/80 p-12 text-center space-y-4 shadow-2xs">
                   <div className="w-16 h-16 rounded-full bg-[#f0f7ff] text-[#12372A] flex items-center justify-center mx-auto border border-blue-100">

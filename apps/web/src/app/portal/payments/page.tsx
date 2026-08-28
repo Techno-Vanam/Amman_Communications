@@ -73,7 +73,7 @@ export default function PaymentsPage() {
   const itemsPerPage = 10;
 
   // Modals state
-  const [selectedTxnForReceipt, setSelectedTxnForReceipt] = useState<TransactionItem | null>(null);
+  // const [selectedTxnForReceipt, setSelectedTxnForReceipt] = useState<TransactionItem | null>(null);
   const [selectedTxnForPayNow, setSelectedTxnForPayNow] = useState<TransactionItem | null>(null);
 
   const formatCurrency = (val: number) => {
@@ -85,36 +85,36 @@ export default function PaymentsPage() {
   };
 
   // Receipt Download Function
-  const handleDownloadReceipt = (txn: TransactionItem) => {
-    const receiptContent = `=====================================================
-AMMAN COMMUNICATIONS HQ - OFFICIAL PAYMENT RECEIPT
-=====================================================
-Receipt Number : ${txn.id}
-Application Ref: ${txn.appId}
-Date           : ${txn.date}
-Service        : ${txn.service}
-Payment Mode   : ${txn.paymentMode}
-Status         : ${txn.status}
------------------------------------------------------
-Total Amount   : ₹${txn.totalAmount.toFixed(2)}
-Paid Amount    : ₹${txn.paidAmount.toFixed(2)}
-Pending Amount : ₹${txn.pendingAmount.toFixed(2)}
------------------------------------------------------
-Thank you for using Amman Communications Portal!
-Digital Tax Reference: TAX-INV-${txn.id}
-=====================================================`;
+  // const handleDownloadReceipt = (txn: TransactionItem) => {
+  //   const receiptContent = `=====================================================
+  // AMMAN COMMUNICATIONS HQ - OFFICIAL PAYMENT RECEIPT
+  // =====================================================
+  // Receipt Number : ${txn.id}
+  // Application Ref: ${txn.appId}
+  // Date           : ${txn.date}
+  // Service        : ${txn.service}
+  // Payment Mode   : ${txn.paymentMode}
+  // Status         : ${txn.status}
+  // -----------------------------------------------------
+  // Total Amount   : ₹${txn.totalAmount.toFixed(2)}
+  // Paid Amount    : ₹${txn.paidAmount.toFixed(2)}
+  // Pending Amount : ₹${txn.pendingAmount.toFixed(2)}
+  // -----------------------------------------------------
+  // Thank you for using Amman Communications Portal!
+  // Digital Tax Reference: TAX-INV-${txn.id}
+  // =====================================================`;
 
-    const blob = new Blob([receiptContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Receipt-${txn.id}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Receipt Downloaded Successfully!', `Receipt-${txn.id}.txt saved.`);
-  };
+  //   const blob = new Blob([receiptContent], { type: 'text/plain;charset=utf-8' });
+  //   const url = URL.createObjectURL(blob);
+  //   const link = document.createElement('a');
+  //   link.href = url;
+  //   link.download = `Receipt-${txn.id}.txt`;
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  //   URL.revokeObjectURL(url);
+  //   showToast('Receipt Downloaded Successfully!', `Receipt-${txn.id}.txt saved.`);
+  // };
 
   const handlePayNowSubmit = (txn: TransactionItem) => {
     setTransactions(
@@ -205,7 +205,7 @@ Digital Tax Reference: TAX-INV-${txn.id}
     <div className="max-w-7xl mx-auto space-y-8 font-sans pb-12">
 
       {/* 3 Metric Cards - Dynamically reflect transactions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Card 1: Total Paid */}
         <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
           <div>
@@ -270,11 +270,11 @@ Digital Tax Reference: TAX-INV-${txn.id}
       {/* Main Transactions Container Card */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs overflow-hidden space-y-4">
         {/* Filter Toolbar */}
-        <div className="p-6 pb-2 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="p-6 pb-2 flex flex-col lg:flex-row items-center justify-between gap-4">
           {/* Left Controls */}
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             {/* Category Dropdown */}
-            <div className="w-56">
+            <div className="w-full sm:w-56">
               <CustomSelect
                 value={selectedCategoryFilter}
                 onChange={setSelectedCategoryFilter}
@@ -294,7 +294,7 @@ Digital Tax Reference: TAX-INV-${txn.id}
             {/* Changeable Date Range Selector Button */}
             <button
               onClick={() => setShowDatePickerModal(true)}
-              className="flex items-center gap-2 bg-gray-50/80 border border-gray-200 hover:bg-gray-100 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-gray-700 transition-colors"
+              className="flex items-center gap-2 bg-gray-50/80 border border-gray-200 hover:bg-gray-100 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-gray-700 transition-colors w-full sm:w-auto justify-center"
             >
               <Calendar className="w-4 h-4 text-gray-400" />
               <span>{datePreset}</span>
@@ -303,7 +303,7 @@ Digital Tax Reference: TAX-INV-${txn.id}
           </div>
 
           {/* Right Controls */}
-          <div className="flex items-center gap-3 self-end md:self-auto">
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end sm:justify-start">
             <button
               onClick={() => setShowMoreFilters(!showMoreFilters)}
               className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all shadow-2xs ${
@@ -415,9 +415,9 @@ Digital Tax Reference: TAX-INV-${txn.id}
                   </td>
                 </tr>
               ) : (
-                paginatedTransactions.map((txn) => {
+                paginatedTransactions.map((txn, index) => {
                   return (
-                    <tr key={txn.id} className="hover:bg-gray-50/70 transition-colors">
+                    <tr key={`${txn.id}-${txn.appId}-${index}`} className="hover:bg-gray-50/70 transition-colors">
                       {/* Service & Application ID */}
                       <td className="py-4 px-6">
                         <p className="font-bold text-gray-900 leading-tight">{txn.service}</p>
