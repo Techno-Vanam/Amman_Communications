@@ -21,10 +21,8 @@ async function bootstrap() {
 
   app.enableCors({ origin: process.env.CORS_ALLOWED_ORIGINS?.split(',') ?? true, credentials: true });
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
-
   app.setGlobalPrefix('api/v1', { exclude: ['health'] });
-
-
+  
   // Setup Swagger API Documentation
   const config = new DocumentBuilder()
     .setTitle('Amman Communications API')
@@ -41,14 +39,14 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  // Write swagger.json file for Postman / Swagger tooling
-  const swaggerJsonPath = path.resolve(process.cwd(), '../../swagger.json');
   try {
-    fs.writeFileSync(swaggerJsonPath, JSON.stringify(document, null, 2));
+    fs.writeFileSync(path.resolve(__dirname, '../../backend_endpoints.json'), JSON.stringify(document, null, 2));
   } catch {
     fs.writeFileSync(path.resolve(process.cwd(), 'swagger.json'), JSON.stringify(document, null, 2));
   }
 
-  await app.listen(process.env.PORT ?? 3003);
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3003;
+  await app.listen(port, '0.0.0.0');
+  console.log(`[NestJS API] Server listening at http://127.0.0.1:${port} and http://localhost:${port}`);
 }
 void bootstrap();

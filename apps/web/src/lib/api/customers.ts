@@ -4,6 +4,7 @@ export interface Customer {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
   status: CustomerStatus;
   createdAt: string;
   updatedAt: string;
@@ -46,6 +47,7 @@ export interface PaginatedCustomers {
 export interface CreateCustomerInput {
   name: string;
   email: string;
+  phone?: string;
   password: string;
   status?: CustomerStatus;
 }
@@ -53,5 +55,6 @@ export interface CreateCustomerInput {
 export interface UpdateCustomerInput {
   name?: string;
   email?: string;
+  phone?: string;
   status?: CustomerStatus;
 }

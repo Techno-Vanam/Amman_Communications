@@ -13,6 +13,11 @@ export class CreateCustomerDto {
   @IsNotEmpty()
   email!: string;
 
+  @ApiPropertyOptional({ description: 'Phone number of the customer' })
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
   @ApiProperty({ description: 'Raw password (will be hashed)', minLength: 6 })
   @IsString()
   @MinLength(6)

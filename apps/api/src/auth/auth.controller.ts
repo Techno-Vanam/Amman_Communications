@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiOperation, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 import { AuthService } from './auth.service';
 
 class LoginDto {
@@ -23,6 +23,11 @@ class RegisterDto {
   @ApiProperty({ description: 'Account email address', example: 'customer@test.com' })
   @IsEmail()
   email!: string;
+
+  @ApiProperty({ description: 'Phone number', example: '+919876543210' })
+  @IsString()
+  @IsNotEmpty()
+  phone!: string;
 
   @ApiProperty({ description: 'Account password', example: 'password123' })
   @IsString()
@@ -49,7 +54,7 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'Registration successful. Returns access token and user info.' })
   @ApiResponse({ status: 400, description: 'Bad Request - Validation error or duplicate email.' })
   async register(@Body() dto: RegisterDto) {
-    const { accessToken, user } = await this.auth.register(dto.name, dto.email, dto.password);
+    const { accessToken, user } = await this.auth.register(dto.name, dto.email, dto.password, dto.phone);
     return { accessToken, user };
   }
 }

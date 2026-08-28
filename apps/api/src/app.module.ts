@@ -18,6 +18,7 @@ import { ExpensesModule } from './expenses/expenses.module';
 import { BusinessProfileModule } from './settings/business-profile/business-profile.module';
 import { StorageModule } from './storage/storage.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { FinanceModule } from './finance/finance.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     BusinessProfileModule,
     StorageModule,
     NotificationsModule,
+    FinanceModule,
   ],
 })
 export class AppModule {}

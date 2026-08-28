@@ -34,9 +34,35 @@ enum CustomerStatus {
   INACTIVE
 }
 
+enum InvoiceStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CREDIT_CARD
+  DEBIT_CARD
+  UPI
+  CHEQUE
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
 model Customer {
   id           String         @id @default(cuid())
   email        String         @unique
+  phone        String?
   passwordHash String
   name         String
   address      String?
@@ -45,6 +71,8 @@ model Customer {
   applications Application[]
   documents    Document[]
   appointments Appointment[]
+  invoices     Invoice[]
+  payments     Payment[]
   status       CustomerStatus @default(ACTIVE)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -78,6 +106,7 @@ model Application {
   notes             String?
   status            ApplicationStatus @default(DRAFT)
   documents         Document[]
+  invoices          Invoice[]
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 }
@@ -146,6 +175,7 @@ model Service {
   requiredDocuments RequiredDocument[]
   applications      Application[]
   appointments      Appointment[]
+  invoices          Invoice[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 }
@@ -240,15 +270,6 @@ enum ExpenseCategory {
   OTHER
 }
 
-enum PaymentMethod {
-  CASH
-  BANK_TRANSFER
-  CREDIT_CARD
-  UPI
-  CHEQUE
-  OTHER
-}
-
 model Expense {
   id             String          @id @default(cuid())
   title          String
@@ -285,4 +306,55 @@ model AppointmentDocument {
   fileUrl       String
   fileName      String
   uploadedAt    DateTime    @default(now())
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId    String
+  application   Application?  @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  applicationId String?
+  service       Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceId     String?
+  
+  // Authoritative monetary values
+  governmentFee Decimal       @db.Decimal(10, 2)
+  serviceFee    Decimal       @db.Decimal(10, 2)
+  totalAmount   Decimal       @db.Decimal(10, 2)
+  
+  status        InvoiceStatus @default(UNPAID)
+  dueDate       DateTime?
+  notes         String?
+  
+  payments      Payment[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  paymentNumber String        @unique
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId     String
+  customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId    String
+  
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod @default(BANK_TRANSFER)
+  status        PaymentStatus @default(PAID)
+  reference     String?
+  notes         String?
+  paidAt        DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([invoiceId])
+  @@index([customerId])
+  @@index([status])
+  @@index([paidAt])
 }

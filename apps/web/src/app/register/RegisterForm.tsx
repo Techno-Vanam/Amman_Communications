@@ -9,10 +9,18 @@ export default function RegisterForm() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+
+    const trimmedPhone = phoneNumber.replace(/\D/g, '');
+    if (!trimmedPhone || trimmedPhone.length < 10) {
+      setError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
 
     startTransition(async () => {
@@ -48,7 +56,9 @@ export default function RegisterForm() {
 
       {/* Full Name */}
       <div className="flex flex-col gap-2">
-        <label htmlFor="name" className="text-sm font-medium text-gray-800">Full Name</label>
+        <label htmlFor="name" className="text-sm font-medium text-gray-800">
+          Full Name <span className="text-red-500">*</span>
+        </label>
         <div className="relative flex items-center">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="absolute left-3 text-gray-400 pointer-events-none">
             <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -70,7 +80,9 @@ export default function RegisterForm() {
 
       {/* Email */}
       <div className="flex flex-col gap-2">
-        <label htmlFor="email" className="text-sm font-medium text-gray-800">Email address</label>
+        <label htmlFor="email" className="text-sm font-medium text-gray-800">
+          Email address <span className="text-red-500">*</span>
+        </label>
         <div className="relative flex items-center">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="absolute left-3 text-gray-400 pointer-events-none">
             <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -87,6 +99,37 @@ export default function RegisterForm() {
             suppressHydrationWarning
           />
         </div>
+      </div>
+
+      {/* Phone Number */}
+      <div className="flex flex-col gap-2">
+        <label htmlFor="phoneInput" className="text-sm font-medium text-gray-800">
+          Phone Number <span className="text-red-500">*</span>
+        </label>
+        <div className="relative flex items-center">
+          <div className="absolute left-3 flex items-center gap-1.5 text-sm font-semibold text-gray-700 pointer-events-none select-none border-r border-gray-200 pr-2.5">
+            <span className="text-base leading-none">🇮🇳</span>
+            <span>+91</span>
+          </div>
+          <input
+            id="phoneInput"
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel-national"
+            required
+            value={phoneNumber}
+            onChange={(e) => {
+              const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+              setPhoneNumber(cleaned);
+            }}
+            className="w-full pl-24 pr-4 py-2.5 text-base border border-gray-200 rounded-xl bg-white text-gray-900 focus:outline-none focus:border-brand-700 focus:ring-2 focus:ring-brand-700/10 transition-colors disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed tracking-wide font-mono"
+            placeholder="98765 43210"
+            disabled={isPending}
+            suppressHydrationWarning
+          />
+          <input type="hidden" name="phone" value={phoneNumber ? `+91 ${phoneNumber}` : ''} />
+        </div>
+        <p className="text-xs text-gray-400">Enter your 10-digit mobile number</p>
       </div>
 
       {/* Password */}
