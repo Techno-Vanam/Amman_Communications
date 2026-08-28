@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import {
-  PieChart as PieChartIcon,
   TrendingUp,
   TrendingDown,
   Users,
@@ -19,7 +18,7 @@ import {
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, Legend, AreaChart, Area,
+  PieChart, Pie, Cell, AreaChart, Area,
 } from 'recharts';
 
 // ── Data ──────────────────────────────────────────────────────
@@ -153,7 +152,7 @@ export default function ReportsPage() {
   const fmtAmt = (n: number) => `₹${(n / 1000).toFixed(1)}k`;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans">
+    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
       {/* ── Page Header ── */}
       <div className="flex justify-end gap-3">

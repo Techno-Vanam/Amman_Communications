@@ -407,7 +407,7 @@ export default function AppointmentsPage() {
   const canReschedule = (status: AppointmentStatus) => ['Pending', 'Confirmed', 'Rescheduled'].includes(status);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans">
+    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
       {/* ── Page Header ── */}
       <div className="flex justify-end">
@@ -421,7 +421,7 @@ export default function AppointmentsPage() {
       </div>
 
       {/* ── Status Summary Cards ── */}
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
         {statusList.filter(s => s !== 'All').map(s => {
           const cfg: Record<string, string> = {
             Confirmed: 'border-emerald-200 bg-emerald-50 text-emerald-800',
@@ -436,7 +436,7 @@ export default function AppointmentsPage() {
               className={`rounded-2xl border p-3 text-left ${cfg[s]}`}
             >
               <p className="text-xl font-extrabold">{counts[s]}</p>
-              <p className="text-[10px] font-semibold mt-0.5 opacity-80">{s}</p>
+              <p className="text-[10px] font-semibold mt-0.5 opacity-80 truncate">{s}</p>
             </div>
           );
         })}
@@ -463,10 +463,10 @@ export default function AppointmentsPage() {
         <div className="relative">
           <button
             onClick={() => setShowFilterMenu(s => !s)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-xs"
           >
             <Filter className="w-4 h-4 text-gray-500" />
-            {filterStatus === 'All' ? 'All Status' : filterStatus}
+            Status: {filterStatus}
             <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showFilterMenu ? 'rotate-180' : ''}`} />
           </button>
           {showFilterMenu && (
@@ -487,98 +487,101 @@ export default function AppointmentsPage() {
 
       {/* ── Appointments List ── */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
-
-        {/* Table Header */}
-        <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-          <div className="col-span-3">Customer</div>
-          <div className="col-span-3">Service</div>
-          <div className="col-span-2">Date & Time</div>
-          <div className="col-span-1 text-center">Mode</div>
-          <div className="col-span-1 text-center">Status</div>
-          <div className="col-span-2 text-center">Actions</div>
-        </div>
-
-        {/* Rows */}
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <Calendar className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-sm font-bold text-gray-400">No appointments found</p>
-            <p className="text-xs text-gray-300 mt-1">Try changing your search or filter</p>
-          </div>
-        ) : (
-          filtered.map((a, idx) => (
-            <div
-              key={a.id}
-              className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}
-            >
-              {/* Customer */}
-              <div className="col-span-3 flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
-                  {a.customer.charAt(0)}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-gray-900 truncate">{a.customer}</p>
-                  <p className="text-[9px] text-gray-400 font-medium">{a.id}</p>
-                </div>
-              </div>
-
-              {/* Service */}
-              <div className="col-span-3 min-w-0 pr-2">
-                <p className="text-xs text-gray-700 font-semibold truncate">{a.service}</p>
-              </div>
-
-              {/* Date & Time */}
-              <div className="col-span-2">
-                <p className="text-xs font-bold text-gray-900">{fmtDate(a.date)}</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">{fmtTime(a.time)}</p>
-              </div>
-
-              {/* Mode */}
-              <div className="col-span-1 flex justify-center">
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border ${a.mode === 'Online' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-orange-50 text-orange-700 border-orange-100'}`}>
-                  {a.mode === 'Online' ? <Video className="w-2.5 h-2.5" /> : <MapPin className="w-2.5 h-2.5" />}
-                  {a.mode}
-                </span>
-              </div>
-
-              {/* Status */}
-              <div className="col-span-1 flex justify-center">
-                <StatusBadge status={a.status} />
-              </div>
-
-              {/* Actions */}
-              <div className="col-span-2 flex items-center justify-center gap-1.5">
-                {/* Edit */}
-                <button
-                  onClick={() => setEditApt(a)}
-                  className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all"
-                  title="Edit"
-                >
-                  <Edit2 className="w-3 h-3" />
-                </button>
-
-                {/* Reschedule — only shown if status allows */}
-                {canReschedule(a.status) ? (
-                  <button
-                    onClick={() => setRescheduleApt(a)}
-                    className="w-7 h-7 rounded-full bg-violet-50 hover:bg-violet-600 text-violet-600 hover:text-white flex items-center justify-center transition-all"
-                    title="Reschedule"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                  </button>
-                ) : (
-                  <button
-                    disabled
-                    className="w-7 h-7 rounded-full bg-gray-100 text-gray-300 flex items-center justify-center cursor-not-allowed"
-                    title="Cannot reschedule"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
+        <div className="overflow-x-auto w-full">
+          <div className="min-w-[640px]">
+            {/* Table Header */}
+            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
+              <div className="col-span-3">Customer</div>
+              <div className="col-span-3">Service</div>
+              <div className="col-span-2">Date &amp; Time</div>
+              <div className="col-span-1 text-center">Mode</div>
+              <div className="col-span-1 text-center">Status</div>
+              <div className="col-span-2 text-center">Actions</div>
             </div>
-          ))
-        )}
+
+            {/* Rows */}
+            {filtered.length === 0 ? (
+              <div className="py-16 text-center">
+                <Calendar className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                <p className="text-sm font-bold text-gray-400">No appointments found</p>
+                <p className="text-xs text-gray-300 mt-1">Try changing your search or filter</p>
+              </div>
+            ) : (
+              filtered.map((a, idx) => (
+                <div
+                  key={a.id}
+                  className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}
+                >
+                  {/* Customer */}
+                  <div className="col-span-3 flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
+                      {a.customer.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-gray-900 truncate">{a.customer}</p>
+                      <p className="text-[9px] text-gray-400 font-medium">{a.id}</p>
+                    </div>
+                  </div>
+
+                  {/* Service */}
+                  <div className="col-span-3 min-w-0 pr-2">
+                    <p className="text-xs text-gray-700 font-semibold truncate">{a.service}</p>
+                  </div>
+
+                  {/* Date & Time */}
+                  <div className="col-span-2">
+                    <p className="text-xs font-bold text-gray-900">{fmtDate(a.date)}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">{fmtTime(a.time)}</p>
+                  </div>
+
+                  {/* Mode */}
+                  <div className="col-span-1 flex justify-center">
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border ${a.mode === 'Online' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-orange-50 text-orange-700 border-orange-100'}`}>
+                      {a.mode === 'Online' ? <Video className="w-2.5 h-2.5" /> : <MapPin className="w-2.5 h-2.5" />}
+                      {a.mode}
+                    </span>
+                  </div>
+
+                  {/* Status */}
+                  <div className="col-span-1 flex justify-center">
+                    <StatusBadge status={a.status} />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="col-span-2 flex items-center justify-center gap-1.5">
+                    {/* Edit */}
+                    <button
+                      onClick={() => setEditApt(a)}
+                      className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all"
+                      title="Edit"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                    </button>
+
+                    {/* Reschedule — only shown if status allows */}
+                    {canReschedule(a.status) ? (
+                      <button
+                        onClick={() => setRescheduleApt(a)}
+                        className="w-7 h-7 rounded-full bg-violet-50 hover:bg-violet-600 text-violet-600 hover:text-white flex items-center justify-center transition-all"
+                        title="Reschedule"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                      </button>
+                    ) : (
+                      <button
+                        disabled
+                        className="w-7 h-7 rounded-full bg-gray-100 text-gray-300 flex items-center justify-center cursor-not-allowed"
+                        title="Cannot reschedule"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
 
         {/* Footer */}
         <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">

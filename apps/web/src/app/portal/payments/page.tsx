@@ -254,21 +254,21 @@ Digital Tax Reference: TAX-INV-${txn.id}
       </div>
 
       {/* 3 Metric Cards - Dynamically reflect transactions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
         {/* Card 1: Total Paid */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide">Total Paid</span>
+              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Total Paid</span>
             </div>
-            <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {formatCurrency(totalPaidSum)}
             </p>
           </div>
-          <div>
+          <div className="mt-3">
             <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
               Last 30 days
             </span>
@@ -276,19 +276,19 @@ Digital Tax Reference: TAX-INV-${txn.id}
         </div>
 
         {/* Card 2: Pending Payments */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
                 <Clock className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide">Pending Payments</span>
+              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Pending Payments</span>
             </div>
-            <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {formatCurrency(pendingPaymentsSum)}
             </p>
           </div>
-          <div>
+          <div className="mt-3">
             <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200/60">
               {overdueInvoicesCount} Invoices Overdue
             </span>
@@ -296,19 +296,19 @@ Digital Tax Reference: TAX-INV-${txn.id}
         </div>
 
         {/* Card 3: Total Transactions */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44 sm:col-span-2 md:col-span-1">
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-gray-100 text-gray-700 border border-gray-200 flex items-center justify-center shrink-0">
                 <Receipt className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide">Total Transactions</span>
+              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Total Transactions</span>
             </div>
-            <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {totalTransactionsCount}
             </p>
           </div>
-          <div>
+          <div className="mt-3">
             <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200/60">
               All time
             </span>

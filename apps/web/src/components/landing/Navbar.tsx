@@ -61,15 +61,15 @@ export const Navbar: React.FC<NavbarProps> = ({
       >
         <div className="flex items-center justify-between gap-3">
           {/* Brand Logo */}
-          <a href="#hero" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center shadow-md shadow-brand-600/20 group-hover:scale-105 transition-transform">
-              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />
+          <a href="#hero" className="flex items-center gap-2 sm:gap-2.5 group min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center shadow-md shadow-brand-600/20 group-hover:scale-105 transition-transform shrink-0">
+              <ShieldCheck className="w-4 h-4 sm:w-6 sm:h-6 text-white stroke-[2.2]" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-heading font-extrabold text-base sm:text-lg tracking-tight text-slate-900 leading-none">
+            <div className="flex flex-col min-w-0">
+              <span className="font-heading font-extrabold text-sm sm:text-lg tracking-tight text-slate-900 leading-none truncate">
                 Amman <span className="text-brand-600">Communications</span>
               </span>
-              <span className="text-[9px] sm:text-[10px] font-semibold tracking-widest text-slate-500 uppercase leading-tight mt-0.5">
+              <span className="text-[8px] sm:text-[10px] font-semibold tracking-wider text-slate-500 uppercase leading-tight mt-0.5 truncate">
                 Registration & Consultancy
               </span>
             </div>
@@ -128,6 +128,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile Menu Toggle Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            suppressHydrationWarning
             className="md:hidden p-2 rounded-full text-slate-700 hover:text-brand-600 hover:bg-white/80 transition-colors cursor-pointer"
             aria-label="Toggle menu"
           >

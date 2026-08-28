@@ -47,9 +47,9 @@ function AdminSidebarNavContent({
   return (
     <aside
       className={`
-        fixed inset-y-0 left-0 z-40 w-72 bg-white text-gray-800 flex flex-col transition-transform duration-300 ease-in-out md:static md:translate-x-0
+        fixed inset-y-0 left-0 z-40 w-72 md:w-60 lg:w-72 bg-white text-gray-800 flex flex-col transition-transform duration-300 ease-in-out md:static md:translate-x-0
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:sticky md:top-4
+        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-3 lg:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:sticky md:top-4
       `}
     >
       {/* Fixed Brand Header — not scrollable */}
@@ -159,7 +159,7 @@ function AdminSidebarNavContent({
 
 const PATH_METADATA: Record<
   string,
-  { title: string; subtext: string; icon: React.ComponentType<any> }
+  { title: string; subtext: string; icon: React.ComponentType<{ className?: string }> }
 > = {
   '/admin': { title: 'Dashboard', subtext: 'Welcome back, Administrator', icon: LayoutDashboard },
   '/admin/customers': { title: 'Customers', subtext: 'Manage all registered customer accounts', icon: Users },
@@ -183,44 +183,45 @@ function AdminTopHeader() {
   const Icon = matched.icon;
 
   return (
-    <header className="bg-transparent pb-6 flex items-center justify-between border-b border-gray-200/50 mb-6 shrink-0">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[#12372A] flex items-center justify-center shrink-0 shadow-sm">
-          <Icon className="w-5 h-5 text-[#a8d5b9]" />
+    <header className="bg-transparent pb-4 sm:pb-6 flex items-center justify-between gap-3 border-b border-gray-200/50 mb-4 sm:mb-6 shrink-0 flex-wrap">
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#12372A] flex items-center justify-center shrink-0 shadow-sm">
+          <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#a8d5b9]" />
         </div>
-        <div>
-          <h1 className="text-xl md:text-2xl font-extrabold tracking-tight text-gray-900 leading-tight">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold tracking-tight text-gray-900 leading-tight truncate">
             {matched.title}
           </h1>
-          <p className="text-[11px] text-gray-500 font-semibold mt-0.5">
+          <p className="text-[10px] sm:text-[11px] text-gray-500 font-semibold mt-0.5 truncate">
             {matched.subtext}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
         {/* Notification Bell */}
         <button
           type="button"
-          className="w-12 h-12 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative animate-in"
+          suppressHydrationWarning
+          className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative"
           title="Notifications"
         >
-          <Bell className="w-6 h-6" />
+          <Bell className="w-4 h-4 sm:w-6 sm:h-6" />
         </button>
 
         {/* Admin Profile Pill Badge — links to Profile */}
         <Link
           href="/admin/profile"
-          className="flex items-center gap-3.5 bg-white border border-gray-200/90 rounded-full pl-3 pr-6 py-2 shadow-xs hover:bg-[#f0f7f2] hover:border-[#a8d5b9] hover:shadow-sm transition-all"
+          className="flex items-center gap-2 sm:gap-3.5 bg-white border border-gray-200/90 rounded-full pl-1.5 sm:pl-3 pr-2.5 sm:pr-6 py-1 sm:py-2 shadow-xs hover:bg-[#f0f7f2] hover:border-[#a8d5b9] hover:shadow-sm transition-all"
         >
-          <div className="w-10 h-10 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-sm flex items-center justify-center border border-[#a8d5b9]/30 shadow-2xs shrink-0">
+          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-xs sm:text-sm flex items-center justify-center border border-[#a8d5b9]/30 shadow-2xs shrink-0">
             AD
           </div>
           <div className="text-left leading-tight hidden sm:block">
             <p className="text-sm font-extrabold text-gray-900">Administrator</p>
             <p className="text-xs text-gray-500 font-semibold mt-0.5">Admin Account</p>
           </div>
-          <ChevronDown className="w-4 h-4 text-gray-400 ml-1" />
+          <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 ml-0.5 sm:ml-1" />
         </Link>
       </div>
     </header>
@@ -231,7 +232,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-x-hidden" suppressHydrationWarning>
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c]">
         <div className="flex items-center space-x-3">
@@ -249,6 +250,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
         </div>
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          suppressHydrationWarning
           className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-[#a8d5b9] transition-colors"
           aria-label="Toggle navigation menu"
         >
@@ -257,12 +259,12 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
       </div>
 
       {/* Sidebar Navigation */}
-      <Suspense fallback={<aside className="w-72 bg-white rounded-3xl m-4 border border-gray-100" />}>
+      <Suspense fallback={<aside className="w-72 md:w-60 lg:w-72 max-w-[85vw] bg-white rounded-3xl m-3 lg:m-4 border border-gray-100" />}>
         <AdminSidebarNavContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
       </Suspense>
 
       {/* Main Content Area */}
-      <main className="min-w-0 flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
+      <main className="min-w-0 flex-1 p-3.5 sm:p-4 md:p-5 lg:p-8 overflow-y-auto max-w-full overflow-x-hidden">
         <AdminTopHeader />
         {children}
       </main>

@@ -323,23 +323,21 @@ export default function VerificationPage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans">
-
-
+    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
       {/* ── Summary Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {summaryCards.map(card => (
-          <div key={card.label} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-2xs hover:shadow-md transition-shadow">
+          <div key={card.label} className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-2xs hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-3">
-              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${card.iconBg}`}>
+              <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center ${card.iconBg}`}>
                 {card.icon}
               </div>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${card.badge}`}>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${card.badge} truncate max-w-[140px]`}>
                 {card.desc}
               </span>
             </div>
-            <p className={`text-3xl font-extrabold ${card.text}`}>{card.value}</p>
-            <p className="text-xs text-gray-500 font-semibold mt-1">{card.label}</p>
+            <p className={`text-2xl sm:text-3xl font-extrabold ${card.text}`}>{card.value}</p>
+            <p className="text-xs text-gray-500 font-semibold mt-1 truncate">{card.label}</p>
           </div>
         ))}
       </div>
@@ -350,31 +348,38 @@ export default function VerificationPage() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by record ID, application ID, customer, or document type..."
+            placeholder="Search by customer, document type, ID, or app ID..."
             value={search}
             onChange={e => setSearch(e.target.value)}
+            suppressHydrationWarning
             className="w-full pl-11 pr-4 py-2.5 rounded-full border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] shadow-xs transition-all"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
+            <button onClick={() => setSearch('')} suppressHydrationWarning className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
               <X className="w-4 h-4" />
             </button>
           )}
         </div>
+
         <div className="relative">
           <button
             onClick={() => setShowFilterMenu(s => !s)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs transition-all"
+            suppressHydrationWarning
+            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-xs"
           >
             <Filter className="w-4 h-4 text-gray-500" />
-            {filterStatus === 'All' ? 'All Status' : filterStatus}
+            Status: {filterStatus}
             <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showFilterMenu ? 'rotate-180' : ''}`} />
           </button>
           {showFilterMenu && (
-            <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl border border-gray-100 shadow-xl z-20 py-1.5">
+            <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl border border-gray-100 shadow-xl z-20 py-1.5 overflow-hidden">
               {(['All', ...ALL_STATUS_LIST] as FilterType[]).map(s => (
-                <button key={s} onClick={() => { setFilterStatus(s); setShowFilterMenu(false); }}
-                  className={`w-full text-left px-4 py-2 text-xs font-semibold transition-colors flex items-center justify-between ${filterStatus === s ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold' : 'text-gray-700 hover:bg-gray-50'}`}>
+                <button
+                  key={s}
+                  onClick={() => { setFilterStatus(s); setShowFilterMenu(false); }}
+                  suppressHydrationWarning
+                  className={`w-full text-left px-4 py-2 text-xs font-semibold transition-colors flex items-center justify-between ${filterStatus === s ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold' : 'text-gray-700 hover:bg-gray-50'}`}
+                >
                   <span>{s}</span>
                   <span className="text-gray-400">{counts[s]}</span>
                 </button>
@@ -386,96 +391,101 @@ export default function VerificationPage() {
 
       {/* ── Verification Table ── */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
+        <div className="overflow-x-auto w-full">
+          <div className="min-w-[700px]">
+            {/* Table Header */}
+            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
+              <div className="col-span-1">ID</div>
+              <div className="col-span-2">App. ID</div>
+              <div className="col-span-2">Document Type</div>
+              <div className="col-span-2">Customer</div>
+              <div className="col-span-1">Uploaded</div>
+              <div className="col-span-2 text-center">Verif. Status</div>
+              <div className="col-span-1">Remarks</div>
+              <div className="col-span-1 text-center">Action</div>
+            </div>
 
-        {/* Table Header */}
-        <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-          <div className="col-span-1">ID</div>
-          <div className="col-span-2">App. ID</div>
-          <div className="col-span-2">Document Type</div>
-          <div className="col-span-2">Customer</div>
-          <div className="col-span-1">Uploaded</div>
-          <div className="col-span-2 text-center">Verif. Status</div>
-          <div className="col-span-1">Remarks</div>
-          <div className="col-span-1 text-center">Action</div>
+            {/* Rows */}
+            {filtered.length === 0 ? (
+              <div className="py-16 text-center">
+                <ShieldCheck className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                <p className="text-sm font-bold text-gray-400">No verification records found</p>
+                <p className="text-xs text-gray-300 mt-1">Try adjusting your search or filter</p>
+              </div>
+            ) : filtered.map((r, idx) => (
+              <div key={r.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                {/* ID */}
+                <div className="col-span-1">
+                  <span className="text-[11px] font-bold text-gray-500">{r.id}</span>
+                </div>
+                {/* App ID */}
+                <div className="col-span-2">
+                  <span className="text-xs font-bold text-[#12372A]">{r.appId}</span>
+                </div>
+                {/* Doc Type */}
+                <div className="col-span-2 min-w-0 pr-2">
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="text-xs font-semibold text-gray-700 truncate">{r.docType}</span>
+                  </div>
+                </div>
+                {/* Customer */}
+                <div className="col-span-2 min-w-0 pr-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[9px] font-extrabold flex items-center justify-center shrink-0">
+                      {r.customer.charAt(0)}
+                    </div>
+                    <span className="text-xs font-semibold text-gray-800 truncate">{r.customer}</span>
+                  </div>
+                </div>
+                {/* Uploaded Date */}
+                <div className="col-span-1">
+                  <div className="flex items-center gap-1">
+                    <CalendarDays className="w-3 h-3 text-gray-400" />
+                    <span className="text-[10px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(r.uploadedDate)}</span>
+                  </div>
+                </div>
+                {/* Status */}
+                <div className="col-span-2 flex justify-center">
+                  <VerifBadge status={r.status} />
+                </div>
+                {/* Remarks preview */}
+                <div className="col-span-1 min-w-0">
+                  {r.remarks ? (
+                    <div className="flex items-center gap-1" title={r.remarks}>
+                      <MessageSquare className="w-3 h-3 text-gray-400 shrink-0" />
+                      <span className="text-[10px] text-gray-500 truncate max-w-[80px]">{r.remarks}</span>
+                    </div>
+                  ) : (
+                    <span className="text-[10px] text-gray-300 italic">—</span>
+                  )}
+                </div>
+                {/* Actions */}
+                <div className="col-span-1 flex items-center justify-center gap-1.5">
+                  <button
+                    onClick={() => setViewRecord(r)}
+                    suppressHydrationWarning
+                    className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all"
+                    title="View details"
+                  >
+                    <Eye className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={() => setReviewRecord(r)}
+                    suppressHydrationWarning
+                    className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all"
+                    title="Review"
+                  >
+                    <ShieldCheck className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Rows */}
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <ShieldCheck className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-sm font-bold text-gray-400">No verification records found</p>
-            <p className="text-xs text-gray-300 mt-1">Try adjusting your search or filter</p>
-          </div>
-        ) : filtered.map((r, idx) => (
-          <div key={r.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
-            {/* ID */}
-            <div className="col-span-1">
-              <span className="text-[11px] font-bold text-gray-500">{r.id}</span>
-            </div>
-            {/* App ID */}
-            <div className="col-span-2">
-              <span className="text-xs font-bold text-[#12372A]">{r.appId}</span>
-            </div>
-            {/* Doc Type */}
-            <div className="col-span-2 min-w-0 pr-2">
-              <div className="flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                <span className="text-xs font-semibold text-gray-700 truncate">{r.docType}</span>
-              </div>
-            </div>
-            {/* Customer */}
-            <div className="col-span-2 min-w-0 pr-2">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[9px] font-extrabold flex items-center justify-center shrink-0">
-                  {r.customer.charAt(0)}
-                </div>
-                <span className="text-xs font-semibold text-gray-800 truncate">{r.customer}</span>
-              </div>
-            </div>
-            {/* Uploaded Date */}
-            <div className="col-span-1">
-              <div className="flex items-center gap-1">
-                <CalendarDays className="w-3 h-3 text-gray-400" />
-                <span className="text-[10px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(r.uploadedDate)}</span>
-              </div>
-            </div>
-            {/* Status */}
-            <div className="col-span-2 flex justify-center">
-              <VerifBadge status={r.status} />
-            </div>
-            {/* Remarks preview */}
-            <div className="col-span-1 min-w-0">
-              {r.remarks ? (
-                <div className="flex items-center gap-1" title={r.remarks}>
-                  <MessageSquare className="w-3 h-3 text-gray-400 shrink-0" />
-                  <span className="text-[10px] text-gray-500 truncate max-w-[80px]">{r.remarks}</span>
-                </div>
-              ) : (
-                <span className="text-[10px] text-gray-300 italic">—</span>
-              )}
-            </div>
-            {/* Actions */}
-            <div className="col-span-1 flex items-center justify-center gap-1.5">
-              <button
-                onClick={() => setViewRecord(r)}
-                className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all"
-                title="View details"
-              >
-                <Eye className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => setReviewRecord(r)}
-                className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all"
-                title="Review"
-              >
-                <ShieldCheck className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        ))}
-
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-[11px] text-gray-400 font-medium">Showing {filtered.length} of {records.length} documents</p>
           <p className="text-[11px] text-gray-400">{pendingCount} pending officer action</p>
         </div>

@@ -188,7 +188,7 @@ function CustomBarTooltip({ active, payload, label }: { active?: boolean; payloa
     return (
       <div className="bg-[#12372A] text-white text-xs px-3 py-2 rounded-xl shadow-lg font-semibold">
         <p className="text-[#a8d5b9]">{label}</p>
-        <p>₹{payload[0].value.toLocaleString()}</p>
+        <p>₹{payload[0].value.toLocaleString('en-IN')}</p>
       </div>
     );
   }
@@ -293,7 +293,7 @@ export default function AdminDashboardPage() {
   const totalRevenue = currentData.reduce((s, d) => s + d.value, 0);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12">
+    <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12" suppressHydrationWarning>
 
       {/* ── Welcome Header ── */}
       <div className="flex justify-end">
@@ -307,22 +307,22 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ── KPI Cards — Row 1 (4 cards) ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {kpiCards.slice(0, 4).map((card) => {
           const Icon = card.icon;
           return (
             <div
               key={card.label}
-              className="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-2xs flex flex-col justify-between hover:shadow-md transition-shadow duration-200"
+              className="bg-white rounded-2xl border border-gray-200/80 p-3.5 sm:p-4 shadow-2xs flex flex-col justify-between hover:shadow-md transition-shadow duration-200"
             >
               <div className="flex items-center gap-2.5 mb-3">
                 <div className={`w-8 h-8 rounded-full ${card.iconBg} ${card.iconColor} border ${card.iconBorder} flex items-center justify-center shrink-0`}>
                   <Icon className="w-4 h-4" />
                 </div>
-                <span className="text-[11px] font-bold text-gray-500 tracking-wide leading-tight">{card.label}</span>
+                <span className="text-[11px] font-bold text-gray-500 tracking-wide leading-tight truncate">{card.label}</span>
               </div>
-              <p className="text-2xl font-extrabold text-[#0e2a47] tracking-tight">{card.value}</p>
-              <span className={`mt-2 inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${card.badgeBg}`}>
+              <p className="text-xl sm:text-2xl font-extrabold text-[#0e2a47] tracking-tight">{card.value}</p>
+              <span className={`mt-2 inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${card.badgeBg} self-start`}>
                 {card.sub}
               </span>
             </div>
@@ -331,22 +331,22 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ── KPI Cards — Row 2 (4 cards) ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {kpiCards.slice(4, 8).map((card) => {
           const Icon = card.icon;
           return (
             <div
               key={card.label}
-              className="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-2xs flex flex-col justify-between hover:shadow-md transition-shadow duration-200"
+              className="bg-white rounded-2xl border border-gray-200/80 p-3.5 sm:p-4 shadow-2xs flex flex-col justify-between hover:shadow-md transition-shadow duration-200"
             >
               <div className="flex items-center gap-2.5 mb-3">
                 <div className={`w-8 h-8 rounded-full ${card.iconBg} ${card.iconColor} border ${card.iconBorder} flex items-center justify-center shrink-0`}>
                   <Icon className="w-4 h-4" />
                 </div>
-                <span className="text-[11px] font-bold text-gray-500 tracking-wide leading-tight">{card.label}</span>
+                <span className="text-[11px] font-bold text-gray-500 tracking-wide leading-tight truncate">{card.label}</span>
               </div>
-              <p className="text-2xl font-extrabold text-[#0e2a47] tracking-tight">{card.value}</p>
-              <span className={`mt-2 inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${card.badgeBg}`}>
+              <p className="text-xl sm:text-2xl font-extrabold text-[#0e2a47] tracking-tight">{card.value}</p>
+              <span className={`mt-2 inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${card.badgeBg} self-start`}>
                 {card.sub}
               </span>
             </div>
@@ -358,19 +358,19 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
         {/* Revenue Chart (col-span 8) */}
-        <div className="lg:col-span-8 bg-white rounded-3xl border border-gray-100 shadow-2xs p-6">
-          <div className="flex items-center justify-between mb-5">
+        <div className="lg:col-span-8 bg-white rounded-3xl border border-gray-100 shadow-2xs p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div>
               <h2 className="text-base font-bold text-gray-900">Revenue Overview</h2>
               <p className="text-xs text-gray-400 mt-0.5">
                 Total:{' '}
                 <span className="font-bold text-[#12372A]">
-                  ₹{totalRevenue.toLocaleString()}
+                  ₹{totalRevenue.toLocaleString('en-IN')}
                 </span>
               </p>
             </div>
             {/* Filter Tabs */}
-            <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1">
+            <div className="flex items-center gap-1 bg-gray-100 rounded-full p-1 self-start sm:self-auto">
               {(['yearly', 'monthly', 'weekly'] as const).map((f) => (
                 <button
                   key={f}

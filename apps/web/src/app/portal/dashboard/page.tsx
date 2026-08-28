@@ -82,21 +82,21 @@ export default function PortalDashboardPage() {
       </div>
 
       {/* 4 KPI Summary Cards Grid - Matching Payments Card Styling & Size */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Card 1: Active Applications */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
                 <FileText className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide">Active Applications</span>
+              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Active Applications</span>
             </div>
-            <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {applications.length}
             </p>
           </div>
-          <div>
+          <div className="mt-3">
             <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/60">
               {activeAppsCount > 0 ? `${activeAppsCount} active` : 'No active apps'}
             </span>
@@ -104,19 +104,19 @@ export default function PortalDashboardPage() {
         </div>
 
         {/* Card 2: Pending Actions */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
                 <Clock className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide">Pending Actions</span>
+              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Pending Actions</span>
             </div>
-            <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {pendingActionsCount}
             </p>
           </div>
-          <div>
+          <div className="mt-3">
             <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/60">
               {pendingActionsCount > 0 ? 'Verification in progress' : 'Up to date'}
             </span>
@@ -124,41 +124,41 @@ export default function PortalDashboardPage() {
         </div>
 
         {/* Card 3: Completed Services */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide">Completed Services</span>
+              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Completed Services</span>
             </div>
-            <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {completedAppsCount}
             </p>
           </div>
-          <div>
+          <div className="mt-3">
             <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
-              Total completed
+              {completedAppsCount > 0 ? `${completedAppsCount} Completed` : '0 Completed'}
             </span>
           </div>
         </div>
 
         {/* Card 4: Appointments */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-2xs relative flex flex-col justify-between h-44">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
                 <Calendar className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide">Appointments</span>
+              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Appointments</span>
             </div>
-            <p className="text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-4">
+            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {appointmentsCount}
             </p>
           </div>
-          <div>
+          <div className="mt-3">
             <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-200/60">
-              Booked sessions
+              Scheduled
             </span>
           </div>
         </div>

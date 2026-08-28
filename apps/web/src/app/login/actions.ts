@@ -46,7 +46,7 @@ export async function loginAction(formData: FormData) {
     // Return success and where to redirect to let the client handle router.push
     return {
       success: true,
-      redirectTo: user.role === 'ADMIN' ? '/admin/dashboard' : '/portal/dashboard',
+      redirectTo: user.role === 'ADMIN' ? '/admin' : '/portal/dashboard',
     };
 
   } catch (error) {

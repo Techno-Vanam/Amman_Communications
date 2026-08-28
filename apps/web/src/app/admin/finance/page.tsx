@@ -304,7 +304,7 @@ export default function FinancePage() {
   const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans">
+    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
 
       {/* ── Summary Cards ── */}
@@ -394,86 +394,90 @@ export default function FinancePage() {
 
       {/* ── Table ── */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
-        {/* Header */}
-        <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-          <div className="col-span-2">App. ID</div>
-          <div className="col-span-2">Customer</div>
-          <div className="col-span-2">Total Cost</div>
-          <div className="col-span-2">Advance Paid</div>
-          <div className="col-span-1">Balance</div>
-          <div className="col-span-1">Due Date</div>
-          <div className="col-span-1 text-center">Status</div>
-          <div className="col-span-1 text-center">Actions</div>
-        </div>
-
-        {/* Rows */}
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <Wallet className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-sm font-bold text-gray-400">No finance records found</p>
-            <p className="text-xs text-gray-300 mt-1">Try adjusting your search or filter</p>
-          </div>
-        ) : filtered.map((r, idx) => {
-          const balance = r.totalCost - r.advancePaid;
-          return (
-            <div key={r.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
-              {/* App ID */}
-              <div className="col-span-2">
-                <span className="text-xs font-bold text-[#12372A]">{r.appId}</span>
-                <p className="text-[9px] text-gray-400">{r.id}</p>
-              </div>
-
-              {/* Customer */}
-              <div className="col-span-2 flex items-center gap-2 min-w-0">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">
-                  {r.customer.charAt(0)}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-gray-900 truncate">{r.customer}</p>
-                </div>
-              </div>
-
-              {/* Total Cost */}
-              <div className="col-span-2">
-                <span className="text-xs font-extrabold text-gray-900">{fmtAmt(r.totalCost)}</span>
-              </div>
-
-              {/* Advance Paid */}
-              <div className="col-span-2">
-                <span className="text-xs font-bold text-emerald-700">{fmtAmt(r.advancePaid)}</span>
-              </div>
-
-              {/* Balance */}
-              <div className="col-span-1">
-                <span className={`text-xs font-extrabold ${balance > 0 ? 'text-rose-700' : 'text-emerald-600'}`}>
-                  {balance === 0 ? '—' : fmtAmt(balance)}
-                </span>
-              </div>
-
-              {/* Due Date */}
-              <div className="col-span-1">
-                <span className="text-[10px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(r.dueDate)}</span>
-              </div>
-
-              {/* Status */}
-              <div className="col-span-1 flex justify-center">
-                <StatusBadge status={r.status} />
-              </div>
-
-              {/* Actions */}
-              <div className="col-span-1 flex items-center justify-center gap-1.5">
-                <button onClick={() => setViewRecord(r)}
-                  className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all" title="View">
-                  <Eye className="w-3 h-3" />
-                </button>
-                <button onClick={() => setEditRecord(r)}
-                  className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all" title="Edit">
-                  <Edit2 className="w-3 h-3" />
-                </button>
-              </div>
+        <div className="overflow-x-auto w-full">
+          <div className="min-w-[680px]">
+            {/* Header */}
+            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
+              <div className="col-span-2">App. ID</div>
+              <div className="col-span-2">Customer</div>
+              <div className="col-span-2">Total Cost</div>
+              <div className="col-span-2">Advance Paid</div>
+              <div className="col-span-1">Balance</div>
+              <div className="col-span-1">Due Date</div>
+              <div className="col-span-1 text-center">Status</div>
+              <div className="col-span-1 text-center">Actions</div>
             </div>
-          );
-        })}
+
+            {/* Rows */}
+            {filtered.length === 0 ? (
+              <div className="py-16 text-center">
+                <Wallet className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                <p className="text-sm font-bold text-gray-400">No finance records found</p>
+                <p className="text-xs text-gray-300 mt-1">Try adjusting your search or filter</p>
+              </div>
+            ) : filtered.map((r, idx) => {
+              const balance = r.totalCost - r.advancePaid;
+              return (
+                <div key={r.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  {/* App ID */}
+                  <div className="col-span-2">
+                    <span className="text-xs font-bold text-[#12372A]">{r.appId}</span>
+                    <p className="text-[9px] text-gray-400">{r.id}</p>
+                  </div>
+
+                  {/* Customer */}
+                  <div className="col-span-2 flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">
+                      {r.customer.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-gray-900 truncate">{r.customer}</p>
+                    </div>
+                  </div>
+
+                  {/* Total Cost */}
+                  <div className="col-span-2">
+                    <span className="text-xs font-extrabold text-gray-900">{fmtAmt(r.totalCost)}</span>
+                  </div>
+
+                  {/* Advance Paid */}
+                  <div className="col-span-2">
+                    <span className="text-xs font-bold text-emerald-700">{fmtAmt(r.advancePaid)}</span>
+                  </div>
+
+                  {/* Balance */}
+                  <div className="col-span-1">
+                    <span className={`text-xs font-extrabold ${balance > 0 ? 'text-rose-700' : 'text-emerald-600'}`}>
+                      {balance === 0 ? '—' : fmtAmt(balance)}
+                    </span>
+                  </div>
+
+                  {/* Due Date */}
+                  <div className="col-span-1">
+                    <p className="text-[11px] text-gray-600 font-medium whitespace-nowrap">{r.dueDate ? fmtDate(r.dueDate) : '—'}</p>
+                  </div>
+
+                  {/* Status */}
+                  <div className="col-span-1 flex justify-center">
+                    <StatusBadge status={r.status} />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="col-span-1 flex items-center justify-center gap-1.5">
+                    <button onClick={() => setViewRecord(r)}
+                      className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all" title="View">
+                      <Eye className="w-3 h-3" />
+                    </button>
+                    <button onClick={() => setEditRecord(r)}
+                      className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all" title="Edit">
+                      <Edit2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Footer */}
         <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between flex-wrap gap-2">

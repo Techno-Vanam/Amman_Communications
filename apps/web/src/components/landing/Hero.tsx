@@ -17,20 +17,20 @@ export const Hero: React.FC<HeroProps> = ({ onOpenAppointmentModal }) => {
       <div className="absolute bottom-10 left-10 w-72 h-72 bg-accent-skySoft/40 blur-3xl rounded-full -z-10 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20 w-full flex-grow flex items-center justify-center">
-        <div className="text-center space-y-6 sm:space-y-7 max-w-4xl mx-auto my-auto">
+        <div className="text-center space-y-5 sm:space-y-7 max-w-4xl mx-auto my-auto w-full">
           {/* Top Pill Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-50/90 border border-brand-100 text-brand-700 text-xs sm:text-sm font-semibold shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
-            <span>Official Documentation & Registration Consultancy</span>
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-brand-50/90 border border-brand-100 text-brand-700 text-[11px] sm:text-sm font-semibold shadow-xs max-w-full">
+            <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse shrink-0" />
+            <span className="truncate">Official Documentation &amp; Registration Consultancy</span>
           </div>
 
           {/* Main Headline */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-brand-700 tracking-tight leading-[1.12]">
-            Streamlined Property Registration & Document Verification
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-brand-700 tracking-tight leading-[1.15] sm:leading-[1.12]">
+            Streamlined Property Registration &amp; Document Verification
           </h1>
 
           {/* Description */}
-          <p className="text-base sm:text-lg lg:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed font-normal">
+          <p className="text-sm sm:text-lg lg:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed font-normal">
             Amman Communications delivers professional advisory, pre-audit verification, deed drafting, and online filing to streamline your registration workflows with 100% precision.
           </p>
 

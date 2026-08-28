@@ -360,12 +360,13 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans">
+    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
       {/* ── Page Header ── */}
       <div className="flex justify-end">
         <button
           onClick={() => setShowAddModal(true)}
+          suppressHydrationWarning
           className="flex items-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md self-start sm:self-auto"
         >
           <Plus className="w-4 h-4 text-[#a8d5b9]" />
@@ -400,10 +401,11 @@ export default function CustomersPage() {
             placeholder="Search by name, email, phone, or ID..."
             value={search}
             onChange={e => setSearch(e.target.value)}
+            suppressHydrationWarning
             className="w-full pl-11 pr-4 py-2.5 rounded-full border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] shadow-xs transition-all"
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
+            <button onClick={() => setSearch('')} suppressHydrationWarning className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -413,6 +415,7 @@ export default function CustomersPage() {
         <div className="relative">
           <button
             onClick={() => setShowFilterMenu(s => !s)}
+            suppressHydrationWarning
             className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-xs"
           >
             <Filter className="w-4 h-4 text-gray-500" />
@@ -425,6 +428,7 @@ export default function CustomersPage() {
                 <button
                   key={s}
                   onClick={() => { setFilterStatus(s); setShowFilterMenu(false); }}
+                  suppressHydrationWarning
                   className={`w-full text-left px-4 py-2 text-xs font-semibold transition-colors ${filterStatus === s ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold' : 'text-gray-700 hover:bg-gray-50'}`}
                 >
                   {s} ({statusCounts[s]})
@@ -437,89 +441,95 @@ export default function CustomersPage() {
 
       {/* ── Customers Table ── */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
-        {/* Table Header */}
-        <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-          <div className="col-span-3">Customer</div>
-          <div className="col-span-2 hidden sm:block">Phone</div>
-          <div className="col-span-2 text-center">Applications</div>
-          <div className="col-span-2 text-center">Pending Bal.</div>
-          <div className="col-span-1 text-center hidden md:block">Status</div>
-          <div className="col-span-2 text-center">Actions</div>
+        <div className="overflow-x-auto w-full">
+          <div className="min-w-[620px]">
+            {/* Table Header */}
+            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
+              <div className="col-span-3">Customer</div>
+              <div className="col-span-2 hidden sm:block">Phone</div>
+              <div className="col-span-2 text-center">Applications</div>
+              <div className="col-span-2 text-center">Pending Bal.</div>
+              <div className="col-span-1 text-center hidden md:block">Status</div>
+              <div className="col-span-2 text-center">Actions</div>
+            </div>
+
+            {/* Rows */}
+            {filtered.length === 0 ? (
+              <div className="py-16 text-center">
+                <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                <p className="text-sm font-bold text-gray-400">No customers found</p>
+                <p className="text-xs text-gray-300 mt-1">Try changing your search or filter</p>
+              </div>
+            ) : (
+              filtered.map((c, idx) => (
+                <div
+                  key={c.id}
+                  className={`grid grid-cols-12 px-5 py-3.5 items-center transition-colors hover:bg-gray-50/80 ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}
+                >
+                  {/* Name + Email */}
+                  <div className="col-span-3 flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
+                      {c.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-gray-900 truncate">{c.name}</p>
+                      <p className="text-[10px] text-gray-400 truncate">{c.email}</p>
+                    </div>
+                  </div>
+
+                  {/* Phone */}
+                  <div className="col-span-2 hidden sm:block">
+                    <p className="text-xs text-gray-600 font-medium truncate">{c.phone}</p>
+                  </div>
+
+                  {/* Applications */}
+                  <div className="col-span-2 text-center">
+                    <div className="inline-flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-[#12372A]" />
+                      <span className="text-xs font-bold text-gray-800">{c.applications}</span>
+                    </div>
+                  </div>
+
+                  {/* Pending Balance */}
+                  <div className="col-span-2 text-center">
+                    <div className="inline-flex items-center gap-1.5">
+                      <Wallet className="w-3.5 h-3.5 text-amber-600" />
+                      <span className={`text-xs font-bold ${c.balance === '₹0' ? 'text-gray-400' : 'text-amber-700'}`}>{c.balance}</span>
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div className="col-span-1 hidden md:flex justify-center">
+                    <StatusBadge status={c.status} />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="col-span-2 flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => setEditCustomer(c)}
+                      suppressHydrationWarning
+                      className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all group"
+                      title="Edit"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteCustomer(c)}
+                      suppressHydrationWarning
+                      className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
-        {/* Rows */}
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-sm font-bold text-gray-400">No customers found</p>
-            <p className="text-xs text-gray-300 mt-1">Try changing your search or filter</p>
-          </div>
-        ) : (
-          filtered.map((c, idx) => (
-            <div
-              key={c.id}
-              className={`grid grid-cols-12 px-5 py-3.5 items-center transition-colors hover:bg-gray-50/80 ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}
-            >
-              {/* Name + Email */}
-              <div className="col-span-3 flex items-center gap-3 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
-                  {c.name.charAt(0)}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-gray-900 truncate">{c.name}</p>
-                  <p className="text-[10px] text-gray-400 truncate">{c.email}</p>
-                </div>
-              </div>
-
-              {/* Phone */}
-              <div className="col-span-2 hidden sm:block">
-                <p className="text-xs text-gray-600 font-medium">{c.phone}</p>
-              </div>
-
-              {/* Applications */}
-              <div className="col-span-2 text-center">
-                <div className="inline-flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5 text-[#12372A]" />
-                  <span className="text-xs font-bold text-gray-800">{c.applications}</span>
-                </div>
-              </div>
-
-              {/* Pending Balance */}
-              <div className="col-span-2 text-center">
-                <div className="inline-flex items-center gap-1.5">
-                  <Wallet className="w-3.5 h-3.5 text-amber-600" />
-                  <span className={`text-xs font-bold ${c.balance === '₹0' ? 'text-gray-400' : 'text-amber-700'}`}>{c.balance}</span>
-                </div>
-              </div>
-
-              {/* Status */}
-              <div className="col-span-1 hidden md:flex justify-center">
-                <StatusBadge status={c.status} />
-              </div>
-
-              {/* Actions */}
-              <div className="col-span-2 flex items-center justify-center gap-2">
-                <button
-                  onClick={() => setEditCustomer(c)}
-                  className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all group"
-                  title="Edit"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => setDeleteCustomer(c)}
-                  className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all"
-                  title="Delete"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-[11px] text-gray-400 font-medium">
             Showing {filtered.length} of {customers.length} customers
           </p>

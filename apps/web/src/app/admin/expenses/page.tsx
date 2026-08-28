@@ -295,7 +295,7 @@ export default function ExpensesPage() {
   const months = [...new Set(expenses.map(e => e.date.slice(0, 7)))].sort().reverse();
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans">
+    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
       {/* ── Page Header ── */}
       <div className="flex justify-end">
@@ -409,58 +409,62 @@ export default function ExpensesPage() {
 
       {/* ── Table ── */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
-        {/* Header */}
-        <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-          <div className="col-span-1">ID</div>
-          <div className="col-span-2">Category</div>
-          <div className="col-span-2 text-right">Amount</div>
-          <div className="col-span-4">Description</div>
-          <div className="col-span-2">Date</div>
-          <div className="col-span-1 text-center">Actions</div>
+        <div className="overflow-x-auto w-full">
+          <div className="min-w-[620px]">
+            {/* Header */}
+            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
+              <div className="col-span-1">ID</div>
+              <div className="col-span-2">Category</div>
+              <div className="col-span-2 text-right">Amount</div>
+              <div className="col-span-4">Description</div>
+              <div className="col-span-2">Date</div>
+              <div className="col-span-1 text-center">Actions</div>
+            </div>
+
+            {/* Rows */}
+            {filtered.length === 0 ? (
+              <div className="py-16 text-center">
+                <Receipt className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                <p className="text-sm font-bold text-gray-400">No expenses found</p>
+                <p className="text-xs text-gray-300 mt-1">Try adjusting your search or filters</p>
+              </div>
+            ) : filtered.map((e, idx) => (
+              <div key={e.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                <div className="col-span-1">
+                  <span className="text-[11px] font-bold text-gray-400">{e.id}</span>
+                </div>
+                <div className="col-span-2">
+                  <CategoryBadge category={e.category} />
+                </div>
+                <div className="col-span-2 text-right pr-3">
+                  <span className="text-sm font-extrabold text-rose-700">{fmtAmt(e.amount)}</span>
+                </div>
+                <div className="col-span-4 min-w-0 pr-3">
+                  <p className="text-xs text-gray-700 truncate">{e.description}</p>
+                </div>
+                <div className="col-span-2">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3 h-3 text-gray-400" />
+                    <span className="text-[11px] text-gray-600 font-medium">{fmtDate(e.date)}</span>
+                  </div>
+                </div>
+                <div className="col-span-1 flex items-center justify-center gap-1.5">
+                  <button onClick={() => setEditExpense(e)}
+                    className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all" title="Edit">
+                    <Edit2 className="w-3 h-3" />
+                  </button>
+                  <button onClick={() => setDeleteExpense(e)}
+                    className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all" title="Delete">
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Rows */}
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <Receipt className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-sm font-bold text-gray-400">No expenses found</p>
-            <p className="text-xs text-gray-300 mt-1">Try adjusting your search or filters</p>
-          </div>
-        ) : filtered.map((e, idx) => (
-          <div key={e.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
-            <div className="col-span-1">
-              <span className="text-[11px] font-bold text-gray-400">{e.id}</span>
-            </div>
-            <div className="col-span-2">
-              <CategoryBadge category={e.category} />
-            </div>
-            <div className="col-span-2 text-right pr-3">
-              <span className="text-sm font-extrabold text-rose-700">{fmtAmt(e.amount)}</span>
-            </div>
-            <div className="col-span-4 min-w-0 pr-3">
-              <p className="text-xs text-gray-700 truncate">{e.description}</p>
-            </div>
-            <div className="col-span-2">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-3 h-3 text-gray-400" />
-                <span className="text-[11px] text-gray-600 font-medium">{fmtDate(e.date)}</span>
-              </div>
-            </div>
-            <div className="col-span-1 flex items-center justify-center gap-1.5">
-              <button onClick={() => setEditExpense(e)}
-                className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all" title="Edit">
-                <Edit2 className="w-3 h-3" />
-              </button>
-              <button onClick={() => setDeleteExpense(e)}
-                className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all" title="Delete">
-                <Trash2 className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        ))}
-
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-[11px] text-gray-400">Showing {filtered.length} of {expenses.length} expenses</p>
           <p className="text-xs font-extrabold text-rose-700">
             Filtered Total: {fmtAmt(totalFiltered)}

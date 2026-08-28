@@ -380,7 +380,7 @@ export default function ApplicationsPage() {
   const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans">
+    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
       {/* ── Page Header ── */}
       <div className="flex justify-end gap-3">
@@ -455,68 +455,72 @@ export default function ApplicationsPage() {
 
       {/* ── Table ── */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
-        {/* Header */}
-        <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-          <div className="col-span-2">App. ID</div>
-          <div className="col-span-3">Customer</div>
-          <div className="col-span-3">Service Type</div>
-          <div className="col-span-1">Date</div>
-          <div className="col-span-2 text-center">Status</div>
-          <div className="col-span-1 text-center">Actions</div>
+        <div className="overflow-x-auto w-full">
+          <div className="min-w-[660px]">
+            {/* Header */}
+            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
+              <div className="col-span-2">App. ID</div>
+              <div className="col-span-3">Customer</div>
+              <div className="col-span-3">Service Type</div>
+              <div className="col-span-1">Date</div>
+              <div className="col-span-2 text-center">Status</div>
+              <div className="col-span-1 text-center">Actions</div>
+            </div>
+
+            {/* Rows */}
+            {filtered.length === 0 ? (
+              <div className="py-16 text-center">
+                <FileText className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                <p className="text-sm font-bold text-gray-400">No applications found</p>
+                <p className="text-xs text-gray-300 mt-1">Try adjusting your search or filter</p>
+              </div>
+            ) : filtered.map((a, idx) => (
+              <div key={a.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                {/* ID */}
+                <div className="col-span-2">
+                  <span className="text-xs font-bold text-[#12372A]">{a.id}</span>
+                </div>
+                {/* Customer */}
+                <div className="col-span-3 flex items-center gap-2.5 min-w-0">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">
+                    {a.customer.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-gray-900 truncate">{a.customer}</p>
+                    <p className="text-[10px] text-gray-400 truncate">{a.email}</p>
+                  </div>
+                </div>
+                {/* Service */}
+                <div className="col-span-3 min-w-0 pr-2">
+                  <p className="text-xs text-gray-700 font-semibold truncate">{a.serviceType}</p>
+                </div>
+                {/* Date */}
+                <div className="col-span-1">
+                  <p className="text-[11px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(a.createdDate)}</p>
+                </div>
+                {/* Status */}
+                <div className="col-span-2 flex justify-center">
+                  <StatusBadge status={a.status} />
+                </div>
+                {/* Actions */}
+                <div className="col-span-1 flex items-center justify-center gap-1.5">
+                  <button onClick={() => setViewApp(a)} className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all" title="View">
+                    <Eye className="w-3 h-3" />
+                  </button>
+                  <button onClick={() => setEditApp(a)} className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all" title="Edit">
+                    <Edit2 className="w-3 h-3" />
+                  </button>
+                  <button onClick={() => setDeleteApp(a)} className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all" title="Delete">
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Rows */}
-        {filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <FileText className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-sm font-bold text-gray-400">No applications found</p>
-            <p className="text-xs text-gray-300 mt-1">Try adjusting your search or filter</p>
-          </div>
-        ) : filtered.map((a, idx) => (
-          <div key={a.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
-            {/* ID */}
-            <div className="col-span-2">
-              <span className="text-xs font-bold text-[#12372A]">{a.id}</span>
-            </div>
-            {/* Customer */}
-            <div className="col-span-3 flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">
-                {a.customer.charAt(0)}
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-gray-900 truncate">{a.customer}</p>
-                <p className="text-[10px] text-gray-400 truncate">{a.email}</p>
-              </div>
-            </div>
-            {/* Service */}
-            <div className="col-span-3 min-w-0 pr-2">
-              <p className="text-xs text-gray-700 font-semibold truncate">{a.serviceType}</p>
-            </div>
-            {/* Date */}
-            <div className="col-span-1">
-              <p className="text-[11px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(a.createdDate)}</p>
-            </div>
-            {/* Status */}
-            <div className="col-span-2 flex justify-center">
-              <StatusBadge status={a.status} />
-            </div>
-            {/* Actions */}
-            <div className="col-span-1 flex items-center justify-center gap-1.5">
-              <button onClick={() => setViewApp(a)} className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all" title="View">
-                <Eye className="w-3 h-3" />
-              </button>
-              <button onClick={() => setEditApp(a)} className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all" title="Edit">
-                <Edit2 className="w-3 h-3" />
-              </button>
-              <button onClick={() => setDeleteApp(a)} className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all" title="Delete">
-                <Trash2 className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        ))}
-
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-[11px] text-gray-400 font-medium">Showing {filtered.length} of {apps.length} applications</p>
           <button onClick={() => exportCSV(filtered)} className="text-[11px] font-bold text-[#12372A] hover:underline flex items-center gap-1">
             <Download className="w-3 h-3" /> Export filtered

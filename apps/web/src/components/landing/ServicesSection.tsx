@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { SERVICES_DATA } from '../../data/landingData';
 import { ServiceItem } from '../../types/landing';
 import {
@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Clock,
   ArrowRight,
-  Filter
 } from 'lucide-react';
 
 interface ServicesSectionProps {
@@ -19,13 +18,6 @@ interface ServicesSectionProps {
 }
 
 export const ServicesSection: React.FC<ServicesSectionProps> = ({ onSelectService }) => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-
-  const categories = ['All', 'Registration', 'Verification', 'Applications', 'Certificates', 'Consultation'];
-
-  const filteredServices = selectedCategory === 'All'
-    ? SERVICES_DATA
-    : SERVICES_DATA.filter((s) => s.category === selectedCategory);
 
   const getServiceIconInfo = (iconName: string) => {
     switch (iconName) {

@@ -77,6 +77,7 @@ function Field({
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
+          suppressHydrationWarning
           className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] focus:bg-white transition-all"
         />
       </div>
@@ -191,6 +192,7 @@ export default function AdminProfilePage() {
                 {/* Upload hint when editing */}
                 {editing && (
                   <button type="button" onClick={() => fileRef.current?.click()}
+                    suppressHydrationWarning
                     className="mt-2 w-full flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-[#f0f7f2] border border-[#a8d5b9] text-[10px] font-bold text-[#12372A] hover:bg-[#dceee4] transition-colors">
                     <Upload className="w-3 h-3" /> Upload Logo
                   </button>
@@ -208,6 +210,7 @@ export default function AdminProfilePage() {
                   <button
                     type="button"
                     onClick={() => setEditing(true)}
+                    suppressHydrationWarning
                     className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#12372A] text-white text-xs font-bold hover:bg-[#1a4a38] transition-all shadow-md"
                   >
                     <Edit2 className="w-3.5 h-3.5" /> Edit Profile
@@ -215,10 +218,12 @@ export default function AdminProfilePage() {
                 ) : (
                   <div className="flex gap-2">
                     <button type="button" onClick={handleCancel}
+                      suppressHydrationWarning
                       className="flex items-center gap-1.5 px-4 py-2.5 rounded-full border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors">
                       <X className="w-3.5 h-3.5" /> Cancel
                     </button>
                     <button type="submit"
+                      suppressHydrationWarning
                       className="flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#12372A] text-white text-xs font-bold hover:bg-[#1a4a38] transition-all shadow-md">
                       <Save className="w-3.5 h-3.5" /> Save Changes
                     </button>
@@ -321,6 +326,7 @@ export default function AdminProfilePage() {
                   disabled={!editing}
                   placeholder="Building name, street, locality..."
                   rows={2}
+                  suppressHydrationWarning
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] focus:bg-white transition-all resize-none disabled:opacity-70 disabled:cursor-not-allowed"
                 />
               </div>
@@ -356,6 +362,7 @@ export default function AdminProfilePage() {
               <p className="text-[11px] text-gray-400">{profile.adminRole} · Last updated just now</p>
             </div>
             <button type="button" onClick={() => setEditing(true)}
+              suppressHydrationWarning
               className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#12372A] text-white text-[10px] font-bold hover:bg-[#1a4a38] transition-colors">
               <Edit2 className="w-3 h-3" /> Edit
             </button>
@@ -366,10 +373,12 @@ export default function AdminProfilePage() {
         {editing && (
           <div className="flex gap-3">
             <button type="button" onClick={handleCancel}
+              suppressHydrationWarning
               className="flex-1 py-3 rounded-full border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors">
               Cancel
             </button>
             <button type="submit"
+              suppressHydrationWarning
               className="flex-1 py-3 rounded-full bg-[#12372A] text-white text-sm font-bold hover:bg-[#1a4a38] transition-all shadow-md flex items-center justify-center gap-2">
               <Save className="w-4 h-4" />
               Save Profile

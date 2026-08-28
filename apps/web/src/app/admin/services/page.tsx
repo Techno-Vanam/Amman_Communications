@@ -486,7 +486,7 @@ export default function ServicesPage() {
   const fmtAmt = (n: number) => n === 0 ? '—' : `₹${n.toLocaleString('en-IN')}`;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans">
+    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
       {/* ── Page Header ── */}
       <div className="flex justify-end">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { STATS_DATA } from '../../data/landingData';
-import { CheckSquare, ShieldAlert, Building, Headphones, Info } from 'lucide-react';
+import { CheckSquare, ShieldAlert, Building, Headphones } from 'lucide-react';
 
 export const TrustStats: React.FC = () => {
   const getStatIconInfo = (iconName: string) => {

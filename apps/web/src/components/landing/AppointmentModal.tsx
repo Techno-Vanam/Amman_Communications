@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Calendar, Clock, CheckCircle2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { X, Calendar, CheckCircle2, ShieldCheck, ArrowRight } from 'lucide-react';
 import { ServiceSelector } from './ServiceSelector';
 import { CalendarPicker } from './CalendarPicker';
 import { TimePicker } from './TimePicker';
@@ -37,7 +37,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onCl
     if (!formData.serviceType) newErrors.serviceType = 'Please select a registration or service type.';
     if (!formData.preferredDate.trim()) {
       newErrors.preferredDate = 'Please select or enter a preferred date';
-    } else if (!/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/.test(formData.preferredDate.trim())) {
+    } else if (!/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/.test(formData.preferredDate.trim())) {
       newErrors.preferredDate = 'Please enter a valid date in DD/MM/YYYY format';
     }
 
@@ -65,36 +65,36 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in outline-none border-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in outline-none border-none">
       <div
-        className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden max-h-[90vh] flex flex-col"
+        className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden max-h-[92dvh] max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-5 bg-brand-600 text-white flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/15 text-white border border-white/20 flex items-center justify-center">
-              <Calendar className="w-5 h-5" />
+        <div className="px-4 sm:px-6 py-4 sm:py-5 bg-brand-600 text-white flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/15 text-white border border-white/20 flex items-center justify-center shrink-0">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
-            <div>
-              <h3 className="font-heading font-bold text-lg text-white">
+            <div className="min-w-0">
+              <h3 className="font-heading font-bold text-base sm:text-lg text-white truncate">
                 Book Consultation Appointment
               </h3>
-              <p className="text-xs text-brand-100">
-                Schedule a dedicated session with our documentation team
+              <p className="text-[11px] sm:text-xs text-brand-100 truncate">
+                Schedule a dedicated session with our team
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0 ml-2"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 sm:p-8 overflow-y-auto space-y-6">
+        <div className="p-4 sm:p-6 sm:p-8 overflow-y-auto space-y-5 sm:space-y-6">
           {isSubmitted ? (
             <div className="text-center py-8 space-y-6 animate-fade-in">
               <div className="w-16 h-16 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mx-auto shadow-inner">
