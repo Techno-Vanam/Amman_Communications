@@ -50,7 +50,6 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
     { name: 'Customers', href: '/admin/customers', icon: User },
     { name: 'Services', href: '/admin/services', icon: Building2 },
     { name: 'Expenses', href: '/admin/expenses', icon: Receipt },
-    { name: 'Finance', href: '/admin/finance', icon: Receipt },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 

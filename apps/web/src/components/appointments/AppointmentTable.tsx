@@ -39,46 +39,37 @@ export const AppointmentTable: React.FC<AppointmentTableProps> = ({
         </thead>
         <tbody className="divide-y divide-slate-100">
           {appointments.map((apt) => {
-            const isRescheduled = apt.status === 'RESCHEDULED' || Boolean(apt.originalDate);
+            const isRescheduled = apt.status === 'RESCHEDULED';
             const isCancellable =
               (apt.status === 'PENDING' || apt.status === 'CONFIRMED') &&
-              new Date(apt.preferredDate) >= new Date();
+              new Date(apt.preferredDate || apt.appointmentDate || Date.now()) >= new Date();
 
             return (
               <tr key={apt.id} className="hover:bg-slate-50/50 transition-colors">
                 {/* Ref & Service */}
                 <td className="py-4 px-4">
                   <div className="font-mono text-xs text-slate-400 font-medium mb-0.5">
-                    {apt.appointmentNumber}
+                    {apt.appointmentNumber || `AMC-${apt.id.slice(0, 8)}`}
                   </div>
-                  <div className="font-semibold text-slate-900 line-clamp-1">{apt.service.name}</div>
+                  <div className="font-semibold text-slate-900 line-clamp-1">{apt.service?.name || 'Consultation Service'}</div>
                 </td>
 
                 {/* Date & Time (Original) */}
                 <td className="py-4 px-4 text-slate-800">
-                  {isRescheduled && apt.originalDate ? (
-                    <div>
-                      <div className="font-medium text-slate-800">
-                        {formatDate(apt.originalDate.toString())}
-                      </div>
-                      <div className="text-xs text-slate-500">{apt.originalTime || '—'}</div>
+                  <div>
+                    <div className="font-medium text-slate-800">
+                      {formatDate((apt.preferredDate || apt.appointmentDate || '').toString())}
                     </div>
-                  ) : (
-                    <div>
-                      <div className="font-medium text-slate-800">
-                        {formatDate(apt.preferredDate.toString())}
-                      </div>
-                      <div className="text-xs text-slate-500">{apt.preferredTime}</div>
-                    </div>
-                  )}
+                    <div className="text-xs text-slate-500">{apt.preferredTime || '10:00 AM'}</div>
+                  </div>
                 </td>
 
                 {/* New Date & Time */}
                 <td className="py-4 px-4">
                   {isRescheduled ? (
                     <div>
-                      <div className="font-semibold text-slate-900">{formatDate(apt.preferredDate.toString())}</div>
-                      <div className="text-xs text-slate-500">{apt.preferredTime}</div>
+                      <div className="font-semibold text-slate-900">{formatDate((apt.appointmentDate || '').toString())}</div>
+                      <div className="text-xs text-slate-500">{apt.preferredTime || '10:00 AM'}</div>
                     </div>
                   ) : (
                     <span className="text-slate-400 text-xs italic">N/A</span>

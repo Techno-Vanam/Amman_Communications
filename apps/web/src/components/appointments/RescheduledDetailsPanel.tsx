@@ -38,7 +38,7 @@ export const RescheduledDetailsPanel: React.FC<RescheduledDetailsPanelProps> = (
         <div className="flex gap-2">
           <span className="text-slate-500 font-medium w-36 shrink-0">New Date & Time</span>
           <span className="text-slate-900 font-semibold">
-            : {formatDate(appointment.preferredDate.toString())}, {appointment.preferredTime}
+            : {formatDate((appointment.preferredDate || appointment.appointmentDate || '').toString())}, {appointment.preferredTime || '10:00 AM'}
           </span>
         </div>
 

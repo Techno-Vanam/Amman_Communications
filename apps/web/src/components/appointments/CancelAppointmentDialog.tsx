@@ -42,14 +42,14 @@ export const CancelAppointmentDialog: React.FC<CancelAppointmentDialogProps> = (
 
         <p className="text-sm text-gray-600 mb-4">
           Are you sure you want to cancel your appointment for{' '}
-          <strong className="text-gray-900">{appointment.service.name}</strong> on{' '}
+          <strong className="text-gray-900">{appointment.service?.name || 'Consultation Service'}</strong> on{' '}
           <span className="font-semibold text-gray-900">
-            {new Date(appointment.preferredDate).toLocaleDateString('en-US', {
+            {new Date(appointment.preferredDate || appointment.appointmentDate || Date.now()).toLocaleDateString('en-US', {
               month: 'short',
               day: 'numeric',
               year: 'numeric',
             })}{' '}
-            at {appointment.preferredTime}
+            at {appointment.preferredTime || '10:00 AM'}
           </span>
           ? This action cannot be undone.
         </p>

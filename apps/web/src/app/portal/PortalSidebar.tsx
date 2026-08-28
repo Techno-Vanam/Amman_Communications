@@ -16,7 +16,9 @@ export default function PortalSidebar() {
         if (res.success && res.data) {
           setProfile(res.data);
         }
-      } catch {}
+      } catch (err) {
+        console.error('Failed to load profile', err);
+      }
     }
     loadProfile();
   }, []);

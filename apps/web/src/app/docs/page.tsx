@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import Head from 'next/head';
 
 export default function SwaggerDocsPage() {
   useEffect(() => {
@@ -16,18 +15,21 @@ export default function SwaggerDocsPage() {
     script.src = 'https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js';
     script.crossOrigin = 'anonymous';
     script.onload = () => {
-      // @ts-ignore
-      if (window.SwaggerUIBundle) {
-        // @ts-ignore
-        window.SwaggerUIBundle({
+      const globalWindow = window as unknown as {
+        SwaggerUIBundle?: {
+          (config: Record<string, unknown>): unknown;
+          presets: { apis: unknown };
+          SwaggerUIStandalonePreset: unknown;
+        };
+      };
+      if (globalWindow.SwaggerUIBundle) {
+        globalWindow.SwaggerUIBundle({
           url: '/swagger.json',
           dom_id: '#swagger-ui',
           deepLinking: true,
           presets: [
-            // @ts-ignore
-            window.SwaggerUIBundle.presets.apis,
-            // @ts-ignore
-            window.SwaggerUIBundle.SwaggerUIStandalonePreset,
+            globalWindow.SwaggerUIBundle.presets.apis,
+            globalWindow.SwaggerUIBundle.SwaggerUIStandalonePreset,
           ],
           layout: 'BaseLayout',
         });

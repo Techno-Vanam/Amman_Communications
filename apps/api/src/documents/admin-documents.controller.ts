@@ -13,7 +13,7 @@ import { AdminAuthGuard } from '../auth/guards/admin-auth.guard';
 import { DocumentsService } from './documents.service';
 import { UpdateDocumentStatusDto } from './dto/update-document-status.dto';
 
-@Controller('admin/applications')
+@Controller(['admin/applications', 'v1/admin/applications', 'api/v1/admin/applications'])
 @UseGuards(AdminAuthGuard)
 export class AdminDocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}

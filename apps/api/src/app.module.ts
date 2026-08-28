@@ -13,6 +13,10 @@ import { CustomersModule } from './customers/customers.module';
 import { CustomerAppointmentsModule } from './customer-appointments/customer-appointments.module';
 import { CustomerProfileModule } from './customer-profile/customer-profile.module';
 import { AppointmentsModule } from './appointments/appointments.module';
+import { ExpensesModule } from './expenses/expenses.module';
+import { BusinessProfileModule } from './settings/business-profile/business-profile.module';
+import { ApplicationsModule } from './applications/applications.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -34,6 +38,10 @@ import { AppointmentsModule } from './appointments/appointments.module';
     CustomerAppointmentsModule,
     CustomerProfileModule,
     AppointmentsModule,
+    ExpensesModule,
+    BusinessProfileModule,
+    ApplicationsModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

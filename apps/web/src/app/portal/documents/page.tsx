@@ -124,7 +124,7 @@ export default function DocumentCenterPage() {
     try {
       const [res, catRes] = await Promise.all([
         apiRequest<ApplicationGroup[]>('/api/v1/customer/documents'),
-        apiRequest<any[]>('/api/v1/customer/services-catalog'),
+        apiRequest<ServiceDefinition[]>('/api/v1/customer/services-catalog'),
       ]);
 
       if (catRes.success && catRes.data && catRes.data.length > 0) {
@@ -155,7 +155,7 @@ export default function DocumentCenterPage() {
           s.code === serviceType ||
           s.id === serviceType ||
           s.title?.toLowerCase() === serviceType?.toLowerCase() ||
-          (s as any).name?.toLowerCase() === serviceType?.toLowerCase(),
+          (s as ServiceDefinition & { name?: string }).name?.toLowerCase() === serviceType?.toLowerCase(),
       ) ||
       DEFAULT_SERVICES.find(
         (s) =>
@@ -215,9 +215,10 @@ export default function DocumentCenterPage() {
         }
       };
       reader.readAsDataURL(file);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setUploadingSlot(null);
-      setMessage({ type: 'error', text: err?.message || 'Upload failed' });
+      const text = err instanceof Error ? err.message : 'Upload failed';
+      setMessage({ type: 'error', text });
     }
   };
 

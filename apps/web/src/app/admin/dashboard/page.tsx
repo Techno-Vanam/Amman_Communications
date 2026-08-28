@@ -47,7 +47,9 @@ export default function AdminDashboardPage() {
       if (queueRes?.data) {
         setDocuments(queueRes.data);
       }
-    } catch {}
+    } catch (err) {
+      console.error('Failed to load verification data', err);
+    }
   };
 
   const handleManualRefresh = async () => {
@@ -73,7 +75,9 @@ export default function AdminDashboardPage() {
         method: 'PUT',
         body: JSON.stringify({ status: 'VERIFIED' }),
       });
-    } catch {}
+    } catch (err) {
+      console.error('Failed to verify document', err);
+    }
 
     setDocuments((prev) =>
       prev.map((d) => (d.id === doc.id ? { ...d, status: 'VERIFIED', rejectionReason: undefined } : d)),
@@ -98,7 +102,9 @@ export default function AdminDashboardPage() {
           }),
         },
       );
-    } catch {}
+    } catch (err) {
+      console.error('Failed to update document status', err);
+    }
 
     setDocuments((prev) =>
       prev.map((d) =>

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { apiRequest } from '@/lib/api';
 import Link from 'next/link';
 
 interface DocumentRecord {
@@ -150,7 +149,7 @@ export default function MyApplicationsPage() {
         ].map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setFilter(tab.key as any)}
+            onClick={() => setFilter(tab.key as 'ALL' | 'ACTION_REQUIRED' | 'PENDING' | 'VERIFIED')}
             style={{
               padding: '0.5rem 1rem',
               borderRadius: '8px',

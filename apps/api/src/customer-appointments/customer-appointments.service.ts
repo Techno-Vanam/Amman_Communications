@@ -107,6 +107,7 @@ export class CustomerAppointmentsService {
         customerId,
         serviceId: dto.serviceId,
         appointmentType: dto.appointmentType,
+        mode: dto.appointmentType === AppointmentType.ONLINE_CONSULTATION ? 'ONLINE' : 'OFFLINE',
         officeId: targetOfficeId,
         consultationMode: dto.appointmentType === AppointmentType.ONLINE_CONSULTATION ? dto.consultationMode : null,
         preferredDate,

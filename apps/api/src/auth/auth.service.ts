@@ -161,4 +161,33 @@ export class AuthService {
       });
     }
   }
+
+  async getUserFromAccessToken(accessToken: string) {
+    let payload: { sub?: unknown; role?: unknown };
+    try {
+      payload = await this.jwt.verifyAsync(accessToken, { secret: this.accessSecret });
+    } catch {
+      throw new UnauthorizedException('Access token is invalid or expired');
+    }
+
+    if (
+      typeof payload.sub !== 'string' ||
+      (payload.role !== 'ADMIN' && payload.role !== 'CUSTOMER')
+    ) throw new UnauthorizedException('Invalid token payload');
+
+    const user = payload.role === 'ADMIN'
+      ? await this.prisma.admin.findUnique({ where: { id: payload.sub } })
+      : await this.prisma.customer.findUnique({ where: { id: payload.sub } });
+
+    if (!user || ('status' in user && user.status !== 'ACTIVE')) {
+      throw new UnauthorizedException('User account not found or inactive');
+    }
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: payload.role as AuthRole,
+    };
+  }
 }

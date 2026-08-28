@@ -20,7 +20,7 @@ import {
   UploadOrReplaceDocumentDto,
 } from './dto/upload-document.dto';
 
-@Controller('customer')
+@Controller(['customer', 'v1/customer', 'api/v1/customer'])
 @UseGuards(CustomerAuthGuard)
 export class CustomerDocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}

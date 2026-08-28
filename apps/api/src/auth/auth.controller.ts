@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { ApiOperation, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { IsEmail, IsString, MinLength } from 'class-validator';
@@ -32,7 +32,7 @@ class RegisterDto {
 }
 
 @ApiTags('Auth')
-@Controller('v1/auth')
+@Controller(['v1/auth', 'api/v1/auth', 'auth'])
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
@@ -40,14 +40,14 @@ export class AuthController {
     response.cookie('refresh_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/v1/auth',
+      sameSite: 'lax',
+      path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
   }
 
   private clearRefreshCookie(response: Response) {
-    response.clearCookie('refresh_token', { httpOnly: true, sameSite: 'strict', path: '/v1/auth' });
+    response.clearCookie('refresh_token', { httpOnly: true, sameSite: 'lax', path: '/' });
   }
 
   private getRefreshToken(request: Request) {
@@ -76,6 +76,25 @@ export class AuthController {
     const { accessToken, refreshToken, user } = await this.auth.register(dto.name, dto.email, dto.password);
     this.setRefreshCookie(response, refreshToken);
     return { accessToken, user };
+  }
+
+  @Get('me')
+  @ApiOperation({ summary: 'Get Current Authenticated User' })
+  async me(@Req() request: Request) {
+    const authHeader = request.headers.authorization;
+    let token: string | undefined;
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.slice(7);
+    } else {
+      const cookieHeader = request.headers.cookie ?? '';
+      token = cookieHeader
+        .split(';')
+        .map((part) => part.trim().split('='))
+        .find(([name]) => name === 'access_token')?.[1];
+    }
+    if (!token) throw new UnauthorizedException('Missing access token');
+    const user = await this.auth.getUserFromAccessToken(token);
+    return { user };
   }
 
   @Post('refresh')

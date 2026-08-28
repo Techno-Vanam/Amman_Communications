@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SERVICES_CATALOG, ServiceDefinition } from '@repo/shared-types';
 import { apiRequest } from '@/lib/api';
 import Link from 'next/link';
@@ -62,7 +62,11 @@ export default function NewApplicationPage() {
     }
 
     try {
-      const res = await apiRequest('/api/v1/customer/applications', {
+      const res = await apiRequest<{
+        id: string;
+        applicationNumber: string;
+        serviceType: string;
+      }>('/api/v1/customer/applications', {
         method: 'POST',
         body: JSON.stringify({
           serviceType: selectedService.code,
@@ -88,8 +92,9 @@ export default function NewApplicationPage() {
       } else {
         setErrorMessage(res.message || 'Failed to create application in database. Please check your connection.');
       }
-    } catch (err: any) {
-      setErrorMessage(err?.message || 'Failed to create application');
+    } catch (err: unknown) {
+      const text = err instanceof Error ? err.message : 'Failed to create application';
+      setErrorMessage(text);
     }
   };
 
@@ -113,7 +118,13 @@ export default function NewApplicationPage() {
       reader.onload = async () => {
         const base64Data = reader.result as string;
 
-        const res = await apiRequest(`/api/v1/customer/applications/${createdApplication.id}/documents/upload`, {
+        const res = await apiRequest<{
+          id?: string;
+          documentId?: string;
+          status?: string;
+          version?: number;
+          downloadUrl?: string;
+        }>(`/api/v1/customer/applications/${createdApplication.id}/documents/upload`, {
           method: 'POST',
           body: JSON.stringify({
             documentType: docType,
@@ -127,20 +138,21 @@ export default function NewApplicationPage() {
         setUploadingDocType(null);
 
         if (res.success && res.data) {
+          const docData = res.data;
           setUploadedDocuments((prev) => ({
             ...prev,
             [docType]: {
-              id: res.data.id || res.data.documentId,
-              documentId: res.data.id || res.data.documentId,
+              id: docData.id || docData.documentId,
+              documentId: docData.id || docData.documentId,
               documentType: docType,
               fileName: file.name,
               originalFileName: file.name,
               fileSize: file.size,
               mimeType: file.type,
-              status: res.data.status || 'UPLOADED',
-              version: res.data.version || (prev[docType]?.version ? prev[docType].version + 1 : 1),
+              status: docData.status || 'UPLOADED',
+              version: docData.version || (prev[docType]?.version ? prev[docType].version + 1 : 1),
               uploadedAt: new Date().toISOString(),
-              downloadUrl: res.data.downloadUrl,
+              downloadUrl: docData.downloadUrl,
             },
           }));
           setSuccessMessage(`Document "${file.name}" encrypted & uploaded successfully!`);
@@ -149,9 +161,10 @@ export default function NewApplicationPage() {
         }
       };
       reader.readAsDataURL(file);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setUploadingDocType(null);
-      setErrorMessage(err?.message || 'Upload failed');
+      const text = err instanceof Error ? err.message : 'Upload failed';
+      setErrorMessage(text);
     }
   };
 

@@ -110,9 +110,10 @@ export default function DocumentCenterPage() {
         }
       };
       reader.readAsDataURL(file);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setUploadingSlot(null);
-      setMessage({ type: 'error', text: err?.message || 'Upload failed' });
+      const text = err instanceof Error ? err.message : 'Upload failed';
+      setMessage({ type: 'error', text });
     }
   };
 

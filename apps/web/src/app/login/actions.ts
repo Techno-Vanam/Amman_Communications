@@ -80,15 +80,23 @@ export async function loginAction(formData: FormData) {
   cookieStore.set('refresh_token', refreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    path: '/api/v1/auth',
+    sameSite: 'lax',
+    path: '/',
     maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+  });
+
+  cookieStore.set('access_token', accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 15 * 60, // 15 minutes
   });
 
   return {
     success: true,
     accessToken,
     user,
-    redirectTo: user.role === 'ADMIN' ? '/admin/dashboard' : '/customer/appointments',
+    redirectTo: user.role === 'ADMIN' ? '/admin' : '/customer/appointments',
   };
 }

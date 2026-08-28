@@ -203,21 +203,21 @@ export function BookAppointmentForm() {
         <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 text-left space-y-3 text-sm">
           <div className="flex justify-between border-b border-slate-200 pb-2">
             <span className="text-slate-500 font-medium">Service:</span>
-            <span className="font-semibold text-slate-900">{createdAppointment.service.name}</span>
+            <span className="font-semibold text-slate-900">{createdAppointment.service?.name || 'Appointment Service'}</span>
           </div>
           <div className="flex justify-between border-b border-slate-200 pb-2">
             <span className="text-slate-500 font-medium">Type:</span>
             <span className="font-semibold text-slate-900">
               {createdAppointment.appointmentType === 'OFFICE_VISIT'
                 ? `Office Visit (${createdAppointment.office?.name || 'Branch Office'})`
-                : `Online Consultation (${createdAppointment.consultationMode})`}
+                : `Online Consultation (${createdAppointment.consultationMode || 'Video'})`}
             </span>
           </div>
           <div className="flex justify-between border-b border-slate-200 pb-2">
             <span className="text-slate-500 font-medium">Scheduled Date & Time:</span>
             <span className="font-semibold text-blue-600">
-              {new Date(createdAppointment.preferredDate).toLocaleDateString()} at{' '}
-              {createdAppointment.preferredTime}
+              {new Date(createdAppointment.preferredDate || createdAppointment.appointmentDate || Date.now()).toLocaleDateString()} at{' '}
+              {createdAppointment.preferredTime || '10:00 AM'}
             </span>
           </div>
           <div className="flex justify-between">
