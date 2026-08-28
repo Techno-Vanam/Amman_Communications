@@ -26,7 +26,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenAppointmentModal }) => {
 
           {/* Description */}
           <p className="text-lg sm:text-xl text-slate-600 max-w-4xl mx-auto leading-relaxed font-normal">
-            Amman Communications delivers professional advisory, pre-audit verification, deed drafting, and online filing to streamline your registration workflows with 100% precision.
+            TechnoVanam Communications delivers professional advisory, pre-audit verification, deed drafting, and online filing to streamline your registration workflows with 100% precision.
           </p>
 
           {/* Action Buttons - Book Appointment on LEFT, Explore Services on RIGHT */}

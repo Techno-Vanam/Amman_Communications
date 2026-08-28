@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 interface LoginPlaceholderProps {
   mode?: 'login' | 'signup';
@@ -116,46 +116,34 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
 
   // Integrated Green Image Panel (Completely fills its 50% half of outer container)
   const GreenImagePanel = () => (
-    <div className="lg:w-1/2 bg-brand-700 p-8 sm:p-12 lg:p-14 text-white flex flex-col justify-between relative overflow-hidden self-stretch w-full min-h-[440px]">
+    <div className="lg:w-1/2 bg-[#0d2702] p-8 sm:p-12 lg:p-14 text-white flex flex-col justify-between relative overflow-hidden self-stretch w-full min-h-[440px]">
       {/* Subtle Ambient Lighting */}
       <div className="absolute -top-[10%] -right-[10%] w-96 h-96 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-[10%] -left-[10%] w-80 h-80 rounded-full bg-emerald-400/15 blur-3xl pointer-events-none" />
 
       {/* Header Branding */}
-      <div className="relative z-10 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shadow-xs">
-          <ShieldCheck className="w-6 h-6 text-white" />
-        </div>
-        <div className="flex flex-col">
-          <span className="font-heading font-extrabold text-xl tracking-tight text-white leading-none">
-            AMMAN
-          </span>
-          <span className="text-[10px] font-semibold tracking-widest text-brand-200 uppercase leading-tight">
-            Communications
-          </span>
-        </div>
-      </div>
+      <img src="/Logo With Name Png.png" alt="TechnoVanam Communications" className="relative z-10 w-48 h-auto" />
 
       {/* Central Visual Card */}
-      <div className="relative z-10 my-auto max-w-lg bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-xl space-y-4">
+      <div className="relative z-10 my-auto max-w-lg bg-[#71d300] backdrop-blur-md rounded-3xl p-8 border border-white/20 shadow-xl space-y-4">
         <h2 className="text-3xl sm:text-4xl font-extrabold leading-tight">
-          Manage everything in <span className="text-brand-200">one place.</span>
+          Manage everything in <span className="text-[#0d2702]">one place.</span>
         </h2>
         <p className="text-white/85 text-sm sm:text-base leading-relaxed">
-          Welcome back to Amman Communications. Access your portal dashboard to track property registrations, document audits, and advisory requests seamlessly.
+            Welcome back to TechnoVanam Communications. Access your portal dashboard to track property registrations, document audits, and advisory requests seamlessly.
         </p>
       </div>
 
       {/* Footer Info */}
       <div className="relative z-10 text-xs text-white/60 pt-4">
-        © {new Date().getFullYear()} Amman Communications. Official Documentation Consultancy.
+        © {new Date().getFullYear()} TechnoVanam Communications. Official Documentation Consultancy.
       </div>
     </div>
   );
 
   // Form Panel (Fills its 50% half of outer container)
   const FormPanel = () => (
-    <div className="lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-12 bg-white self-stretch w-full overflow-y-auto">
+    <div className={`lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-12 bg-white self-stretch w-full ${isSignUp ? 'overflow-hidden' : 'overflow-y-auto'}`}>
       {/* Back to Home Header inside Form Half */}
       <div className={`w-full flex items-center mb-4 ${isSignUp ? 'justify-start' : 'justify-end'}`}>
         <button
@@ -175,7 +163,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
           </h1>
           <p className="text-sm text-slate-500 mt-1.5">
             {isSignUp
-              ? 'Fill in your details below to register with Amman Communications'
+              ? 'Fill in your details below to register with TechnoVanam Communications'
               : 'Welcome back! Enter your details below to access your account'}
           </p>
         </div>
@@ -224,7 +212,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
               </label>
               <input
                 type="tel"
-                placeholder="+91 98765 43210"
+                placeholder="+91 90805 10279"
                 value={regMobile}
                 onChange={(e) => setRegMobile(e.target.value)}
                 className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"
@@ -303,7 +291,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
               </label>
               <input
                 type="tel"
-                placeholder="+91 98765 43210"
+                placeholder="+91 90805 10279"
                 value={loginMobile}
                 onChange={(e) => setLoginMobile(e.target.value)}
                 className="w-full py-2 bg-transparent border-b-2 border-slate-300 focus:border-brand-600 text-slate-900 text-sm font-medium outline-none transition-colors"

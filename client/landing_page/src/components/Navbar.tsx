@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Menu, X, LogIn, UserPlus } from 'lucide-react';
+import { Menu, X, LogIn, UserPlus } from 'lucide-react';
 
 interface NavbarProps {
   onOpenModal?: () => void;
@@ -61,17 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center justify-between gap-2">
           {/* Brand Logo */}
           <a href="#hero" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center shadow-xs shadow-brand-600/20 group-hover:scale-105 transition-transform">
-              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-heading font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 leading-none">
-                AMMAN
-              </span>
-              <span className="text-[10px] sm:text-[11px] font-semibold tracking-widest text-brand-600 uppercase leading-tight">
-                Communications
-              </span>
-            </div>
+            <img src="/logo@4x-8.png" alt="TechnoVanam Communications" className="w-32 sm:w-36 h-auto group-hover:scale-[1.02] transition-transform" />
           </a>
 
           {/* INNER NAVIGATION LAYER - Layer inside a layer */}

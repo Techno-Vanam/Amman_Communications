@@ -100,7 +100,7 @@ export const QuickEstimateModal: React.FC<QuickEstimateModalProps> = ({
                 </div>
                 <div className="text-xs text-brand-800 space-y-1">
                   <p>• Processing Window: <strong>{formData.urgency}</strong></p>
-                  <p>• Assigned Desk: Amman Communications Central Desk</p>
+                  <p>• Assigned Desk: TechnoVanam Communications Central Desk</p>
                 </div>
               </div>
 
