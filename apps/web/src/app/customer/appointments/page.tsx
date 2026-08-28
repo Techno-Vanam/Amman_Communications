@@ -29,12 +29,7 @@ export default function MyAppointmentsPage() {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const token = localStorage.getItem('access_token');
-        const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003/api/v1').replace(/\/+$/, '');
-
-        const res = await fetch(`${apiBaseUrl}/customer/appointments?status=${filter}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const res = await fetch(`/api/customer/appointments?status=${filter}`);
 
         if (res.ok) {
           const data = await res.json();

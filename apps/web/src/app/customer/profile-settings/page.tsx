@@ -40,14 +40,7 @@ export default function ProfileSettingsPage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('access_token');
-        const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003/api/v1').replace(/\/+$/, '');
-
-        if (!token) return;
-
-        const res = await fetch(`${apiBaseUrl}/customer/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(`/api/customer/profile`);
 
         if (res.ok) {
           const data = await res.json();
@@ -70,14 +63,10 @@ export default function ProfileSettingsPage() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('access_token');
-      const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003/api/v1').replace(/\/+$/, '');
-
-      const res = await fetch(`${apiBaseUrl}/customer/profile`, {
+      const res = await fetch(`/api/customer/profile`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ name, email, contactNumber, address }),
       });
@@ -103,14 +92,10 @@ export default function ProfileSettingsPage() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('access_token');
-      const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003/api/v1').replace(/\/+$/, '');
-
-      const res = await fetch(`${apiBaseUrl}/customer/password`, {
+      const res = await fetch(`/api/customer/password`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ currentPassword, newPassword, confirmNewPassword }),
       });
@@ -122,6 +107,56 @@ export default function ProfileSettingsPage() {
       setConfirmNewPassword('');
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdateContactInfo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+    setSaving(true);
+
+    try {
+      const res = await fetch(`/api/customer/contact-info`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ altContactName, altPhoneNumber, preferredContactMethod }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to update contact info');
+      }
+
+      setMessage({ type: 'success', text: 'Contact info updated successfully.' });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'An error occurred' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdatePreferences = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+    setSaving(true);
+
+    try {
+      const res = await fetch(`/api/customer/preferences`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emailNotifications, smsAlerts, whatsappUpdates }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to update preferences');
+      }
+
+      setMessage({ type: 'success', text: 'Preferences updated successfully.' });
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'An error occurred' });
     } finally {
       setSaving(false);
     }
@@ -142,7 +177,7 @@ export default function ProfileSettingsPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-200 gap-6 text-sm font-semibold text-slate-500 mb-6">
+        <div className="flex border-b border-slate-200 gap-6 text-sm font-semibold text-slate-500 mb-6 overflow-x-auto">
           {[
             { id: 'details', label: 'Personal Details' },
             { id: 'password', label: 'Change Password' },
@@ -155,7 +190,7 @@ export default function ProfileSettingsPage() {
                 setActiveTab(tab.id);
                 setMessage(null);
               }}
-              className={`pb-3 transition-colors ${
+              className={`pb-3 whitespace-nowrap transition-colors ${
                 activeTab === tab.id ? 'border-b-2 border-blue-600 text-blue-600 font-bold' : 'hover:text-slate-800'
               }`}
             >
@@ -193,8 +228,8 @@ export default function ProfileSettingsPage() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-900 focus:border-blue-600 focus:outline-none"
+                  disabled
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-500 focus:outline-none cursor-not-allowed"
                 />
               </div>
             </div>
@@ -226,7 +261,7 @@ export default function ProfileSettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
+              className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
               {saving ? 'Saving Changes...' : 'Save Personal Details'}
             </button>
@@ -273,7 +308,7 @@ export default function ProfileSettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
+              className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
               {saving ? 'Updating Password...' : 'Change Password'}
             </button>
@@ -282,7 +317,7 @@ export default function ProfileSettingsPage() {
 
         {/* Tab 3: Contact Info */}
         {activeTab === 'contact' && (
-          <div className="space-y-6 max-w-lg">
+          <form onSubmit={handleUpdateContactInfo} className="space-y-6 max-w-lg">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Alternate Contact Name</label>
               <input
@@ -310,7 +345,7 @@ export default function ProfileSettingsPage() {
               <select
                 value={preferredContactMethod}
                 onChange={(e) => setPreferredContactMethod(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-900 focus:border-blue-600 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-900 bg-white focus:border-blue-600 focus:outline-none"
               >
                 <option value="EMAIL">Email</option>
                 <option value="PHONE">Phone Call</option>
@@ -319,67 +354,58 @@ export default function ProfileSettingsPage() {
             </div>
 
             <button
-              type="button"
-              onClick={() => setMessage({ type: 'success', text: 'Contact information preferences saved.' })}
-              className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
+              type="submit"
+              disabled={saving}
+              className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              Save Contact Information
+              {saving ? 'Saving...' : 'Update Contact Info'}
             </button>
-          </div>
+          </form>
         )}
 
         {/* Tab 4: Preferences */}
         {activeTab === 'preferences' && (
-          <div className="space-y-6 max-w-lg">
+          <form onSubmit={handleUpdatePreferences} className="space-y-6 max-w-lg">
             <div className="space-y-4">
-              <label className="flex items-center justify-between cursor-pointer rounded-xl border border-slate-200 p-4">
-                <div>
-                  <p className="font-semibold text-slate-900">Email Notifications</p>
-                  <p className="text-xs text-slate-500">Receive appointment status updates via email</p>
-                </div>
+              <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
                   checked={emailNotifications}
                   onChange={(e) => setEmailNotifications(e.target.checked)}
-                  className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
+                  className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
                 />
+                <span className="text-slate-700 font-medium">Receive Email Notifications</span>
               </label>
 
-              <label className="flex items-center justify-between cursor-pointer rounded-xl border border-slate-200 p-4">
-                <div>
-                  <p className="font-semibold text-slate-900">SMS Alerts</p>
-                  <p className="text-xs text-slate-500">Receive instant SMS reminders for upcoming visits</p>
-                </div>
+              <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
                   checked={smsAlerts}
                   onChange={(e) => setSmsAlerts(e.target.checked)}
-                  className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
+                  className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
                 />
+                <span className="text-slate-700 font-medium">Receive SMS Alerts</span>
               </label>
 
-              <label className="flex items-center justify-between cursor-pointer rounded-xl border border-slate-200 p-4">
-                <div>
-                  <p className="font-semibold text-slate-900">WhatsApp Updates</p>
-                  <p className="text-xs text-slate-500">Receive document requests via WhatsApp</p>
-                </div>
+              <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
                   checked={whatsappUpdates}
                   onChange={(e) => setWhatsappUpdates(e.target.checked)}
-                  className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
+                  className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
                 />
+                <span className="text-slate-700 font-medium">Receive WhatsApp Updates</span>
               </label>
             </div>
 
             <button
-              type="button"
-              onClick={() => setMessage({ type: 'success', text: 'Notification preferences saved.' })}
-              className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
+              type="submit"
+              disabled={saving}
+              className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              Save Preferences
+              {saving ? 'Saving...' : 'Update Preferences'}
             </button>
-          </div>
+          </form>
         )}
       </div>
     </div>

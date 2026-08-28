@@ -9,7 +9,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   console.log(`[API Proxy GET] Path: ${pathStr}, Token length: ${token?.length}`);
 
-  const res = await fetch(`${API_BASE}/v1/${pathStr}${request.nextUrl.search}`, {
+  const backendPath = pathStr.startsWith('v1/') ? pathStr : `v1/${pathStr}`;
+  const res = await fetch(`${API_BASE}/${backendPath}${request.nextUrl.search}`, {
     method: 'GET',
     cache: 'no-store',
     headers: {
@@ -40,7 +41,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const token = request.cookies.get('access_token')?.value;
   const body = await request.text();
 
-  const res = await fetch(`${API_BASE}/v1/${pathStr}${request.nextUrl.search}`, {
+  const backendPath = pathStr.startsWith('v1/') ? pathStr : `v1/${pathStr}`;
+  const res = await fetch(`${API_BASE}/${backendPath}${request.nextUrl.search}`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token || ''}`,
@@ -69,7 +71,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const token = request.cookies.get('access_token')?.value;
   const body = await request.text();
 
-  const res = await fetch(`${API_BASE}/v1/${pathStr}${request.nextUrl.search}`, {
+  const backendPath = pathStr.startsWith('v1/') ? pathStr : `v1/${pathStr}`;
+  const res = await fetch(`${API_BASE}/${backendPath}${request.nextUrl.search}`, {
     method: 'PATCH',
     headers: {
       'Authorization': `Bearer ${token || ''}`,
@@ -97,7 +100,8 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const pathStr = resolvedParams.path.join('/');
   const token = request.cookies.get('access_token')?.value;
 
-  const res = await fetch(`${API_BASE}/v1/${pathStr}${request.nextUrl.search}`, {
+  const backendPath = pathStr.startsWith('v1/') ? pathStr : `v1/${pathStr}`;
+  const res = await fetch(`${API_BASE}/${backendPath}${request.nextUrl.search}`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token || ''}`,

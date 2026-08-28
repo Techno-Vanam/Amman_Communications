@@ -48,11 +48,13 @@ export default function MyApplicationsPage() {
     async function fetchApps() {
       setLoading(true);
       try {
-        const res = await apiRequest<ApplicationItem[]>('/api/v1/customer/applications');
-        if (res.success && res.data) {
-          setApplications(res.data);
-          if (res.data.length > 0) {
-            setExpandedAppId(res.data[0].id);
+        const res = await fetch('/api/customer/applications');
+        if (res.ok) {
+          const data = await res.json();
+          const items = data.data ?? data;
+          setApplications(items);
+          if (items.length > 0) {
+            setExpandedAppId(items[0].id);
           }
         } else {
           setApplications([]);

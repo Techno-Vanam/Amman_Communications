@@ -13,7 +13,7 @@ import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 
-@Controller('customer/applications')
+@Controller(['customer/applications', 'v1/customer/applications', 'api/v1/customer/applications'])
 @UseGuards(CustomerAuthGuard)
 export class CustomerApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}
