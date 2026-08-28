@@ -1,16 +1,21 @@
 import { Body, Controller, Get, Patch, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CustomerAuthGuard } from '../auth/guards/customer-auth.guard';
+
 import { CustomerProfileService } from './customer-profile.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateContactInfoDto } from './dto/update-contact-info.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+
 
 @ApiTags('Customer - Profile')
 @ApiBearerAuth()
 @Controller('customer')
-@UseGuards(CustomerAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('CUSTOMER')
 export class CustomerProfileController {
   constructor(private readonly profileService: CustomerProfileService) {}
 

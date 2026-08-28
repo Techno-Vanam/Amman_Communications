@@ -13,8 +13,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CustomerAuthGuard } from '../auth/guards/customer-auth.guard';
+
 import { DocumentsService } from './documents.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+
 import {
   DirectUploadDocumentDto,
   RequestUploadUrlDto,
@@ -24,7 +28,8 @@ import {
 @ApiTags('Customer - Documents')
 @ApiBearerAuth()
 @Controller('customer')
-@UseGuards(CustomerAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('CUSTOMER')
 export class CustomerDocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 

@@ -8,14 +8,19 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { AdminAuthGuard } from '../auth/guards/admin-auth.guard';
+
 import { ApplicationsService } from './applications.service';
 import { ApplicationStatus } from '@prisma/client';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+
 
 @ApiTags('Admin - Applications')
 @ApiBearerAuth()
 @Controller('admin/applications')
-@UseGuards(AdminAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
 export class AdminApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}
 

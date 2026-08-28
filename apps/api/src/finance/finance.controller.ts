@@ -1,14 +1,19 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
-import { AdminAuthGuard } from '../auth/guards/admin-auth.guard';
+
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { FinanceSummaryQueryDto, InvoiceQueryDto, PaymentQueryDto } from './dto/finance-query.dto';
 import { RecordPaymentDto } from './dto/record-payment.dto';
 import { UpdateInvoiceStatusDto } from './dto/update-invoice-status.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { FinanceService } from './finance.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+
 
 @Controller('admin/finance')
-@UseGuards(AdminAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
 export class FinanceController {
   constructor(private readonly financeService: FinanceService) {}
 

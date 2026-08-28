@@ -1,12 +1,17 @@
 import { Controller, Get, NotFoundException, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CustomerAuthGuard } from '../auth/guards/customer-auth.guard';
+
 import { PrismaService } from '../prisma/prisma.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+
 
 @ApiTags('Customer Profile')
 @ApiBearerAuth()
 @Controller('customer/me')
-@UseGuards(CustomerAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('CUSTOMER')
 export class CustomerMeController {
   constructor(private readonly prisma: PrismaService) {}
 

@@ -2928,11 +2928,6 @@
             "description": "Account email address",
             "example": "customer@test.com"
           },
-          "phone": {
-            "type": "string",
-            "description": "Phone number",
-            "example": "+919876543210"
-          },
           "password": {
             "type": "string",
             "description": "Account password",
@@ -2942,7 +2937,6 @@
         "required": [
           "name",
           "email",
-          "phone",
           "password"
         ]
       },
