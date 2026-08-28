@@ -83,11 +83,12 @@ export default function DocumentDetailPage({
 
     if (!res.success) {
       setReviewError(res.error || 'Failed to update document status.');
+      setSubmittingReview(false);
     } else {
       setSuccessMessage(`Document status updated to ${statusToSet}.`);
-      loadDocument();
+      router.push('/admin/documents');
+      router.refresh();
     }
-    setSubmittingReview(false);
   };
 
   const handleDelete = async () => {
