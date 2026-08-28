@@ -93,9 +93,8 @@ async function main() {
       description: 'Complete assistance for commercial and trade license renewals, document verification, and government submissions.',
       requiredDocuments: ['trade_license', 'passport_copy', 'lease_agreement'],
       governmentFee: 150.00,
-      officeCharge: 50.00,
-      estimatedProcessingTime: '3-5 Business Days',
-      isActive: true,
+      serviceFee: 50.00,
+      estimatedTime: '3-5 Business Days',
     },
     {
       id: '11111111-0000-4000-8000-000000000002',
@@ -103,9 +102,8 @@ async function main() {
       description: 'End-to-end registration of new company structures, tax identification setup, and office lease certification.',
       requiredDocuments: ['identity_card', 'business_plan', 'bank_reference'],
       governmentFee: 300.00,
-      officeCharge: 100.00,
-      estimatedProcessingTime: '7-10 Business Days',
-      isActive: true,
+      serviceFee: 100.00,
+      estimatedTime: '7-10 Business Days',
     },
     {
       id: '11111111-0000-4000-8000-000000000003',
@@ -113,9 +111,8 @@ async function main() {
       description: 'Professional consultation regarding corporate taxation, legal compliance, and regulatory documentation.',
       requiredDocuments: ['tax_returns', 'audit_report'],
       governmentFee: 75.00,
-      officeCharge: 75.00,
-      estimatedProcessingTime: '1-2 Business Days',
-      isActive: true,
+      serviceFee: 75.00,
+      estimatedTime: '1-2 Business Days',
     },
     // Also include legacy prefix IDs for existing references
     {
@@ -124,9 +121,8 @@ async function main() {
       description: 'Complete assistance for commercial and trade license renewals, document verification, and government submissions.',
       requiredDocuments: ['trade_license', 'passport_copy', 'lease_agreement'],
       governmentFee: 150.00,
-      officeCharge: 50.00,
-      estimatedProcessingTime: '3-5 Business Days',
-      isActive: true,
+      serviceFee: 50.00,
+      estimatedTime: '3-5 Business Days',
     },
     {
       id: 'srv-00000000-0000-0000-0000-000000000002',
@@ -134,9 +130,8 @@ async function main() {
       description: 'End-to-end registration of new company structures, tax identification setup, and office lease certification.',
       requiredDocuments: ['identity_card', 'business_plan', 'bank_reference'],
       governmentFee: 300.00,
-      officeCharge: 100.00,
-      estimatedProcessingTime: '7-10 Business Days',
-      isActive: true,
+      serviceFee: 100.00,
+      estimatedTime: '7-10 Business Days',
     },
     {
       id: 'srv-00000000-0000-0000-0000-000000000003',
@@ -144,17 +139,40 @@ async function main() {
       description: 'Professional consultation regarding corporate taxation, legal compliance, and regulatory documentation.',
       requiredDocuments: ['tax_returns', 'audit_report'],
       governmentFee: 75.00,
-      officeCharge: 75.00,
-      estimatedProcessingTime: '1-2 Business Days',
-      isActive: true,
+      serviceFee: 75.00,
+      estimatedTime: '1-2 Business Days',
     },
   ];
 
   for (const s of services) {
     await prisma.service.upsert({
       where: { id: s.id },
-      update: { ...s },
-      create: { ...s },
+      update: {
+        name: s.name,
+        description: s.description,
+        governmentFee: s.governmentFee,
+        serviceFee: s.serviceFee,
+        totalFee: s.governmentFee + s.serviceFee,
+        estimatedTime: s.estimatedTime,
+        status: 'ACTIVE',
+        requiredDocuments: {
+          deleteMany: {},
+          create: s.requiredDocuments.map((name, displayOrder) => ({ name, displayOrder })),
+        },
+      },
+      create: {
+        id: s.id,
+        name: s.name,
+        description: s.description,
+        governmentFee: s.governmentFee,
+        serviceFee: s.serviceFee,
+        totalFee: s.governmentFee + s.serviceFee,
+        estimatedTime: s.estimatedTime,
+        status: 'ACTIVE',
+        requiredDocuments: {
+          create: s.requiredDocuments.map((name, displayOrder) => ({ name, displayOrder })),
+        },
+      },
     });
   }
   // 5. Seed Appointments

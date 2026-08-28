@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { apiClient } from '@/lib/apiClient';
+import { useAuth } from '@/lib/auth-context';
 
 interface ServiceItem {
   id: string;
@@ -40,34 +42,34 @@ export default function BookAppointmentPage() {
   const [address, setAddress] = useState('');
   const [notes, setNotes] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const { ready, user } = useAuth();
 
   useEffect(() => {
+    if (!ready || !user || user.role !== 'CUSTOMER') return;
+
     const fetchData = async () => {
-      try {
       try {
         // Fetch customer profile for auto-fill
         try {
-          const profileRes = await fetch('/api/customer/profile');
-          if (profileRes.ok) {
-            const profile = await profileRes.json();
-            if (profile.name) setFullName(profile.name);
-            if (profile.email) setEmail(profile.email);
-            if (profile.address) setAddress(profile.address);
-            if (profile.phone) setContactNumber(profile.phone);
-          }
-        } catch (e) {}
+          const profile = await apiClient<{ name?: string; email?: string; address?: string; phone?: string }>('/api/v1/customer/profile');
+          if (profile.name) setFullName(profile.name);
+          if (profile.email) setEmail(profile.email);
+          if (profile.address) setAddress(profile.address);
+          if (profile.phone) setContactNumber(profile.phone);
+        } catch (error) {
+          console.warn('Customer profile unavailable while loading booking form', error);
+        }
 
         // Fetch Active Services posted/activated by Admin
         let fetchedServices: ServiceItem[] = [];
         try {
           // This goes through the proxy
-          const servicesRes = await fetch('/api/customer/services');
-          if (servicesRes.ok) {
-            const rawServices: ServiceItem[] = await servicesRes.json();
-            // Strict filter: only display ACTIVE services
-            fetchedServices = rawServices.filter((s) => !s.status || s.status === 'ACTIVE');
-          }
-        } catch (e) {}
+          const rawServices = await apiClient<ServiceItem[]>('/api/v1/customer/services');
+          // Strict filter: only display ACTIVE services
+          fetchedServices = rawServices.filter((s) => !s.status || s.status === 'ACTIVE');
+        } catch (error) {
+          console.warn('Customer services unavailable while loading booking form', error);
+        }
         
         setServices(fetchedServices);
         if (fetchedServices.length > 0) {
@@ -77,11 +79,10 @@ export default function BookAppointmentPage() {
         // Fetch Offices
         let fetchedOffices: OfficeItem[] = [];
         try {
-          const officesRes = await fetch('/api/customer/offices');
-          if (officesRes.ok) {
-            fetchedOffices = await officesRes.json();
-          }
-        } catch (e) {}
+          fetchedOffices = await apiClient<OfficeItem[]>('/api/v1/customer/offices');
+        } catch (error) {
+          console.warn('Customer offices unavailable while loading booking form', error);
+        }
         setOffices(fetchedOffices);
         if (fetchedOffices.length > 0) {
           setOfficeId(fetchedOffices[0].id);
@@ -94,7 +95,7 @@ export default function BookAppointmentPage() {
     };
 
     fetchData();
-  }, []);
+  }, [ready, user]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -151,24 +152,10 @@ export default function BookAppointmentPage() {
         notes,
       };
 
-      const res = await fetch('/api/customer/appointments', {
+      const createdAppointment = await apiClient<{ appointmentNumber?: string }>('/api/v1/customer/appointments', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(payload),
       });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        const errorMsg = errData.message
-          ? (Array.isArray(errData.message) ? errData.message.join(', ') : errData.message)
-          : 'Failed to submit appointment';
-        throw new Error(errorMsg);
-      }
-
-
-      const createdAppointment = await res.json();
       setMessage({
         type: 'success',
         text: `Appointment ${createdAppointment.appointmentNumber || ''} confirmed and booked successfully!`,
@@ -179,8 +166,9 @@ export default function BookAppointmentPage() {
       setPreferredTime('');
       setNotes('');
       setUploadedFiles([]);
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'An error occurred while booking appointment.' });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred while booking appointment.';
+      setMessage({ type: 'error', text: errorMessage });
     } finally {
       setSubmitting(false);
     }

@@ -12,6 +12,7 @@ import { ServicesModule } from './services/services.module';
 import { CustomersModule } from './customers/customers.module';
 import { CustomerAppointmentsModule } from './customer-appointments/customer-appointments.module';
 import { CustomerProfileModule } from './customer-profile/customer-profile.module';
+import { AppointmentsModule } from './appointments/appointments.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { CustomerProfileModule } from './customer-profile/customer-profile.modul
     CustomersModule,
     CustomerAppointmentsModule,
     CustomerProfileModule,
+    AppointmentsModule,
   ],
 })
 export class AppModule {}

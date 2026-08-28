@@ -17,7 +17,7 @@ import { CustomerQueryDto } from './dto/customer-query.dto';
 import { UpdateCustomerStatusDto } from './dto/update-customer-status.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 
-@Controller('admin/customers')
+@Controller(['v1/admin/customers', 'api/v1/admin/customers', 'admin/customers'])
 @UseGuards(AdminAuthGuard)
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}

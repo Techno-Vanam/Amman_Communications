@@ -2,7 +2,9 @@
 
 import { cookies } from 'next/headers';
 
-const apiBaseUrl = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3003';
+function refreshTokenFromResponse(response: Response) {
+  return response.headers.get('set-cookie')?.match(/refresh_token=([^;]+)/)?.[1];
+}
 
 export async function registerAction(formData: FormData) {
   const name = formData.get('name');
@@ -76,18 +78,22 @@ export async function registerAction(formData: FormData) {
     return { error: 'Invalid response from server' };
   }
 
+  const refreshToken = refreshTokenFromResponse(res);
+  if (!refreshToken) return { error: 'Invalid response from server' };
+
   const cookieStore = await cookies();
-  cookieStore.set('access_token', accessToken, {
-    httpOnly: false,
+  cookieStore.set('refresh_token', refreshToken, {
+    httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
+    sameSite: 'strict',
+    path: '/api/v1/auth',
     maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
   });
 
   return {
     success: true,
     accessToken,
+    user,
     redirectTo: '/customer/appointments',
   };
 }

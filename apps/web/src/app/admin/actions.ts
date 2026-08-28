@@ -1,12 +1,13 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { getAccessToken } from '@/lib/server-auth';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003')
+  .replace(/\/api\/v1\/?$/, '')
+  .replace(/\/api\/?$/, '');
 
 async function getAuthHeader() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
+  const token = await getAccessToken();
   return {
     Authorization: token ? `Bearer ${token}` : '',
     'Content-Type': 'application/json',

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { apiClient } from '@/lib/apiClient';
+import { useAuth } from '@/lib/auth-context';
 
 interface AppointmentItem {
   id: string;
@@ -25,16 +27,15 @@ export default function MyAppointmentsPage() {
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
+  const { ready, user } = useAuth();
 
   useEffect(() => {
+    if (!ready || !user || user.role !== 'CUSTOMER') return;
+
     const fetchAppointments = async () => {
       try {
-        const res = await fetch(`/api/customer/appointments?status=${filter}`);
-
-        if (res.ok) {
-          const data = await res.json();
-          setAppointments(data);
-        }
+        const data = await apiClient<AppointmentItem[]>(`/api/v1/customer/appointments?status=${filter}`);
+        setAppointments(data);
       } catch (err) {
         console.error('Failed to fetch appointments', err);
       } finally {
@@ -43,7 +44,7 @@ export default function MyAppointmentsPage() {
     };
 
     fetchAppointments();
-  }, [filter]);
+  }, [filter, ready, user]);
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {

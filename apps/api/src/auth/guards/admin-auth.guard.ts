@@ -17,14 +17,7 @@ export class AdminAuthGuard implements CanActivate {
     }>();
 
     const authorization = request.headers.authorization;
-    let token =
-      authorization?.match(/^Bearer\s+(\S+)$/i)?.[1] ||
-      authorization?.replace(/^Bearer\s+/i, '');
-
-    if (!token && request.headers.cookie) {
-      const match = request.headers.cookie.match(/access_token=([^;]+)/);
-      if (match) token = match[1];
-    }
+    const token = authorization?.match(/^Bearer\s+(\S+)$/i)?.[1];
 
     if (token) {
       try {
@@ -32,7 +25,11 @@ export class AdminAuthGuard implements CanActivate {
           secret: process.env.JWT_ACCESS_SECRET,
         });
 
-        if (typeof payload.sub === 'string' && payload.role === 'ADMIN') {
+          if (payload.role === 'CUSTOMER') {
+            throw new ForbiddenException('Admin access required');
+          }
+
+          if (typeof payload.sub === 'string' && payload.role === 'ADMIN') {
           const admin = await this.prisma.admin.findUnique({
             where: { id: payload.sub },
           });
@@ -47,27 +44,6 @@ export class AdminAuthGuard implements CanActivate {
       }
     }
 
-    // Default persistent admin for admin console verification
-    let defaultAdmin = await this.prisma.admin.findFirst({
-      where: { email: 'admin@test.com' },
-    });
-
-    if (!defaultAdmin) {
-      defaultAdmin = await this.prisma.admin.findFirst();
-    }
-
-    if (!defaultAdmin) {
-      defaultAdmin = await this.prisma.admin.create({
-        data: {
-          id: 'admin_default_amman_2026',
-          email: 'admin@test.com',
-          name: 'Amman Verification Officer',
-          passwordHash: '$2a$10$demoAdminHashAmman2026',
-        },
-      });
-    }
-
-    request.user = { sub: defaultAdmin.id, role: 'ADMIN' };
-    return true;
+    throw new UnauthorizedException('Authentication token missing or invalid');
   }
 }

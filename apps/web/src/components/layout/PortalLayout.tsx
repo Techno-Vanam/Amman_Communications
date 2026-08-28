@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
+import { apiClient } from '@/lib/apiClient';
 
 interface PortalLayoutProps {
   children: React.ReactNode;
@@ -10,34 +12,33 @@ interface PortalLayoutProps {
 
 export default function PortalLayout({ children }: PortalLayoutProps) {
   const pathname = usePathname() || '/customer/appointments';
+  const router = useRouter();
+  const { ready, user, clearSession } = useAuth();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [customerName, setCustomerName] = useState('Customer Account');
   const [customerEmail, setCustomerEmail] = useState('');
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (ready && !isSigningOut && (!user || user.role !== 'CUSTOMER')) router.replace('/login?forbidden=true');
+  }, [isSigningOut, ready, router, user]);
+
+  useEffect(() => {
+    if (!ready || !user || user.role !== 'CUSTOMER') return;
+
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('access_token');
-        if (!token) return;
-
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003/api/v1';
-        const res = await fetch(`${apiBaseUrl.replace(/\/+$/, '')}/customer/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.name) setCustomerName(data.name);
-          if (data.email) setCustomerEmail(data.email);
-        }
+        const data = await apiClient<{ name?: string; email?: string }>('/api/v1/customer/profile');
+        if (data.name) setCustomerName(data.name);
+        if (data.email) setCustomerEmail(data.email);
       } catch (err) {
         console.error('Failed to fetch user profile for layout', err);
       }
     };
 
     fetchProfile();
-  }, []);
+  }, [ready, user]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -50,10 +51,15 @@ export default function PortalLayout({ children }: PortalLayoutProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  if (!ready || !user || user.role !== 'CUSTOMER') {
+    return <div className="min-h-screen bg-slate-50" />;
+  }
+
   const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    window.location.href = '/login';
+    setIsSigningOut(true);
+    void fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => undefined);
+    clearSession();
+    router.replace('/login');
   };
 
   const getInitials = (name: string) => {
