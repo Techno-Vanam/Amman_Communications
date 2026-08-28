@@ -7,7 +7,7 @@ import { UpdateInvoiceStatusDto } from './dto/update-invoice-status.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { FinanceService } from './finance.service';
 
-@Controller('v1/admin/finance')
+@Controller('admin/finance')
 @UseGuards(AdminAuthGuard)
 export class FinanceController {
   constructor(private readonly financeService: FinanceService) {}

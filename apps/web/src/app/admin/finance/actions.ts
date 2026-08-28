@@ -31,7 +31,7 @@ export async function fetchFinanceSummary(from?: string, to?: string): Promise<{
     if (to) params.set('to', to);
 
     const qs = params.toString() ? `?${params.toString()}` : '';
-    const res = await fetch(`${API_BASE_URL}/v1/admin/finance/summary${qs}`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/finance/summary${qs}`, {
       headers: await getAuthHeader(),
       cache: 'no-store',
     });
@@ -71,7 +71,7 @@ export async function fetchInvoices(params: {
     if (params.to) query.set('to', params.to);
 
     const qs = query.toString() ? `?${query.toString()}` : '';
-    const res = await fetch(`${API_BASE_URL}/v1/admin/finance/invoices${qs}`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/finance/invoices${qs}`, {
       headers: await getAuthHeader(),
       cache: 'no-store',
     });
@@ -91,7 +91,7 @@ export async function fetchInvoices(params: {
 
 export async function fetchInvoiceById(id: string): Promise<{ invoice?: InvoiceItem; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/v1/admin/finance/invoices/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/finance/invoices/${id}`, {
       headers: await getAuthHeader(),
       cache: 'no-store',
     });
@@ -111,7 +111,7 @@ export async function fetchInvoiceById(id: string): Promise<{ invoice?: InvoiceI
 
 export async function createInvoiceAction(input: CreateInvoiceInput): Promise<{ invoice?: InvoiceItem; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/v1/admin/finance/invoices`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/finance/invoices`, {
       method: 'POST',
       headers: await getAuthHeader(),
       body: JSON.stringify(input),
@@ -132,7 +132,7 @@ export async function createInvoiceAction(input: CreateInvoiceInput): Promise<{ 
 
 export async function updateInvoiceAction(id: string, input: UpdateInvoiceInput): Promise<{ invoice?: InvoiceItem; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/v1/admin/finance/invoices/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/finance/invoices/${id}`, {
       method: 'PATCH',
       headers: await getAuthHeader(),
       body: JSON.stringify(input),
@@ -153,7 +153,7 @@ export async function updateInvoiceAction(id: string, input: UpdateInvoiceInput)
 
 export async function updateInvoiceStatusAction(id: string, status: InvoiceStatus): Promise<{ success?: boolean; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/v1/admin/finance/invoices/${id}/status`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/finance/invoices/${id}/status`, {
       method: 'PATCH',
       headers: await getAuthHeader(),
       body: JSON.stringify({ status }),
@@ -173,7 +173,7 @@ export async function updateInvoiceStatusAction(id: string, status: InvoiceStatu
 
 export async function recordPaymentAction(invoiceId: string, input: RecordPaymentInput): Promise<{ payment?: PaymentItem; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/v1/admin/finance/invoices/${invoiceId}/payments`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/finance/invoices/${invoiceId}/payments`, {
       method: 'POST',
       headers: await getAuthHeader(),
       body: JSON.stringify(input),
@@ -212,7 +212,7 @@ export async function fetchPayments(params: {
     if (params.to) query.set('to', params.to);
 
     const qs = query.toString() ? `?${query.toString()}` : '';
-    const res = await fetch(`${API_BASE_URL}/v1/admin/finance/payments${qs}`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/finance/payments${qs}`, {
       headers: await getAuthHeader(),
       cache: 'no-store',
     });
@@ -232,7 +232,7 @@ export async function fetchPayments(params: {
 
 export async function fetchPaymentById(id: string): Promise<{ payment?: PaymentItem; error?: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/v1/admin/finance/payments/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/admin/finance/payments/${id}`, {
       headers: await getAuthHeader(),
       cache: 'no-store',
     });

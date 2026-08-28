@@ -134,15 +134,16 @@ export default function AdminAppointmentsPage() {
   };
 
   const submitReschedule = async () => {
-    if (!selectedAppointment || !rescheduleDate || !rescheduleReason.trim()) {
-      setError('Please provide a new date and a reason for rescheduling.');
+    if (!selectedAppointment || !rescheduleDate || !rescheduleTime || !rescheduleReason.trim()) {
+      setError('Please provide a new date, time, and a reason for rescheduling.');
       return;
     }
 
     setIsRescheduling(true);
     setError(null);
+    const combinedDateTime = new Date(`${rescheduleDate}T${rescheduleTime}`);
     const res = await rescheduleAdminAppointment(selectedAppointment.id, {
-      newDate: new Date(rescheduleDate).toISOString(),
+      newDate: combinedDateTime.toISOString(),
       reason: rescheduleReason,
     });
 

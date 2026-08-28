@@ -92,16 +92,14 @@ export async function updateAdminAppointmentStatus(
 
 export async function rescheduleAdminAppointment(
   id: string,
-  preferredDate: string,
-  preferredTime: string,
-  notes?: string
+  data: { newDate: string; reason?: string }
 ) {
   try {
     const headers = await getAuthHeader();
     const res = await fetch(`${API_BASE_URL}/api/v1/admin/appointments/${id}/reschedule`, {
       method: 'PATCH',
       headers,
-      body: JSON.stringify({ preferredDate, preferredTime, notes }),
+      body: JSON.stringify(data),
     });
 
     const json = await res.json();

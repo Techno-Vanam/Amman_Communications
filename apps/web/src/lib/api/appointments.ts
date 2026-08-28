@@ -31,6 +31,7 @@ export interface Appointment {
     name: string;
     email: string;
   } | null;
+  [key: string]: any; // Catch-all for extra fields used by components
 }
 
 export interface AppointmentStats {
@@ -80,3 +81,4 @@ export interface RescheduleAppointmentInput {
   meetingLink?: string;
   notes?: string;
 }
+export type CustomerProfile = any; export type Office = any; export type ConsultationMode = any; export type Service = any;
