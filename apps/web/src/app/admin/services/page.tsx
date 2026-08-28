@@ -24,6 +24,7 @@ import {
   updateAdminServiceStatus
 } from './actions';
 import { Service, ServiceStats, ServiceStatus } from '@/lib/api/services';
+import CustomSelect from '@/components/CustomSelect';
 
 interface FormDocument {
   id?: string;
@@ -311,7 +312,7 @@ export default function AdminServicesPage() {
   });
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8">
+    <div className="w-full max-w-[1500px] mx-auto space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -543,7 +544,7 @@ export default function AdminServicesPage() {
             <table className="w-full text-left text-sm text-gray-600">
               <thead className="bg-gray-50 text-xs uppercase font-semibold tracking-wider text-gray-500 border-b border-gray-200">
                 <tr>
-                  <th scope="col" className="px-4 py-3.5 w-10 text-center">
+                  <th scope="col" className="px-4 py-3.5 w-10 text-center whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={services.length > 0 && selectedServiceIds.length === services.length}
@@ -557,14 +558,14 @@ export default function AdminServicesPage() {
                       className="h-4 w-4 rounded border-gray-300 text-emerald-800 focus:ring-emerald-700 cursor-pointer"
                     />
                   </th>
-                  <th scope="col" className="px-6 py-3.5">Service Name</th>
-                  <th scope="col" className="px-6 py-3.5">Required Documents</th>
-                  <th scope="col" className="px-6 py-3.5">Govt Fee</th>
-                  <th scope="col" className="px-6 py-3.5">Service Fee</th>
-                  <th scope="col" className="px-6 py-3.5">Total Fee</th>
-                  <th scope="col" className="px-6 py-3.5">Est. Time</th>
-                  <th scope="col" className="px-6 py-3.5">Status</th>
-                  <th scope="col" className="px-6 py-3.5 text-right">Actions</th>
+                  <th scope="col" className="px-6 py-3.5 whitespace-nowrap min-w-[200px]">Service Name</th>
+                  <th scope="col" className="px-6 py-3.5 whitespace-nowrap min-w-[180px]">Required Documents</th>
+                  <th scope="col" className="px-6 py-3.5 whitespace-nowrap min-w-[100px]">Govt Fee</th>
+                  <th scope="col" className="px-6 py-3.5 whitespace-nowrap min-w-[100px]">Service Fee</th>
+                  <th scope="col" className="px-6 py-3.5 whitespace-nowrap min-w-[100px]">Total Fee</th>
+                  <th scope="col" className="px-6 py-3.5 whitespace-nowrap min-w-[140px]">Est. Time</th>
+                  <th scope="col" className="px-6 py-3.5 whitespace-nowrap min-w-[110px]">Status</th>
+                  <th scope="col" className="px-6 py-3.5 text-right whitespace-nowrap min-w-[120px]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
@@ -821,15 +822,15 @@ export default function AdminServicesPage() {
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
                     Service Status
                   </label>
-                  <select
+                  <CustomSelect
                     value={formStatus}
-                    onChange={(e) => setFormStatus(e.target.value as ServiceStatus)}
-                    className="w-full rounded-lg border border-gray-300 px-3.5 py-2 text-sm text-gray-900 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/20"
-                  >
-                    <option value="DRAFT">DRAFT (Hidden from customers)</option>
-                    <option value="ACTIVE">ACTIVE (Available for customer applications)</option>
-                    <option value="INACTIVE">INACTIVE (Deactivated)</option>
-                  </select>
+                    onChange={(val) => setFormStatus(val as ServiceStatus)}
+                    options={[
+                      { value: 'DRAFT', label: 'DRAFT', sublabel: 'Hidden from customers' },
+                      { value: 'ACTIVE', label: 'ACTIVE', sublabel: 'Available for customer applications' },
+                      { value: 'INACTIVE', label: 'INACTIVE', sublabel: 'Deactivated' },
+                    ]}
+                  />
                 </div>
               </div>
 

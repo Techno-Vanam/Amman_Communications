@@ -9,44 +9,48 @@ async function main() {
   // 1. Create customers
   await prisma.customer.upsert({
     where: { email: 'customer@test.com' },
-    update: { passwordHash, status: 'ACTIVE' },
+    update: { passwordHash, status: 'ACTIVE', phone: '+962 7 9123 4567' },
     create: {
       email: 'customer@test.com',
       passwordHash,
       name: 'Test Customer',
+      phone: '+962 7 9123 4567',
       status: 'ACTIVE',
     },
   });
 
   await prisma.customer.upsert({
     where: { email: 'sarah.smith@example.com' },
-    update: { passwordHash, status: 'ACTIVE' },
+    update: { passwordHash, status: 'ACTIVE', phone: '+962 7 8876 5432' },
     create: {
       email: 'sarah.smith@example.com',
       passwordHash,
       name: 'Sarah Smith',
+      phone: '+962 7 8876 5432',
       status: 'ACTIVE',
     },
   });
 
   await prisma.customer.upsert({
     where: { email: 'john.doe@example.com' },
-    update: { passwordHash, status: 'INACTIVE' },
+    update: { passwordHash, status: 'INACTIVE', phone: '+962 7 7000 1122' },
     create: {
       email: 'john.doe@example.com',
       passwordHash,
       name: 'John Doe',
+      phone: '+962 7 7000 1122',
       status: 'INACTIVE',
     },
   });
 
   await prisma.customer.upsert({
     where: { email: 'acme.corp@business.com' },
-    update: { passwordHash, status: 'ACTIVE' },
+    update: { passwordHash, status: 'ACTIVE', phone: '+962 6 5500 9988' },
     create: {
       email: 'acme.corp@business.com',
       passwordHash,
       name: 'Acme Corporation',
+      phone: '+962 6 5500 9988',
       status: 'ACTIVE',
     },
   });
@@ -292,6 +296,249 @@ async function main() {
     }
   }
   console.log('Default appointments seeded');
+  console.log('Default services seeded');
+
+  // 5. Seed sample Invoices and Payments
+  const acmeCustomer = await prisma.customer.findUnique({ where: { email: 'acme.corp@business.com' } });
+  const sarahCustomer = await prisma.customer.findUnique({ where: { email: 'sarah.smith@example.com' } });
+  const testCustomer = await prisma.customer.findUnique({ where: { email: 'customer@test.com' } });
+  const johnCustomer = await prisma.customer.findUnique({ where: { email: 'john.doe@example.com' } });
+  const fiberService = await prisma.service.findFirst({ where: { name: 'Commercial Fiber Broadband' } });
+  const broadbandService = await prisma.service.findFirst({ where: { name: 'Residential Broadband Setup' } });
+  const legacyService = await prisma.service.findFirst({ where: { name: 'Legacy Copper Landline' } });
+
+  if (acmeCustomer && fiberService) {
+    const inv1 = await prisma.invoice.upsert({
+      where: { invoiceNumber: 'INV-202608-0001' },
+      update: {},
+      create: {
+        invoiceNumber: 'INV-202608-0001',
+        customerId: acmeCustomer.id,
+        serviceId: fiberService.id,
+        governmentFee: 250,
+        serviceFee: 750,
+        totalAmount: 1000,
+        status: 'PAID',
+        dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+        notes: 'Corporate fiber annual subscription setup fee',
+      },
+    });
+
+    await prisma.payment.upsert({
+      where: { paymentNumber: 'PAY-202608-0001' },
+      update: {},
+      create: {
+        paymentNumber: 'PAY-202608-0001',
+        invoiceId: inv1.id,
+        customerId: acmeCustomer.id,
+        amount: 1000,
+        paymentMethod: 'BANK_TRANSFER',
+        status: 'PAID',
+        reference: 'TXN-HDFC-9928172',
+        notes: 'Direct wire transfer received',
+        paidAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      },
+    });
+  }
+
+  if (sarahCustomer && broadbandService) {
+    const inv2 = await prisma.invoice.upsert({
+      where: { invoiceNumber: 'INV-202608-0002' },
+      update: {},
+      create: {
+        invoiceNumber: 'INV-202608-0002',
+        customerId: sarahCustomer.id,
+        serviceId: broadbandService.id,
+        governmentFee: 100,
+        serviceFee: 300,
+        totalAmount: 400,
+        status: 'PARTIALLY_PAID',
+        dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+        notes: 'Home broadband installation advance payment',
+      },
+    });
+
+    await prisma.payment.upsert({
+      where: { paymentNumber: 'PAY-202608-0002' },
+      update: {},
+      create: {
+        paymentNumber: 'PAY-202608-0002',
+        invoiceId: inv2.id,
+        customerId: sarahCustomer.id,
+        amount: 200,
+        paymentMethod: 'UPI',
+        status: 'PAID',
+        reference: 'UPI-778899112233',
+        notes: 'Advance 50% deposit received via UPI',
+        paidAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      },
+    });
+  }
+
+  if (testCustomer && fiberService) {
+    await prisma.invoice.upsert({
+      where: { invoiceNumber: 'INV-202608-0003' },
+      update: {},
+      create: {
+        invoiceNumber: 'INV-202608-0003',
+        customerId: testCustomer.id,
+        serviceId: fiberService.id,
+        governmentFee: 250,
+        serviceFee: 750,
+        totalAmount: 1000,
+        status: 'UNPAID',
+        dueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
+        notes: 'Pending initial payment invoice',
+      },
+    });
+  }
+
+  if (johnCustomer && legacyService) {
+    await prisma.invoice.upsert({
+      where: { invoiceNumber: 'INV-202608-0004' },
+      update: {},
+      create: {
+        invoiceNumber: 'INV-202608-0004',
+        customerId: johnCustomer.id,
+        serviceId: legacyService.id,
+        governmentFee: 50,
+        serviceFee: 150,
+        totalAmount: 200,
+        status: 'OVERDUE',
+        dueDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+        notes: 'Overdue copper line reconnection bill',
+      },
+    });
+  }
+
+  console.log('Sample invoices and payments seeded');
+
+  // 6. Seed sample Applications and Documents
+  if (acmeCustomer && fiberService) {
+    let acmeApp = await prisma.application.findFirst({ where: { customerId: acmeCustomer.id } });
+    if (!acmeApp) {
+      acmeApp = await prisma.application.create({
+        data: {
+          customerId: acmeCustomer.id,
+          serviceId: fiberService.id,
+        },
+      });
+    }
+
+    const docCount = await prisma.document.count({ where: { customerId: acmeCustomer.id } });
+    if (docCount === 0) {
+      await prisma.document.createMany({
+        data: [
+          {
+            customerId: acmeCustomer.id,
+            applicationId: acmeApp.id,
+            documentType: 'Commercial Registration Certificate',
+            fileName: 'Acme_Corp_Registration_2026.pdf',
+            mimeType: 'application/pdf',
+            fileSize: 2450000,
+            storagePath: `documents/${acmeCustomer.id}/${acmeApp.id}/cr_cert.pdf`,
+            verificationStatus: 'VERIFIED',
+            verificationRemarks: 'Verified against Ministry records',
+          },
+          {
+            customerId: acmeCustomer.id,
+            applicationId: acmeApp.id,
+            documentType: 'Authorized Signatory National ID',
+            fileName: 'Director_National_ID.jpg',
+            mimeType: 'image/jpeg',
+            fileSize: 1240000,
+            storagePath: `documents/${acmeCustomer.id}/${acmeApp.id}/director_id.jpg`,
+            verificationStatus: 'VERIFIED',
+            verificationRemarks: 'Clear government photo ID confirmed',
+          },
+          {
+            customerId: acmeCustomer.id,
+            applicationId: acmeApp.id,
+            documentType: 'Lease Agreement / Proof of Address',
+            fileName: 'Office_Lease_Agreement_Amman_Tower.pdf',
+            mimeType: 'application/pdf',
+            fileSize: 3890000,
+            storagePath: `documents/${acmeCustomer.id}/${acmeApp.id}/lease.pdf`,
+            verificationStatus: 'PENDING',
+          },
+        ],
+      });
+    }
+  }
+
+  if (sarahCustomer && broadbandService) {
+    let sarahApp = await prisma.application.findFirst({ where: { customerId: sarahCustomer.id } });
+    if (!sarahApp) {
+      sarahApp = await prisma.application.create({
+        data: {
+          customerId: sarahCustomer.id,
+          serviceId: broadbandService.id,
+        },
+      });
+    }
+
+    const docCount = await prisma.document.count({ where: { customerId: sarahCustomer.id } });
+    if (docCount === 0) {
+      await prisma.document.createMany({
+        data: [
+          {
+            customerId: sarahCustomer.id,
+            applicationId: sarahApp.id,
+            documentType: 'National Identification / Passport',
+            fileName: 'Sarah_Smith_Passport.pdf',
+            mimeType: 'application/pdf',
+            fileSize: 1850000,
+            storagePath: `documents/${sarahCustomer.id}/${sarahApp.id}/passport.pdf`,
+            verificationStatus: 'VERIFIED',
+            verificationRemarks: 'Valid passport provided',
+          },
+          {
+            customerId: sarahCustomer.id,
+            applicationId: sarahApp.id,
+            documentType: 'Utility Bill (Electricity/Water)',
+            fileName: 'Electricity_Bill_July2026.png',
+            mimeType: 'image/png',
+            fileSize: 950000,
+            storagePath: `documents/${sarahCustomer.id}/${sarahApp.id}/bill.png`,
+            verificationStatus: 'REJECTED',
+            verificationRemarks: 'Document is blurry and billing date is older than 3 months. Please re-upload latest bill.',
+          },
+        ],
+      });
+    }
+  }
+
+  if (testCustomer && fiberService) {
+    let testApp = await prisma.application.findFirst({ where: { customerId: testCustomer.id } });
+    if (!testApp) {
+      testApp = await prisma.application.create({
+        data: {
+          customerId: testCustomer.id,
+          serviceId: fiberService.id,
+        },
+      });
+    }
+
+    const docCount = await prisma.document.count({ where: { customerId: testCustomer.id } });
+    if (docCount === 0) {
+      await prisma.document.createMany({
+        data: [
+          {
+            customerId: testCustomer.id,
+            applicationId: testApp.id,
+            documentType: 'National Identification / Passport',
+            fileName: 'Customer_National_ID.pdf',
+            mimeType: 'application/pdf',
+            fileSize: 1540000,
+            storagePath: `documents/${testCustomer.id}/${testApp.id}/national_id.pdf`,
+            verificationStatus: 'PENDING',
+          },
+        ],
+      });
+    }
+  }
+
+
 }
 
 main()

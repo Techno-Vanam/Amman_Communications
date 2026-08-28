@@ -15,6 +15,10 @@ export class UpdateCustomerDto {
 
   @ApiPropertyOptional({ enum: CustomerStatus })
   @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
   @IsEnum(CustomerStatus)
   status?: CustomerStatus;
 }

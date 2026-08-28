@@ -15,19 +15,20 @@ export class AuthService {
     ]);
 
     if (admin && customer) {
-      throw new UnauthorizedException('Invalid credentials');
+      // Ambiguous identity - safely reject without revealing account status
+      throw new UnauthorizedException('Incorrect email or password');
     }
 
     const user = admin || customer;
     const role = admin ? 'ADMIN' : (customer ? 'CUSTOMER' : null);
 
     if (!user || !role) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Incorrect email or password');
     }
 
     const isPasswordValid = await compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Incorrect email or password');
     }
 
     const accessToken = await this.jwt.signAsync(
@@ -46,7 +47,7 @@ export class AuthService {
     };
   }
 
-  async register(name: string, email: string, password: string) {
+  async register(name: string, email: string, password: string, phone?: string) {
     const normalizedEmail = email.toLowerCase().trim();
 
     const [existingAdmin, existingCustomer] = await Promise.all([
@@ -64,6 +65,7 @@ export class AuthService {
       data: {
         name: name.trim(),
         email: normalizedEmail,
+        phone: phone ? phone.trim() : null,
         passwordHash,
       },
     });
