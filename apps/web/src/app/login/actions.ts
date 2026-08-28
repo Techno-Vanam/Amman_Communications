@@ -1,7 +1,12 @@
 'use server';
 
 import { cookies } from 'next/headers';
-const API_BASE_URL = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3003';
+
+const API_BASE_URL =
+  process.env.API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  'http://localhost:3003';
+
 export async function loginAction(formData: FormData) {
   const email = formData.get('email');
   const password = formData.get('password');
@@ -11,23 +16,41 @@ export async function loginAction(formData: FormData) {
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/v1/auth/login`, {
+    let res = await fetch(`${API_BASE_URL}/v1/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({
+        email: String(email).trim().toLowerCase(),
+        password: String(password),
+      }),
     });
+
+    if (res.status === 404) {
+      res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: String(email).trim().toLowerCase(),
+          password: String(password),
+        }),
+      });
+    }
+
+    const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
       if (res.status === 401) {
-        return { error: 'Invalid credentials' };
+        return { error: data.message || 'Invalid credentials' };
       }
-      return { error: 'An error occurred during login. Please try again later.' };
+      return { error: data.message || 'An error occurred during login. Please try again later.' };
     }
 
-    const data = await res.json();
-    const { accessToken, user } = data;
+    const payload = data.data || data;
+    const { accessToken, user } = payload;
 
     if (!accessToken || !user || !user.role) {
       return { error: 'Invalid response from server' };
@@ -40,15 +63,14 @@ export async function loginAction(formData: FormData) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 15 * 60, // 15 minutes in seconds
+      maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
-    // Return success and where to redirect to let the client handle router.push
     return {
       success: true,
+      user,
       redirectTo: user.role === 'ADMIN' ? '/admin' : '/portal/dashboard',
     };
-
   } catch (error) {
     console.error('Login action error:', error);
     return { error: 'Network error or backend unavailable' };

@@ -58,18 +58,20 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
         setError(result.error);
       } else if (result?.success && result.redirectTo) {
         try {
+          const userName = result.user?.name || (emailOrUser.split('@')[0].replace('.', ' ').charAt(0).toUpperCase() + emailOrUser.split('@')[0].replace('.', ' ').slice(1));
           localStorage.setItem('user_email', emailOrUser);
-          const derivedName = emailOrUser.split('@')[0].replace('.', ' ');
-          const formattedName = derivedName.charAt(0).toUpperCase() + derivedName.slice(1);
+          localStorage.setItem('user_role', result.user?.role || '');
           localStorage.setItem(
             'amman_user_profile',
             JSON.stringify({
-              name: formattedName,
+              id: result.user?.id || '',
+              name: userName,
               email: emailOrUser,
+              role: result.user?.role || '',
               phone: '+91 ',
               address: '',
               handle: `@${emailOrUser.split('@')[0]}`,
-              initials: formattedName.charAt(0).toUpperCase(),
+              initials: userName.charAt(0).toUpperCase(),
             })
           );
         } catch (err) {
@@ -109,16 +111,20 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
         setError(result.error);
       } else if (result?.success && result.redirectTo) {
         try {
+          const userName = result.user?.name || regName.trim();
           localStorage.setItem('user_email', regEmail.trim());
+          localStorage.setItem('user_role', result.user?.role || 'CUSTOMER');
           localStorage.setItem(
             'amman_user_profile',
             JSON.stringify({
-              name: regName.trim(),
+              id: result.user?.id || '',
+              name: userName,
               email: regEmail.trim(),
+              role: result.user?.role || 'CUSTOMER',
               phone: regMobile || '+91 ',
               address: '',
               handle: `@${regEmail.trim().split('@')[0]}`,
-              initials: regName.trim().charAt(0).toUpperCase(),
+              initials: userName.charAt(0).toUpperCase(),
             })
           );
         } catch (err) {
