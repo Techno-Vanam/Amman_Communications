@@ -10,14 +10,19 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AdminAuthGuard } from '../auth/guards/admin-auth.guard';
+
 import { DocumentsService } from './documents.service';
 import { UpdateDocumentStatusDto } from './dto/update-document-status.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+
 
 @ApiTags('Admin - Documents')
 @ApiBearerAuth()
 @Controller('admin/applications')
-@UseGuards(AdminAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
 export class AdminDocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 

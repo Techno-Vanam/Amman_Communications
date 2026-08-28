@@ -10,11 +10,15 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { CustomerAuthGuard } from '../auth/guards/customer-auth.guard';
+
 import { CustomerAppointmentsService } from './customer-appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { GetAppointmentsDto } from './dto/get-appointments.dto';
 import { CompleteDocumentUploadDto, CreateUploadUrlDto } from './dto/upload-document.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+
 
 interface RequestWithUser {
   user: {
@@ -41,7 +45,8 @@ export class CustomerAppointmentsController {
   }
 
   @Post('appointments')
-  @UseGuards(CustomerAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('CUSTOMER')
   async createAppointment(
     @Req() req: RequestWithUser,
     @Body() dto: CreateAppointmentDto,
@@ -52,7 +57,8 @@ export class CustomerAppointmentsController {
   }
 
   @Post('appointments/:id/documents/upload-url')
-  @UseGuards(CustomerAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('CUSTOMER')
   async createDocumentUploadUrl(
     @Req() req: RequestWithUser,
     @Param('id') id: string,
@@ -64,7 +70,8 @@ export class CustomerAppointmentsController {
   }
 
   @Post('appointments/:id/documents')
-  @UseGuards(CustomerAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('CUSTOMER')
   async completeDocumentUpload(
     @Req() req: RequestWithUser,
     @Param('id') id: string,
@@ -76,7 +83,8 @@ export class CustomerAppointmentsController {
   }
 
   @Get('appointments')
-  @UseGuards(CustomerAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('CUSTOMER')
   async getAppointments(
     @Req() req: RequestWithUser,
     @Query() query: GetAppointmentsDto,
@@ -87,7 +95,8 @@ export class CustomerAppointmentsController {
   }
 
   @Get('appointments/:id')
-  @UseGuards(CustomerAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('CUSTOMER')
   async getAppointmentDetail(
     @Req() req: RequestWithUser,
     @Param('id') id: string,
@@ -98,7 +107,8 @@ export class CustomerAppointmentsController {
   }
 
   @Delete('appointments/:id')
-  @UseGuards(CustomerAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('CUSTOMER')
   async cancelAppointment(
     @Req() req: RequestWithUser,
     @Param('id') id: string,
