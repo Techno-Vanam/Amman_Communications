@@ -67,7 +67,6 @@ model Customer {
   name         String
   address      String?
   contactNumber String?
-  phone         String?
   applications Application[]
   documents    Document[]
   appointments Appointment[]
