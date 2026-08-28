@@ -1,9 +1,10 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AdminAuthGuard } from '../auth/guards/admin-auth.guard';
 import { CustomerAuthGuard } from '../auth/guards/customer-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
 
+@ApiTags('Admin - Dashboard')
 @ApiBearerAuth()
 @Controller('admin/dashboard')
 @UseGuards(AdminAuthGuard)
@@ -11,6 +12,7 @@ export class AdminDashboardController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get('summary')
+  @ApiOperation({ summary: 'Get summary statistics for the admin dashboard' })
   async summary() {
     const [customers, applications, documents] = await Promise.all([
       this.prisma.customer.count(),
@@ -21,6 +23,7 @@ export class AdminDashboardController {
   }
 
   @Get('verification-queue')
+  @ApiOperation({ summary: 'Get recent documents for verification queue' })
   async verificationQueue() {
     const documents = await this.prisma.document.findMany({
       orderBy: { uploadedAt: 'desc' },
@@ -54,6 +57,7 @@ export class AdminDashboardController {
   }
 }
 
+@ApiTags('Customer - Dashboard')
 @ApiBearerAuth()
 @Controller('customer/dashboard')
 @UseGuards(CustomerAuthGuard)
@@ -61,6 +65,7 @@ export class CustomerDashboardController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get('summary')
+  @ApiOperation({ summary: 'Get summary statistics for the customer dashboard' })
   async summary(@Req() request: { user: { sub: string } }) {
     const customerId = request.user.sub;
     const [applications, documents] = await Promise.all([
@@ -71,6 +76,7 @@ export class CustomerDashboardController {
   }
 
   @Get('profile')
+  @ApiOperation({ summary: 'Get customer profile details' })
   async profile(@Req() request: { user: { sub: string } }) {
     const customer = await this.prisma.customer.findUnique({
       where: { id: request.user.sub },
@@ -87,6 +93,7 @@ export class CustomerDashboardController {
   }
 
   @Get('me')
+  @ApiOperation({ summary: 'Get current customer session details (alias for profile)' })
   async me(@Req() request: { user: { sub: string } }) {
     return this.profile(request);
   }

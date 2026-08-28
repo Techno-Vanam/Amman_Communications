@@ -1,3 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export enum AdminDocumentStatusInput {
@@ -9,10 +10,12 @@ export enum AdminDocumentStatusInput {
 }
 
 export class UpdateDocumentStatusDto {
+  @ApiProperty({ enum: AdminDocumentStatusInput })
   @IsEnum(AdminDocumentStatusInput)
   @IsNotEmpty()
   status!: AdminDocumentStatusInput;
 
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   rejectionReason?: string;

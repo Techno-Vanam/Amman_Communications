@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Body,
   Controller,
@@ -23,7 +24,9 @@ interface RequestWithUser {
   };
 }
 
-@Controller(['customer', 'v1/customer', 'api/v1/customer'])
+@ApiTags('Customer - Appointments')
+@ApiBearerAuth()
+@Controller('customer')
 export class CustomerAppointmentsController {
   constructor(private readonly appointmentsService: CustomerAppointmentsService) {}
 

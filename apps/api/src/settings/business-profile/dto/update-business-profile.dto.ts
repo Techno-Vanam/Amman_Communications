@@ -29,12 +29,15 @@ export class UpdateBusinessProfileDto {
   @Matches(/^[+]?[\d\s\-()]{7,20}$/, {
     message: 'primaryPhone must be a valid phone number format',
   })
+  @ApiProperty()
   @Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value))
   primaryPhone!: string;
 
   @ApiProperty({ description: 'Support email address', example: 'support@example.com' })
   @IsEmail({}, { message: 'supportEmail must be a valid email address' })
+  @ApiProperty()
   @IsNotEmpty()
+  @ApiProperty()
   @Transform(({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
   supportEmail!: string;
 }

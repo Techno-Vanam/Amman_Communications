@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards, Req, Delete } from '@nestjs/common';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto, UpdateExpenseDto } from './dto/expense.dto';
 import { AdminAuthGuard } from '../auth/guards/admin-auth.guard';
@@ -7,7 +7,8 @@ import { AdminAuthGuard } from '../auth/guards/admin-auth.guard';
 import { ExpenseCategory } from '@prisma/client';
 
 @ApiBearerAuth()
-@Controller('v1/admin/expenses')
+@ApiTags('Admin - Expenses')
+@Controller('admin/expenses')
 @UseGuards(AdminAuthGuard)
 export class ExpensesController {
   constructor(private readonly expensesService: ExpensesService) {}

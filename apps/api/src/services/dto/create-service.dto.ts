@@ -60,6 +60,7 @@ export class CreateServiceDto {
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
+  @ApiProperty()
   @Type(() => RequiredDocumentDto)
   requiredDocuments?: RequiredDocumentDto[];
 }

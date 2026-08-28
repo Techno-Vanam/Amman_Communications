@@ -22,6 +22,9 @@ async function bootstrap() {
   app.enableCors({ origin: process.env.CORS_ALLOWED_ORIGINS?.split(',') ?? true, credentials: true });
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
 
+  app.setGlobalPrefix('api/v1', { exclude: ['health'] });
+
+
   // Setup Swagger API Documentation
   const config = new DocumentBuilder()
     .setTitle('Amman Communications API')

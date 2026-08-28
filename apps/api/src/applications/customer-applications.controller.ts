@@ -1,3 +1,4 @@
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Body,
   Controller,
@@ -13,7 +14,9 @@ import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 
-@Controller(['customer/applications', 'v1/customer/applications', 'api/v1/customer/applications'])
+@ApiTags('Customer - Applications')
+@ApiBearerAuth()
+@Controller('customer/applications')
 @UseGuards(CustomerAuthGuard)
 export class CustomerApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}

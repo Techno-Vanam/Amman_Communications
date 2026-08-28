@@ -12,6 +12,7 @@ import {
   StreamableFile,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CustomerAuthGuard } from '../auth/guards/customer-auth.guard';
 import { DocumentsService } from './documents.service';
 import {
@@ -20,40 +21,32 @@ import {
   UploadOrReplaceDocumentDto,
 } from './dto/upload-document.dto';
 
+@ApiTags('Customer - Documents')
+@ApiBearerAuth()
 @Controller('customer')
 @UseGuards(CustomerAuthGuard)
 export class CustomerDocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
-  /**
-   * GET /api/v1/customer/services-catalog
-   * List available services with required document schemas
-   */
   @Get('services-catalog')
+  @ApiOperation({ summary: 'List available services with required document schemas' })
   getServicesCatalog() {
     return this.documentsService.getServicesCatalog();
   }
 
-  /**
-   * GET /api/v1/customer/documents
-   * Convenience endpoint: grouped by application for Document Upload Center
-   */
   @Get('documents')
+  @ApiOperation({ summary: 'Convenience endpoint: grouped by application for Document Upload Center' })
   async getAllDocumentsGrouped(@Req() req: { user: { sub: string } }) {
     return this.documentsService.getAllCustomerDocumentsGrouped(req.user.sub);
   }
 
-  /**
-   * GET /api/v1/customer/documents/download-stream?path=...
-   * Decrypt and stream an encrypted document file to the browser.
-   */
   @Get('documents/download-stream')
+  @ApiOperation({ summary: 'Decrypt and stream an encrypted document file to the browser' })
   async downloadStream(
     @Req() req: { user: { sub: string } },
     @Query('path') storagePath: string,
     @Res({ passthrough: true }) res: any,
   ) {
-    // Verify the customer owns a document at this path
     const allowed = await this.documentsService.verifyCustomerOwnsPath(
       req.user.sub,
       storagePath,
@@ -76,11 +69,8 @@ export class CustomerDocumentsController {
     return new StreamableFile(buffer);
   }
 
-  /**
-   * POST /api/v1/customer/applications/:applicationId/documents/upload-url
-   * Request signed upload URL
-   */
   @Post('applications/:applicationId/documents/upload-url')
+  @ApiOperation({ summary: 'Request signed upload URL' })
   async requestUploadUrl(
     @Req() req: { user: { sub: string } },
     @Param('applicationId') applicationId: string,
@@ -93,11 +83,8 @@ export class CustomerDocumentsController {
     );
   }
 
-  /**
-   * POST /api/v1/customer/applications/:applicationId/documents/upload
-   * Direct encrypted file upload (AES-256-GCM) with 10MB limit
-   */
   @Post('applications/:applicationId/documents/upload')
+  @ApiOperation({ summary: 'Direct encrypted file upload (AES-256-GCM) with 10MB limit' })
   async directUpload(
     @Req() req: { user: { sub: string } },
     @Param('applicationId') applicationId: string,
@@ -110,11 +97,8 @@ export class CustomerDocumentsController {
     );
   }
 
-  /**
-   * GET /api/v1/customer/applications/:applicationId/documents
-   * Fetch all documents for an application
-   */
   @Get('applications/:applicationId/documents')
+  @ApiOperation({ summary: 'Fetch all documents for an application' })
   async getApplicationDocuments(
     @Req() req: { user: { sub: string } },
     @Param('applicationId') applicationId: string,
@@ -125,11 +109,8 @@ export class CustomerDocumentsController {
     );
   }
 
-  /**
-   * POST /api/v1/customer/applications/:applicationId/documents
-   * Upload or replace document for an application (Single Source of Truth)
-   */
   @Post('applications/:applicationId/documents')
+  @ApiOperation({ summary: 'Upload or replace document for an application (Single Source of Truth)' })
   async uploadOrReplaceDocument(
     @Req() req: { user: { sub: string } },
     @Param('applicationId') applicationId: string,
@@ -142,11 +123,8 @@ export class CustomerDocumentsController {
     );
   }
 
-  /**
-   * GET /api/v1/customer/applications/:applicationId/documents/:documentId
-   * Fetch a single document
-   */
   @Get('applications/:applicationId/documents/:documentId')
+  @ApiOperation({ summary: 'Fetch a single document' })
   async getDocument(
     @Req() req: { user: { sub: string } },
     @Param('applicationId') applicationId: string,
@@ -159,11 +137,8 @@ export class CustomerDocumentsController {
     );
   }
 
-  /**
-   * PUT /api/v1/customer/applications/:applicationId/documents/:documentId
-   * Replace or update a single document
-   */
   @Put('applications/:applicationId/documents/:documentId')
+  @ApiOperation({ summary: 'Replace or update a single document' })
   async replaceDocument(
     @Req() req: { user: { sub: string } },
     @Param('applicationId') applicationId: string,
@@ -177,11 +152,8 @@ export class CustomerDocumentsController {
     );
   }
 
-  /**
-   * DELETE /api/v1/customer/applications/:applicationId/documents/:documentId
-   * Delete document
-   */
   @Delete('applications/:applicationId/documents/:documentId')
+  @ApiOperation({ summary: 'Delete document' })
   async deleteDocument(
     @Req() req: { user: { sub: string } },
     @Param('applicationId') applicationId: string,

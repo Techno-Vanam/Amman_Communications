@@ -14,7 +14,7 @@ import { UpdateBusinessProfileDto } from './dto/update-business-profile.dto';
 
 @ApiTags('Admin - Business Profile Settings')
 @ApiBearerAuth()
-@Controller('v1/admin/settings/business-profile')
+@Controller('admin/settings/business-profile')
 @UseGuards(AdminAuthGuard)
 export class BusinessProfileController {
   constructor(private readonly businessProfileService: BusinessProfileService) {}
