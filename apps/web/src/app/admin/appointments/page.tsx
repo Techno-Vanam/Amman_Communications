@@ -39,17 +39,8 @@ interface Appointment {
   notes?: string;
 }
 
-// ── Mock data ─────────────────────────────────────────────────
-const INITIAL_APPOINTMENTS: Appointment[] = [
-  { id: 'APT-1046', customer: 'Mohammad Ali', email: 'mohd.ali@gmail.com', phone: '+91 88790 34511', service: 'Technical Onsite Survey', date: '2026-08-27', time: '14:30', mode: 'Offline', status: 'Confirmed' },
-  { id: 'APT-1045', customer: 'Rachel Vance', email: 'rachel.vance@mail.com', phone: '+91 77823 64120', service: 'Broadband Consultation', date: '2026-08-28', time: '10:00', mode: 'Online', status: 'Pending' },
-  { id: 'APT-1044', customer: 'TechCorp LLC', email: 'admin@techcorp.com', phone: '+91 80112 77890', service: 'Enterprise VoIP Setup', date: '2026-08-29', time: '15:00', mode: 'Offline', status: 'Confirmed' },
-  { id: 'APT-1043', customer: 'Sarah Jenkins', email: 'sarah.jenkins@email.com', phone: '+91 99001 45678', service: 'Network Assessment', date: '2026-08-30', time: '11:00', mode: 'Online', status: 'Pending' },
-  { id: 'APT-1042', customer: 'Ahmad Hassan', email: 'ahmad.hassan@email.com', phone: '+91 98456 12300', service: 'Fiber Installation', date: '2026-08-31', time: '09:00', mode: 'Offline', status: 'Confirmed' },
-  { id: 'APT-1041', customer: 'City Retail Group', email: 'cityretail@business.com', phone: '+91 94561 23890', service: 'Security Audit', date: '2026-08-20', time: '13:00', mode: 'Offline', status: 'Completed' },
-  { id: 'APT-1040', customer: 'Mohammad Ali', email: 'mohd.ali@gmail.com', phone: '+91 88790 34511', service: 'Cloud Setup', date: '2026-08-18', time: '10:30', mode: 'Online', status: 'Cancelled' },
-  { id: 'APT-1039', customer: 'Rachel Vance', email: 'rachel.vance@mail.com', phone: '+91 77823 64120', service: 'VoIP Consultation', date: '2026-08-15', time: '16:00', mode: 'Online', status: 'Rescheduled' },
-];
+// ── Live Dataset ─────────────────────────────────────────────────
+const INITIAL_APPOINTMENTS: Appointment[] = [];
 
 const SERVICES = [
   'Technical Onsite Survey',
@@ -376,7 +367,7 @@ export default function AppointmentsPage() {
   }, [appointments, search, filterStatus]);
 
   function handleAdd(data: Partial<Appointment>) {
-    const newId = `APT-${1047 + appointments.length - INITIAL_APPOINTMENTS.length}`;
+    const newId = `APT-${1001 + appointments.length}`;
     setAppointments(prev => [{
       id: newId,
       customer: data.customer ?? '',

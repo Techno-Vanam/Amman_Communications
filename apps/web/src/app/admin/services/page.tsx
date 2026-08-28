@@ -48,56 +48,8 @@ const CATEGORIES = [
   'Broadband', 'Leased Line', 'VoIP', 'Security', 'Cloud', 'Consulting', 'Support',
 ];
 
-const INITIAL_SERVICES: Service[] = [
-  {
-    id: 'SVC-001', name: 'Commercial Fiber Broadband', category: 'Broadband',
-    requiredDocs: [{ name: 'Business Registration' }, { name: 'Address Proof' }, { name: 'Identity Proof' }],
-    govtFee: 2500, officeCharge: 4500, estDays: 7, status: 'Active',
-    description: 'High-speed fiber broadband connection for commercial establishments.',
-  },
-  {
-    id: 'SVC-002', name: 'Dedicated Leased Line', category: 'Leased Line',
-    requiredDocs: [{ name: 'Business Registration' }, { name: 'NOC Letter' }, { name: 'Bank Statement' }],
-    govtFee: 5000, officeCharge: 8000, estDays: 14, status: 'Active',
-    description: 'Uncontended, symmetric leased line for enterprise-grade connectivity.',
-  },
-  {
-    id: 'SVC-003', name: 'Enterprise VoIP Infrastructure', category: 'VoIP',
-    requiredDocs: [{ name: 'Business Registration' }, { name: 'Tax Certificate' }, { name: 'Partnership Deed' }],
-    govtFee: 3200, officeCharge: 6800, estDays: 10, status: 'Active',
-    description: 'Full VoIP system setup with PBX, extensions and SIP trunking.',
-  },
-  {
-    id: 'SVC-004', name: 'Managed Network Security', category: 'Security',
-    requiredDocs: [{ name: 'Identity Proof' }, { name: 'Business Registration' }],
-    govtFee: 1800, officeCharge: 5200, estDays: 5, status: 'Active',
-    description: 'Firewall, IDS/IPS, and 24x7 network monitoring service.',
-  },
-  {
-    id: 'SVC-005', name: 'Cloud Backup & Storage', category: 'Cloud',
-    requiredDocs: [{ name: 'Identity Proof' }],
-    govtFee: 0, officeCharge: 2000, estDays: 3, status: 'Active',
-    description: 'Secure cloud backup with AES-256 encryption and 99.9% uptime SLA.',
-  },
-  {
-    id: 'SVC-006', name: 'Technical Onsite Survey', category: 'Consulting',
-    requiredDocs: [{ name: 'Identity Proof' }, { name: 'Address Proof' }],
-    govtFee: 0, officeCharge: 1500, estDays: 2, status: 'Active',
-    description: 'On-premise technical site assessment and feasibility report.',
-  },
-  {
-    id: 'SVC-007', name: 'Legacy ADSL Support', category: 'Support',
-    requiredDocs: [{ name: 'Identity Proof' }],
-    govtFee: 500, officeCharge: 1200, estDays: 3, status: 'Inactive',
-    description: 'Support plan for existing ADSL connections (phased out).',
-  },
-  {
-    id: 'SVC-008', name: 'Satellite Broadband (Beta)', category: 'Broadband',
-    requiredDocs: [{ name: 'Business Registration' }, { name: 'NOC Letter' }],
-    govtFee: 4000, officeCharge: 7500, estDays: 21, status: 'Draft',
-    description: 'Low-latency satellite broadband — currently in beta testing phase.',
-  },
-];
+// ── Live Dataset ─────────────────────────────────────────────────
+const INITIAL_SERVICES: Service[] = [];
 
 const DEFAULT_DOCS = [
   'Business Registration', 'Identity Proof', 'Address Proof', 'Tax Certificate',

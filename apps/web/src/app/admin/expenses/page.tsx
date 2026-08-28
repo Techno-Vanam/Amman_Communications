@@ -43,19 +43,8 @@ interface Expense {
   addedBy: string;
 }
 
-// ── Mock Data ─────────────────────────────────────────────────
-const INITIAL_EXPENSES: Expense[] = [
-  { id: 'EXP-001', category: 'Infrastructure', amount: 45000, description: 'Server rack upgrade and new switches for data center', date: '2026-08-25', addedBy: 'Admin' },
-  { id: 'EXP-002', category: 'Salaries',       amount: 82000, description: 'Monthly salary disbursement – technical team', date: '2026-08-01', addedBy: 'Admin' },
-  { id: 'EXP-003', category: 'Marketing',      amount: 12500, description: 'Google Ads campaign for Q3 broadband promotion', date: '2026-08-10', addedBy: 'Admin' },
-  { id: 'EXP-004', category: 'Utilities',      amount: 8400,  description: 'Electricity & water bill for office premises', date: '2026-08-05', addedBy: 'Admin' },
-  { id: 'EXP-005', category: 'Equipment',      amount: 23000, description: 'Purchase of 4 new laptops for support team', date: '2026-08-12', addedBy: 'Admin' },
-  { id: 'EXP-006', category: 'Maintenance',    amount: 6200,  description: 'Quarterly servicing of network equipment', date: '2026-08-18', addedBy: 'Admin' },
-  { id: 'EXP-007', category: 'Operations',     amount: 9800,  description: 'Office supplies and printing for Aug 2026', date: '2026-08-03', addedBy: 'Admin' },
-  { id: 'EXP-008', category: 'Miscellaneous',  amount: 3200,  description: 'Team lunch event and refreshments', date: '2026-08-22', addedBy: 'Admin' },
-  { id: 'EXP-009', category: 'Infrastructure', amount: 18500, description: 'Fiber cable procurement for new zones', date: '2026-08-14', addedBy: 'Admin' },
-  { id: 'EXP-010', category: 'Marketing',      amount: 7600,  description: 'Brochure design and printing', date: '2026-08-20', addedBy: 'Admin' },
-];
+// ── Live Dataset ─────────────────────────────────────────────────
+const INITIAL_EXPENSES: Expense[] = [];
 
 const CATEGORIES: Category[] = [
   'Infrastructure', 'Operations', 'Salaries', 'Marketing',
