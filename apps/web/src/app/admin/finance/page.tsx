@@ -38,17 +38,8 @@ interface FinanceRecord {
   notes?: string;
 }
 
-// ── Mock Data ─────────────────────────────────────────────────
-const INITIAL_RECORDS: FinanceRecord[] = [
-  { id: 'FIN-001', appId: 'APP-2026-089', customer: 'Ahmad Hassan',      email: 'ahmad.hassan@email.com',  serviceType: 'Commercial Fiber Broadband',     totalCost: 48000, advancePaid: 12000, dueDate: '2026-09-10', status: 'Partial' },
-  { id: 'FIN-002', appId: 'APP-2026-088', customer: 'Sarah Jenkins',     email: 'sarah.jenkins@email.com', serviceType: 'Dedicated Leased Line',           totalCost: 72000, advancePaid: 72000, dueDate: '2026-08-26', status: 'Paid' },
-  { id: 'FIN-003', appId: 'APP-2026-087', customer: 'TechCorp LLC',      email: 'admin@techcorp.com',       serviceType: 'Enterprise VoIP Infrastructure', totalCost: 95000, advancePaid: 95000, dueDate: '2026-08-25', status: 'Paid' },
-  { id: 'FIN-004', appId: 'APP-2026-086', customer: 'City Retail Group', email: 'cityretail@business.com', serviceType: 'Managed Network Security',        totalCost: 36000, advancePaid: 0,     dueDate: '2026-09-01', status: 'Pending' },
-  { id: 'FIN-005', appId: 'APP-2026-085', customer: 'Rachel Vance',      email: 'rachel.vance@mail.com',   serviceType: 'Cloud Backup & Storage',         totalCost: 18000, advancePaid: 5000,  dueDate: '2026-08-23', status: 'Overdue' },
-  { id: 'FIN-006', appId: 'APP-2026-084', customer: 'Mohammad Ali',      email: 'mohd.ali@gmail.com',       serviceType: 'Commercial Fiber Broadband',     totalCost: 48000, advancePaid: 0,     dueDate: '2026-09-15', status: 'Pending' },
-  { id: 'FIN-007', appId: 'APP-2026-083', customer: 'Ahmad Hassan',      email: 'ahmad.hassan@email.com',  serviceType: 'Enterprise VoIP Infrastructure', totalCost: 95000, advancePaid: 50000, dueDate: '2026-09-05', status: 'Partial' },
-  { id: 'FIN-008', appId: 'APP-2026-082', customer: 'TechCorp LLC',      email: 'admin@techcorp.com',       serviceType: 'Dedicated Leased Line',          totalCost: 72000, advancePaid: 72000, dueDate: '2026-08-18', status: 'Waived',  notes: 'Waived on settlement agreement.' },
-];
+// ── Live Dataset ─────────────────────────────────────────────────
+const INITIAL_RECORDS: FinanceRecord[] = [];
 
 const ALL_STATUSES: PaymentStatus[] = ['Paid', 'Partial', 'Pending', 'Overdue', 'Waived'];
 

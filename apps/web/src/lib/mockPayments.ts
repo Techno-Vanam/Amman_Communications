@@ -1,40 +1,4 @@
 import { ReceiptData } from '@/types/payment';
 
-export const mockPayments: ReceiptData[] = [
-  {
-    receiptNumber: 'REC-2026-0001',
-    paymentDate: '15 Aug 2026',
-    customerName: 'Sreemathi Manoharan',
-    customerEmail: 'sreemathi@example.com',
-    customerPhone: '+91 98765 43210',
-    customerAddress: 'No. 100, Harris St,\nSydney NSW 2009, Australia',
-    applicationNumber: 'APP-2026-0001',
-    description: 'Telecom License Application Fee',
-    quantity: 1,
-    unitPrice: 5000,
-    subtotal: 5000,
-    tax: 0,
-    totalAmount: 5000,
-    paymentMethod: 'UPI',
-    transactionId: 'TXN8472910482',
-    paymentStatus: 'PAID',
-  },
-  {
-    receiptNumber: 'REC-2026-0002',
-    paymentDate: '20 Aug 2026',
-    customerName: 'Sreemathi Manoharan',
-    customerEmail: 'sreemathi@example.com',
-    customerPhone: '+91 98765 43210',
-    customerAddress: 'No. 100, Harris St,\nSydney NSW 2009, Australia',
-    applicationNumber: 'APP-2026-0002',
-    description: 'Frequency Allocation Processing Fee',
-    quantity: 1,
-    unitPrice: 2500,
-    subtotal: 2500,
-    tax: 0,
-    totalAmount: 2500,
-    paymentMethod: 'Net Banking',
-    transactionId: 'TXN3920194810',
-    paymentStatus: 'PAID',
-  },
-];
+// Empty dataset - live data loaded dynamically from API and database records
+export const mockPayments: ReceiptData[] = [];

@@ -21,77 +21,20 @@ import {
   UserCircle2,
 } from 'lucide-react';
 
-// ── Mock Data ────────────────────────────────────────────────
-const INITIAL_CUSTOMERS = [
-  {
-    id: 'C-0001',
-    name: 'Ahmad Hassan',
-    email: 'ahmad.hassan@email.com',
-    phone: '+91 98456 12300',
-    applications: 3,
-    pending: 1,
-    balance: '₹12,400',
-    status: 'Active',
-    joinedDate: '12 Jan 2026',
-  },
-  {
-    id: 'C-0002',
-    name: 'Sarah Jenkins',
-    email: 'sarah.jenkins@email.com',
-    phone: '+91 99001 45678',
-    applications: 1,
-    pending: 0,
-    balance: '₹0',
-    status: 'Active',
-    joinedDate: '03 Mar 2026',
-  },
-  {
-    id: 'C-0003',
-    name: 'TechCorp LLC',
-    email: 'admin@techcorp.com',
-    phone: '+91 80112 77890',
-    applications: 5,
-    pending: 2,
-    balance: '₹28,000',
-    status: 'Active',
-    joinedDate: '15 Feb 2026',
-  },
-  {
-    id: 'C-0004',
-    name: 'Rachel Vance',
-    email: 'rachel.vance@mail.com',
-    phone: '+91 77823 64120',
-    applications: 2,
-    pending: 1,
-    balance: '₹5,600',
-    status: 'Inactive',
-    joinedDate: '28 Apr 2026',
-  },
-  {
-    id: 'C-0005',
-    name: 'City Retail Group',
-    email: 'cityretail@business.com',
-    phone: '+91 94561 23890',
-    applications: 4,
-    pending: 0,
-    balance: '₹0',
-    status: 'Active',
-    joinedDate: '09 May 2026',
-  },
-  {
-    id: 'C-0006',
-    name: 'Mohammad Ali',
-    email: 'mohd.ali@gmail.com',
-    phone: '+91 88790 34511',
-    applications: 1,
-    pending: 1,
-    balance: '₹8,200',
-    status: 'Pending',
-    joinedDate: '19 Jun 2026',
-  },
-];
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  applications: number;
+  pending: number;
+  balance: string;
+  status: string;
+  joinedDate: string;
+}
 
-type Customer = typeof INITIAL_CUSTOMERS[number];
+// ── Live Dataset ────────────────────────────────────────────────
+const INITIAL_CUSTOMERS: Customer[] = [];
 type FilterStatus = 'All' | 'Active' | 'Inactive' | 'Pending';
 
 // ── Status Badge ──────────────────────────────────────────────

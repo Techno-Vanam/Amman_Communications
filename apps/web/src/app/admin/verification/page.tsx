@@ -43,21 +43,8 @@ interface VerifRecord {
   reviewedBy?: string;
 }
 
-// ── Mock Data ─────────────────────────────────────────────────
-const TODAY = '2026-08-27';
-
-const INITIAL_RECORDS: VerifRecord[] = [
-  { id: 'VRF-001', appId: 'APP-2026-089', customer: 'Ahmad Hassan',      docType: 'Business Registration', uploadedDate: '2026-08-27', status: 'Pending Review',    remarks: '' },
-  { id: 'VRF-002', appId: 'APP-2026-089', customer: 'Ahmad Hassan',      docType: 'Identity Proof',        uploadedDate: '2026-08-27', status: 'Pending Review',    remarks: '' },
-  { id: 'VRF-003', appId: 'APP-2026-088', customer: 'Sarah Jenkins',     docType: 'Bank Statement',        uploadedDate: '2026-08-26', status: 'Verified',          remarks: 'All documents verified successfully.', reviewedBy: 'Admin' },
-  { id: 'VRF-004', appId: 'APP-2026-088', customer: 'Sarah Jenkins',     docType: 'Address Proof',         uploadedDate: '2026-08-26', status: 'Needs Correction',  remarks: 'Address mismatch found. Please re-upload.' },
-  { id: 'VRF-005', appId: 'APP-2026-085', customer: 'Rachel Vance',      docType: 'Tax Certificate',       uploadedDate: '2026-08-25', status: 'Pending Review',    remarks: '' },
-  { id: 'VRF-006', appId: 'APP-2026-085', customer: 'Rachel Vance',      docType: 'Utility Bill',          uploadedDate: '2026-08-25', status: 'Needs Correction',  remarks: 'Document expired. Please provide a recent bill.' },
-  { id: 'VRF-007', appId: 'APP-2026-084', customer: 'Mohammad Ali',      docType: 'Identity Proof',        uploadedDate: '2026-08-22', status: 'Pending Review',    remarks: '' },
-  { id: 'VRF-008', appId: 'APP-2026-083', customer: 'Ahmad Hassan',      docType: 'Partnership Deed',      uploadedDate: '2026-08-20', status: 'Verified',          remarks: 'Verified and approved.', reviewedBy: 'Admin' },
-  { id: 'VRF-009', appId: 'APP-2026-082', customer: 'TechCorp LLC',      docType: 'NOC Letter',            uploadedDate: '2026-08-18', status: 'Rejected',          remarks: 'NOC not from the correct authority. Application rejected.' },
-  { id: 'VRF-010', appId: 'APP-2026-087', customer: 'TechCorp LLC',      docType: 'Business Registration', uploadedDate: '2026-08-27', status: 'Verified',          remarks: 'Documents in order.', reviewedBy: 'Admin' },
-];
+// ── Live Dataset ─────────────────────────────────────────────────
+const INITIAL_RECORDS: VerifRecord[] = [];
 
 // ── Status config ─────────────────────────────────────────────
 const STATUS_CFG: Record<VerifStatus, { badge: string; icon: React.ReactNode; ring: string }> = {
@@ -268,16 +255,16 @@ export default function VerificationPage() {
     (['All', ...ALL_STATUS_LIST] as FilterType[]).map(s => [s, s === 'All' ? records.length : records.filter(r => r.status === s).length])
   );
 
+  const todayStr = new Date().toISOString().split('T')[0];
   const pendingCount    = records.filter(r => r.status === 'Pending Review').length;
-  const verifiedToday   = records.filter(r => r.status === 'Verified' && r.uploadedDate === TODAY).length;
+  const verifiedToday   = records.filter(r => r.status === 'Verified' && r.uploadedDate === todayStr).length;
   const needsCorrection = records.filter(r => r.status === 'Needs Correction').length;
 
-  // avg processing (mock: days between upload and today for verified records)
   const verifiedRecords = records.filter(r => r.status === 'Verified');
   const avgDays = verifiedRecords.length === 0 ? 0 :
     Math.round(verifiedRecords.reduce((acc, r) => {
-      const diff = (new Date(TODAY).getTime() - new Date(r.uploadedDate).getTime()) / 86400000;
-      return acc + diff;
+      const diff = (new Date().getTime() - new Date(r.uploadedDate).getTime()) / 86400000;
+      return acc + Math.max(0, diff);
     }, 0) / verifiedRecords.length);
 
   const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });

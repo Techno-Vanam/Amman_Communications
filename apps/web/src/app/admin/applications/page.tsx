@@ -45,17 +45,8 @@ interface Application {
   notes?: string;
 }
 
-// ── Mock Data ─────────────────────────────────────────────────
-const INITIAL_APPS: Application[] = [
-  { id: 'APP-2026-089', customer: 'Ahmad Hassan',      email: 'ahmad.hassan@email.com',    phone: '+91 98456 12300', serviceType: 'Commercial Fiber Broadband',      createdDate: '2026-08-27', status: 'Under Verification' },
-  { id: 'APP-2026-088', customer: 'Sarah Jenkins',     email: 'sarah.jenkins@email.com',   phone: '+91 99001 45678', serviceType: 'Dedicated Leased Line',           createdDate: '2026-08-26', status: 'Documents Received' },
-  { id: 'APP-2026-087', customer: 'TechCorp LLC',      email: 'admin@techcorp.com',        phone: '+91 80112 77890', serviceType: 'Enterprise VoIP Infrastructure',  createdDate: '2026-08-25', status: 'Completed' },
-  { id: 'APP-2026-086', customer: 'City Retail Group', email: 'cityretail@business.com',   phone: '+91 94561 23890', serviceType: 'Managed Network Security',         createdDate: '2026-08-24', status: 'Pending Payment' },
-  { id: 'APP-2026-085', customer: 'Rachel Vance',      email: 'rachel.vance@mail.com',     phone: '+91 77823 64120', serviceType: 'Cloud Backup & Storage',          createdDate: '2026-08-23', status: 'Under Verification' },
-  { id: 'APP-2026-084', customer: 'Mohammad Ali',      email: 'mohd.ali@gmail.com',        phone: '+91 88790 34511', serviceType: 'Commercial Fiber Broadband',      createdDate: '2026-08-22', status: 'Submitted' },
-  { id: 'APP-2026-083', customer: 'Ahmad Hassan',      email: 'ahmad.hassan@email.com',    phone: '+91 98456 12300', serviceType: 'Enterprise VoIP Infrastructure',  createdDate: '2026-08-20', status: 'Approved' },
-  { id: 'APP-2026-082', customer: 'TechCorp LLC',      email: 'admin@techcorp.com',        phone: '+91 80112 77890', serviceType: 'Dedicated Leased Line',           createdDate: '2026-08-18', status: 'Rejected', notes: 'Missing business registration documents.' },
-];
+// ── Live Dataset ─────────────────────────────────────────────────
+const INITIAL_APPS: Application[] = [];
 
 const SERVICE_TYPES = [
   'Commercial Fiber Broadband',
@@ -352,7 +343,7 @@ export default function ApplicationsPage() {
 
   function handleAdd(data: Partial<Application>) {
     const newApp: Application = {
-      id: `APP-2026-${String(90 + apps.length - INITIAL_APPS.length + 1).padStart(3, '0')}`,
+      id: `APP-2026-${String(apps.length + 1).padStart(3, '0')}`,
       customer: data.customer ?? '',
       email: data.email ?? '',
       phone: data.phone ?? '',
