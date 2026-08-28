@@ -1,1 +1,0 @@
-export function PaymentReceipt({ payment, invoice }: any) { return <div>Payment Receipt Mock</div>; }
