@@ -7,7 +7,7 @@ import { AdminAuthGuard } from '../auth/guards/admin-auth.guard';
 import { ExpenseCategory } from '@prisma/client';
 
 @ApiBearerAuth()
-@Controller('v1/admin/expenses')
+@Controller(['v1/admin/expenses', 'api/v1/admin/expenses', 'admin/expenses'])
 @UseGuards(AdminAuthGuard)
 export class ExpensesController {
   constructor(private readonly expensesService: ExpensesService) {}

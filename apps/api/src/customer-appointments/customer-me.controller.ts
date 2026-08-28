@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @ApiTags('Customer Profile')
 @ApiBearerAuth()
-@Controller('customer/me')
+@Controller(['customer/me', 'v1/customer/me', 'api/v1/customer/me'])
 @UseGuards(CustomerAuthGuard)
 export class CustomerMeController {
   constructor(private readonly prisma: PrismaService) {}

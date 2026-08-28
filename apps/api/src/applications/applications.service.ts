@@ -153,4 +153,74 @@ export class ApplicationsService {
       },
     });
   }
+
+  async adminListApplications(filters: { search?: string; status?: any }) {
+    const where: any = {};
+    if (filters.status && filters.status !== 'ALL') {
+      where.status = filters.status;
+    }
+    if (filters.search && filters.search.trim()) {
+      const q = filters.search.trim();
+      where.OR = [
+        { applicationNumber: { contains: q, mode: 'insensitive' } },
+        { fullName: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+        { serviceType: { contains: q, mode: 'insensitive' } },
+        { title: { contains: q, mode: 'insensitive' } },
+      ];
+    }
+
+    return this.prisma.application.findMany({
+      where,
+      include: {
+        customer: {
+          select: { id: true, name: true, email: true, phone: true },
+        },
+        service: {
+          select: { id: true, name: true, totalFee: true },
+        },
+        documents: {
+          orderBy: { uploadedAt: 'asc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async adminGetApplicationById(applicationId: string) {
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+      include: {
+        customer: true,
+        service: true,
+        documents: true,
+      },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+
+    return application;
+  }
+
+  async adminUpdateApplicationStatus(applicationId: string, status: any) {
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+
+    return this.prisma.application.update({
+      where: { id: applicationId },
+      data: { status },
+      include: {
+        customer: true,
+        service: true,
+        documents: true,
+      },
+    });
+  }
 }

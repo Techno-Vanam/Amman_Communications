@@ -51,7 +51,7 @@ export default function MyAppointmentsPage() {
     UPCOMING: allAppointments.filter(
       (a) =>
         (a.status === 'PENDING' || a.status === 'CONFIRMED') &&
-        new Date(a.preferredDate) >= new Date()
+        new Date(a.preferredDate || a.appointmentDate || Date.now()) >= new Date()
     ).length,
     RESCHEDULED: allAppointments.filter((a) => a.status === 'RESCHEDULED').length,
     COMPLETED: allAppointments.filter((a) => a.status === 'COMPLETED').length,

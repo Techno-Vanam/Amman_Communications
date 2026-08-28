@@ -73,8 +73,9 @@ export default function ProfileSettingsPage() {
 
       if (!res.ok) throw new Error('Failed to update personal details');
       setMessage({ type: 'success', text: 'Personal details updated successfully!' });
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message });
+    } catch (err: unknown) {
+      const text = err instanceof Error ? err.message : 'An error occurred';
+      setMessage({ type: 'error', text });
     } finally {
       setSaving(false);
     }
@@ -105,8 +106,9 @@ export default function ProfileSettingsPage() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmNewPassword('');
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message });
+    } catch (err: unknown) {
+      const text = err instanceof Error ? err.message : 'Password change failed';
+      setMessage({ type: 'error', text });
     } finally {
       setSaving(false);
     }
@@ -130,8 +132,9 @@ export default function ProfileSettingsPage() {
       }
 
       setMessage({ type: 'success', text: 'Contact info updated successfully.' });
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'An error occurred' });
+    } catch (err: unknown) {
+      const text = err instanceof Error ? err.message : 'An error occurred';
+      setMessage({ type: 'error', text });
     } finally {
       setSaving(false);
     }
@@ -155,8 +158,9 @@ export default function ProfileSettingsPage() {
       }
 
       setMessage({ type: 'success', text: 'Preferences updated successfully.' });
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'An error occurred' });
+    } catch (err: unknown) {
+      const text = err instanceof Error ? err.message : 'An error occurred';
+      setMessage({ type: 'error', text });
     } finally {
       setSaving(false);
     }

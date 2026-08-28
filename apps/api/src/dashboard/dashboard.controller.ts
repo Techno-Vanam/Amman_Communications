@@ -55,7 +55,7 @@ export class AdminDashboardController {
 }
 
 @ApiBearerAuth()
-@Controller('customer/dashboard')
+@Controller(['customer/dashboard', 'v1/customer/dashboard', 'api/v1/customer/dashboard'])
 @UseGuards(CustomerAuthGuard)
 export class CustomerDashboardController {
   constructor(private readonly prisma: PrismaService) {}

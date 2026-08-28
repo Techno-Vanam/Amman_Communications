@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { fetchAdminDashboardSummary, fetchAdminVerificationQueue, verifyDocumentStatus } from './actions';
-import { AlertCircle, CheckCircle2, Clock, FileText, RefreshCw, X, XCircle } from 'lucide-react';
-import Link from 'next/link';
+import { AlertCircle, CheckCircle2, Clock, FileText, RefreshCw, X } from 'lucide-react';
 
 interface DashboardSummary {
   customers: number;

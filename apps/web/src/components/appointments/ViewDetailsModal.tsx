@@ -40,7 +40,7 @@ export const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
 
   const isCancellable =
     (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') &&
-    new Date(appointment.preferredDate) >= new Date();
+    new Date(appointment.preferredDate || appointment.appointmentDate || Date.now()) >= new Date();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
@@ -50,11 +50,11 @@ export const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
           <div>
             <div className="flex items-center gap-3">
               <span className="text-xs font-mono text-slate-400 font-semibold">
-                {appointment.appointmentNumber}
+                {appointment.appointmentNumber || `AMC-${appointment.id.slice(0, 8)}`}
               </span>
               <StatusBadge status={appointment.status} />
             </div>
-            <h2 className="text-xl font-bold text-slate-900 mt-1">{appointment.service.name}</h2>
+            <h2 className="text-xl font-bold text-slate-900 mt-1">{appointment.service?.name || 'Consultation Service'}</h2>
           </div>
           <button
             onClick={onClose}
@@ -103,11 +103,11 @@ export const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
               </p>
               <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
                 <Calendar className="w-4 h-4 text-blue-600" />
-                <span>{formatDate(appointment.preferredDate.toString())}</span>
+                <span>{formatDate((appointment.preferredDate || appointment.appointmentDate || '').toString())}</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-600 mt-1">
                 <Clock className="w-3.5 h-3.5 text-slate-400" />
-                <span>Slot: {appointment.preferredTime}</span>
+                <span>Slot: {appointment.preferredTime || '10:00 AM'}</span>
               </div>
             </div>
           </div>
@@ -120,31 +120,25 @@ export const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-slate-700">
               <div className="flex items-center gap-2">
                 <User className="w-4 h-4 text-slate-400 shrink-0" />
-                <span>{appointment.name}</span>
+                <span>{appointment.customerName || appointment.customer?.name || 'Applicant'}</span>
               </div>
-              {appointment.email && (
+              {(appointment.customerEmail || appointment.customer?.email) && (
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>{appointment.email}</span>
+                  <span>{appointment.customerEmail || appointment.customer?.email}</span>
                 </div>
               )}
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-slate-400 shrink-0" />
-                <span>{appointment.contactNumber}</span>
+                <span>{appointment.customerPhone || '—'}</span>
               </div>
-              {appointment.address && (
+              {appointment.notes && (
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                  <span>{appointment.address}</span>
+                  <span>{appointment.notes}</span>
                 </div>
               )}
             </div>
-            {appointment.notes && (
-              <div className="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs">
-                <span className="font-semibold text-slate-900">Notes: </span>
-                <span className="text-slate-700">{appointment.notes}</span>
-              </div>
-            )}
           </div>
 
           {/* Supporting Documents */}
@@ -161,12 +155,12 @@ export const ViewDetailsModal: React.FC<ViewDetailsModalProps> = ({
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs uppercase">
-                        {doc.fileType || 'PDF'}
+                        {doc.documentType || 'DOC'}
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-slate-900">{doc.fileName}</p>
                         <p className="text-[10px] text-slate-400">
-                          {(doc.fileSize / 1024).toFixed(1)} KB · Uploaded{' '}
+                          {((doc.fileSize || 0) / 1024).toFixed(1)} KB · Uploaded{' '}
                           {new Date(doc.uploadedAt).toLocaleDateString()}
                         </p>
                       </div>

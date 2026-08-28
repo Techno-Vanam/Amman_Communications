@@ -36,7 +36,6 @@ export default function AdminExpensesPage() {
     title: '', description: '', category: 'OFFICE', amount: '', expenseDate: new Date().toISOString().split('T')[0], paymentMethod: 'CASH', notes: ''
   });
   
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; action: () => void } | null>(null);
   
   const router = useRouter();
@@ -79,13 +78,6 @@ export default function AdminExpensesPage() {
   }, [fetchExpenses, fetchStats]);
 
   useEffect(() => { loadData(); }, [loadData]);
-  
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = () => setOpenDropdownId(null);
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
 
   const openConfirmation = (title: string, message: string, action: () => void) => {
     setConfirmModal({ isOpen: true, title, message, action });
@@ -102,7 +94,6 @@ export default function AdminExpensesPage() {
       if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
       await loadData(false);
       setConfirmModal(null);
-      setOpenDropdownId(null);
     } catch (e: unknown) {
       if (e instanceof Error) alert(e.message);
       setConfirmModal(null);

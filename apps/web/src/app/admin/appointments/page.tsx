@@ -15,8 +15,7 @@ import {
   fetchAdminAppointments,
   fetchAdminAppointmentStats,
   updateAdminAppointmentStatus,
-  deleteAdminAppointment,
-  rescheduleAdminAppointment
+  deleteAdminAppointment
 } from './actions';
 
 interface AppointmentStats {
@@ -270,7 +269,7 @@ export default function AdminAppointmentsPage() {
                       </div>
                       <div className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
                         <span className="px-1.5 py-0.5 rounded-md bg-gray-100 text-gray-600 font-medium tracking-tight">
-                          {apt.appointmentType.replace('_', ' ')}
+                          {(apt.appointmentType || apt.mode || 'OFFICE_VISIT').replace('_', ' ')}
                         </span>
                         {apt.consultationMode && (
                           <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-medium tracking-tight">

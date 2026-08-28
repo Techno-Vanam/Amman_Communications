@@ -26,21 +26,21 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
   const isCancellable =
     (appointment.status === 'PENDING' || appointment.status === 'CONFIRMED') &&
-    new Date(appointment.preferredDate) >= new Date();
+    new Date(appointment.preferredDate || appointment.appointmentDate || Date.now()) >= new Date();
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-card space-y-3">
       {/* Header with Reference & Status */}
       <div className="flex items-center justify-between">
         <span className="text-xs font-mono font-semibold text-slate-400">
-          {appointment.appointmentNumber}
+          {appointment.appointmentNumber || `AMC-${appointment.id.slice(0, 8)}`}
         </span>
         <StatusBadge status={appointment.status} />
       </div>
 
       {/* Service Name */}
       <h3 className="font-semibold text-slate-900 text-base leading-tight">
-        {appointment.service.name}
+        {appointment.service?.name || 'Consultation Service'}
       </h3>
 
       {/* Rescheduled details if applicable */}
@@ -52,12 +52,12 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
       <div className="flex items-center gap-3 text-xs text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
         <div className="flex items-center gap-1.5 font-medium">
           <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-          <span>{formatDate(appointment.preferredDate.toString())}</span>
+          <span>{formatDate((appointment.preferredDate || appointment.appointmentDate || '').toString())}</span>
         </div>
         <span className="text-slate-300">•</span>
         <div className="flex items-center gap-1.5 font-medium">
           <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span>{appointment.preferredTime}</span>
+          <span>{appointment.preferredTime || '10:00 AM'}</span>
         </div>
       </div>
 

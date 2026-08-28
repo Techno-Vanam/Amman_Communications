@@ -7,12 +7,12 @@ import { UpdateServiceStatusDto } from './dto/update-service-status.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { ServicesService } from './services.service';
 
-@Controller(['v1/admin/services', 'api/v1/admin/services', 'admin/services'])
-@UseGuards(AdminAuthGuard)
+@Controller(['v1/admin/services', 'api/v1/admin/services', 'admin/services', 'v1/services', 'api/v1/services', 'services'])
 export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}
 
   @Get('stats')
+  @UseGuards(AdminAuthGuard)
   @ApiOperation({ summary: 'Get Service Statistics' })
   async getStats() {
     return this.servicesService.getStats();
@@ -31,6 +31,7 @@ export class ServicesController {
   }
 
   @Post()
+  @UseGuards(AdminAuthGuard)
   @ApiOperation({ summary: 'Create New Service' })
   @ApiResponse({ status: 201, description: 'Service created successfully.' })
   async create(@Body() dto: CreateServiceDto) {
@@ -38,18 +39,21 @@ export class ServicesController {
   }
 
   @Patch(':id')
+  @UseGuards(AdminAuthGuard)
   @ApiOperation({ summary: 'Update Service Details' })
   async update(@Param('id') id: string, @Body() dto: UpdateServiceDto) {
     return this.servicesService.update(id, dto);
   }
 
   @Patch(':id/status')
+  @UseGuards(AdminAuthGuard)
   @ApiOperation({ summary: 'Update Service Status' })
   async updateStatus(@Param('id') id: string, @Body() dto: UpdateServiceStatusDto) {
     return this.servicesService.updateStatus(id, dto.status);
   }
 
   @Delete(':id')
+  @UseGuards(AdminAuthGuard)
   @ApiOperation({ summary: 'Delete Service' })
   async remove(@Param('id') id: string) {
     return this.servicesService.remove(id);

@@ -62,9 +62,9 @@ export const ServiceSelect: React.FC<ServiceSelectProps> = ({
         <div className="mt-2 text-xs text-slate-600 bg-blue-50/60 p-3.5 rounded-xl border border-blue-100 space-y-1">
           <p className="font-semibold text-blue-900">Service Overview</p>
           <p>{selectedService.description}</p>
-          {selectedService.estimatedProcessingTime && (
+          {(selectedService.estimatedProcessingTime || selectedService.estimatedTime) && (
             <p className="font-medium text-blue-800 pt-0.5">
-              Estimated Turnaround: {selectedService.estimatedProcessingTime}
+              Estimated Turnaround: {selectedService.estimatedProcessingTime || selectedService.estimatedTime}
             </p>
           )}
         </div>
