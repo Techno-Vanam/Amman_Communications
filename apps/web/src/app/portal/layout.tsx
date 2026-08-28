@@ -17,7 +17,8 @@ import {
   X,
   LogOut,
   ShieldCheck,
-  ChevronDown
+  ChevronDown,
+  Plus
 } from 'lucide-react';
 import { NotificationProvider, useNotifications } from '@/context/NotificationContext';
 import { UserProvider, useUser } from '@/context/UserContext';
@@ -43,9 +44,9 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
   return (
     <aside
       className={`
-        fixed inset-y-0 left-0 z-40 w-72 md:w-60 lg:w-72 bg-white text-gray-800 flex flex-col justify-between transition-transform duration-300 ease-in-out md:static md:translate-x-0
+        fixed inset-y-0 left-0 z-40 w-72 md:w-60 lg:w-72 bg-white text-gray-800 flex flex-col justify-between transition-transform duration-300 ease-in-out md:static md:translate-x-0 print:hidden
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-3 lg:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:sticky md:top-4 overflow-hidden
+        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-3 lg:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:sticky md:top-4 overflow-hidden print:hidden
       `}
     >
       {/* Scrollable Top Area: Brand & Navigation */}
@@ -196,28 +197,109 @@ function PortalSidebarContent(props: { mobileMenuOpen: boolean; setMobileMenuOpe
 }
 
 function PortalTopHeader() {
+  const pathname = usePathname();
   const { unreadCount } = useNotifications();
   const { user } = useUser();
 
+  const getHeaderInfo = () => {
+    switch (pathname) {
+      case '/portal/dashboard':
+        return {
+          title: `Good day, ${user.name} 👋`,
+          subtitle: "Here's a real-time overview of your current applications and scheduled appointments.",
+          action: (
+            <Link
+              href="/portal/book-appointment"
+              className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-md shrink-0"
+            >
+              <Plus className="w-4 h-4 text-[#a8d5b9]" />
+              <span>Book New Service</span>
+            </Link>
+          )
+        };
+      case '/portal/appointments':
+        return {
+          title: 'My Appointments',
+          subtitle: 'View, reschedule, or cancel your scheduled appointments.'
+        };
+      case '/portal/applications':
+        return {
+          title: 'My Applications',
+          subtitle: 'Track and manage your submitted service requests.'
+        };
+      case '/portal/documents':
+        return {
+          title: 'Document Upload & Management',
+          subtitle: 'Upload essential certificates, government IDs, and legal deeds for official verification.'
+        };
+      case '/portal/payments':
+        return {
+          title: 'Payments & Receipts',
+          subtitle: 'Manage your financial transactions and documentation.'
+        };
+      case '/portal/book-appointment':
+        return {
+          title: 'Book Appointment',
+          subtitle: 'Follow the steps below to schedule an appointment for your required service.'
+        };
+      case '/portal/profile':
+        return {
+          title: 'My Profile & Identity',
+          subtitle: 'Manage your official personal information, government verification status, and contact credentials.'
+        };
+      case '/portal/settings':
+        return {
+          title: 'System & Security Settings',
+          subtitle: 'Configure security preferences, notifications, and portal settings.'
+        };
+      case '/portal/notifications':
+        return {
+          title: 'Notification Center',
+          subtitle: 'All your notifications and alerts in real-time.'
+        };
+      default:
+        return {
+          title: 'Customer Portal',
+          subtitle: 'Manage your services and account details.'
+        };
+    }
+  };
+
+  const { title, subtitle, action } = getHeaderInfo();
+
   return (
-    <header className="bg-transparent pb-4 sm:pb-6 flex items-center justify-end">
-      {/* Right User Controls: Notification Bell & Profile Badge */}
-      <div className="flex items-center space-x-2 sm:space-x-4">
+    <header className="mb-6 flex items-center justify-between gap-4 print:hidden">
+      {/* Title & Subtitle - Aligned to the left */}
+      <div className="min-w-0">
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="mt-1 text-xs md:text-sm text-gray-500 font-medium hidden sm:block">
+            {subtitle}
+          </p>
+        )}
+      </div>
+
+      {/* Right Controls: Action Button (if any) + Notification Bell + Profile Pill */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {action}
+
         {/* Notification Bell */}
         <Link
           href="/portal/notifications"
-          className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative"
+          className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative shrink-0"
           title="Notifications"
         >
-          <Bell className="w-4 h-4 sm:w-6 sm:h-6" />
+          <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] sm:min-w-[22px] h-[18px] sm:h-[22px] px-1 rounded-full bg-rose-500 text-white text-[9px] sm:text-[11px] font-extrabold flex items-center justify-center shadow-xs border-2 border-white leading-none shrink-0">
+            <span className="absolute -top-1 -right-1 min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-[20px] px-1 rounded-full bg-rose-500 text-white text-[9px] sm:text-[10px] font-extrabold flex items-center justify-center shadow-xs border-2 border-white leading-none shrink-0">
               {unreadCount}
             </span>
           )}
         </Link>
 
-        {/* User Profile Pill Badge */}
+        {/* User Profile Pill */}
         <Link
           href="/portal/profile"
           className="flex items-center gap-2 sm:gap-3.5 bg-white border border-gray-200/90 rounded-full pl-1.5 sm:pl-3 pr-2.5 sm:pr-6 py-1 sm:py-2 shadow-xs hover:bg-[#f0f7f2] hover:border-[#a8d5b9] hover:shadow-sm transition-all"
@@ -242,9 +324,9 @@ export default function PortalLayout({ children }: Readonly<{ children: React.Re
   return (
     <UserProvider>
       <NotificationProvider>
-        <div className="min-h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-x-hidden">
+        <div className="min-h-screen bg-[#f4f6f8] print:bg-white text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-x-hidden print:p-0 print:m-0">
           {/* Mobile Header */}
-          <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c]">
+          <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c] print:hidden">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 rounded-xl bg-[#a8d5b9]/20 flex items-center justify-center border border-[#a8d5b9]/40 text-[#a8d5b9]">
                 <ShieldCheck className="w-5 h-5" />
@@ -267,7 +349,7 @@ export default function PortalLayout({ children }: Readonly<{ children: React.Re
           <PortalSidebarContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
           {/* Main Content Area */}
-          <main className="min-w-0 flex-1 p-3.5 sm:p-4 md:p-5 lg:p-8 overflow-y-auto max-w-full overflow-x-hidden">
+          <main className="min-w-0 flex-1 p-3.5 sm:p-4 md:p-5 lg:p-8 overflow-y-auto max-w-full overflow-x-hidden print:p-0 print:m-0 print:bg-white print:w-full">
             <PortalTopHeader />
             {children}
           </main>

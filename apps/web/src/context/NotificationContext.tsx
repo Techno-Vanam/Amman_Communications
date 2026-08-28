@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, X } from 'lucide-react';
 
 export interface NotificationItem {
@@ -128,18 +129,29 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     setNotifications((prev) => [...prev, ...moreItems]);
   };
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <NotificationContext.Provider
       value={{ notifications, unreadCount, markAsRead, markAllAsRead, loadMore, showToast }}
     >
       {children}
 
-      {/* Centered Modal Success Notification Pop-up matching Reference Image */}
-      {toast && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2rem] shadow-2xl border border-emerald-100 max-w-sm w-full p-8 text-center relative overflow-hidden animate-in zoom-in-95 duration-200 space-y-4">
+      {/* Centered Modal Success Notification Pop-up with Full Dim Overlay */}
+      {mounted && toast && createPortal(
+        <div
+          onClick={() => setToast(null)}
+          className="fixed inset-0 z-[999999] bg-black/70 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-[2rem] shadow-2xl border border-gray-200/90 ring-1 ring-black/5 max-w-sm w-full p-8 text-center relative overflow-hidden animate-in zoom-in-95 duration-200 space-y-4"
+          >
             {/* Soft Green Pattern Header Overlay */}
-            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#e8f8ef] via-[#f2faf5] to-transparent pointer-events-none" />
+            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#f0f7f2] via-[#f7faf8] to-transparent pointer-events-none" />
 
             {/* Dismiss X Button */}
             <button
@@ -150,15 +162,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
               <X className="w-4 h-4" />
             </button>
 
-            {/* 3D Green Checkmark Circle Badge */}
-            <div className="relative z-10 w-20 h-20 rounded-full bg-gradient-to-tr from-[#00b05b] to-[#10b981] text-white flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/30 border-4 border-white ring-4 ring-emerald-50/80 my-2">
-              <Check className="w-10 h-10 stroke-[3] text-white" />
+            {/* Brand Dark Green Checkmark Circle Badge */}
+            <div className="relative z-10 w-20 h-20 rounded-full bg-[#12372A] text-white flex items-center justify-center mx-auto shadow-lg shadow-[#12372A]/20 border-4 border-white ring-4 ring-[#f0f7f2] my-2">
+              <Check className="w-10 h-10 stroke-[3] text-[#a8d5b9]" />
             </div>
 
-            {/* Content Text */}
+            {/* Content Text (Emoji removed) */}
             <div className="relative z-10 space-y-2">
               <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">
-                {toast.title} 🎉
+                {toast.title}
               </h3>
               {toast.message && (
                 <p className="text-xs text-gray-500 font-medium leading-relaxed max-w-xs mx-auto">
@@ -171,13 +183,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             <div className="relative z-10 pt-2">
               <button
                 onClick={() => setToast(null)}
-                className="w-full py-3 px-6 bg-gradient-to-r from-[#00b05b] to-[#10b981] hover:from-[#009b50] hover:to-[#059669] text-white font-bold text-xs rounded-2xl shadow-md shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full py-3 px-6 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-2xl shadow-md shadow-[#12372A]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 Continue
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </NotificationContext.Provider>
   );

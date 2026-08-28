@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </a>
 
           {/* INNER NAVIGATION LAYER - Light Frosted Glass Capsule */}
-          <nav className="hidden md:flex items-center gap-1 bg-slate-900/[0.04] backdrop-blur-md px-2 py-1.5 rounded-full border border-black/[0.04] shadow-inner">
+          <nav className="hidden lg:flex items-center gap-1 bg-slate-900/[0.04] backdrop-blur-md px-2 py-1.5 rounded-full border border-black/[0.04] shadow-inner">
             {navLinks.map((link) => {
               const sectionId = link.href.replace('#', '');
               const isActive = activeSection === sectionId;
@@ -96,11 +96,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             })}
           </nav>
 
-          {/* RIGHT ACTION BUTTONS */}
-          <div className="hidden lg:flex items-center gap-2">
+          {/* RIGHT ACTION BUTTONS - Outside drawer on tablet/desktop (>= 640px) */}
+          <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={onNavigateLogin}
-              className="px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-slate-700 hover:text-brand-700 hover:bg-white/80 rounded-full transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-2.5 sm:px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-slate-700 hover:text-brand-700 hover:bg-white/80 rounded-full transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <LogIn className="w-3.5 h-3.5 text-brand-600" />
               <span>Login</span>
@@ -109,7 +109,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {onOpenModal ? (
               <button
                 onClick={onOpenModal}
-                className="px-5 py-2 text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 rounded-full transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-brand-600/25 hover:scale-[1.02]"
+                className="px-3 sm:px-5 py-1.5 sm:py-2 text-[11px] sm:text-sm font-bold text-white bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 rounded-full transition-all flex items-center gap-1 cursor-pointer shadow-md shadow-brand-600/25 hover:scale-[1.02]"
               >
                 <span>Get in Touch</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -117,7 +117,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             ) : (
               <button
                 onClick={onNavigateSignUp}
-                className="px-5 py-2 text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 rounded-full transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-brand-600/25 hover:scale-[1.02]"
+                className="px-3 sm:px-5 py-1.5 sm:py-2 text-[11px] sm:text-sm font-bold text-white bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 rounded-full transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-brand-600/25 hover:scale-[1.02]"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>Get Started</span>
@@ -139,7 +139,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer (Light Glassmorphism) */}
       {mobileMenuOpen && (
-        <div className="md:hidden mt-2 bg-white/90 backdrop-blur-2xl rounded-3xl border border-white/80 px-4 pt-3 pb-5 shadow-2xl text-slate-800 animate-fade-in max-w-7xl mx-auto">
+        <div className="lg:hidden mt-2 bg-white/90 backdrop-blur-2xl rounded-3xl border border-white/80 px-4 pt-3 pb-5 shadow-2xl text-slate-800 animate-fade-in max-w-7xl mx-auto">
           <div className="flex flex-col space-y-1 mb-4">
             {navLinks.map((link) => {
               const sectionId = link.href.replace('#', '');
@@ -160,7 +160,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               );
             })}
           </div>
-          <div className="flex flex-col gap-2 pt-3 border-t border-slate-100">
+
+          {/* Actions for Mobile Phones Only (< 640px) inside the drawer */}
+          <div className="sm:hidden flex flex-col gap-2 pt-3 border-t border-slate-100">
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => {

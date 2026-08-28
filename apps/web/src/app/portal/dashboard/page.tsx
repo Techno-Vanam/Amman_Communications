@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Calendar,
   RefreshCw,
-  AlertCircle,
   Info,
   ArrowUpRight,
   Plus
@@ -59,6 +58,51 @@ export default function PortalDashboardPage() {
   const pendingActionsCount = applications.filter((a) => a.status === 'Verification' || a.status === 'Documents Received').length;
   const appointmentsCount = appointments.length;
 
+  // Build combined top 3 recent activities list
+  const recentActivities = [
+    ...applications.map((app) => ({
+      id: `app-${app.id}`,
+      title: `Application ${app.id}`,
+      service: app.serviceType,
+      status: app.status,
+      date: app.submittedDate,
+      isApp: true
+    })),
+    ...appointments.map((apt) => ({
+      id: `apt-${apt.id || apt.serviceType}`,
+      title: `Appointment Scheduled`,
+      service: apt.serviceType,
+      status: apt.consultationType || 'Office Visit',
+      date: apt.originalDateTime || 'Scheduled',
+      isApp: false
+    }))
+  ].slice(0, 3);
+
+  // Build top 3 alerts & reminders list
+  const topAlerts = [
+    ...(applications.length > 0 ? [{
+      id: 'alt-1',
+      title: 'Application Under Verification',
+      desc: `Application ${applications[0].id} for ${applications[0].serviceType} is being verified.`,
+      badge: 'Active',
+      badgeBg: 'bg-blue-100 text-blue-800'
+    }] : []),
+    ...(appointments.length > 0 ? [{
+      id: 'alt-2',
+      title: 'Upcoming Appointment Session',
+      desc: `${appointments[0].serviceType} session (${appointments[0].consultationType || 'Office Visit'}).`,
+      badge: 'Scheduled',
+      badgeBg: 'bg-emerald-100 text-emerald-800'
+    }] : []),
+    {
+      id: 'alt-3',
+      title: 'System Security & Verification',
+      desc: 'Account credentials and identity document vault status active.',
+      badge: 'Protected',
+      badgeBg: 'bg-gray-100 text-gray-800'
+    }
+  ].slice(0, 3);
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12">
       {/* Welcome Header & Action */}
@@ -88,7 +132,7 @@ export default function PortalDashboardPage() {
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
-                <FileText className="w-5 h-5" />
+                <FileText className="w-4.5 h-4.5" />
               </div>
               <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Active Applications</span>
             </div>
@@ -108,7 +152,7 @@ export default function PortalDashboardPage() {
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
-                <Clock className="w-5 h-5" />
+                <Clock className="w-4.5 h-4.5" />
               </div>
               <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Pending Actions</span>
             </div>
@@ -128,7 +172,7 @@ export default function PortalDashboardPage() {
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-5 h-5" />
+                <CheckCircle2 className="w-4.5 h-4.5" />
               </div>
               <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Completed Services</span>
             </div>
@@ -148,7 +192,7 @@ export default function PortalDashboardPage() {
           <div>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
-                <Calendar className="w-5 h-5" />
+                <Calendar className="w-4.5 h-4.5" />
               </div>
               <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Appointments</span>
             </div>
@@ -164,29 +208,29 @@ export default function PortalDashboardPage() {
         </div>
       </div>
 
-      {/* Main Container Card Grid: Recent Activity & Notifications */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Recent Activity (Left Col 7/12) */}
-        <div className="lg:col-span-7 bg-white rounded-3xl border border-gray-100 shadow-2xs p-6 flex flex-col justify-between space-y-6">
+      {/* Main Container Card Grid: Recent Activity (Top 3) & Alerts (Top 3) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Recent Activity (Left Col 7/12) - Perfectly Sized Top 3 Cards */}
+        <div className="lg:col-span-7 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-5 flex flex-col justify-between space-y-4">
           <div>
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-              <h2 className="text-base font-bold text-gray-900">Recent Activity &amp; Status Updates</h2>
+            <div className="flex items-center justify-between gap-3 pb-3 border-b border-gray-100">
+              <h2 className="text-sm font-bold text-gray-900 min-w-0 truncate">Recent Activity &amp; Updates</h2>
               <Link
                 href="/portal/applications"
-                className="text-xs font-bold text-[#12372A] hover:underline flex items-center gap-1"
+                className="text-xs font-bold text-[#12372A] hover:underline flex items-center gap-1 shrink-0 whitespace-nowrap"
               >
                 <span>View All</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
-            <div className="mt-4 space-y-3">
-              {applications.length === 0 && appointments.length === 0 ? (
-                <div className="p-8 text-center bg-gray-50/70 border border-gray-200/60 rounded-2xl space-y-2">
-                  <Info className="w-6 h-6 text-gray-400 mx-auto" />
+            <div className="mt-3 space-y-2.5">
+              {recentActivities.length === 0 ? (
+                <div className="p-6 text-center bg-gray-50/70 border border-gray-200/60 rounded-xl space-y-1.5">
+                  <Info className="w-5 h-5 text-gray-400 mx-auto" />
                   <p className="text-xs font-bold text-gray-800">No Recent Activity Recorded</p>
                   <p className="text-[11px] text-gray-500 max-w-sm mx-auto">
-                    Create an application or schedule an appointment to track status updates and verification milestones in real-time.
+                    Create an application or schedule an appointment to track status updates.
                   </p>
                 </div>
               ) : (
@@ -223,51 +267,44 @@ export default function PortalDashboardPage() {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-gray-100 flex items-center justify-between text-xs">
-            <span className="text-gray-400 font-medium">Updated real-time</span>
+          <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
+            <span className="text-gray-400 font-medium text-[11px]">Real-time tracking active</span>
             <Link href="/portal/applications" className="font-bold text-[#12372A] hover:underline">
               Track requests &rarr;
             </Link>
           </div>
         </div>
 
-        {/* Action Alerts & Notifications (Right Col 5/12) */}
-        <div className="lg:col-span-5 bg-white rounded-3xl border border-gray-100 shadow-2xs p-6 flex flex-col justify-between space-y-6">
+        {/* Action Alerts & Reminders (Right Col 5/12) - Perfectly Sized Cards */}
+        <div className="lg:col-span-5 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-5 flex flex-col justify-between space-y-4">
           <div>
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-gray-900">Alerts &amp; Reminders</h2>
-                <span className="bg-[#12372A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  {applications.length > 0 ? '1 Active' : '0 New'}
-                </span>
+            <div className="flex items-center justify-between gap-3 pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="text-sm font-bold text-gray-900 truncate">Alerts &amp; Reminders</h2>
               </div>
-              <Link href="/portal/notifications" className="text-xs font-bold text-[#12372A] hover:underline">
+              <Link href="/portal/notifications" className="text-xs font-bold text-[#12372A] hover:underline shrink-0 whitespace-nowrap">
                 View All
               </Link>
             </div>
 
-            <div className="mt-4 space-y-3 text-xs">
-              {applications.length > 0 ? (
-                <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 space-y-2">
+            <div className="mt-3 space-y-2.5 text-xs">
+              {topAlerts.map((alt) => (
+                <div key={alt.id} className="p-3.5 rounded-xl bg-gray-50/80 border border-gray-200/70 space-y-1.5 transition-all hover:bg-gray-50">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-gray-900">Application Under Verification</span>
-                    <span className="text-[10px] text-gray-400">Active</span>
+                    <span className="font-bold text-gray-900 text-xs truncate">{alt.title}</span>
+                    <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-gray-200 ${alt.badgeBg}`}>
+                      {alt.badge}
+                    </span>
                   </div>
-                  <p className="text-gray-600 text-[11px] leading-relaxed">
-                    Your application {applications[0].id} for {applications[0].serviceType} is being verified by officer {applications[0].assignedOfficer}.
+                  <p className="text-gray-600 text-[11px] leading-relaxed line-clamp-2">
+                    {alt.desc}
                   </p>
                 </div>
-              ) : (
-                <div className="p-6 text-center bg-gray-50 border border-gray-200/70 rounded-2xl space-y-2">
-                  <AlertCircle className="w-5 h-5 text-gray-400 mx-auto" />
-                  <p className="font-bold text-gray-800 text-xs">No Action Alerts</p>
-                  <p className="text-gray-500 text-[11px]">Your account status and documents are up to date.</p>
-                </div>
-              )}
+              ))}
             </div>
           </div>
 
-          <div className="pt-4 border-t border-gray-100 text-center">
+          <div className="pt-3 border-t border-gray-100 text-center">
             <Link href="/portal/notifications" className="text-xs font-bold text-[#12372A] hover:underline">
               Open Notification Center &rarr;
             </Link>

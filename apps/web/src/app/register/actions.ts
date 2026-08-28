@@ -1,6 +1,10 @@
 'use server';
 
 import { cookies } from 'next/headers';
+const API_BASE_URL =
+  process.env.API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  'http://localhost:3003';
 
 export async function registerAction(formData: FormData) {
   const name = formData.get('name');
@@ -20,7 +24,7 @@ export async function registerAction(formData: FormData) {
   }
 
   try {
-    const res = await fetch('http://localhost:3003/v1/auth/register', {
+    const res = await fetch(`${API_BASE_URL}/v1/auth/register`,  {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

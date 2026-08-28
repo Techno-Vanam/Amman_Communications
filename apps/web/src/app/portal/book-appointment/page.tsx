@@ -26,6 +26,8 @@ import {
   Video,
   Globe
 } from 'lucide-react';
+import CustomDatePicker from '@/components/ui/CustomDatePicker';
+import CustomSelect from '@/components/ui/CustomSelect';
 
 const SERVICES = [
   { id: 'passport', name: 'Passport Renewal', icon: BookOpen },
@@ -144,79 +146,64 @@ export default function BookAppointmentPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 font-sans pb-12">
-      {/* Title & Subtitle */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
-          Book Appointment
-        </h1>
-        <p className="mt-1 text-sm text-gray-600">
-          Follow the steps below to schedule an appointment for your required service.
-        </p>
-      </div>
-
+    <div className="max-w-7xl w-full mx-auto space-y-8 font-sans pb-12">
       {/* 5-Step Stepper Progress Bar */}
-      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-6 md:p-8 overflow-hidden">
-        <div className="flex items-center justify-between max-w-3xl mx-auto relative px-5">
-          {/* Background Track Line */}
-          <div className="absolute top-[18px] left-9 right-9 h-1 bg-gray-200 z-0 rounded-full" />
-
-          {/* Animated Active Progress Line */}
-          <div
-            className="absolute top-[18px] left-9 h-1 bg-gradient-to-r from-[#12372A] via-[#1b4d3a] to-[#2d6a4f] z-0 rounded-full transition-all duration-700 ease-in-out shadow-sm"
-            style={{
-              width: `calc(${((currentStep - 1) / (STEPS.length - 1)) * 100}% - ${
-                ((currentStep - 1) / (STEPS.length - 1)) * 36
-              }px)`
-            }}
-          />
-
-          {STEPS.map((step) => {
+      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-5 md:p-6 overflow-hidden">
+        <div className="flex items-center justify-between max-w-5xl mx-auto px-1 sm:px-5">
+          {STEPS.map((step, index) => {
             const isCompleted = step.id < currentStep;
             const isCurrent = step.id === currentStep;
             const isClickable = step.id < currentStep;
 
             return (
-              <div
-                key={step.id}
-                onClick={() => isClickable && setCurrentStep(step.id)}
-                className={`relative z-10 flex flex-col items-center group ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
-              >
+              <React.Fragment key={step.id}>
+                {/* Stepper Node */}
                 <div
-                  className={`
-                    w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm transition-all duration-300 transform
-                    ${isCompleted
-                      ? 'bg-[#12372A] text-white shadow-md scale-100'
-                      : isCurrent
-                      ? 'bg-[#12372A] text-white ring-4 ring-gray-300/80 scale-110 shadow-md'
-                      : 'bg-white text-gray-800 shadow-xs scale-95'
-                    }
-                  `}
-                  style={{
-                    border: '2px solid #6b7280',
-                    backgroundColor: isCompleted || isCurrent ? '#12372A' : '#ffffff'
-                  }}
+                  onClick={() => isClickable && setCurrentStep(step.id)}
+                  className={`relative z-10 flex flex-col items-center group shrink-0 ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
                 >
-                  {isCompleted ? (
-                    <Check className="w-5 h-5 text-[#a8d5b9] stroke-[3]" />
-                  ) : (
-                    <span className={`font-extrabold ${isCurrent || isCompleted ? 'text-white' : 'text-gray-800'}`}>
-                      {step.id}
-                    </span>
-                  )}
+                  <div
+                    className={`
+                      w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-extrabold text-xs sm:text-sm transition-all duration-300 transform
+                      ${isCompleted || isCurrent
+                        ? 'bg-[#12372A] text-white border-2 border-[#12372A] shadow-md'
+                        : 'bg-white text-gray-700 border-2 border-gray-300 shadow-xs'
+                      }
+                    `}
+                  >
+                    {isCompleted ? (
+                      <Check className="w-4 h-4 sm:w-5 sm:h-5 text-[#a8d5b9] stroke-[3]" />
+                    ) : (
+                      <span className={`font-extrabold ${isCurrent || isCompleted ? 'text-white' : 'text-gray-800'}`}>
+                        {step.id}
+                      </span>
+                    )}
+                  </div>
+                  <span
+                    className={`mt-1.5 text-[9px] sm:text-xs transition-all duration-300 tracking-wide whitespace-nowrap ${
+                      isCurrent
+                        ? 'text-[#12372A] font-bold scale-105'
+                        : isCompleted
+                        ? 'text-gray-800 font-semibold'
+                        : 'text-gray-600 font-medium'
+                    }`}
+                  >
+                    {step.label}
+                  </span>
                 </div>
-                <span
-                  className={`mt-2 text-xs transition-all duration-300 tracking-wide ${
-                    isCurrent
-                      ? 'text-[#12372A] font-bold scale-105'
-                      : isCompleted
-                      ? 'text-gray-800 font-semibold'
-                      : 'text-gray-600 font-medium'
-                  }`}
-                >
-                  {step.label}
-                </span>
-              </div>
+
+                {/* Connector Line between Steps */}
+                {index < STEPS.length - 1 && (
+                  <div className="flex-1 mx-2 sm:mx-4 h-1 bg-gray-200 rounded-full relative -top-3">
+                    <div
+                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#12372A] to-[#2d6a4f] rounded-full transition-all duration-500 ease-in-out"
+                      style={{
+                        width: isCompleted ? '100%' : '0%'
+                      }}
+                    />
+                  </div>
+                )}
+              </React.Fragment>
             );
           })}
         </div>
@@ -299,10 +286,10 @@ export default function BookAppointmentPage() {
                 <button
                   type="button"
                   onClick={() => setDetails({ ...details, mainMode: 'Office Visit' })}
-                  className={`p-5 rounded-2xl border text-left flex items-start gap-4 transition-all duration-200 ${
+                  className={`p-5 rounded-2xl border-2 text-left flex items-start gap-4 transition-all duration-200 ${
                     details.mainMode === 'Office Visit'
                       ? 'border-[#12372A] bg-[#f0f7f2] ring-2 ring-[#12372A]/20 shadow-sm'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                      : 'border-gray-300 hover:border-[#12372A] bg-white shadow-2xs'
                   }`}
                 >
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
@@ -327,10 +314,10 @@ export default function BookAppointmentPage() {
                 <button
                   type="button"
                   onClick={() => setDetails({ ...details, mainMode: 'Online Consultation' })}
-                  className={`p-5 rounded-2xl border text-left flex items-start gap-4 transition-all duration-200 ${
+                  className={`p-5 rounded-2xl border-2 text-left flex items-start gap-4 transition-all duration-200 ${
                     details.mainMode === 'Online Consultation'
                       ? 'border-[#12372A] bg-[#f0f7f2] ring-2 ring-[#12372A]/20 shadow-sm'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                      : 'border-gray-300 hover:border-[#12372A] bg-white shadow-2xs'
                   }`}
                 >
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
@@ -355,12 +342,12 @@ export default function BookAppointmentPage() {
 
             {/* Sub Options when Online Consultation is selected */}
             {details.mainMode === 'Online Consultation' && (
-              <div className="p-5 bg-[#f8faf9] border border-emerald-200/80 rounded-2xl space-y-4 animate-in fade-in duration-300">
+              <div className="p-5 bg-[#f8faf9] border-2 border-emerald-200 rounded-2xl space-y-4 animate-in fade-in duration-300">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold uppercase tracking-wider text-[#12372A]">
                     Select Online Consultation Method
                   </label>
-                  <span className="text-[11px] font-medium text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                  <span className="text-[11px] font-medium text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
                     3 Channels Available
                   </span>
                 </div>
@@ -370,10 +357,10 @@ export default function BookAppointmentPage() {
                   <button
                     type="button"
                     onClick={() => setDetails({ ...details, onlineSubMode: 'Phone Call' })}
-                    className={`p-4 rounded-xl border flex flex-col items-center text-center space-y-2 transition-all ${
+                    className={`p-4 rounded-xl border-2 flex flex-col items-center text-center space-y-2 transition-all ${
                       details.onlineSubMode === 'Phone Call'
                         ? 'border-[#12372A] bg-white ring-2 ring-[#12372A]/30 shadow-sm'
-                        : 'border-gray-200 hover:border-gray-300 bg-white/70'
+                        : 'border-gray-300 hover:border-[#12372A] bg-white'
                     }`}
                   >
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
@@ -391,10 +378,10 @@ export default function BookAppointmentPage() {
                   <button
                     type="button"
                     onClick={() => setDetails({ ...details, onlineSubMode: 'WhatsApp' })}
-                    className={`p-4 rounded-xl border flex flex-col items-center text-center space-y-2 transition-all ${
+                    className={`p-4 rounded-xl border-2 flex flex-col items-center text-center space-y-2 transition-all ${
                       details.onlineSubMode === 'WhatsApp'
                         ? 'border-[#12372A] bg-white ring-2 ring-[#12372A]/30 shadow-sm'
-                        : 'border-gray-200 hover:border-gray-300 bg-white/70'
+                        : 'border-gray-300 hover:border-[#12372A] bg-white'
                     }`}
                   >
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
@@ -412,10 +399,10 @@ export default function BookAppointmentPage() {
                   <button
                     type="button"
                     onClick={() => setDetails({ ...details, onlineSubMode: 'Video Call' })}
-                    className={`p-4 rounded-xl border flex flex-col items-center text-center space-y-2 transition-all ${
+                    className={`p-4 rounded-xl border-2 flex flex-col items-center text-center space-y-2 transition-all ${
                       details.onlineSubMode === 'Video Call'
                         ? 'border-[#12372A] bg-white ring-2 ring-[#12372A]/30 shadow-sm'
-                        : 'border-gray-200 hover:border-gray-300 bg-white/70'
+                        : 'border-gray-300 hover:border-[#12372A] bg-white'
                     }`}
                   >
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
@@ -437,27 +424,26 @@ export default function BookAppointmentPage() {
               {/* Preferred Date */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Preferred Date</label>
-                <input
-                  type="date"
+                <CustomDatePicker
                   value={details.date}
-                  onChange={(e) => setDetails({ ...details, date: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800"
+                  onChange={(val) => setDetails({ ...details, date: val })}
+                  disablePast
                 />
               </div>
 
               {/* Time Slot */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Time Slot</label>
-                <select
+                <CustomSelect
                   value={details.timeSlot}
-                  onChange={(e) => setDetails({ ...details, timeSlot: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800 bg-white"
-                >
-                  <option value="09:30 AM">09:30 AM - 10:15 AM</option>
-                  <option value="10:30 AM">10:30 AM - 11:15 AM</option>
-                  <option value="02:00 PM">02:00 PM - 02:45 PM</option>
-                  <option value="04:00 PM">04:00 PM - 04:45 PM</option>
-                </select>
+                  onChange={(val) => setDetails({ ...details, timeSlot: val })}
+                  options={[
+                    { value: '09:30 AM', label: '09:30 AM - 10:15 AM' },
+                    { value: '10:30 AM', label: '10:30 AM - 11:15 AM' },
+                    { value: '02:00 PM', label: '02:00 PM - 02:45 PM' },
+                    { value: '04:00 PM', label: '04:00 PM - 04:45 PM' }
+                  ]}
+                />
               </div>
 
               {/* DYNAMIC CASE 1: Office Visit Location Selector */}
@@ -518,10 +504,11 @@ export default function BookAppointmentPage() {
                     </div>
                     <div className="space-y-1.5">
                       <label className="block text-xs font-semibold text-gray-700">Preferred Call Type</label>
-                      <select className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-blue-500 bg-white">
-                        <option>Direct Voice Call</option>
-                        <option>IVR Callback Confirmation</option>
-                      </select>
+                      <CustomSelect
+                        value="Direct Voice Call"
+                        onChange={() => {}}
+                        options={['Direct Voice Call', 'IVR Callback Confirmation']}
+                      />
                     </div>
                   </div>
                   <p className="text-[11px] text-blue-800 flex items-center gap-1.5">
@@ -551,15 +538,11 @@ export default function BookAppointmentPage() {
                     </div>
                     <div className="space-y-1.5">
                       <label className="block text-xs font-semibold text-gray-700">WhatsApp Mode Preference</label>
-                      <select
+                      <CustomSelect
                         value={details.whatsappOption}
-                        onChange={(e) => setDetails({ ...details, whatsappOption: e.target.value as 'WhatsApp Voice Call' | 'WhatsApp Video Call' | 'WhatsApp Text Chat' })}
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-emerald-500 bg-white"
-                      >
-                        <option value="WhatsApp Voice Call">WhatsApp Voice Call</option>
-                        <option value="WhatsApp Video Call">WhatsApp Video Call</option>
-                        <option value="WhatsApp Text Chat">WhatsApp Text Chat</option>
-                      </select>
+                        onChange={(val) => setDetails({ ...details, whatsappOption: val as 'WhatsApp Voice Call' | 'WhatsApp Video Call' | 'WhatsApp Text Chat' })}
+                        options={['WhatsApp Voice Call', 'WhatsApp Video Call', 'WhatsApp Text Chat']}
+                      />
                     </div>
                   </div>
                   <p className="text-[11px] text-emerald-800 flex items-center gap-1.5">
@@ -579,15 +562,15 @@ export default function BookAppointmentPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="block text-xs font-semibold text-gray-700">Preferred Video Platform</label>
-                      <select
+                      <CustomSelect
                         value={details.videoPlatform}
-                        onChange={(e) => setDetails({ ...details, videoPlatform: e.target.value as 'Google Meet' | 'Zoom' | 'Microsoft Teams' })}
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-purple-500 bg-white"
-                      >
-                        <option value="Google Meet">Google Meet (Recommended)</option>
-                        <option value="Zoom">Zoom Meeting</option>
-                        <option value="Microsoft Teams">Microsoft Teams</option>
-                      </select>
+                        onChange={(val) => setDetails({ ...details, videoPlatform: val as 'Google Meet' | 'Zoom' | 'Microsoft Teams' })}
+                        options={[
+                          { value: 'Google Meet', label: 'Google Meet (Recommended)' },
+                          { value: 'Zoom', label: 'Zoom Meeting' },
+                          { value: 'Microsoft Teams', label: 'Microsoft Teams' }
+                        ]}
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <label className="block text-xs font-semibold text-gray-700">Email for Video Link Invite</label>

@@ -1,7 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
-
+const API_BASE_URL = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3003';
 export async function loginAction(formData: FormData) {
   const email = formData.get('email');
   const password = formData.get('password');
@@ -11,7 +11,7 @@ export async function loginAction(formData: FormData) {
   }
 
   try {
-    const res = await fetch('http://localhost:3003/v1/auth/login', {
+    const res = await fetch(`${API_BASE_URL}/v1/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
