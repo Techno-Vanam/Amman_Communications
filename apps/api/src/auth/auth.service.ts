@@ -15,7 +15,6 @@ export class AuthService {
     ]);
 
     if (admin && customer) {
-      // Ambiguous identity - safely reject without revealing account status
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -33,22 +32,23 @@ export class AuthService {
 
     const accessToken = await this.jwt.signAsync(
       { sub: user.id, role },
-      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' }
+      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '7d' }
     );
 
-    return { 
+    return {
       accessToken,
       user: {
         id: user.id,
+        name: user.name,
+        email: user.email,
         role,
-      }
+      },
     };
   }
 
   async register(name: string, email: string, password: string) {
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check both tables for existing email
     const [existingAdmin, existingCustomer] = await Promise.all([
       this.prisma.admin.findUnique({ where: { email: normalizedEmail } }),
       this.prisma.customer.findUnique({ where: { email: normalizedEmail } }),
@@ -70,15 +70,17 @@ export class AuthService {
 
     const accessToken = await this.jwt.signAsync(
       { sub: customer.id, role: 'CUSTOMER' },
-      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' }
+      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '7d' }
     );
 
     return {
       accessToken,
       user: {
         id: customer.id,
+        name: customer.name,
+        email: customer.email,
         role: 'CUSTOMER',
-      }
+      },
     };
   }
 }

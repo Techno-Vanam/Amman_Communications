@@ -1,0 +1,404 @@
+openapi: 3.0.3
+info:
+  title: Amman Communications — Application & Document Management API
+  description: API specification for Amman Communications service applications, client-encrypted document storage (AES-256-GCM), live synchronization, and admin verification desk.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local Web Proxy (Port 3000)
+  - url: http://localhost:3003/api/v1
+    description: Direct API Server (Port 3003)
+
+paths:
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health Check
+      responses:
+        '200':
+          description: System is healthy
+
+  /customer/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Customer Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDto'
+      responses:
+        '200':
+          description: Returns JWT access token
+
+  /admin/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Admin Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDto'
+      responses:
+        '200':
+          description: Returns Admin JWT access token
+
+  /customer/services-catalog:
+    get:
+      tags:
+        - Services Catalog
+      summary: Get Services & Required Document Checklist
+      responses:
+        '200':
+          description: List of 5 services and requirements
+
+  /customer/applications:
+    get:
+      tags:
+        - Customer Applications
+      summary: List Customer Applications
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of applications with document summary counts
+    post:
+      tags:
+        - Customer Applications
+      summary: Create New Service Application
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApplicationDto'
+      responses:
+        '201':
+          description: Application created successfully
+
+  /customer/applications/{applicationId}:
+    get:
+      tags:
+        - Customer Applications
+      summary: Get Application Details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Full application details and attached documents
+    put:
+      tags:
+        - Customer Applications
+      summary: Update Application Details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApplicationDto'
+      responses:
+        '200':
+          description: Application updated
+
+  /customer/documents:
+    get:
+      tags:
+        - Customer Documents
+      summary: Get All Grouped Documents (Document Center)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Grouped applications with documents and statuses
+
+  /customer/applications/{applicationId}/documents/upload:
+    post:
+      tags:
+        - Customer Documents
+      summary: Upload and Encrypt Application Document (AES-256-GCM)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectUploadDocumentDto'
+      responses:
+        '200':
+          description: Document encrypted & saved to database
+
+  /customer/documents/download-stream:
+    get:
+      tags:
+        - Customer Documents
+      summary: Stream Decrypted Document
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: path
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Decrypted binary file stream (PDF/Image)
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /customer/applications/{applicationId}/documents/{documentId}:
+    get:
+      tags:
+        - Customer Documents
+      summary: Get Single Document Details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document details
+    delete:
+      tags:
+        - Customer Documents
+      summary: Delete Document
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Document deleted
+
+  /admin/applications/{applicationId}/documents:
+    get:
+      tags:
+        - Admin Verification Desk
+      summary: Admin List Documents for Application
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of documents for review
+
+  /admin/applications/{applicationId}/documents/{documentId}/status:
+    put:
+      tags:
+        - Admin Verification Desk
+      summary: Admin Update Document Verification Status
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: applicationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDocumentStatusDto'
+      responses:
+        '200':
+          description: Document verified or action requested
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginDto:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: customer@amman.com
+        password:
+          type: string
+          example: password123
+
+    CreateApplicationDto:
+      type: object
+      required:
+        - serviceType
+        - fullName
+        - email
+        - phone
+      properties:
+        serviceType:
+          type: string
+          example: PASSPORT_SERVICE
+          enum:
+            - PASSPORT_SERVICE
+            - VISA_SERVICE
+            - COMPANY_REGISTRATION
+            - CITIZEN_SERVICES
+            - DOCUMENT_ATTESTATION
+        title:
+          type: string
+          example: Passport Application & Renewal
+        fullName:
+          type: string
+          example: Ashwath Krishna
+        email:
+          type: string
+          format: email
+          example: ashwath@example.com
+        phone:
+          type: string
+          example: "+91 9876543210"
+        dateOfBirth:
+          type: string
+          example: "1998-05-15"
+        nationality:
+          type: string
+          example: Indian
+        address:
+          type: string
+          example: 123 Anna Salai, Chennai
+        notes:
+          type: string
+          example: Urgent renewal requested
+
+    UpdateApplicationDto:
+      type: object
+      properties:
+        title:
+          type: string
+        serviceType:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        dateOfBirth:
+          type: string
+        nationality:
+          type: string
+        address:
+          type: string
+        notes:
+          type: string
+        status:
+          type: string
+          enum:
+            - DRAFT
+            - SUBMITTED
+            - UNDER_REVIEW
+            - APPROVED
+            - REJECTED
+
+    DirectUploadDocumentDto:
+      type: object
+      required:
+        - documentType
+        - fileName
+        - mimeType
+        - fileSize
+        - base64Data
+      properties:
+        documentType:
+          type: string
+          example: NATIONAL_ID_PROOF
+        fileName:
+          type: string
+          example: aadhaar_card_scan.pdf
+        mimeType:
+          type: string
+          example: application/pdf
+        fileSize:
+          type: integer
+          example: 204800
+        base64Data:
+          type: string
+          example: data:application/pdf;base64,VGhpcyBpcyBhbiBhYWRoYWFyIGNhcmQgc2NhbiBjb250ZW50...
+
+    UpdateDocumentStatusDto:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - UPLOADED
+            - UNDER_REVIEW
+            - VERIFIED
+            - REJECTED
+            - ACTION_REQUIRED
+          example: VERIFIED
+        rejectionReason:
+          type: string
+          example: Photo background has glare. Please upload a clear 300 DPI scan.

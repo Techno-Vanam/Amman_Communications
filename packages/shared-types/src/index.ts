@@ -1,2 +1,2 @@
-/** Shared domain types will be introduced as platform modules are built. */
+export * from './services-catalog';
 export type HealthStatus = 'ok';

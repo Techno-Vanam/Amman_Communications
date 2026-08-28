@@ -1,0 +1,3452 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "description": "Authenticates admin or customer and returns JWT access token.",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Authentication successful. Returns access token and user role."
+          },
+          "401": {
+            "description": "Invalid credentials."
+          }
+        },
+        "summary": "User Login",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "description": "Registers a new customer account.",
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registration successful. Returns access token and user info."
+          },
+          "400": {
+            "description": "Bad Request - Validation error or duplicate email."
+          }
+        },
+        "summary": "Customer Registration",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/customer/services-catalog": {
+      "get": {
+        "operationId": "CustomerDocumentsController_getServicesCatalog",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List available services with required document schemas",
+        "tags": [
+          "Customer - Documents"
+        ]
+      }
+    },
+    "/api/v1/customer/documents": {
+      "get": {
+        "operationId": "CustomerDocumentsController_getAllDocumentsGrouped",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Convenience endpoint: grouped by application for Document Upload Center",
+        "tags": [
+          "Customer - Documents"
+        ]
+      }
+    },
+    "/api/v1/customer/documents/download-stream": {
+      "get": {
+        "operationId": "CustomerDocumentsController_downloadStream",
+        "parameters": [
+          {
+            "name": "path",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Decrypt and stream an encrypted document file to the browser",
+        "tags": [
+          "Customer - Documents"
+        ]
+      }
+    },
+    "/api/v1/customer/applications/{applicationId}/documents/upload-url": {
+      "post": {
+        "operationId": "CustomerDocumentsController_requestUploadUrl",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestUploadUrlDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Request signed upload URL",
+        "tags": [
+          "Customer - Documents"
+        ]
+      }
+    },
+    "/api/v1/customer/applications/{applicationId}/documents/upload": {
+      "post": {
+        "operationId": "CustomerDocumentsController_directUpload",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectUploadDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Direct encrypted file upload (AES-256-GCM) with 10MB limit",
+        "tags": [
+          "Customer - Documents"
+        ]
+      }
+    },
+    "/api/v1/customer/applications/{applicationId}/documents": {
+      "get": {
+        "operationId": "CustomerDocumentsController_getApplicationDocuments",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Fetch all documents for an application",
+        "tags": [
+          "Customer - Documents"
+        ]
+      },
+      "post": {
+        "operationId": "CustomerDocumentsController_uploadOrReplaceDocument",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadOrReplaceDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload or replace document for an application (Single Source of Truth)",
+        "tags": [
+          "Customer - Documents"
+        ]
+      }
+    },
+    "/api/v1/customer/applications/{applicationId}/documents/{documentId}": {
+      "get": {
+        "operationId": "CustomerDocumentsController_getDocument",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Fetch a single document",
+        "tags": [
+          "Customer - Documents"
+        ]
+      },
+      "put": {
+        "operationId": "CustomerDocumentsController_replaceDocument",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadOrReplaceDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace or update a single document",
+        "tags": [
+          "Customer - Documents"
+        ]
+      },
+      "delete": {
+        "operationId": "CustomerDocumentsController_deleteDocument",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete document",
+        "tags": [
+          "Customer - Documents"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{applicationId}/documents": {
+      "get": {
+        "operationId": "AdminDocumentsController_getApplicationDocuments",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all documents for a specific application",
+        "tags": [
+          "Admin - Documents"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{applicationId}/documents/{documentId}": {
+      "get": {
+        "operationId": "AdminDocumentsController_getDocument",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get details of a specific document",
+        "tags": [
+          "Admin - Documents"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{applicationId}/documents/{documentId}/stream": {
+      "get": {
+        "operationId": "AdminDocumentsController_streamDocumentById",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream a decrypted document for review",
+        "tags": [
+          "Admin - Documents"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{applicationId}/documents/{documentId}/status": {
+      "put": {
+        "operationId": "AdminDocumentsController_updateDocumentStatus",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "documentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDocumentStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update the status of a document (Approve/Reject)",
+        "tags": [
+          "Admin - Documents"
+        ]
+      }
+    },
+    "/api/v1/admin/dashboard/summary": {
+      "get": {
+        "operationId": "AdminDashboardController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get summary statistics for the admin dashboard",
+        "tags": [
+          "Admin - Dashboard"
+        ]
+      }
+    },
+    "/api/v1/admin/dashboard/verification-queue": {
+      "get": {
+        "operationId": "AdminDashboardController_verificationQueue",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get recent documents for verification queue",
+        "tags": [
+          "Admin - Dashboard"
+        ]
+      }
+    },
+    "/api/v1/customer/dashboard/summary": {
+      "get": {
+        "operationId": "CustomerDashboardController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get summary statistics for the customer dashboard",
+        "tags": [
+          "Customer - Dashboard"
+        ]
+      }
+    },
+    "/api/v1/customer/dashboard/profile": {
+      "get": {
+        "operationId": "CustomerDashboardController_profile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get customer profile details",
+        "tags": [
+          "Customer - Dashboard"
+        ]
+      }
+    },
+    "/api/v1/customer/dashboard/me": {
+      "get": {
+        "operationId": "CustomerDashboardController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current customer session details (alias for profile)",
+        "tags": [
+          "Customer - Dashboard"
+        ]
+      }
+    },
+    "/api/v1/admin/services/stats": {
+      "get": {
+        "operationId": "ServicesController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Service Statistics",
+        "tags": [
+          "Admin - Services"
+        ]
+      }
+    },
+    "/api/v1/admin/services": {
+      "get": {
+        "operationId": "ServicesController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List Services",
+        "tags": [
+          "Admin - Services"
+        ]
+      },
+      "post": {
+        "operationId": "ServicesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateServiceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Service created successfully."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create New Service",
+        "tags": [
+          "Admin - Services"
+        ]
+      }
+    },
+    "/api/v1/admin/services/{id}": {
+      "get": {
+        "operationId": "ServicesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Service Details",
+        "tags": [
+          "Admin - Services"
+        ]
+      },
+      "patch": {
+        "operationId": "ServicesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateServiceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update Service Details",
+        "tags": [
+          "Admin - Services"
+        ]
+      },
+      "delete": {
+        "operationId": "ServicesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete Service",
+        "tags": [
+          "Admin - Services"
+        ]
+      }
+    },
+    "/api/v1/admin/services/{id}/status": {
+      "patch": {
+        "operationId": "ServicesController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateServiceStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update Service Status",
+        "tags": [
+          "Admin - Services"
+        ]
+      }
+    },
+    "/api/v1/admin/customers/stats": {
+      "get": {
+        "operationId": "CustomersController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get overall customer statistics",
+        "tags": [
+          "Admin - Customers"
+        ]
+      }
+    },
+    "/api/v1/admin/customers": {
+      "get": {
+        "operationId": "CustomersController_findAll",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of items per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search query string",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by customer status",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all customers with pagination and filtering",
+        "tags": [
+          "Admin - Customers"
+        ]
+      },
+      "post": {
+        "operationId": "CustomersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Manually create a new customer",
+        "tags": [
+          "Admin - Customers"
+        ]
+      }
+    },
+    "/api/v1/admin/customers/{id}": {
+      "get": {
+        "operationId": "CustomersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get details of a specific customer",
+        "tags": [
+          "Admin - Customers"
+        ]
+      },
+      "patch": {
+        "operationId": "CustomersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update customer details",
+        "tags": [
+          "Admin - Customers"
+        ]
+      },
+      "delete": {
+        "operationId": "CustomersController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a customer",
+        "tags": [
+          "Admin - Customers"
+        ]
+      }
+    },
+    "/api/v1/admin/customers/{id}/status": {
+      "patch": {
+        "operationId": "CustomersController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCustomerStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change the status of a customer",
+        "tags": [
+          "Admin - Customers"
+        ]
+      }
+    },
+    "/api/v1/customer/services": {
+      "get": {
+        "operationId": "CustomerAppointmentsController_getServices",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Appointments"
+        ]
+      }
+    },
+    "/api/v1/customer/offices": {
+      "get": {
+        "operationId": "CustomerAppointmentsController_getOffices",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Appointments"
+        ]
+      }
+    },
+    "/api/v1/customer/appointments": {
+      "post": {
+        "operationId": "CustomerAppointmentsController_createAppointment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Appointments"
+        ]
+      },
+      "get": {
+        "operationId": "CustomerAppointmentsController_getAppointments",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ALL",
+                "UPCOMING",
+                "PENDING",
+                "CONFIRMED",
+                "RESCHEDULED",
+                "COMPLETED",
+                "CANCELLED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Appointments"
+        ]
+      }
+    },
+    "/api/v1/customer/appointments/{id}/documents/upload-url": {
+      "post": {
+        "operationId": "CustomerAppointmentsController_createDocumentUploadUrl",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUploadUrlDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Appointments"
+        ]
+      }
+    },
+    "/api/v1/customer/appointments/{id}/documents": {
+      "post": {
+        "operationId": "CustomerAppointmentsController_completeDocumentUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteDocumentUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Appointments"
+        ]
+      }
+    },
+    "/api/v1/customer/appointments/{id}": {
+      "get": {
+        "operationId": "CustomerAppointmentsController_getAppointmentDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Appointments"
+        ]
+      },
+      "delete": {
+        "operationId": "CustomerAppointmentsController_cancelAppointment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Appointments"
+        ]
+      }
+    },
+    "/api/v1/customer/profile": {
+      "get": {
+        "operationId": "CustomerProfileController_getProfile[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current customer profile information",
+        "tags": [
+          "Customer - Profile"
+        ]
+      },
+      "patch": {
+        "operationId": "CustomerProfileController_updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update basic profile details",
+        "tags": [
+          "Customer - Profile"
+        ]
+      }
+    },
+    "/api/v1/customer/me": {
+      "get": {
+        "operationId": "CustomerProfileController_getProfile[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current customer profile information",
+        "tags": [
+          "Customer - Profile"
+        ]
+      }
+    },
+    "/api/v1/customer/password": {
+      "patch": {
+        "operationId": "CustomerProfileController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change account password",
+        "tags": [
+          "Customer - Profile"
+        ]
+      }
+    },
+    "/api/v1/customer/contact-info": {
+      "get": {
+        "operationId": "CustomerProfileController_getContactInfo",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get secondary contact information",
+        "tags": [
+          "Customer - Profile"
+        ]
+      },
+      "patch": {
+        "operationId": "CustomerProfileController_updateContactInfo",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContactInfoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update secondary contact information",
+        "tags": [
+          "Customer - Profile"
+        ]
+      }
+    },
+    "/api/v1/customer/preferences": {
+      "get": {
+        "operationId": "CustomerProfileController_getPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get notification and app preferences",
+        "tags": [
+          "Customer - Profile"
+        ]
+      },
+      "patch": {
+        "operationId": "CustomerProfileController_updatePreferences",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePreferencesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update notification and app preferences",
+        "tags": [
+          "Customer - Profile"
+        ]
+      }
+    },
+    "/api/v1/customer/applications": {
+      "get": {
+        "operationId": "CustomerApplicationsController_listApplications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Applications"
+        ]
+      },
+      "post": {
+        "operationId": "CustomerApplicationsController_createApplication",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Applications"
+        ]
+      }
+    },
+    "/api/v1/customer/applications/{applicationId}": {
+      "get": {
+        "operationId": "CustomerApplicationsController_getApplication",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Applications"
+        ]
+      },
+      "put": {
+        "operationId": "CustomerApplicationsController_updateApplication",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Applications"
+        ]
+      }
+    },
+    "/api/v1/admin/applications": {
+      "get": {
+        "operationId": "AdminApplicationsController_getApplications",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin - Applications"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{id}/status": {
+      "put": {
+        "operationId": "AdminApplicationsController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin - Applications"
+        ]
+      }
+    },
+    "/api/v1/admin/appointments/stats": {
+      "get": {
+        "operationId": "AppointmentsController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Appointment Statistics",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/api/v1/admin/appointments": {
+      "get": {
+        "operationId": "AppointmentsController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mode",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "timeframe",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List Appointments",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      },
+      "post": {
+        "operationId": "AppointmentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create New Appointment",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/api/v1/admin/appointments/{id}": {
+      "get": {
+        "operationId": "AppointmentsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get Appointment Details",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      },
+      "patch": {
+        "operationId": "AppointmentsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update Appointment Details",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      },
+      "delete": {
+        "operationId": "AppointmentsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel/Delete Appointment",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/api/v1/admin/appointments/{id}/reschedule": {
+      "patch": {
+        "operationId": "AppointmentsController_reschedule",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescheduleAppointmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reschedule Appointment",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/api/v1/admin/appointments/{id}/status": {
+      "patch": {
+        "operationId": "AppointmentsController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAppointmentStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update Appointment Status",
+        "tags": [
+          "Admin - Appointments"
+        ]
+      }
+    },
+    "/api/v1/admin/expenses": {
+      "post": {
+        "operationId": "ExpensesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExpenseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin - Expenses"
+        ]
+      },
+      "get": {
+        "operationId": "ExpensesController_findAll",
+        "parameters": [
+          {
+            "name": "skip",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "take",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin - Expenses"
+        ]
+      }
+    },
+    "/api/v1/admin/expenses/stats": {
+      "get": {
+        "operationId": "ExpensesController_getStats",
+        "parameters": [
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin - Expenses"
+        ]
+      }
+    },
+    "/api/v1/admin/expenses/{id}": {
+      "get": {
+        "operationId": "ExpensesController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin - Expenses"
+        ]
+      },
+      "patch": {
+        "operationId": "ExpensesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExpenseDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin - Expenses"
+        ]
+      },
+      "delete": {
+        "operationId": "ExpensesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin - Expenses"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/business-profile": {
+      "get": {
+        "description": "Returns the organization profile.",
+        "operationId": "BusinessProfileController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Business Profile details."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admins only"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current Business Profile",
+        "tags": [
+          "Admin - Business Profile Settings"
+        ]
+      },
+      "patch": {
+        "description": "Updates organization profile details.",
+        "operationId": "BusinessProfileController_updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBusinessProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Business profile successfully updated."
+          },
+          "400": {
+            "description": "Bad Request - Validation failure."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admins only"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update or Create Business Profile",
+        "tags": [
+          "Admin - Business Profile Settings"
+        ]
+      }
+    },
+    "/api/v1/admin/settings/business-profile/logo": {
+      "post": {
+        "description": "Accepts PNG, JPG, JPEG, WebP up to 5MB.",
+        "operationId": "BusinessProfileController_uploadLogo",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Image file (PNG, JPG, JPEG, WebP)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Logo successfully uploaded."
+          },
+          "400": {
+            "description": "Invalid file type or size."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admins only"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload or Replace Business Logo",
+        "tags": [
+          "Admin - Business Profile Settings"
+        ]
+      },
+      "delete": {
+        "description": "Removes active logo from business profile.",
+        "operationId": "BusinessProfileController_deleteLogo",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Logo successfully removed."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - Admins only"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove Active Business Logo",
+        "tags": [
+          "Admin - Business Profile Settings"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Amman Communications API",
+    "description": "API documentation and interactive endpoint specification for Amman Communications Business Platform.",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "description": "Enter Admin JWT access token"
+      }
+    },
+    "schemas": {
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Account email address",
+            "example": "admin@test.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Account password",
+            "example": "password123"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Full name of the user",
+            "example": "Test Customer"
+          },
+          "email": {
+            "type": "string",
+            "description": "Account email address",
+            "example": "customer@test.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Account password",
+            "example": "password123"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ]
+      },
+      "RequestUploadUrlDto": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string",
+            "description": "Type of document (e.g. ID_CARD, UTILITY_BILL)"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string",
+            "example": "application/pdf"
+          },
+          "fileSize": {
+            "type": "number",
+            "description": "File size in bytes"
+          }
+        },
+        "required": [
+          "documentType",
+          "fileName",
+          "mimeType",
+          "fileSize"
+        ]
+      },
+      "DirectUploadDocumentDto": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "fileSize": {
+            "type": "number"
+          },
+          "base64Data": {
+            "type": "string",
+            "description": "Base64 encoded file data"
+          }
+        },
+        "required": [
+          "documentType",
+          "fileName",
+          "mimeType",
+          "fileSize",
+          "base64Data"
+        ]
+      },
+      "UploadOrReplaceDocumentDto": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "originalFileName": {
+            "type": "string"
+          },
+          "storagePath": {
+            "type": "string"
+          },
+          "fileUrl": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "fileSize": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "documentType",
+          "fileName",
+          "storagePath",
+          "mimeType",
+          "fileSize"
+        ]
+      },
+      "UpdateDocumentStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "enum": [
+              "UPLOADED",
+              "UNDER_REVIEW",
+              "VERIFIED",
+              "REJECTED",
+              "ACTION_REQUIRED"
+            ],
+            "type": "string"
+          },
+          "rejectionReason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "RequiredDocumentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Required document ID",
+            "example": "doc-1"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Document name",
+            "example": "Commercial License Copy"
+          },
+          "displayOrder": {
+            "type": "number",
+            "description": "Display order index",
+            "example": 1
+          },
+          "isRequired": {
+            "type": "boolean",
+            "description": "Is this document mandatory",
+            "example": true
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CreateServiceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "description": "Service title",
+            "example": "Commercial Fiber Connectivity"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the service",
+            "example": "High-speed dedicated commercial fiber connectivity."
+          },
+          "governmentFee": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Government processing fee",
+            "example": 250
+          },
+          "serviceFee": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Service provider fee",
+            "example": 750
+          },
+          "estimatedTime": {
+            "type": "string",
+            "description": "Estimated fulfillment timeframe",
+            "example": "2-3 Working Days"
+          },
+          "status": {
+            "enum": [
+              "DRAFT",
+              "ACTIVE",
+              "INACTIVE"
+            ],
+            "type": "string",
+            "description": "Service publishing status",
+            "example": "ACTIVE"
+          },
+          "requiredDocuments": {
+            "description": "List of required documents",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequiredDocumentDto"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "governmentFee",
+          "serviceFee"
+        ]
+      },
+      "UpdateServiceDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2
+          },
+          "description": {
+            "type": "string"
+          },
+          "governmentFee": {
+            "type": "number",
+            "minimum": 0
+          },
+          "serviceFee": {
+            "type": "number",
+            "minimum": 0
+          },
+          "estimatedTime": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "DRAFT"
+            ],
+            "type": "string"
+          },
+          "requiredDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequiredDocumentDto"
+            }
+          }
+        }
+      },
+      "UpdateServiceStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "enum": [
+              "DRAFT",
+              "ACTIVE",
+              "INACTIVE"
+            ],
+            "type": "string",
+            "description": "New status for the service",
+            "example": "ACTIVE"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "CreateCustomerDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Full name of the customer"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address (must be unique)"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 6,
+            "description": "Raw password (will be hashed)"
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ],
+            "type": "string",
+            "description": "Initial status of the customer"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ]
+      },
+      "UpdateCustomerDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ],
+            "type": "string"
+          }
+        }
+      },
+      "UpdateCustomerStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "CreateAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "customerName": {
+            "type": "string",
+            "description": "Full name of the customer",
+            "example": "Test Customer"
+          },
+          "customerEmail": {
+            "type": "string",
+            "description": "Customer email address",
+            "example": "customer@test.com"
+          },
+          "customerPhone": {
+            "type": "string",
+            "description": "Customer contact phone number",
+            "example": "+91 9876543210"
+          },
+          "customerId": {
+            "type": "string",
+            "description": "Customer ID if registered",
+            "example": "cust-123"
+          },
+          "serviceId": {
+            "type": "string",
+            "description": "Associated Service ID",
+            "example": "serv-456"
+          },
+          "appointmentDate": {
+            "type": "string",
+            "description": "ISO Date string for appointment",
+            "example": "2026-09-01T10:00:00.000Z"
+          },
+          "durationMinutes": {
+            "type": "number",
+            "minimum": 5,
+            "maximum": 480,
+            "description": "Duration in minutes",
+            "example": 30
+          },
+          "mode": {
+            "enum": [
+              "OFFLINE",
+              "ONLINE"
+            ],
+            "type": "string",
+            "description": "Appointment mode",
+            "example": "OFFLINE"
+          },
+          "onlineType": {
+            "enum": [
+              "PHONE",
+              "VIDEO",
+              "MEETING"
+            ],
+            "type": "string",
+            "description": "Online meeting channel type",
+            "example": "PHONE"
+          },
+          "meetingLink": {
+            "type": "string",
+            "description": "Meeting URL for online appointments",
+            "example": "https://meet.google.com/abc-defg-hij"
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "RESCHEDULED",
+              "COMPLETED",
+              "CANCELLED"
+            ],
+            "type": "string",
+            "description": "Initial appointment status",
+            "example": "CONFIRMED"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional notes or instructions",
+            "example": "Discuss commercial fiber deployment schedule."
+          }
+        },
+        "required": [
+          "customerName",
+          "customerEmail",
+          "customerPhone",
+          "appointmentDate",
+          "mode"
+        ]
+      },
+      "CreateUploadUrlDto": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "fileSize": {
+            "type": "number",
+            "maximum": 10485760,
+            "minimum": 1
+          }
+        },
+        "required": [
+          "documentType",
+          "fileName",
+          "mimeType",
+          "fileSize"
+        ]
+      },
+      "CompleteDocumentUploadDto": {
+        "type": "object",
+        "properties": {
+          "storagePath": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "fileType": {
+            "type": "string"
+          },
+          "fileSize": {
+            "type": "number",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "storagePath",
+          "fileName",
+          "fileType",
+          "fileSize"
+        ]
+      },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "contactNumber": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          }
+        }
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8
+          },
+          "confirmNewPassword": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword",
+          "confirmNewPassword"
+        ]
+      },
+      "UpdateContactInfoDto": {
+        "type": "object",
+        "properties": {
+          "altContactName": {
+            "type": "string"
+          },
+          "altPhoneNumber": {
+            "type": "string"
+          },
+          "preferredContactMethod": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdatePreferencesDto": {
+        "type": "object",
+        "properties": {
+          "emailNotifications": {
+            "type": "boolean"
+          },
+          "smsAlerts": {
+            "type": "boolean"
+          },
+          "whatsappUpdates": {
+            "type": "boolean"
+          },
+          "preferredLanguage": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateApplicationDto": {
+        "type": "object",
+        "properties": {
+          "serviceType": {
+            "type": "string"
+          },
+          "applicationNumber": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "dateOfBirth": {
+            "type": "string"
+          },
+          "nationality": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "serviceType"
+        ]
+      },
+      "UpdateApplicationDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "serviceType": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "dateOfBirth": {
+            "type": "string"
+          },
+          "nationality": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "status": {
+            "type": "object"
+          }
+        }
+      },
+      "UpdateAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "customerName": {
+            "type": "string"
+          },
+          "customerEmail": {
+            "type": "string"
+          },
+          "customerPhone": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "string"
+          },
+          "serviceId": {
+            "type": "string"
+          },
+          "appointmentDate": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "number",
+            "minimum": 5,
+            "maximum": 480
+          },
+          "mode": {
+            "enum": [
+              "OFFLINE",
+              "ONLINE"
+            ],
+            "type": "string"
+          },
+          "onlineType": {
+            "enum": [
+              "PHONE",
+              "VIDEO",
+              "MEETING"
+            ],
+            "type": "string"
+          },
+          "meetingLink": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "RESCHEDULED",
+              "COMPLETED",
+              "CANCELLED"
+            ],
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "rescheduledFrom": {
+            "type": "string"
+          },
+          "rescheduleReason": {
+            "type": "string"
+          }
+        }
+      },
+      "RescheduleAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "newDate": {
+            "type": "string",
+            "description": "New proposed date/time ISO string",
+            "example": "2026-09-05T14:00:00.000Z"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason for rescheduling",
+            "example": "Customer requested afternoon slot."
+          },
+          "mode": {
+            "enum": [
+              "OFFLINE",
+              "ONLINE"
+            ],
+            "type": "string",
+            "description": "Updated appointment mode",
+            "example": "ONLINE"
+          },
+          "onlineType": {
+            "enum": [
+              "PHONE",
+              "VIDEO",
+              "MEETING"
+            ],
+            "type": "string",
+            "description": "Online meeting channel type",
+            "example": "VIDEO"
+          },
+          "meetingLink": {
+            "type": "string",
+            "description": "Meeting link if mode is online",
+            "example": "https://meet.google.com/xyz-uvwx-rst"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Updated notes",
+            "example": "Rescheduled per customer email."
+          }
+        },
+        "required": [
+          "newDate"
+        ]
+      },
+      "UpdateAppointmentStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "RESCHEDULED",
+              "COMPLETED",
+              "CANCELLED"
+            ],
+            "type": "string",
+            "description": "New appointment status",
+            "example": "CONFIRMED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "CreateExpenseDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Office Supplies"
+          },
+          "description": {
+            "type": "string",
+            "example": "Pens, paper, and staplers"
+          },
+          "category": {
+            "enum": [
+              "OFFICE",
+              "TRAVEL",
+              "EMPLOYEE",
+              "PROPERTY",
+              "UTILITIES",
+              "MARKETING",
+              "EQUIPMENT",
+              "OTHER"
+            ],
+            "type": "string",
+            "example": "OFFICE"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 1,
+            "example": 250.5
+          },
+          "expenseDate": {
+            "type": "string",
+            "example": "2026-08-25T10:00:00Z"
+          },
+          "paymentMethod": {
+            "enum": [
+              "CASH",
+              "BANK_TRANSFER",
+              "CREDIT_CARD",
+              "UPI",
+              "CHEQUE",
+              "OTHER"
+            ],
+            "type": "string",
+            "example": "CREDIT_CARD"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Bought from Staples"
+          },
+          "isVoided": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "title",
+          "category",
+          "amount",
+          "expenseDate"
+        ]
+      },
+      "UpdateExpenseDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Updated Office Supplies"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated description"
+          },
+          "category": {
+            "enum": [
+              "OFFICE",
+              "TRAVEL",
+              "EMPLOYEE",
+              "PROPERTY",
+              "UTILITIES",
+              "MARKETING",
+              "EQUIPMENT",
+              "OTHER"
+            ],
+            "type": "string",
+            "example": "OFFICE"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 1,
+            "example": 300
+          },
+          "expenseDate": {
+            "type": "string",
+            "example": "2026-08-26T10:00:00Z"
+          },
+          "paymentMethod": {
+            "enum": [
+              "CASH",
+              "BANK_TRANSFER",
+              "CREDIT_CARD",
+              "UPI",
+              "CHEQUE",
+              "OTHER"
+            ],
+            "type": "string",
+            "example": "CASH"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Price went up"
+          },
+          "isVoided": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "UpdateBusinessProfileDto": {
+        "type": "object",
+        "properties": {
+          "businessName": {
+            "type": "string",
+            "minLength": 2,
+            "description": "Name of the business organization",
+            "example": "Amman Communications"
+          },
+          "registrationNumber": {
+            "type": "string",
+            "description": "Official business registration number",
+            "example": "AC-2023-894"
+          },
+          "officeAddress": {
+            "type": "string",
+            "minLength": 5,
+            "description": "Physical office address of the business",
+            "example": "124 Main Street, Business District"
+          },
+          "primaryPhone": {
+            "type": "string",
+            "pattern": "^[+]?[\\d\\s\\-()]{7,20}$",
+            "description": "Primary contact phone number",
+            "example": "+91 9876543210"
+          },
+          "supportEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "Support email address",
+            "example": "support@example.com"
+          }
+        },
+        "required": [
+          "businessName",
+          "officeAddress",
+          "primaryPhone",
+          "supportEmail"
+        ]
+      }
+    }
+  }
+}
