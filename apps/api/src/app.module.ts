@@ -12,6 +12,12 @@ import { ServicesModule } from './services/services.module';
 import { CustomersModule } from './customers/customers.module';
 import { CustomerAppointmentsModule } from './customer-appointments/customer-appointments.module';
 import { CustomerProfileModule } from './customer-profile/customer-profile.module';
+import { ApplicationsModule } from './applications/applications.module';
+import { AppointmentsModule } from './appointments/appointments.module';
+import { ExpensesModule } from './expenses/expenses.module';
+import { BusinessProfileModule } from './settings/business-profile/business-profile.module';
+import { StorageModule } from './storage/storage.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -32,6 +38,12 @@ import { CustomerProfileModule } from './customer-profile/customer-profile.modul
     CustomersModule,
     CustomerAppointmentsModule,
     CustomerProfileModule,
+    ApplicationsModule,
+    AppointmentsModule,
+    ExpensesModule,
+    BusinessProfileModule,
+    StorageModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

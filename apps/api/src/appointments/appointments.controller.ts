@@ -10,7 +10,7 @@ import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 
 @ApiTags('Admin - Appointments')
 @ApiBearerAuth()
-@Controller('v1/admin/appointments')
+@Controller('admin/appointments')
 @UseGuards(AdminAuthGuard)
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}

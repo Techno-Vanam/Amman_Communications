@@ -47,7 +47,7 @@ export default function AdminExpensesPage() {
       if (searchTerm) params.append('search', searchTerm);
       if (filterCategory) params.append('category', filterCategory);
 
-      const res = await fetch(`/api/admin/expenses?${params.toString()}`);
+      const res = await fetch(`/api/v1/admin/expenses?${params.toString()}`);
       if (res.status === 401) return router.push('/login');
       if (!res.ok) throw new Error(`Unable to load expenses.`);
       const data = await res.json();
@@ -62,7 +62,7 @@ export default function AdminExpensesPage() {
     try {
       const params = new URLSearchParams();
       if (filterCategory) params.append('category', filterCategory);
-      const res = await fetch(`/api/admin/expenses/stats?${params.toString()}`);
+      const res = await fetch(`/api/v1/admin/expenses/stats?${params.toString()}`);
       if (res.status === 401) return router.push('/login');
       if (!res.ok) throw new Error(`API Error: ${res.status}`);
       const data = await res.json();
@@ -210,12 +210,13 @@ export default function AdminExpensesPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-brand-500 focus:border-brand-500"
+            suppressHydrationWarning
           />
           <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
-        <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-brand-500 focus:border-brand-500">
+        <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-brand-500 focus:border-brand-500" suppressHydrationWarning>
           <option value="">All Categories</option>
           <option value="OFFICE">OFFICE</option><option value="TRAVEL">TRAVEL</option><option value="EMPLOYEE">EMPLOYEE</option><option value="PROPERTY">PROPERTY</option><option value="UTILITIES">UTILITIES</option><option value="MARKETING">MARKETING</option><option value="EQUIPMENT">EQUIPMENT</option><option value="OTHER">OTHER</option>
         </select>

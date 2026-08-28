@@ -46,6 +46,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 rounded-lg text-emerald-200 hover:text-white hover:bg-emerald-900 focus:outline-none"
               aria-label="Toggle menu"
+              suppressHydrationWarning
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -66,6 +67,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
                 type="text"
                 placeholder="Search portal..."
                 className="w-full bg-emerald-900/60 border border-emerald-800 rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-emerald-900"
+                suppressHydrationWarning
               />
             </div>
           </div>
@@ -78,6 +80,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 className="flex items-center gap-2 py-1.5 px-3 rounded-xl hover:bg-emerald-900 text-sm font-medium transition-colors"
                 aria-expanded={userDropdownOpen}
+                suppressHydrationWarning
               >
                 <div className="w-8 h-8 rounded-full bg-emerald-800 flex items-center justify-center text-emerald-200 font-bold border border-emerald-700">
                   <User className="w-4 h-4" />

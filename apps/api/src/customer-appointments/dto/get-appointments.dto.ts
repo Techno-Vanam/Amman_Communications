@@ -1,3 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional } from 'class-validator';
 
 export enum AppointmentStatusFilter {
@@ -11,7 +12,9 @@ export enum AppointmentStatusFilter {
 }
 
 export class GetAppointmentsDto {
+  @ApiPropertyOptional()
   @IsOptional()
+  @ApiProperty()
   @IsEnum(AppointmentStatusFilter)
   status?: AppointmentStatusFilter;
 }

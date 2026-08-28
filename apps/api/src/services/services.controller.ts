@@ -7,7 +7,9 @@ import { UpdateServiceStatusDto } from './dto/update-service-status.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { ServicesService } from './services.service';
 
-@Controller(['v1/admin/services', 'api/v1/admin/services', 'admin/services'])
+@ApiTags('Admin - Services')
+@ApiBearerAuth()
+@Controller('admin/services')
 @UseGuards(AdminAuthGuard)
 export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}

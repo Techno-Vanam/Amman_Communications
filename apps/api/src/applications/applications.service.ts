@@ -153,4 +153,65 @@ export class ApplicationsService {
       },
     });
   }
+
+  async adminGetApplications(search?: string, status?: string, page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    
+    if (status && status !== 'ALL') {
+      where.status = status;
+    }
+
+    if (search) {
+      where.OR = [
+        { applicationNumber: { contains: search, mode: 'insensitive' } },
+        { fullName: { contains: search, mode: 'insensitive' } },
+        { customer: { name: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+
+    const [total, items] = await Promise.all([
+      this.prisma.application.count({ where }),
+      this.prisma.application.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          customer: {
+            select: { name: true, email: true },
+          },
+          _count: {
+            select: { documents: true },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      total,
+      totalPages: Math.ceil(total / limit),
+      items,
+    };
+  }
+
+  async adminUpdateApplicationStatus(applicationId: string, status: any) {
+    const existing = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Application not found');
+    }
+
+    return this.prisma.application.update({
+      where: { id: applicationId },
+      data: { status },
+      include: {
+        customer: true,
+      }
+    });
+  }
 }
+
