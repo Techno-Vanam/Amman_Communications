@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:24-alpine AS base
 WORKDIR /workspace
 RUN corepack enable
 
@@ -13,7 +13,7 @@ COPY prisma ./prisma
 COPY apps/api ./apps/api
 RUN pnpm db:generate && pnpm --filter @repo/api build
 
-FROM node:20-alpine AS production
+FROM node:24-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /workspace/node_modules ./node_modules
