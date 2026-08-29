@@ -102,6 +102,33 @@ function StatusBadge({ status }: { status: AppStatus }) {
   );
 }
 
+const downloadFileWithFetch = async (url: string, fallbackName: string) => {
+  try {
+    const res = await fetch(url, { credentials: 'include' });
+    if (!res.ok) throw new Error('Download failed');
+    const blob = await res.blob();
+    const objUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objUrl;
+    
+    let name = fallbackName;
+    const cd = res.headers.get('content-disposition');
+    if (cd && cd.includes('filename=')) {
+      const match = cd.match(/filename="?([^"]+)"?/);
+      if (match && match[1]) name = match[1];
+    }
+    
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(objUrl);
+  } catch (err) {
+    console.error('Download error:', err);
+    alert('Failed to download document.');
+  }
+};
+
 // ── Detail / View Modal ───────────────────────────────────────
 function ViewModal({ app, onClose, onAdvance }: { app: Application; onClose: () => void; onAdvance?: () => void }) {
   const [docs, setDocs] = useState<any[]>([]);
@@ -171,7 +198,7 @@ function ViewModal({ app, onClose, onAdvance }: { app: Application; onClose: () 
               { label: 'Customer', value: app.customer, icon: <User className="w-4 h-4 text-gray-400" /> },
               { label: 'Email', value: app.email, icon: <Mail className="w-4 h-4 text-gray-400" /> },
               { label: 'Phone', value: app.phone, icon: <Phone className="w-4 h-4 text-gray-400" /> },
-              { label: 'Service Type', value: app.serviceType, icon: <Building2 className="w-4 h-4 text-gray-400" /> },
+              { label: 'Service', value: app.serviceType, icon: <Building2 className="w-4 h-4 text-gray-400" /> },
               { label: 'Created Date', value: new Date(app.createdDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }), icon: <CalendarDays className="w-4 h-4 text-gray-400" /> },
             ].map(row => (
               <div key={row.label} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
@@ -232,6 +259,15 @@ function ViewModal({ app, onClose, onAdvance }: { app: Application; onClose: () 
                         className="flex-1 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 text-[10px] font-bold flex items-center justify-center gap-1.5 transition-colors">
                         <Eye className="w-3 h-3" /> View
                       </button>
+                      <button onClick={() => {
+                        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
+                        const baseDocUrl = doc.downloadUrl?.startsWith('http') && !doc.downloadUrl.includes('localhost') ? doc.downloadUrl : `${baseUrl}/api/v1/admin/applications/${app.id}/documents/${doc.documentId}/stream`;
+                        const dlUrl = baseDocUrl.includes('?') ? `${baseDocUrl}&download=true` : `${baseDocUrl}?download=true`;
+                        downloadFileWithFetch(dlUrl, doc.originalFileName || doc.fileName || 'document.pdf');
+                      }}
+                        className="flex-1 py-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-[10px] font-bold flex items-center justify-center gap-1.5 transition-colors" title="Download">
+                        <Download className="w-3 h-3" /> DL
+                      </button>
                       <button onClick={() => handleVerify(doc.documentId, 'VERIFIED')} disabled={doc.status === 'VERIFIED'}
                         className="flex-1 py-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 text-[10px] font-bold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50">
                         <CheckCircle className="w-3 h-3" /> Verify
@@ -264,9 +300,17 @@ function ViewModal({ app, onClose, onAdvance }: { app: Application; onClose: () 
           <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[95vh] flex flex-col overflow-hidden shadow-2xl relative">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50 shrink-0">
               <h3 className="font-bold text-gray-900 truncate pr-4">{viewingDoc.name}</h3>
-              <button onClick={() => setViewingDoc(null)} className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors shrink-0">
-                <X className="w-4 h-4 text-gray-700" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => {
+                  const dlUrl = viewingDoc.url.includes('?') ? `${viewingDoc.url}&download=true` : `${viewingDoc.url}?download=true`;
+                  downloadFileWithFetch(dlUrl, viewingDoc.name);
+                }} className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 hover:bg-indigo-200 flex items-center justify-center transition-colors shrink-0" title="Download">
+                  <Download className="w-4 h-4" />
+                </button>
+                <button onClick={() => setViewingDoc(null)} className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition-colors shrink-0">
+                  <X className="w-4 h-4 text-gray-700" />
+                </button>
+              </div>
             </div>
             <div className="flex-1 overflow-hidden relative bg-gray-100">
               <iframe src={viewingDoc.url} className="w-full h-full border-0" title="Document Viewer" />
@@ -394,9 +438,9 @@ function AppModal({
             </div>
           </div>
 
-          {/* Service Type */}
+          {/* Service */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5">Service Type</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">Service</label>
             <div className="relative">
               <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <select value={form.serviceType} onChange={e => setForm(p => ({ ...p, serviceType: e.target.value }))}
@@ -639,7 +683,7 @@ function DocumentUploadModal({
 
 
 function exportCSV(data: Application[]) {
-  const headers = ['Application ID', 'Customer', 'Email', 'Phone', 'Service Type', 'Created Date', 'Status', 'Remarks'];
+  const headers = ['Application ID', 'Customer', 'Email', 'Phone', 'Service', 'Created Date', 'Status', 'Remarks'];
   const rows = data.map(a => [
     a.id, a.customer, a.email, a.phone, a.serviceType,
     new Date(a.createdDate).toLocaleDateString('en-IN'),
@@ -693,7 +737,7 @@ export default function ApplicationsPage() {
         customer: a.fullName || a.customer?.name || '—',
         email: a.email || a.customer?.email || '—',
         phone: a.phone || '—',
-        serviceType: a.serviceType || a.title || 'Support',
+        serviceType: a.service?.name || a.serviceType || a.title || 'Support',
         createdDate: a.createdAt ? a.createdAt.split('T')[0] : '',
         status: DB_TO_UI_STATUS[a.status] || 'Submitted',
         notes: a.notes || '',
@@ -794,7 +838,7 @@ export default function ApplicationsPage() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by ID, customer, service type..."
+            placeholder="Search by ID, customer, service..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full pl-11 pr-4 py-2.5 rounded-full border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] shadow-xs transition-all"
@@ -841,9 +885,8 @@ export default function ApplicationsPage() {
           <div className="min-w-[660px]">
             {/* Header */}
             <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-              <div className="col-span-2">App. ID</div>
-              <div className="col-span-3">Customer</div>
-              <div className="col-span-2">Service Type</div>
+              <div className="col-span-4">Customer</div>
+              <div className="col-span-3">Service</div>
               <div className="col-span-1">Date</div>
               <div className="col-span-2 text-center">Status</div>
               <div className="col-span-2 text-center">Actions</div>
@@ -858,22 +901,18 @@ export default function ApplicationsPage() {
               </div>
             ) : filtered.map((a, idx) => (
               <div key={a.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                {/* ID */}
-                <div className="col-span-2 min-w-0 pr-2">
-                  <span className="text-xs font-bold text-[#12372A] truncate block">{a.id}</span>
-                </div>
                 {/* Customer */}
-                <div className="col-span-3 flex items-center gap-2.5 min-w-0 pr-2">
+                <div className="col-span-4 flex items-center gap-2.5 min-w-0 pr-2">
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">
                     {a.customer.charAt(0)}
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-gray-900 truncate">{a.customer}</p>
-                    <p className="text-[10px] text-gray-400 truncate">{a.email}</p>
+                    <p className="text-[10px] text-gray-400 truncate">{a.id}</p>
                   </div>
                 </div>
                 {/* Service */}
-                <div className="col-span-2 min-w-0 pr-2">
+                <div className="col-span-3 min-w-0 pr-2">
                   <p className="text-xs text-gray-700 font-semibold truncate">{a.serviceType}</p>
                 </div>
                 {/* Date */}
@@ -927,3 +966,4 @@ export default function ApplicationsPage() {
     </div>
   );
 }
+

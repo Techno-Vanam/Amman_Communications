@@ -345,17 +345,17 @@ export default function VerificationPage() {
       {/* ── Summary Cards ── */}
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {summaryCards.map(card => (
-          <div key={card.label} className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-2xs hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center ${card.iconBg}`}>
+          <div key={card.label} className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-2xs hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className={`w-8 h-8 rounded-xl border flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4 ${card.iconBg}`}>
                 {card.icon}
               </div>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${card.badge} truncate max-w-[140px]`}>
                 {card.desc}
               </span>
             </div>
-            <p className={`text-2xl sm:text-3xl font-extrabold ${card.text}`}>{card.value}</p>
-            <p className="text-xs text-gray-500 font-semibold mt-1 truncate">{card.label}</p>
+            <p className={`text-xl sm:text-2xl font-extrabold ${card.text}`}>{card.value}</p>
+            <p className="text-[11px] text-gray-500 font-semibold mt-0.5 truncate">{card.label}</p>
           </div>
         ))}
       </div>
@@ -433,12 +433,12 @@ export default function VerificationPage() {
             ) : filtered.map((r, idx) => (
               <div key={r.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
                 {/* ID */}
-                <div className="col-span-1">
-                  <span className="text-[11px] font-bold text-gray-500">{r.id}</span>
+                <div className="col-span-1 min-w-0 pr-2">
+                  <span className="text-[11px] font-bold text-gray-500 truncate block">{r.id}</span>
                 </div>
                 {/* App ID */}
-                <div className="col-span-2">
-                  <span className="text-xs font-bold text-[#12372A]">{r.appId}</span>
+                <div className="col-span-2 min-w-0 pr-2">
+                  <span className="text-xs font-bold text-[#12372A] truncate block">{r.appId}</span>
                 </div>
                 {/* Doc Type */}
                 <div className="col-span-2 min-w-0 pr-2">

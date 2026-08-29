@@ -535,13 +535,13 @@ export default function ServicesPage() {
           { label: 'Inactive Services', value: counts.inactive, icon: <XCircle className="w-5 h-5 text-gray-500" />, bg: 'bg-gray-50 border-gray-200', text: 'text-gray-700', sub: 'Disabled' },
           { label: 'Draft Services', value: counts.draft, icon: <FileEdit className="w-5 h-5 text-amber-600" />, bg: 'bg-amber-50 border-amber-200', text: 'text-amber-700', sub: 'Unpublished' },
         ].map(card => (
-          <div key={card.label} className={`rounded-2xl border p-5 ${card.bg} hover:shadow-md transition-shadow`}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-9 h-9 rounded-xl bg-white/60 flex items-center justify-center">{card.icon}</div>
+          <div key={card.label} className={`rounded-2xl border p-3 sm:p-4 ${card.bg} hover:shadow-md transition-shadow`}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/60 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">{card.icon}</div>
             </div>
-            <p className={`text-3xl font-extrabold ${card.text}`}>{card.value}</p>
-            <p className="text-xs text-gray-500 font-semibold mt-1">{card.label}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">{card.sub}</p>
+            <p className={`text-xl sm:text-2xl font-extrabold ${card.text}`}>{card.value}</p>
+            <p className="text-[11px] text-gray-500 font-semibold mt-0.5">{card.label}</p>
+            <p className="text-[9px] text-gray-400">{card.sub}</p>
           </div>
         ))}
       </div>

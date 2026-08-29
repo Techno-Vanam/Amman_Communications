@@ -9,6 +9,7 @@ import {
   Res,
   StreamableFile,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
@@ -51,6 +52,7 @@ export class AdminDocumentsController {
   async streamDocumentById(
     @Param('applicationId') applicationId: string,
     @Param('documentId') documentId: string,
+    @Query('download') download: string,
     @Res({ passthrough: true }) res: any,
   ) {
     const document = await this.documentsService.adminGetDocumentById(
@@ -60,9 +62,11 @@ export class AdminDocumentsController {
     const { buffer, mimeType, fileName } =
       await this.documentsService.streamDecryptedDocument(document.storagePath);
 
+    const disposition = download ? `attachment; filename="${fileName}"` : `inline; filename="${fileName}"`;
+
     res.set({
       'Content-Type': mimeType || 'application/pdf',
-      'Content-Disposition': `inline; filename="${fileName}"`,
+      'Content-Disposition': disposition,
       'Content-Length': buffer.length,
       'Cache-Control': 'private, no-cache',
     });
