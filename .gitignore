@@ -11,3 +11,5 @@ coverage/
 prisma/*.db
 apps/api/uploads/
 *.tsbuildinfo
+
+apps/api/prisma/migrations_backup/
