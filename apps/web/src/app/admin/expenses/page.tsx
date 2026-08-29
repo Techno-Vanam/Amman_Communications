@@ -336,39 +336,39 @@ export default function ExpensesPage() {
       {/* ── Summary Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total Expenses */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-2xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center">
+        <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-2xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">
               <TrendingDown className="w-5 h-5 text-rose-600" />
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">All Time</span>
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">All Time</span>
           </div>
-          <p className="text-2xl font-extrabold text-rose-700">{fmtAmt(totalAll)}</p>
-          <p className="text-xs text-gray-500 font-semibold mt-1">Total Expenses</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-rose-700">{fmtAmt(totalAll)}</p>
+          <p className="text-[11px] text-gray-500 font-semibold mt-0.5">Total Expenses</p>
         </div>
 
         {/* This Month */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-2xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center">
+        <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-2xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">
               <Calendar className="w-5 h-5 text-amber-600" />
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Aug 2026</span>
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Aug 2026</span>
           </div>
-          <p className="text-2xl font-extrabold text-amber-700">{fmtAmt(thisMonth)}</p>
-          <p className="text-xs text-gray-500 font-semibold mt-1">This Month&apos;s Expenses</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-amber-700">{fmtAmt(thisMonth)}</p>
+          <p className="text-[11px] text-gray-500 font-semibold mt-0.5">This Month&apos;s Expenses</p>
         </div>
 
         {/* Highest Category */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-2xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center">
+        <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-2xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">
               <Tag className="w-5 h-5 text-violet-600" />
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-800">Top Category</span>
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-800">Top Category</span>
           </div>
-          <p className="text-2xl font-extrabold text-violet-700">{fmtAmt(highestCat.sum)}</p>
-          <p className="text-xs text-gray-500 font-semibold mt-1">{highestCat.cat || '—'}</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-violet-700">{fmtAmt(highestCat.sum)}</p>
+          <p className="text-[11px] text-gray-500 font-semibold mt-0.5">{highestCat.cat || '—'}</p>
         </div>
       </div>
 
@@ -448,8 +448,8 @@ export default function ExpensesPage() {
             <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
               <div className="col-span-1">ID</div>
               <div className="col-span-2">Category</div>
-              <div className="col-span-2 text-right">Amount</div>
-              <div className="col-span-4">Description</div>
+              <div className="col-span-2 text-right pr-3">Amount</div>
+              <div className="col-span-4 pl-1">Description</div>
               <div className="col-span-2">Date</div>
               <div className="col-span-1 text-center">Actions</div>
             </div>
@@ -463,8 +463,8 @@ export default function ExpensesPage() {
               </div>
             ) : filtered.map((e, idx) => (
               <div key={e.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                <div className="col-span-1">
-                  <span className="text-[11px] font-bold text-gray-400">{e.id}</span>
+                <div className="col-span-1 min-w-0 pr-2">
+                  <span className="text-[11px] font-bold text-gray-400 truncate block">{e.id}</span>
                 </div>
                 <div className="col-span-2">
                   <CategoryBadge category={e.category} />

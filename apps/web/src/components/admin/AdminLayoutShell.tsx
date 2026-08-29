@@ -183,7 +183,7 @@ function AdminTopHeader() {
   const Icon = matched.icon;
 
   return (
-    <header className="bg-transparent pb-4 sm:pb-6 flex items-center justify-between gap-3 border-b border-gray-200/50 mb-4 sm:mb-6 shrink-0 flex-wrap">
+    <header className="max-w-7xl mx-auto w-full bg-transparent pb-4 sm:pb-6 flex items-center justify-between gap-3 border-b border-gray-200/50 mb-4 sm:mb-6 shrink-0 flex-wrap">
       <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
         <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#12372A] flex items-center justify-center shrink-0 shadow-sm">
           <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#a8d5b9]" />
@@ -232,7 +232,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-x-hidden" suppressHydrationWarning>
+    <div className="h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-hidden" suppressHydrationWarning>
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c]">
         <div className="flex items-center space-x-3">

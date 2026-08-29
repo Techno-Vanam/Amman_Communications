@@ -30,6 +30,7 @@ import {
   updateAppointmentAction,
   updateAppointmentStatusAction,
   deleteAppointmentAction,
+  fetchCustomersForSelectAction,
 } from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -192,15 +193,18 @@ function ViewModal({ apt, onClose, onAdvance }: { apt: Appointment; onClose: () 
 function AppointmentModal({
   mode,
   appointment,
+  customers,
   onClose,
   onSave,
 }: {
   mode: 'add' | 'edit' | 'reschedule';
   appointment?: Appointment;
+  customers: { id: string; name: string; email: string; phone: string }[];
   onClose: () => void;
-  onSave: (data: Partial<Appointment>) => void;
+  onSave: (data: Partial<Appointment> & { customerId?: string }) => void;
 }) {
-  const [form, setForm] = useState<Partial<Appointment>>({
+  const [form, setForm] = useState({
+    customerId: mode === 'add' ? (customers[0]?.id ?? '') : '',
     customer: appointment?.customer ?? '',
     email: appointment?.email ?? '',
     phone: appointment?.phone ?? '',
@@ -215,7 +219,8 @@ function AppointmentModal({
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!form.customer?.trim()) e.customer = 'Customer name is required';
+    if (mode === 'add' && !form.customerId) e.customerId = 'Select a customer';
+    if (mode !== 'add' && !form.customer?.trim()) e.customer = 'Customer name is required';
     if (!form.email?.trim()) e.email = 'Email is required';
     if (!form.phone?.trim()) e.phone = 'Phone is required';
     if (!form.date) e.date = 'Date is required';
@@ -263,20 +268,42 @@ function AppointmentModal({
 
           {mode !== 'reschedule' && (
             <>
-              {/* Customer Name */}
+              {/* Customer */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">Customer Name</label>
-                <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Full name"
-                    value={form.customer}
-                    onChange={e => setForm(p => ({ ...p, customer: e.target.value }))}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all"
-                  />
-                </div>
-                {errors.customer && <p className="text-[10px] text-rose-600 mt-1">{errors.customer}</p>}
+                {mode === 'add' ? (
+                  <>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Select Customer</label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <select value={form.customerId}
+                        onChange={e => {
+                          const cust = customers.find(c => c.id === e.target.value);
+                          setForm(p => ({ ...p, customerId: e.target.value, customer: cust?.name || '', email: cust?.email || '', phone: cust?.phone || '' }));
+                        }}
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all appearance-none">
+                        {customers.length === 0 && <option value="">No customers found — create a customer first</option>}
+                        {customers.map(c => <option key={c.id} value={c.id}>{c.name} ({c.email})</option>)}
+                      </select>
+                      <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                    {errors.customerId && <p className="text-[10px] text-rose-600 mt-1">{errors.customerId}</p>}
+                  </>
+                ) : (
+                  <>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Customer Name</label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Full name"
+                        value={form.customer}
+                        onChange={e => setForm(p => ({ ...p, customer: e.target.value }))}
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all"
+                      />
+                    </div>
+                    {errors.customer && <p className="text-[10px] text-rose-600 mt-1">{errors.customer}</p>}
+                  </>
+                )}
               </div>
 
               {/* Email + Phone */}
@@ -454,6 +481,7 @@ export default function AppointmentsPage() {
   const [rescheduleApt, setRescheduleApt] = useState<Appointment | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [customers, setCustomers] = useState<{ id: string; name: string; email: string; phone: string }[]>([]);
 
   const loadAppointments = async () => {
     setIsLoading(true);
@@ -497,6 +525,12 @@ export default function AppointmentsPage() {
     loadAppointments();
   }, [search, filterStatus]);
 
+  useEffect(() => {
+    fetchCustomersForSelectAction().then(res => {
+      if (res.success && res.data) setCustomers(res.data);
+    });
+  }, []);
+
   const filtered = useMemo(() => {
     return appointments.filter(a => {
       const matchSearch =
@@ -509,9 +543,11 @@ export default function AppointmentsPage() {
     });
   }, [appointments, search, filterStatus]);
 
-  async function handleAdd(data: Partial<Appointment>) {
+  async function handleAdd(data: Partial<Appointment> & { customerId?: string }) {
+    if (!data.customerId) return;
     setErrorMsg(null);
     const res = await createAppointmentAction({
+      customerId: data.customerId,
       customer: data.customer ?? '',
       email: data.email ?? '',
       phone: data.phone ?? '',
@@ -785,16 +821,16 @@ export default function AppointmentsPage() {
 
       {/* ── Modals ── */}
       {showAddModal && (
-        <AppointmentModal mode="add" onClose={() => setShowAddModal(false)} onSave={handleAdd} />
+        <AppointmentModal mode="add" customers={customers} onClose={() => setShowAddModal(false)} onSave={handleAdd} />
       )}
       {viewApt && (
         <ViewModal apt={viewApt} onClose={() => setViewApt(null)} onAdvance={() => handleAdvance(viewApt)} />
       )}
       {editApt && (
-        <AppointmentModal mode="edit" appointment={editApt} onClose={() => setEditApt(null)} onSave={handleEdit} />
+        <AppointmentModal mode="edit" appointment={editApt} customers={customers} onClose={() => setEditApt(null)} onSave={handleEdit} />
       )}
       {rescheduleApt && (
-        <AppointmentModal mode="reschedule" appointment={rescheduleApt} onClose={() => setRescheduleApt(null)} onSave={handleReschedule} />
+        <AppointmentModal mode="reschedule" appointment={rescheduleApt} customers={customers} onClose={() => setRescheduleApt(null)} onSave={handleReschedule} />
       )}
     </div>
   );

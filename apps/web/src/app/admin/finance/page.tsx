@@ -369,45 +369,45 @@ export default function FinancePage() {
       {/* ── Summary Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total Amount */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-2xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+        <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-2xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">
               <IndianRupee className="w-5 h-5 text-blue-600" />
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
               {records.length} records
             </span>
           </div>
-          <p className="text-2xl font-extrabold text-blue-700">{fmtAmt(totalAmount)}</p>
-          <p className="text-xs text-gray-500 font-semibold mt-1">Total Amount Billed</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-blue-700">{fmtAmt(totalAmount)}</p>
+          <p className="text-[11px] text-gray-500 font-semibold mt-0.5">Total Amount Billed</p>
         </div>
 
         {/* Total Collected */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-2xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+        <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-2xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">
               <TrendingUp className="w-5 h-5 text-emerald-600" />
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
               {totalAmount > 0 ? Math.round((totalCollected / totalAmount) * 100) : 0}% collected
             </span>
           </div>
-          <p className="text-2xl font-extrabold text-emerald-700">{fmtAmt(totalCollected)}</p>
-          <p className="text-xs text-gray-500 font-semibold mt-1">Total Collected</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-emerald-700">{fmtAmt(totalCollected)}</p>
+          <p className="text-[11px] text-gray-500 font-semibold mt-0.5">Total Collected</p>
         </div>
 
         {/* Pending */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-2xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center">
+        <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-2xs hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">
               <Hourglass className="w-5 h-5 text-rose-600" />
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
               {counts['Overdue']} overdue
             </span>
           </div>
-          <p className="text-2xl font-extrabold text-rose-700">{fmtAmt(totalPending)}</p>
-          <p className="text-xs text-gray-500 font-semibold mt-1">Total Pending Balance</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-rose-700">{fmtAmt(totalPending)}</p>
+          <p className="text-[11px] text-gray-500 font-semibold mt-0.5">Total Pending Balance</p>
         </div>
       </div>
 

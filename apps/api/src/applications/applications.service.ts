@@ -182,6 +182,9 @@ export class ApplicationsService {
           customer: {
             select: { name: true, email: true },
           },
+          service: {
+            select: { name: true },
+          },
           _count: {
             select: { documents: true },
           },
@@ -248,10 +251,34 @@ export class ApplicationsService {
       throw new NotFoundException(`Customer ${dto.customerId} not found`);
     }
 
+    const emailToCheck = dto.email && dto.email !== customer.email ? dto.email : null;
+    const nameToCheck = dto.fullName && dto.fullName !== customer.name ? dto.fullName : null;
+
+    if (emailToCheck || nameToCheck) {
+      const existingOtherCustomer = await this.prisma.customer.findFirst({
+        where: {
+          id: { not: dto.customerId },
+          OR: [
+            ...(emailToCheck ? [{ email: { equals: emailToCheck.toLowerCase().trim(), mode: 'insensitive' as any } }] : []),
+            ...(nameToCheck ? [{ name: { equals: nameToCheck.trim(), mode: 'insensitive' as any } }] : []),
+          ]
+        }
+      });
+
+      if (existingOtherCustomer) {
+        throw new BadRequestException('A different customer with this email or name already exists.');
+      }
+    }
+
+    const matchedService = await this.prisma.service.findFirst({
+      where: { name: { equals: dto.serviceType, mode: 'insensitive' as any } }
+    });
+
     return this.prisma.application.create({
       data: {
         applicationNumber,
         customerId: dto.customerId,
+        serviceId: matchedService?.id || null,
         serviceType: dto.serviceType,
         title: dto.title || dto.serviceType,
         fullName: dto.fullName || customer.name,

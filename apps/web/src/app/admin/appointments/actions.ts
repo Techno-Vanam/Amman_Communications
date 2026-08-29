@@ -84,6 +84,7 @@ export async function fetchAppointmentsAction(search?: string, status?: string) 
 }
 
 export async function createAppointmentAction(formData: {
+  customerId?: string;
   customer: string;
   email: string;
   phone: string;
@@ -103,6 +104,7 @@ export async function createAppointmentAction(formData: {
     const appointmentDate = new Date(dateTimeStr).toISOString();
 
     const payload = {
+      customerId: formData.customerId || undefined,
       customerName: formData.customer,
       customerEmail: formData.email,
       customerPhone: formData.phone,
@@ -142,6 +144,32 @@ export async function createAppointmentAction(formData: {
     return { success: true, data };
   } catch (error: any) {
     console.error('createAppointmentAction error:', error);
+    return { error: error.message || 'Network error' };
+  }
+}
+
+export async function fetchCustomersForSelectAction() {
+  try {
+    const authHeader = await getAuthHeader();
+
+    let res = await fetch(`${API_BASE_URL}/v1/admin/customers?limit=200`, {
+      headers: { ...authHeader },
+      cache: 'no-store',
+    });
+
+    if (res.status === 404) {
+      res = await fetch(`${API_BASE_URL}/api/v1/admin/customers?limit=200`, {
+        headers: { ...authHeader },
+        cache: 'no-store',
+      });
+    }
+
+    if (!res.ok) return { error: 'Failed to fetch customers' };
+
+    const data = await res.json();
+    const arr = Array.isArray(data) ? data : data.items || [];
+    return { success: true, data: arr.map((c: any) => ({ id: c.id, name: c.name, email: c.email, phone: c.phone || '' })) };
+  } catch (error: any) {
     return { error: error.message || 'Network error' };
   }
 }
