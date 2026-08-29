@@ -24,12 +24,15 @@ import {
   Lock,
   Clock,
   RefreshCw,
-  Eye
+  Eye,
+  Filter,
+  ChevronDown
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser, getUserStorageKey } from '@/context/UserContext';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
+import CustomTabDropdown from '@/components/ui/CustomTabDropdown';
 
 interface ApplicationItem {
   id: string;
@@ -463,14 +466,23 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
           <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-2xs space-y-6">
             {/* Top Control Bar with Search */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div className="bg-gray-100/90 p-1.5 rounded-full inline-flex items-center gap-1 border border-gray-200/60 overflow-x-auto max-w-full shrink-0 scrollbar-none">
+              {/* Mobile Custom Tab Dropdown (Animated Custom Menu - No "Filter:" text) */}
+              <CustomTabDropdown
+                value={activeTabFilter}
+                options={['All', 'Verification', 'Processing', 'Completed']}
+                onChange={(val) => setActiveTabFilter(val)}
+                className="sm:hidden self-start"
+              />
+
+              {/* Desktop Capsule Filter Tabs */}
+              <div className="hidden sm:inline-flex bg-gray-100/90 p-1.5 rounded-full items-center gap-1 border border-gray-200/60 shrink-0">
                 {(['All', 'Verification', 'Processing', 'Completed'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTabFilter(tab)}
                     className={`px-4 py-1.5 rounded-full transition-all text-xs whitespace-nowrap ${
                       activeTabFilter === tab
-                        ? 'bg-white text-gray-900 font-extrabold shadow-xs'
+                        ? 'bg-[#12372A] text-white font-extrabold shadow-xs'
                         : 'text-gray-600 hover:text-gray-900 font-semibold'
                     }`}
                   >
@@ -735,10 +747,17 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             </h2>
 
             {/* Stepper Nodes */}
-            <div className="relative pt-4 pb-2 overflow-x-auto">
-              <div className="flex items-start justify-between min-w-[700px] relative">
-                {/* Connecting Track Line */}
-                <div className="absolute top-5 left-8 right-8 h-1 bg-gray-200 -z-0" />
+            <div className="relative pt-2 pb-2 w-full">
+              <div className="w-full grid grid-cols-8 relative py-1">
+                {/* Connecting Track Line (100% Equal Center-to-Center Spacing) */}
+                <div className="absolute top-[12px] sm:top-[18px] left-[6.25%] right-[6.25%] h-1 bg-gray-200 z-0 overflow-hidden rounded-full">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#12372A] to-[#2d6a4f] rounded-full transition-all duration-500 ease-in-out"
+                    style={{
+                      width: `${Math.min(100, Math.max(0, ((selectedApp.stepPhase - 1) / (TRACKER_PHASES.length - 1)) * 100))}%`
+                    }}
+                  />
+                </div>
 
                 {TRACKER_PHASES.map((phase) => {
                   const isCompleted = phase.step < selectedApp.stepPhase;
@@ -755,14 +774,14 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                   }
 
                   return (
-                    <div key={phase.step} className="flex flex-col items-center text-center space-y-2 z-10 w-24">
+                    <div key={phase.step} className="flex flex-col items-center text-center space-y-1 z-10 px-0.5">
                       {/* Step Circle */}
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-2xs ${
+                        className={`w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-[10px] sm:text-xs transition-all shadow-2xs ${
                           isCompleted
-                            ? 'bg-[#12372A] text-white ring-4 ring-gray-300'
+                            ? 'bg-[#12372A] text-white ring-2 sm:ring-4 ring-gray-300'
                             : isActive
-                            ? 'bg-[#1c3a63] text-white ring-4 ring-gray-300 scale-110'
+                            ? 'bg-[#1c3a63] text-white ring-2 sm:ring-4 ring-gray-300 scale-105'
                             : 'bg-white text-gray-800'
                         }`}
                         style={{
@@ -770,16 +789,16 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                           backgroundColor: isCompleted ? '#12372A' : isActive ? '#1c3a63' : '#ffffff'
                         }}
                       >
-                        {isCompleted ? <Check className="w-5 h-5 text-white stroke-[3]" /> : phase.step}
+                        {isCompleted ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white stroke-[3]" /> : phase.step}
                       </div>
 
                       {/* Step Title & Date */}
                       <div className="space-y-0.5">
-                        <p className={`text-[11px] font-bold leading-tight ${isActive ? 'text-[#1c3a63]' : isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
+                        <p className={`text-[7px] sm:text-[9px] md:text-[11px] font-bold leading-tight line-clamp-2 ${isActive ? 'text-[#1c3a63]' : isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
                           {phase.title}
                         </p>
                         {phaseDate && (
-                          <p className="text-[10px] text-gray-500 font-medium">{phaseDate}</p>
+                          <p className="text-[6px] sm:text-[8px] md:text-[10px] text-gray-500 font-medium hidden sm:block">{phaseDate}</p>
                         )}
                       </div>
                     </div>

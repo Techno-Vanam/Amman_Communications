@@ -9,13 +9,17 @@ import {
   CheckCircle2,
   Clock,
   Check,
-  CheckCheck
+  CheckCheck,
+  Filter,
+  ChevronDown
 } from 'lucide-react';
-import { useNotifications, NotificationItem } from '@/context/NotificationContext';
+import { NotificationProvider, useNotifications, NotificationItem, formatRelativeTime } from '@/context/NotificationContext';
+import CustomTabDropdown from '@/components/ui/CustomTabDropdown';
 
 export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState<'All' | 'Unread' | 'Read'>('All');
-  const { notifications, unreadCount, markAsRead, markAllAsRead, loadMore, showToast } = useNotifications();
+  const [visibleCount, setVisibleCount] = useState<number>(10);
+  const { notifications, unreadCount, markAsRead, markAllAsRead, showToast } = useNotifications();
 
   // Filtered notifications based on activeTab
   const filteredNotifications = notifications.filter((item) => {
@@ -23,6 +27,8 @@ export default function NotificationsPage() {
     if (activeTab === 'Read') return item.read;
     return true;
   });
+
+  const visibleNotifications = filteredNotifications.slice(0, visibleCount);
 
   const renderIcon = (type: NotificationItem['iconType']) => {
     switch (type) {
@@ -80,8 +86,17 @@ export default function NotificationsPage() {
 
       {/* Main Card Container */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs overflow-hidden">
-        {/* Tab Navigation Header (All | Unread | Read) */}
-        <div className="px-6 border-b border-gray-200/80 flex items-center space-x-8 text-xs font-semibold">
+        {/* Mobile Custom Tab Dropdown (Animated Custom Menu - No "Filter:" text) */}
+        <div className="p-3 border-b border-gray-200/80 sm:hidden">
+          <CustomTabDropdown
+            value={activeTab}
+            options={['All', 'Unread', 'Read']}
+            onChange={(val) => setActiveTab(val)}
+          />
+        </div>
+
+        {/* Desktop Tab Navigation Header (All | Unread | Read) */}
+        <div className="hidden sm:flex px-6 border-b border-gray-200/80 items-center space-x-8 text-xs font-semibold">
           {(['All', 'Unread', 'Read'] as const).map((tab) => (
             <button
               key={tab}
@@ -105,11 +120,11 @@ export default function NotificationsPage() {
         {/* Notification List */}
         <div className="divide-y divide-gray-100">
           {filteredNotifications.length === 0 ? (
-            <div className="p-12 text-center text-xs text-gray-500">
+            <div className="p-12 text-center text-xs text-gray-500 font-medium">
               No {activeTab.toLowerCase()} notifications found.
             </div>
           ) : (
-            filteredNotifications.map((notif) => (
+            visibleNotifications.map((notif) => (
               <div
                 key={notif.id}
                 className={`p-6 flex items-start justify-between gap-4 transition-all ${
@@ -160,22 +175,24 @@ export default function NotificationsPage() {
                 </div>
 
                 <span className="text-xs font-medium text-gray-400 whitespace-nowrap pt-0.5 shrink-0">
-                  {notif.time}
+                  {formatRelativeTime(notif.createdAt, notif.time)}
                 </span>
               </div>
             ))
           )}
         </div>
 
-        {/* Load More Button */}
-        <div className="p-6 border-t border-gray-100 flex justify-center bg-white">
-          <button
-            onClick={loadMore}
-            className="px-6 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-xs rounded-xl transition-all shadow-2xs"
-          >
-            Load More
-          </button>
-        </div>
+        {/* Load More Button - Only displayed if actual notifications exceed 10 */}
+        {filteredNotifications.length > visibleCount && (
+          <div className="p-6 border-t border-gray-100 flex justify-center bg-white">
+            <button
+              onClick={() => setVisibleCount((prev) => prev + 10)}
+              className="px-6 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-xs rounded-xl transition-all shadow-2xs"
+            >
+              Load More
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
