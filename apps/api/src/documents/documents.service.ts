@@ -545,4 +545,77 @@ export class DocumentsService {
     const buffer = await this.storage.readDecryptedFile(storagePath);
     return { buffer, mimeType, fileName };
   }
+
+  /**
+   * Admin-initiated document upload on behalf of a customer.
+   * No customer ownership check — admin has full access.
+   */
+  async adminDirectUploadDocument(
+    applicationId: string,
+    dto: DirectUploadDocumentDto,
+  ) {
+    this.storage.validateFile(dto.fileName, dto.mimeType, dto.fileSize);
+
+    const application = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+    });
+
+    if (!application) {
+      throw new NotFoundException('Application not found');
+    }
+
+    const customerId = application.customerId;
+    const safeName = dto.fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const storagePath = `documents/${customerId}/${applicationId}/${dto.documentType}_${Date.now()}_${safeName}`;
+
+    const base64Clean = dto.base64Data.replace(/^data:[^;]+;base64,/, '');
+    const buffer = Buffer.from(base64Clean, 'base64');
+    await this.storage.saveEncryptedFile(storagePath, buffer);
+
+    // Upsert the document record
+    const existing = await this.prisma.document.findUnique({
+      where: { applicationId_documentType: { applicationId, documentType: dto.documentType } },
+    });
+
+    if (existing) {
+      if (existing.storagePath && existing.storagePath !== storagePath) {
+        await this.storage.deleteFile(existing.storagePath).catch(() => {});
+      }
+      const updated = await this.prisma.document.update({
+        where: { id: existing.id },
+        data: {
+          originalFileName: dto.fileName,
+          fileName: dto.fileName,
+          storagePath,
+          mimeType: dto.mimeType,
+          fileSize: dto.fileSize,
+          isEncrypted: true,
+          status: 'UPLOADED',
+          version: existing.version + 1,
+          rejectionReason: null,
+          verifiedAt: null,
+          verifiedBy: null,
+        },
+      });
+      return { ...updated, documentId: updated.id };
+    }
+
+    const created = await this.prisma.document.create({
+      data: {
+        customerId,
+        applicationId,
+        documentType: dto.documentType,
+        originalFileName: dto.fileName,
+        fileName: dto.fileName,
+        storagePath,
+        mimeType: dto.mimeType,
+        fileSize: dto.fileSize,
+        isEncrypted: true,
+        status: 'UPLOADED',
+        version: 1,
+      },
+    });
+    return { ...created, documentId: created.id };
+  }
 }
+

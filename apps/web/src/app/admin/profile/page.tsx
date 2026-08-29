@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   User,
   Building2,
@@ -15,6 +15,11 @@ import {
   Globe,
   Upload,
 } from 'lucide-react';
+import {
+  fetchBusinessProfileAction,
+  updateBusinessProfileAction,
+  deleteBusinessLogoAction,
+} from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
 interface CompanyProfile {
@@ -94,6 +99,43 @@ export default function AdminProfilePage() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const loadProfile = async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+    const res = await fetchBusinessProfileAction();
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else if (res.success && res.data) {
+      const dbProf = res.data;
+      const mapped: CompanyProfile = {
+        logoUrl: dbProf.logoUrl || null,
+        companyName: dbProf.businessName || 'Amman Communications',
+        email: dbProf.supportEmail || 'admin@ammancomm.in',
+        phone: dbProf.primaryPhone || '+91 98456 12300',
+        altPhone: '',
+        address: dbProf.officeAddress || '12, Main Road, Industrial Area',
+        city: 'Chennai',
+        state: 'Tamil Nadu',
+        pincode: '600002',
+        website: 'www.ammancomm.in',
+        adminName: 'Amman Admin',
+        adminRole: 'Administrator',
+      };
+      setProfile(mapped);
+      setDraft(mapped);
+      if (dbProf.logoUrl) {
+        setLogoPreview(dbProf.logoUrl);
+      }
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
 
   function set(key: keyof CompanyProfile, value: string) {
     setDraft(p => ({ ...p, [key]: value }));
@@ -122,12 +164,27 @@ export default function AdminProfilePage() {
     if (file) handleLogoFile(file);
   }
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setProfile(draft);
-    setEditing(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setErrorMsg(null);
+    const res = await updateBusinessProfileAction({
+      companyName: draft.companyName,
+      email: draft.email,
+      phone: draft.phone,
+      address: draft.address,
+      website: draft.website,
+      registrationNumber: 'COMM-TN-2026-9921',
+    });
+
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      setProfile(draft);
+      setEditing(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+      loadProfile();
+    }
   }
 
   function handleCancel() {

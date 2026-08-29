@@ -8,7 +8,7 @@ async function getSummary(): Promise<AdminSummary | null> {
 	if (!token) return null;
 
 	try {
-		const response = await fetch(`${apiBaseUrl}/admin/dashboard/summary`, {
+		const response = await fetch(`${apiBaseUrl}/api/v1/admin/dashboard/summary`, {
 			headers: { Authorization: `Bearer ${token}` },
 			cache: 'no-store',
 		});

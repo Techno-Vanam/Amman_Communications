@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Building2,
   Plus,
@@ -23,6 +23,13 @@ import {
   AlertCircle,
   BadgeCheck,
 } from 'lucide-react';
+import {
+  fetchServicesAction,
+  createServiceAction,
+  updateServiceAction,
+  updateServiceStatusAction,
+  deleteServiceAction,
+} from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
 type ServiceStatus = 'Active' | 'Inactive' | 'Draft';
@@ -381,7 +388,7 @@ function DeleteModal({ service, onClose, onConfirm }: { service: Service; onClos
 type FilterType = 'All' | ServiceStatus;
 
 export default function ServicesPage() {
-  const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
+  const [services, setServices] = useState<Service[]>([]);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterType>('All');
   const [filterCategory, setFilterCategory] = useState<string>('All');
@@ -391,6 +398,50 @@ export default function ServicesPage() {
   const [viewService, setViewService] = useState<Service | null>(null);
   const [editService, setEditService] = useState<Service | null>(null);
   const [deleteService, setDeleteService] = useState<Service | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const loadServices = async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+    const res = await fetchServicesAction(search, filterStatus);
+    if (res.error) {
+      setErrorMsg(res.error);
+      setServices([]);
+    } else if (res.success && res.data) {
+      const mapped = res.data.map((s: any) => {
+        let category = 'Support';
+        let description = s.description || '';
+        if (description.startsWith('[')) {
+          const parts = description.split(']');
+          category = parts[0].slice(1);
+          description = parts.slice(1).join(']');
+        }
+        let estDays = 7;
+        if (s.estimatedTime) {
+          const num = parseInt(s.estimatedTime);
+          if (!isNaN(num)) estDays = num;
+        }
+        return {
+          id: s.id,
+          name: s.name,
+          category,
+          requiredDocs: (s.requiredDocuments || []).map((doc: any) => ({ name: doc.name })),
+          govtFee: s.governmentFee || 0,
+          officeCharge: s.serviceFee || 0,
+          estDays,
+          status: s.status === 'ACTIVE' ? 'Active' : s.status === 'INACTIVE' ? 'Inactive' : 'Draft',
+          description,
+        };
+      });
+      setServices(mapped);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadServices();
+  }, [search, filterStatus]);
 
   const filtered = useMemo(() => services.filter(s => {
     const q = search.toLowerCase();
@@ -400,32 +451,66 @@ export default function ServicesPage() {
     return matchSearch && matchStatus && matchCat;
   }), [services, search, filterStatus, filterCategory]);
 
-  function handleAdd(data: Partial<Service>) {
-    const newSvc: Service = {
-      id: `SVC-${String(services.length + 1).padStart(3, '0')}`,
+  async function handleAdd(data: Partial<Service>) {
+    setErrorMsg(null);
+    const res = await createServiceAction({
       name: data.name ?? '',
       category: data.category ?? 'Support',
-      requiredDocs: data.requiredDocs ?? [],
+      description: data.description,
       govtFee: data.govtFee ?? 0,
       officeCharge: data.officeCharge ?? 0,
       estDays: data.estDays ?? 7,
       status: data.status ?? 'Draft',
-      description: data.description ?? '',
-    };
-    setServices(prev => [newSvc, ...prev]);
+      requiredDocs: data.requiredDocs ?? [],
+    });
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      loadServices();
+    }
   }
 
-  function handleEdit(data: Partial<Service>) {
+  async function handleEdit(data: Partial<Service>) {
     if (!editService) return;
-    setServices(prev => prev.map(s => s.id === editService.id ? { ...s, ...data } : s));
+    setErrorMsg(null);
+    const res = await updateServiceAction(editService.id, {
+      name: data.name,
+      category: data.category,
+      description: data.description,
+      govtFee: data.govtFee,
+      officeCharge: data.officeCharge,
+      estDays: data.estDays,
+      status: data.status,
+      requiredDocs: data.requiredDocs,
+    });
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      loadServices();
+    }
   }
 
-  function toggleStatus(id: string) {
-    setServices(prev => prev.map(s => s.id === id ? { ...s, status: s.status === 'Active' ? 'Inactive' : 'Active' } : s));
+  async function toggleStatus(id: string) {
+    setErrorMsg(null);
+    const svc = services.find(s => s.id === id);
+    if (!svc) return;
+    const targetStatus = svc.status === 'Active' ? 'Inactive' : 'Active';
+    const res = await updateServiceStatusAction(id, targetStatus);
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      loadServices();
+    }
   }
 
-  function handleDelete(id: string) {
-    setServices(prev => prev.filter(s => s.id !== id));
+  async function handleDelete(id: string) {
+    setErrorMsg(null);
+    const res = await deleteServiceAction(id);
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      loadServices();
+    }
   }
 
   const counts = {
@@ -440,16 +525,7 @@ export default function ServicesPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
-      {/* ── Page Header ── */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 text-[#a8d5b9]" />
-          Add New Service
-        </button>
-      </div>
+
 
       {/* ── Summary Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -471,8 +547,8 @@ export default function ServicesPage() {
       </div>
 
       {/* ── Search + Filters ── */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className="relative w-full sm:max-w-sm mr-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input type="text" placeholder="Search by service name or ID..."
             value={search} onChange={e => setSearch(e.target.value)}
@@ -481,9 +557,9 @@ export default function ServicesPage() {
         </div>
 
         {/* Status Filter */}
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <button onClick={() => setShowStatusMenu(s => !s)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs transition-all">
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs transition-all">
             <Filter className="w-4 h-4 text-gray-500" />
             {filterStatus === 'All' ? 'All Status' : filterStatus}
             <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showStatusMenu ? 'rotate-180' : ''}`} />
@@ -499,9 +575,9 @@ export default function ServicesPage() {
         </div>
 
         {/* Category Filter */}
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <button onClick={() => setShowCatMenu(s => !s)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs transition-all">
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs transition-all">
             <Tag className="w-4 h-4 text-gray-500" />
             {filterCategory === 'All' ? 'All Categories' : filterCategory}
             <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showCatMenu ? 'rotate-180' : ''}`} />
@@ -515,6 +591,14 @@ export default function ServicesPage() {
             </div>
           )}
         </div>
+        
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md shrink-0"
+        >
+          <Plus className="w-4 h-4 text-[#a8d5b9]" />
+          Add New Service
+        </button>
       </div>
 
       {/* ── Services Table ── */}

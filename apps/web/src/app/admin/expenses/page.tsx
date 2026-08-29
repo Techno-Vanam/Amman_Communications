@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Receipt,
   Plus,
@@ -22,6 +22,12 @@ import {
   Users,
   Building2,
 } from 'lucide-react';
+import {
+  fetchExpensesAction,
+  createExpenseAction,
+  updateExpenseAction,
+  deleteExpenseAction,
+} from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
 type Category =
@@ -229,7 +235,7 @@ function DeleteModal({ expense, onClose, onConfirm }: { expense: Expense; onClos
 type FilterCat = 'All' | Category;
 
 export default function ExpensesPage() {
-  const [expenses, setExpenses] = useState<Expense[]>(INITIAL_EXPENSES);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [search, setSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState<FilterCat>('All');
   const [filterMonth, setFilterMonth] = useState<string>('');
@@ -237,6 +243,25 @@ export default function ExpensesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editExpense, setEditExpense] = useState<Expense | null>(null);
   const [deleteExpense, setDeleteExpense] = useState<Expense | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const loadExpenses = async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+    const res = await fetchExpensesAction();
+    if (res.error) {
+      setErrorMsg(res.error);
+      setExpenses([]);
+    } else if (res.success && res.data) {
+      setExpenses(res.data);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadExpenses();
+  }, []);
 
   const filtered = useMemo(() => expenses.filter(e => {
     const q = search.toLowerCase();
@@ -256,46 +281,57 @@ export default function ExpensesPage() {
     return sum > best.sum ? { cat, sum } : best;
   }, { cat: '' as Category, sum: 0 });
 
-  function handleAdd(data: Partial<Expense>) {
-    const newExp: Expense = {
-      id: `EXP-${String(expenses.length + 1).padStart(3, '0')}`,
+  async function handleAdd(data: Partial<Expense>) {
+    setErrorMsg(null);
+    const res = await createExpenseAction({
       category: data.category ?? 'Miscellaneous',
       amount: data.amount ?? 0,
       description: data.description ?? '',
       date: data.date ?? new Date().toISOString().split('T')[0],
-      addedBy: 'Admin',
-    };
-    setExpenses(prev => [newExp, ...prev]);
+    });
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      loadExpenses();
+    }
   }
 
-  function handleEdit(data: Partial<Expense>) {
+  async function handleEdit(data: Partial<Expense>) {
     if (!editExpense) return;
-    setExpenses(prev => prev.map(e => e.id === editExpense.id ? { ...e, ...data } : e));
+    setErrorMsg(null);
+    const res = await updateExpenseAction(editExpense.id, {
+      category: data.category,
+      amount: data.amount,
+      description: data.description,
+      date: data.date,
+    });
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      loadExpenses();
+    }
   }
 
-  function handleDelete(id: string) {
-    setExpenses(prev => prev.filter(e => e.id !== id));
+  async function handleDelete(id: string) {
+    setErrorMsg(null);
+    const res = await deleteExpenseAction(id);
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      loadExpenses();
+    }
   }
 
   const fmtAmt  = (n: number) => `₹${n.toLocaleString('en-IN')}`;
-  const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
   // Month options from data
-  const months = [...new Set(expenses.map(e => e.date.slice(0, 7)))].sort().reverse();
+  const months = [...new Set(expenses.map(e => e.date.slice(0, 7)))].filter(Boolean).sort().reverse();
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
-      {/* ── Page Header ── */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 text-[#a8d5b9]" />
-          Add Expense
-        </button>
-      </div>
+
 
       {/* ── Summary Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -337,9 +373,9 @@ export default function ExpensesPage() {
       </div>
 
       {/* ── Filters Row ── */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row items-center gap-3">
         {/* Search */}
-        <div className="relative flex-1">
+        <div className="relative w-full sm:max-w-sm mr-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -356,12 +392,12 @@ export default function ExpensesPage() {
         </div>
 
         {/* Month Filter */}
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <select
             value={filterMonth}
             onChange={e => setFilterMonth(e.target.value)}
-            className="pl-10 pr-8 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 shadow-xs transition-all appearance-none"
+            className="w-full sm:w-auto pl-10 pr-8 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 shadow-xs transition-all appearance-none"
           >
             <option value="">All Months</option>
             {months.map(m => {
@@ -374,10 +410,10 @@ export default function ExpensesPage() {
         </div>
 
         {/* Category Filter */}
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <button
             onClick={() => setShowCatMenu(s => !s)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs transition-all"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs transition-all"
           >
             <Filter className="w-4 h-4 text-gray-500" />
             {filterCategory === 'All' ? 'All Categories' : filterCategory}
@@ -394,6 +430,14 @@ export default function ExpensesPage() {
             </div>
           )}
         </div>
+        
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md shrink-0"
+        >
+          <Plus className="w-4 h-4 text-[#a8d5b9]" />
+          Add Expense
+        </button>
       </div>
 
       {/* ── Table ── */}

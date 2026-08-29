@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   ShieldCheck,
   Search,
@@ -18,6 +18,10 @@ import {
   Edit2,
   Hourglass,
 } from 'lucide-react';
+import {
+  fetchVerificationRecordsAction,
+  updateVerificationStatusAction,
+} from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
 type VerifStatus = 'Pending Review' | 'Verified' | 'Needs Correction' | 'Rejected';
@@ -231,12 +235,31 @@ function DetailModal({ record, onClose }: { record: VerifRecord; onClose: () => 
 type FilterType = 'All' | VerifStatus;
 
 export default function VerificationPage() {
-  const [records, setRecords] = useState<VerifRecord[]>(INITIAL_RECORDS);
+  const [records, setRecords] = useState<VerifRecord[]>([]);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterType>('All');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [reviewRecord, setReviewRecord] = useState<VerifRecord | null>(null);
   const [viewRecord, setViewRecord] = useState<VerifRecord | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const loadRecords = async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+    const res = await fetchVerificationRecordsAction();
+    if (res.error) {
+      setErrorMsg(res.error);
+      setRecords([]);
+    } else if (res.success && res.data) {
+      setRecords(res.data);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadRecords();
+  }, []);
 
   const filtered = useMemo(() => records.filter(r => {
     const q = search.toLowerCase();
@@ -246,8 +269,16 @@ export default function VerificationPage() {
     return matchSearch && matchFilter;
   }), [records, search, filterStatus]);
 
-  function handleSaveReview(id: string, status: VerifStatus, remarks: string) {
-    setRecords(prev => prev.map(r => r.id === id ? { ...r, status, remarks, reviewedBy: 'Admin' } : r));
+  async function handleSaveReview(id: string, status: VerifStatus, remarks: string) {
+    const record = records.find(r => r.id === id);
+    if (!record) return;
+    setErrorMsg(null);
+    const res = await updateVerificationStatusAction(record.appId, id, status, remarks);
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      loadRecords();
+    }
   }
 
   const ALL_STATUS_LIST: VerifStatus[] = ['Pending Review', 'Verified', 'Needs Correction', 'Rejected'];
