@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   CalendarPlus,
@@ -17,10 +17,13 @@ import {
   X,
   LogOut,
   ShieldCheck,
+  ShieldAlert,
+  Lock,
   Plus
 } from 'lucide-react';
 import { NotificationProvider, useNotifications } from '@/context/NotificationContext';
 import { UserProvider, useUser } from '@/context/UserContext';
+import { fetchProfileAction } from '@/app/portal/actions';
 
 const MAIN_NAV_ITEMS = [
   { name: 'Dashboard', href: '/portal/dashboard', icon: LayoutDashboard },
@@ -34,7 +37,8 @@ const MAIN_NAV_ITEMS = [
 function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen: boolean; setMobileMenuOpen: (v: boolean) => void }) {
   const pathname = usePathname();
   const { unreadCount } = useNotifications();
-  const { logoutUser } = useUser();
+  const { user, logoutUser } = useUser();
+  const isProfileLocked = user.isProfileCompleted === false;
 
   // Distinguish Profile vs Settings pages so ONLY ONE gets highlighted
   const isProfileActive = pathname === '/portal/profile';
@@ -56,7 +60,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
             <ShieldCheck className="w-6 h-6 text-[#a8d5b9]" />
           </div>
           <div>
-            <Link href="/portal/dashboard" className="text-lg font-bold tracking-tight text-[#12372A] hover:opacity-80 transition-opacity block leading-tight">
+            <Link href={isProfileLocked ? "/portal/profile" : "/portal/dashboard"} className="text-lg font-bold tracking-tight text-[#12372A] hover:opacity-80 transition-opacity block leading-tight">
               Amman Comm
             </Link>
             <p className="text-[10px] font-bold tracking-wider text-gray-400 uppercase mt-0.5">
@@ -73,19 +77,23 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
               const Icon = item.icon;
               const isActive = pathname === item.href || (item.href !== '/portal/dashboard' && pathname.startsWith(item.href));
               const badgeValue = item.name === 'Notifications' && unreadCount > 0 ? String(unreadCount) : null;
+              const targetHref = isProfileLocked ? '/portal/profile' : item.href;
 
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={targetHref}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`
                     flex items-center justify-between px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 group
                     ${isActive
                       ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold shadow-2xs'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-semibold'
+                      : isProfileLocked
+                        ? 'text-gray-400 hover:bg-amber-50/60 hover:text-amber-800'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-semibold'
                     }
                   `}
+                  title={isProfileLocked ? 'Complete your profile setup to unlock' : item.name}
                 >
                   <div className="flex items-center space-x-3">
                     <div
@@ -101,11 +109,14 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
                     </div>
                     <span className="text-xs">{item.name}</span>
                   </div>
-                  {badgeValue && (
+
+                  {isProfileLocked ? (
+                    <Lock className="w-3.5 h-3.5 text-amber-500 mr-1" />
+                  ) : badgeValue ? (
                     <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500 text-white shadow-2xs mr-1">
                       {badgeValue}
                     </span>
-                  )}
+                  ) : null}
                 </Link>
               );
             })}
@@ -140,12 +151,19 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
           >
             <User className="w-4 h-4" />
           </div>
-          <span>Profile</span>
+          <span className="flex items-center gap-1.5">
+            <span>Profile</span>
+            {isProfileLocked && (
+              <span className="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[9px] font-bold">
+                Setup Required
+              </span>
+            )}
+          </span>
         </Link>
 
         {/* Settings Link */}
         <Link
-          href="/portal/settings"
+          href={isProfileLocked ? "/portal/profile" : "/portal/settings"}
           onClick={() => setMobileMenuOpen(false)}
           className={`
             flex items-center space-x-3 px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 group
@@ -311,51 +329,114 @@ function PortalTopHeader() {
   );
 }
 
-export default function PortalLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+function PortalContentWrapper({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, updateUser } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Sync profile data from database on mount
+  useEffect(() => {
+    async function checkProfile() {
+      try {
+        const dbProfile = await fetchProfileAction();
+        if (dbProfile) {
+          updateUser({
+            name: dbProfile.name,
+            email: dbProfile.email,
+            phone: dbProfile.phone || dbProfile.contactNumber || '+91 ',
+            address: dbProfile.address || '',
+            dob: dbProfile.dob || '',
+            aadhaarNumber: dbProfile.aadhaarNumber || '',
+            panNumber: dbProfile.panNumber || '',
+            occupation: dbProfile.occupation || '',
+            altPhone: dbProfile.altPhone || '+91 ',
+            emergencyContact: dbProfile.emergencyContact || '',
+            isProfileCompleted: dbProfile.isProfileCompleted ?? false,
+          });
+        }
+      } catch (err) {
+        console.error('Error syncing profile in layout:', err);
+      }
+    }
+    checkProfile();
+  }, []);
+
+  const isProfileLocked = user.isProfileCompleted === false && pathname !== '/portal/profile';
+
+  return (
+    <div className="h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-hidden print:bg-white print:h-auto print:overflow-visible print:p-0 print:m-0">
+      {/* Profile Setup Required Modal Guard */}
+      {isProfileLocked && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-gray-100 text-center space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 mx-auto flex items-center justify-center border border-amber-200 shadow-inner">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+            <div>
+              <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">Complete Profile Setup</h3>
+              <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                Welcome to Amman Communications! To comply with official service verification and unlock your account, please complete your profile information first.
+              </p>
+            </div>
+            <Link
+              href="/portal/profile"
+              className="w-full py-3 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl transition-all shadow-md block"
+            >
+              Complete Profile Setup &rarr;
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Header */}
+      <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-40 border-b border-[#1f4e3c] print:hidden">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 rounded-xl bg-[#a8d5b9]/20 flex items-center justify-center border border-[#a8d5b9]/40 text-[#a8d5b9]">
+            <ShieldCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="font-bold text-base tracking-tight text-white block leading-none">Amman Comm</span>
+            <span className="text-[10px] text-[#a8d5b9] font-medium tracking-wide">SERVICES MANAGEMENT</span>
+          </div>
+        </div>
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-[#a8d5b9] transition-colors"
+          aria-label="Toggle navigation menu"
+        >
+          {mobileMenuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
+        </button>
+      </div>
+
+      {/* Sidebar Navigation */}
+      <PortalSidebarContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+
+      {/* Main Content Area */}
+      <main className="min-w-0 flex-1 h-full overflow-y-auto p-3.5 sm:p-4 md:p-5 lg:p-8 max-w-full print:h-auto print:overflow-visible print:p-0 print:m-0 print:bg-white print:w-full">
+        <PortalTopHeader />
+        {children}
+      </main>
+
+      {/* Backdrop for Mobile */}
+      {mobileMenuOpen && (
+        <div
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
+        />
+      )}
+    </div>
+  );
+}
+
+export default function PortalLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <UserProvider>
       <NotificationProvider>
-        <div className="h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-hidden print:bg-white print:h-auto print:overflow-visible print:p-0 print:m-0">
-          {/* Mobile Header */}
-          <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c] print:hidden">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-xl bg-[#a8d5b9]/20 flex items-center justify-center border border-[#a8d5b9]/40 text-[#a8d5b9]">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="font-bold text-base tracking-tight text-white block leading-none">Amman Comm</span>
-                <span className="text-[10px] text-[#a8d5b9] font-medium tracking-wide">SERVICES MANAGEMENT</span>
-              </div>
-            </div>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-[#a8d5b9] transition-colors"
-              aria-label="Toggle navigation menu"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
-            </button>
-          </div>
-
-          {/* Sidebar Navigation */}
-          <PortalSidebarContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
-
-          {/* Main Content Area */}
-          <main className="min-w-0 flex-1 h-full overflow-y-auto p-3.5 sm:p-4 md:p-5 lg:p-8 max-w-full print:h-auto print:overflow-visible print:p-0 print:m-0 print:bg-white print:w-full">
-            <PortalTopHeader />
-            {children}
-          </main>
-
-          {/* Backdrop for Mobile */}
-          {mobileMenuOpen && (
-            <div
-              onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
-            />
-          )}
-        </div>
+        <PortalContentWrapper>
+          {children}
+        </PortalContentWrapper>
       </NotificationProvider>
     </UserProvider>
   );
-}
+}

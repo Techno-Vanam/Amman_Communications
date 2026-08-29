@@ -38,6 +38,8 @@ import { useUser, getUserStorageKey } from '@/context/UserContext';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
 
+import { fetchCustomerPaymentsAction } from '@/app/portal/actions';
+
 export default function PaymentsPage() {
   const { showToast } = useNotifications();
   const { user } = useUser();
@@ -51,14 +53,42 @@ export default function PaymentsPage() {
   const [showDatePickerModal, setShowDatePickerModal] = useState(false);
 
   React.useEffect(() => {
-    try {
-      const storageKey = getUserStorageKey(user.email, 'amman_user_payments');
-      const saved = localStorage.getItem(storageKey);
-      setTransactions(saved ? JSON.parse(saved) : []);
-    } catch (e) {
-      console.error('Error loading payments:', e);
-      setTransactions([]);
+    async function loadPayments() {
+      try {
+        // Try loading from DB first
+        const dbPayments = await fetchCustomerPaymentsAction();
+        if (dbPayments && dbPayments.length > 0) {
+          setTransactions(dbPayments.map((p: any) => ({
+            id: p.id || p.invoiceNumber || '',
+            appId: p.appId || '',
+            service: p.service || '',
+            totalAmount: p.totalAmount || 0,
+            paidAmount: p.paidAmount || 0,
+            pendingAmount: p.pendingAmount || 0,
+            paymentMode: p.paymentMode || 'Pending',
+            status: p.status || 'Pending',
+            date: p.date || new Date().toISOString().split('T')[0],
+          })));
+          return;
+        }
+
+        // Fallback: load from localStorage
+        const storageKey = getUserStorageKey(user.email, 'amman_user_payments');
+        const saved = localStorage.getItem(storageKey);
+        setTransactions(saved ? JSON.parse(saved) : []);
+      } catch (e) {
+        console.error('Error loading payments:', e);
+        // Final fallback: localStorage
+        try {
+          const storageKey = getUserStorageKey(user.email, 'amman_user_payments');
+          const saved = localStorage.getItem(storageKey);
+          setTransactions(saved ? JSON.parse(saved) : []);
+        } catch {
+          setTransactions([]);
+        }
+      }
     }
+    loadPayments();
   }, [user.email]);
 
   // More Filters State

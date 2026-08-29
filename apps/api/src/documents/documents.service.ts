@@ -380,6 +380,7 @@ export class DocumentsService {
             uploadedAt: doc.uploadedAt,
             updatedAt: doc.updatedAt,
             rejectionReason: doc.rejectionReason,
+            storagePath: doc.storagePath,
             downloadUrl: await this.storage.createDownloadUrl(doc.storagePath),
           })),
         ),
@@ -527,7 +528,13 @@ export class DocumentsService {
   ): Promise<boolean> {
     if (!storagePath) return false;
     const document = await this.prisma.document.findFirst({
-      where: { storagePath, customerId },
+      where: {
+        storagePath,
+        OR: [
+          { customerId },
+          { application: { customerId } },
+        ],
+      },
     });
     return document !== null;
   }

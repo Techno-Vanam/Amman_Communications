@@ -42,6 +42,7 @@ export class AuthService {
         name: user.name,
         email: user.email,
         role,
+        isProfileCompleted: 'isProfileCompleted' in user ? Boolean((user as any).isProfileCompleted) : true,
       },
     };
   }
@@ -65,6 +66,7 @@ export class AuthService {
         name: name.trim(),
         email: normalizedEmail,
         passwordHash,
+        isProfileCompleted: false,
       },
     });
 
@@ -80,6 +82,7 @@ export class AuthService {
         name: customer.name,
         email: customer.email,
         role: 'CUSTOMER',
+        isProfileCompleted: false,
       },
     };
   }
