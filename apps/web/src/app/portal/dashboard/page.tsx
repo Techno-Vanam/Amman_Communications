@@ -9,8 +9,7 @@ import {
   Calendar,
   RefreshCw,
   Info,
-  ArrowUpRight,
-  Plus
+  ArrowUpRight
 } from 'lucide-react';
 
 import { useUser, getUserStorageKey } from '@/context/UserContext';
@@ -105,26 +104,6 @@ export default function PortalDashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12">
-      {/* Welcome Header & Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-2">
-            Good day, {user.name} <span className="inline-block animate-bounce">👋</span>
-          </h1>
-          <p className="mt-1 text-xs md:text-sm text-gray-500 font-medium">
-            Here&apos;s a real-time overview of your current applications and scheduled appointments.
-          </p>
-        </div>
-
-        <Link
-          href="/portal/book-appointment"
-          className="bg-[#12372A] hover:bg-[#1a4a38] text-white px-6 py-2.5 rounded-full font-bold text-xs transition-all shadow-md flex items-center gap-2 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Book New Service</span>
-        </Link>
-      </div>
-
       {/* 4 KPI Summary Cards Grid - Matching Payments Card Styling & Size */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Card 1: Active Applications */}
@@ -234,35 +213,27 @@ export default function PortalDashboardPage() {
                   </p>
                 </div>
               ) : (
-                <>
-                  {applications.slice(0, 2).map((app: DashboardAppItem) => (
-                    <div key={app.id} className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/60 flex items-start gap-4">
-                      <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
-                        <RefreshCw className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-800 font-semibold leading-relaxed">
-                          Application <span className="font-bold text-[#12372A]">{app.id}</span> ({app.serviceType}) is currently in <span className="font-bold text-[#12372A]">&quot;{app.status}&quot;</span>.
-                        </p>
-                        <span className="text-[10px] text-gray-400 block mt-0.5">Submitted: {app.submittedDate}</span>
-                      </div>
+                recentActivities.slice(0, 3).map((act) => (
+                  <div key={act.id} className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/60 flex items-start gap-4">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                      act.isApp ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                    }`}>
+                      {act.isApp ? <RefreshCw className="w-4 h-4" /> : <Calendar className="w-4 h-4" />}
                     </div>
-                  ))}
-
-                  {appointments.slice(0, 2).map((apt: DashboardAptItem) => (
-                    <div key={apt.id} className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/60 flex items-start gap-4">
-                      <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
-                        <Calendar className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0">
+                      {act.isApp ? (
                         <p className="text-xs text-gray-800 font-semibold leading-relaxed">
-                          Appointment scheduled for <span className="font-bold text-gray-900">{apt.serviceType}</span> via <span className="font-bold text-gray-900">{apt.consultationType}</span>.
+                          {act.title} ({act.service}) is currently in <span className="font-bold text-[#12372A]">&quot;{act.status}&quot;</span>.
                         </p>
-                        <span className="text-[10px] text-gray-400 block mt-0.5">{apt.originalDateTime}</span>
-                      </div>
+                      ) : (
+                        <p className="text-xs text-gray-800 font-semibold leading-relaxed">
+                          Appointment scheduled for <span className="font-bold text-gray-900">{act.service}</span> via <span className="font-bold text-gray-900">{act.status}</span>.
+                        </p>
+                      )}
+                      <span className="text-[10px] text-gray-400 block mt-0.5">{act.isApp ? `Submitted: ${act.date}` : act.date}</span>
                     </div>
-                  ))}
-                </>
+                  </div>
+                ))
               )}
             </div>
           </div>

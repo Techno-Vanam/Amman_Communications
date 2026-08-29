@@ -148,23 +148,33 @@ export default function BookAppointmentPage() {
   return (
     <div className="max-w-7xl w-full mx-auto space-y-8 font-sans pb-12">
       {/* 5-Step Stepper Progress Bar */}
-      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-5 md:p-6 overflow-hidden">
-        <div className="flex items-center justify-between max-w-5xl mx-auto px-1 sm:px-5">
-          {STEPS.map((step, index) => {
-            const isCompleted = step.id < currentStep;
-            const isCurrent = step.id === currentStep;
-            const isClickable = step.id < currentStep;
+      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-4 sm:p-6 overflow-hidden">
+        <div className="relative w-full max-w-5xl mx-auto">
+          <div className="relative w-full grid grid-cols-5 py-1">
+            {/* Continuous Connecting Line (100% Equal Center-to-Center Spacing) */}
+            <div className="absolute top-[12px] sm:top-[18px] left-[10%] right-[10%] h-1 bg-gray-200 z-0 overflow-hidden rounded-full">
+              <div
+                className="h-full bg-gradient-to-r from-[#12372A] to-[#2d6a4f] rounded-full transition-all duration-500 ease-in-out"
+                style={{
+                  width: `${Math.min(100, Math.max(0, ((currentStep - 1) / (STEPS.length - 1)) * 100))}%`
+                }}
+              />
+            </div>
 
-            return (
-              <React.Fragment key={step.id}>
-                {/* Stepper Node */}
+            {STEPS.map((step) => {
+              const isCompleted = step.id < currentStep;
+              const isCurrent = step.id === currentStep;
+              const isClickable = step.id < currentStep;
+
+              return (
                 <div
+                  key={step.id}
                   onClick={() => isClickable && setCurrentStep(step.id)}
-                  className={`relative z-10 flex flex-col items-center group shrink-0 ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
+                  className={`relative z-10 flex flex-col items-center text-center px-0.5 group ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
                 >
                   <div
                     className={`
-                      w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-extrabold text-xs sm:text-sm transition-all duration-300 transform
+                      w-6 h-6 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-extrabold text-[10px] sm:text-sm transition-all duration-300 transform
                       ${isCompleted || isCurrent
                         ? 'bg-[#12372A] text-white border-2 border-[#12372A] shadow-md'
                         : 'bg-white text-gray-700 border-2 border-gray-300 shadow-xs'
@@ -172,7 +182,7 @@ export default function BookAppointmentPage() {
                     `}
                   >
                     {isCompleted ? (
-                      <Check className="w-4 h-4 sm:w-5 sm:h-5 text-[#a8d5b9] stroke-[3]" />
+                      <Check className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#a8d5b9] stroke-[3]" />
                     ) : (
                       <span className={`font-extrabold ${isCurrent || isCompleted ? 'text-white' : 'text-gray-800'}`}>
                         {step.id}
@@ -180,7 +190,7 @@ export default function BookAppointmentPage() {
                     )}
                   </div>
                   <span
-                    className={`mt-1.5 text-[9px] sm:text-xs transition-all duration-300 tracking-wide whitespace-nowrap ${
+                    className={`mt-1 sm:mt-1.5 text-[8px] sm:text-xs transition-all duration-300 tracking-tight text-center leading-tight break-words max-w-full ${
                       isCurrent
                         ? 'text-[#12372A] font-bold scale-105'
                         : isCompleted
@@ -191,21 +201,9 @@ export default function BookAppointmentPage() {
                     {step.label}
                   </span>
                 </div>
-
-                {/* Connector Line between Steps */}
-                {index < STEPS.length - 1 && (
-                  <div className="flex-1 mx-2 sm:mx-4 h-1 bg-gray-200 rounded-full relative -top-3">
-                    <div
-                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#12372A] to-[#2d6a4f] rounded-full transition-all duration-500 ease-in-out"
-                      style={{
-                        width: isCompleted ? '100%' : '0%'
-                      }}
-                    />
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 

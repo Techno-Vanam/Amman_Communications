@@ -17,7 +17,6 @@ import {
   X,
   LogOut,
   ShieldCheck,
-  ChevronDown,
   Plus
 } from 'lucide-react';
 import { NotificationProvider, useNotifications } from '@/context/NotificationContext';
@@ -46,7 +45,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
       className={`
         fixed inset-y-0 left-0 z-40 w-72 md:w-60 lg:w-72 bg-white text-gray-800 flex flex-col justify-between transition-transform duration-300 ease-in-out md:static md:translate-x-0 print:hidden
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-3 lg:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:sticky md:top-4 overflow-hidden print:hidden
+        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-3 lg:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:shrink-0 overflow-hidden print:hidden
       `}
     >
       {/* Scrollable Top Area: Brand & Navigation */}
@@ -288,30 +287,24 @@ function PortalTopHeader() {
         {/* Notification Bell */}
         <Link
           href="/portal/notifications"
-          className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative shrink-0"
+          className="w-10 h-10 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative shrink-0"
           title="Notifications"
         >
-          <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+          <Bell className="w-5 h-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-[20px] px-1 rounded-full bg-rose-500 text-white text-[9px] sm:text-[10px] font-extrabold flex items-center justify-center shadow-xs border-2 border-white leading-none shrink-0">
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center shadow-xs border-2 border-white leading-none shrink-0">
               {unreadCount}
             </span>
           )}
         </Link>
 
-        {/* User Profile Pill */}
+        {/* User Profile Circle Option */}
         <Link
           href="/portal/profile"
-          className="flex items-center gap-2 sm:gap-3.5 bg-white border border-gray-200/90 rounded-full pl-1.5 sm:pl-3 pr-2.5 sm:pr-6 py-1 sm:py-2 shadow-xs hover:bg-[#f0f7f2] hover:border-[#a8d5b9] hover:shadow-sm transition-all"
+          className="w-10 h-10 rounded-full bg-[#12372A] text-white font-extrabold text-xs sm:text-sm flex items-center justify-center border border-[#12372A] shadow-xs hover:bg-[#1a4a38] transition-all shrink-0"
+          title={`Profile (${user.name})`}
         >
-          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-xs sm:text-sm flex items-center justify-center border border-[#a8d5b9]/30 shadow-2xs shrink-0">
-            {user.initials}
-          </div>
-          <div className="text-left leading-tight hidden sm:block">
-            <p className="text-sm font-extrabold text-gray-900">{user.name}</p>
-            <p className="text-xs text-gray-500 font-semibold mt-0.5">View Profile</p>
-          </div>
-          <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 ml-0.5 sm:ml-1" />
+          {user.initials}
         </Link>
       </div>
     </header>
@@ -324,7 +317,7 @@ export default function PortalLayout({ children }: Readonly<{ children: React.Re
   return (
     <UserProvider>
       <NotificationProvider>
-        <div className="min-h-screen bg-[#f4f6f8] print:bg-white text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-x-hidden print:p-0 print:m-0">
+        <div className="h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-hidden print:bg-white print:h-auto print:overflow-visible print:p-0 print:m-0">
           {/* Mobile Header */}
           <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c] print:hidden">
             <div className="flex items-center space-x-3">
@@ -349,7 +342,7 @@ export default function PortalLayout({ children }: Readonly<{ children: React.Re
           <PortalSidebarContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
           {/* Main Content Area */}
-          <main className="min-w-0 flex-1 p-3.5 sm:p-4 md:p-5 lg:p-8 overflow-y-auto max-w-full overflow-x-hidden print:p-0 print:m-0 print:bg-white print:w-full">
+          <main className="min-w-0 flex-1 h-full overflow-y-auto p-3.5 sm:p-4 md:p-5 lg:p-8 max-w-full print:h-auto print:overflow-visible print:p-0 print:m-0 print:bg-white print:w-full">
             <PortalTopHeader />
             {children}
           </main>

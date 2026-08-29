@@ -16,12 +16,15 @@ import {
   Eye,
   AlertTriangle,
   RotateCcw,
-  Search
+  Search,
+  Filter,
+  ChevronDown
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser, getUserStorageKey } from '@/context/UserContext';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
+import CustomTabDropdown from '@/components/ui/CustomTabDropdown';
 
 interface AppointmentItem {
   id: string;
@@ -228,8 +231,16 @@ export default function AppointmentsPage() {
     <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12">
       {/* Filter Tabs & Search Bar & Book Appointment Bar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Capsule Filter Tabs (All, Upcoming, Completed, Cancelled, Rescheduled) */}
-        <div className="bg-gray-100/90 p-1.5 rounded-full inline-flex items-center gap-1 border border-gray-200/60 overflow-x-auto max-w-full shrink-0 scrollbar-none">
+        {/* Mobile Custom Tab Dropdown (Animated Custom Menu - No "Filter:" text) */}
+        <CustomTabDropdown
+          value={activeTab}
+          options={['All', 'Upcoming', 'Completed', 'Cancelled', 'Rescheduled']}
+          onChange={(val) => setActiveTab(val)}
+          className="sm:hidden self-start"
+        />
+
+        {/* Desktop Capsule Filter Tabs (Visible on sm screens and up) */}
+        <div className="hidden sm:inline-flex bg-gray-100/90 p-1.5 rounded-full items-center gap-1 border border-gray-200/60 shrink-0">
           {(['All', 'Upcoming', 'Completed', 'Cancelled', 'Rescheduled'] as const).map((tab) => {
             const isActive = activeTab === tab;
             return (
@@ -238,7 +249,7 @@ export default function AppointmentsPage() {
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-white text-gray-900 shadow-xs font-extrabold'
+                    ? 'bg-[#12372A] text-white shadow-xs font-extrabold'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-white/60 font-semibold'
                 }`}
               >
@@ -280,110 +291,223 @@ export default function AppointmentsPage() {
         </div>
       </div>
 
-      {/* Responsive Cards Grid Layout */}
+      {/* Responsive Table (Desktop) / Cards (Mobile) Layout */}
       <div className="space-y-4">
         {filteredAppointments.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center text-gray-500 font-medium shadow-xs">
             No appointments found in this category.
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredAppointments.map((apt) => {
-              const isSelected = selectedAppointment?.id === apt.id;
-              const canModify = apt.status !== 'Cancelled' && apt.status !== 'Completed';
+          <>
+            {/* Desktop Table View (Visible on md screens and larger) */}
+            <div className="hidden md:block bg-white rounded-3xl border border-gray-200/80 shadow-xs overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#f8faf9] border-b border-gray-200/80 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">
+                      <th scope="col" className="py-3.5 px-6">Service / ID</th>
+                      <th scope="col" className="py-3.5 px-4">Date &amp; Time</th>
+                      <th scope="col" className="py-3.5 px-4">New Date &amp; Time</th>
+                      <th scope="col" className="py-3.5 px-4">Consultation</th>
+                      <th scope="col" className="py-3.5 px-4">Status</th>
+                      <th scope="col" className="py-3.5 px-6 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 text-xs">
+                    {filteredAppointments.map((apt) => {
+                      const isSelected = selectedAppointment?.id === apt.id;
+                      const canModify = apt.status !== 'Cancelled' && apt.status !== 'Completed';
 
-              return (
-                <div
-                  key={apt.id}
-                  className={`bg-white rounded-3xl border border-gray-200/70 p-5 shadow-xs transition-all hover:shadow-md flex flex-col justify-between gap-4 ${
-                    isSelected ? 'ring-2 ring-[#12372A] bg-[#f0f7f2]/10' : ''
-                  }`}
-                >
-                  {/* Top: Header Info & Actions */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-base font-bold text-gray-900 leading-snug">{apt.serviceType}</h3>
-                      <p className="text-[11px] text-gray-400 font-semibold mt-0.5">ID: {apt.id}</p>
+                      return (
+                        <tr
+                          key={apt.id}
+                          className={`transition-colors hover:bg-gray-50/80 ${
+                            isSelected ? 'bg-[#f0f7f2]/60 font-semibold' : ''
+                          }`}
+                        >
+                          {/* Service & ID */}
+                          <td className="py-4 px-6 align-middle">
+                            <div className="font-bold text-gray-900 leading-snug">{apt.serviceType}</div>
+                            <div className="text-[11px] text-gray-400 font-medium mt-0.5">ID: {apt.id}</div>
+                          </td>
+
+                          {/* Original Date & Time */}
+                          <td className="py-4 px-4 align-middle whitespace-nowrap">
+                            <span className="font-bold text-gray-800">{apt.originalDateTime}</span>
+                          </td>
+
+                          {/* New Date & Time */}
+                          <td className="py-4 px-4 align-middle whitespace-nowrap">
+                            <span className="font-bold text-gray-800">{apt.newDateTime || '-'}</span>
+                          </td>
+
+                          {/* Consultation Type */}
+                          <td className="py-4 px-4 align-middle whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1.5 font-bold text-gray-800">
+                              {getConsultationIcon(apt.consultationType)}
+                              <span>{apt.consultationType}</span>
+                            </div>
+                          </td>
+
+                          {/* Status */}
+                          <td className="py-4 px-4 align-middle whitespace-nowrap">
+                            <span className={`inline-block text-[10px] font-extrabold px-2.5 py-1 rounded-md ${getStatusBadgeClass(apt.status)}`}>
+                              {apt.status}
+                            </span>
+                          </td>
+
+                          {/* Action Buttons */}
+                          <td className="py-4 px-6 align-middle text-right whitespace-nowrap">
+                            <div className="inline-flex items-center justify-end gap-1.5">
+                              {/* View Details Icon Button */}
+                              <button
+                                onClick={() => setSelectedAppointment(apt)}
+                                className={`p-2 rounded-xl border transition-all ${
+                                  isSelected
+                                    ? 'bg-[#12372A] text-white border-[#12372A]'
+                                    : 'bg-[#f0f7f2] text-[#12372A] border-[#d8ebdd] hover:bg-[#d8ebdd]'
+                                }`}
+                                title="View Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+
+                              {canModify && (
+                                <>
+                                  {/* Reschedule Icon Button */}
+                                  <button
+                                    onClick={() => {
+                                      setRescheduleModalItem(apt);
+                                      setRescheduleReason('');
+                                    }}
+                                    className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-100 rounded-xl transition-all"
+                                    title="Reschedule Appointment"
+                                  >
+                                    <RotateCcw className="w-4 h-4" />
+                                  </button>
+
+                                  {/* Cancel Icon Button */}
+                                  <button
+                                    onClick={() => {
+                                      setCancelModalItem(apt);
+                                      setCancelReason('Schedule conflict / Change of plans');
+                                    }}
+                                    className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 rounded-xl transition-all"
+                                    title="Cancel Appointment"
+                                  >
+                                    <XCircle className="w-4 h-4" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Cards View (Visible only on mobile screens) */}
+            <div className="block md:hidden space-y-4">
+              {filteredAppointments.map((apt) => {
+                const isSelected = selectedAppointment?.id === apt.id;
+                const canModify = apt.status !== 'Cancelled' && apt.status !== 'Completed';
+
+                return (
+                  <div
+                    key={apt.id}
+                    className={`bg-white rounded-3xl border border-gray-200/70 p-5 shadow-xs transition-all hover:shadow-md flex flex-col justify-between gap-4 ${
+                      isSelected ? 'ring-2 ring-[#12372A] bg-[#f0f7f2]/10' : ''
+                    }`}
+                  >
+                    {/* Top: Header Info & Actions */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-base font-bold text-gray-900 leading-snug">{apt.serviceType}</h3>
+                        <p className="text-[11px] text-gray-400 font-semibold mt-0.5">ID: {apt.id}</p>
+                      </div>
+                      {/* Action Icon Buttons */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {/* View Details Icon Button */}
+                        <button
+                          onClick={() => setSelectedAppointment(apt)}
+                          className={`p-2 rounded-xl border transition-all ${
+                            isSelected
+                              ? 'bg-[#12372A] text-white border-[#12372A]'
+                              : 'bg-[#f0f7f2] text-[#12372A] border-[#d8ebdd] hover:bg-[#d8ebdd]'
+                          }`}
+                          title="View Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+
+                        {canModify && (
+                          <>
+                            {/* Reschedule Icon Button */}
+                            <button
+                              onClick={() => {
+                                setRescheduleModalItem(apt);
+                                setRescheduleReason('');
+                              }}
+                              className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-100 rounded-xl transition-all"
+                              title="Reschedule Appointment"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </button>
+
+                            {/* Cancel Icon Button */}
+                            <button
+                              onClick={() => {
+                                setCancelModalItem(apt);
+                                setCancelReason('Schedule conflict / Change of plans');
+                              }}
+                              className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 rounded-xl transition-all"
+                              title="Cancel Appointment"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    {/* Action Icon Buttons styled like the 2nd image */}
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {/* View Details Icon Button */}
-                      <button
-                        onClick={() => setSelectedAppointment(apt)}
-                        className={`p-2 rounded-xl border transition-all ${
-                          isSelected
-                            ? 'bg-[#12372A] text-white border-[#12372A]'
-                            : 'bg-[#f0f7f2] text-[#12372A] border-[#d8ebdd] hover:bg-[#d8ebdd]'
-                        }`}
-                        title="View Details"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
 
-                      {canModify && (
-                        <>
-                          {/* Reschedule Icon Button */}
-                          <button
-                            onClick={() => {
-                              setRescheduleModalItem(apt);
-                              setRescheduleReason('');
-                            }}
-                            className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-100 rounded-xl transition-all"
-                            title="Reschedule Appointment"
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </button>
-
-                          {/* Cancel Icon Button */}
-                          <button
-                            onClick={() => {
-                              setCancelModalItem(apt);
-                              setCancelReason('Schedule conflict / Change of plans');
-                            }}
-                            className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 rounded-xl transition-all"
-                            title="Cancel Appointment"
-                          >
-                            <XCircle className="w-4 h-4" />
-                          </button>
-                        </>
+                    {/* Mid: Specific Properties inside nested container */}
+                    <div className="bg-[#f8faf9] rounded-2xl p-4 grid grid-cols-2 gap-x-4 gap-y-3.5 border border-gray-100/80 text-xs">
+                      <div>
+                        <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Date &amp; Time</span>
+                        <span className="font-bold text-gray-800 mt-1 block">{apt.originalDateTime}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">New Date &amp; Time</span>
+                        <span className="font-bold text-gray-800 mt-1 block">{apt.newDateTime || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Status</span>
+                        <span className={`inline-block text-[10px] font-extrabold px-2.5 py-0.5 rounded-md mt-1 ${getStatusBadgeClass(apt.status)}`}>
+                          {apt.status}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Consultation Type</span>
+                        <div className="flex items-center gap-1.5 font-bold text-gray-800 mt-1">
+                          {getConsultationIcon(apt.consultationType)}
+                          <span>{apt.consultationType}</span>
+                        </div>
+                      </div>
+                      {apt.reasonAdminNote && (
+                        <div className="col-span-2 pt-2.5 border-t border-gray-200/50">
+                          <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Remarks / Notes</span>
+                          <span className="text-gray-600 text-[11px] font-medium block mt-1 leading-relaxed">{apt.reasonAdminNote}</span>
+                        </div>
                       )}
                     </div>
                   </div>
-
-                  {/* Mid: Specific Properties inside nested container like the 2nd image */}
-                  <div className="bg-[#f8faf9] rounded-2xl p-4 grid grid-cols-2 gap-x-4 gap-y-3.5 border border-gray-100/80 text-xs">
-                    <div>
-                      <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Date &amp; Time</span>
-                      <span className="font-bold text-gray-800 mt-1 block">{apt.originalDateTime}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">New Date &amp; Time</span>
-                      <span className="font-bold text-gray-800 mt-1 block">{apt.newDateTime || '-'}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Status</span>
-                      <span className={`inline-block text-[10px] font-extrabold px-2.5 py-0.5 rounded-md mt-1 ${getStatusBadgeClass(apt.status)}`}>
-                        {apt.status}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Consultation Type</span>
-                      <div className="flex items-center gap-1.5 font-bold text-gray-800 mt-1">
-                        {getConsultationIcon(apt.consultationType)}
-                        <span>{apt.consultationType}</span>
-                      </div>
-                    </div>
-                    {apt.reasonAdminNote && (
-                      <div className="col-span-2 pt-2.5 border-t border-gray-200/50">
-                        <span className="block text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Remarks / Notes</span>
-                        <span className="text-gray-600 text-[11px] font-medium block mt-1 leading-relaxed">{apt.reasonAdminNote}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 
