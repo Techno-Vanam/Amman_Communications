@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Wallet,
   Search,
@@ -13,14 +13,19 @@ import {
   Clock,
   XCircle,
   AlertCircle,
-  DollarSign,
   TrendingUp,
   Hourglass,
   FileText,
   User,
   Calendar,
   CreditCard,
+  IndianRupee,
 } from 'lucide-react';
+import {
+  fetchInvoicesAction,
+  updateInvoiceAction,
+  recordInvoicePaymentAction,
+} from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
 type PaymentStatus = 'Paid' | 'Partial' | 'Pending' | 'Overdue' | 'Waived';
@@ -121,7 +126,7 @@ function EditModal({
           <div>
             <label className="block text-xs font-bold text-gray-700 mb-1.5">Advance Paid (₹)</label>
             <div className="relative">
-              <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <IndianRupee className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="number"
                 min="0"
@@ -263,12 +268,50 @@ function ViewModal({ record, onClose }: { record: FinanceRecord; onClose: () => 
 type FilterType = 'All' | PaymentStatus;
 
 export default function FinancePage() {
-  const [records, setRecords] = useState<FinanceRecord[]>(INITIAL_RECORDS);
+  const [records, setRecords] = useState<FinanceRecord[]>([]);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterType>('All');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [viewRecord, setViewRecord] = useState<FinanceRecord | null>(null);
   const [editRecord, setEditRecord] = useState<FinanceRecord | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const loadInvoices = async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+    const res = await fetchInvoicesAction(search, filterStatus);
+    if (res.error) {
+      setErrorMsg(res.error);
+      setRecords([]);
+    } else if (res.success && res.data) {
+      const DB_TO_UI_STATUS: Record<string, PaymentStatus> = {
+        PAID: 'Paid',
+        PARTIALLY_PAID: 'Partial',
+        UNPAID: 'Pending',
+        OVERDUE: 'Overdue',
+        CANCELLED: 'Waived',
+      };
+      const mapped = res.data.map((inv: any) => ({
+        id: inv.invoiceNumber,
+        appId: inv.applicationId || '—',
+        customer: inv.customer?.name || '—',
+        email: inv.customer?.email || '—',
+        serviceType: inv.service?.name || 'Technical Onsite Survey',
+        totalCost: inv.totalAmount,
+        advancePaid: inv.paidAmount,
+        dueDate: inv.dueDate ? inv.dueDate.split('T')[0] : '',
+        status: DB_TO_UI_STATUS[inv.status] || 'Pending',
+        notes: inv.notes || '',
+      }));
+      setRecords(mapped);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadInvoices();
+  }, [search, filterStatus]);
 
   const filtered = useMemo(() => records.filter(r => {
     const q = search.toLowerCase();
@@ -278,8 +321,33 @@ export default function FinancePage() {
     return matchSearch && matchFilter;
   }), [records, search, filterStatus]);
 
-  function handleSave(id: string, data: Partial<FinanceRecord>) {
-    setRecords(prev => prev.map(r => r.id === id ? { ...r, ...data } : r));
+  async function handleSave(id: string, data: Partial<FinanceRecord>) {
+    setErrorMsg(null);
+    const record = records.find(r => r.id === id);
+    if (!record) return;
+
+    // 1. If paid amount increased, record payment
+    if (data.advancePaid !== undefined && data.advancePaid > record.advancePaid) {
+      const diff = data.advancePaid - record.advancePaid;
+      const payRes = await recordInvoicePaymentAction(id, diff, data.notes);
+      if (payRes.error) {
+        setErrorMsg(payRes.error);
+        return;
+      }
+    }
+
+    // 2. Update invoice status / dueDate / notes
+    const res = await updateInvoiceAction(id, {
+      status: data.status,
+      notes: data.notes,
+      dueDate: data.dueDate,
+    });
+
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      loadInvoices();
+    }
   }
 
   // Aggregates
@@ -301,17 +369,17 @@ export default function FinancePage() {
       {/* ── Summary Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total Amount */}
-        <div className="bg-gradient-to-br from-[#12372A] to-[#1a5c3a] rounded-2xl p-5 shadow-md text-white">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-2xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-[#a8d5b9]" />
+            <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
+              <IndianRupee className="w-5 h-5 text-blue-600" />
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-[#a8d5b9]">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
               {records.length} records
             </span>
           </div>
-          <p className="text-2xl font-extrabold">{fmtAmt(totalAmount)}</p>
-          <p className="text-xs text-[#a8d5b9] font-semibold mt-1">Total Amount Billed</p>
+          <p className="text-2xl font-extrabold text-blue-700">{fmtAmt(totalAmount)}</p>
+          <p className="text-xs text-gray-500 font-semibold mt-1">Total Amount Billed</p>
         </div>
 
         {/* Total Collected */}
@@ -321,7 +389,7 @@ export default function FinancePage() {
               <TrendingUp className="w-5 h-5 text-emerald-600" />
             </div>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-              {Math.round((totalCollected / totalAmount) * 100)}% collected
+              {totalAmount > 0 ? Math.round((totalCollected / totalAmount) * 100) : 0}% collected
             </span>
           </div>
           <p className="text-2xl font-extrabold text-emerald-700">{fmtAmt(totalCollected)}</p>

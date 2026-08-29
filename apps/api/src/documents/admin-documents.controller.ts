@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Post,
   Put,
   Req,
   Res,
@@ -12,6 +13,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { DocumentsService } from './documents.service';
+import { DirectUploadDocumentDto } from './dto/upload-document.dto';
 import { UpdateDocumentStatusDto } from './dto/update-document-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -66,6 +68,15 @@ export class AdminDocumentsController {
     });
 
     return new StreamableFile(buffer);
+  }
+
+  @Post(':applicationId/documents/upload')
+  @ApiOperation({ summary: 'Admin uploads a document on behalf of a customer (base64)' })
+  async adminUploadDocument(
+    @Param('applicationId') applicationId: string,
+    @Body() dto: DirectUploadDocumentDto,
+  ) {
+    return this.documentsService.adminDirectUploadDocument(applicationId, dto);
   }
 
   @Put(':applicationId/documents/:documentId/status')
