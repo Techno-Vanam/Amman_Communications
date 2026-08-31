@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import {
   CheckCircle2,
@@ -105,6 +106,12 @@ export default function PaymentsPage() {
   // Modals state
   // const [selectedTxnForReceipt, setSelectedTxnForReceipt] = useState<TransactionItem | null>(null);
   const [selectedTxnForPayNow, setSelectedTxnForPayNow] = useState<TransactionItem | null>(null);
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -597,9 +604,15 @@ export default function PaymentsPage() {
       </div>
 
       {/* DATE RANGE SELECTOR MODAL */}
-      {showDatePickerModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
+      {mounted && showDatePickerModal && createPortal(
+        <div
+          onClick={() => setShowDatePickerModal(false)}
+          className="fixed inset-0 z-[999999] bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-gray-200/90 ring-1 ring-black/5 animate-in zoom-in-95 duration-200"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-[#0e2a47]" />
@@ -607,7 +620,7 @@ export default function PaymentsPage() {
               </div>
               <button
                 onClick={() => setShowDatePickerModal(false)}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -666,18 +679,25 @@ export default function PaymentsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL 2: Pay Now Confirmation */}
-      {selectedTxnForPayNow && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl animate-in zoom-in-95 duration-200">
+      {mounted && selectedTxnForPayNow && createPortal(
+        <div
+          onClick={() => setSelectedTxnForPayNow(null)}
+          className="fixed inset-0 z-[999999] bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl border border-gray-200/90 ring-1 ring-black/5 animate-in zoom-in-95 duration-200"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <h3 className="text-base font-bold text-gray-900">Pay Outstanding Balance</h3>
               <button
                 onClick={() => setSelectedTxnForPayNow(null)}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -732,7 +752,8 @@ export default function PaymentsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
