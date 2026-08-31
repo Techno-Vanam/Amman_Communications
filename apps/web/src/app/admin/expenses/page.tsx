@@ -446,12 +446,11 @@ export default function ExpensesPage() {
           <div className="min-w-[620px]">
             {/* Header */}
             <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-              <div className="col-span-1">ID</div>
+              <div className="col-span-3">Description</div>
               <div className="col-span-2">Category</div>
-              <div className="col-span-2 text-right pr-3">Amount</div>
-              <div className="col-span-4 pl-1">Description</div>
-              <div className="col-span-2">Date</div>
-              <div className="col-span-1 text-center">Actions</div>
+              <div className="col-span-2 text-right pr-6">Amount</div>
+              <div className="col-span-3 pl-4">Date</div>
+              <div className="col-span-2 text-center">Actions</div>
             </div>
 
             {/* Rows */}
@@ -463,25 +462,27 @@ export default function ExpensesPage() {
               </div>
             ) : filtered.map((e, idx) => (
               <div key={e.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                <div className="col-span-1 min-w-0 pr-2">
-                  <span className="text-[11px] font-bold text-gray-400 truncate block">{e.id}</span>
+                {/* Description */}
+                <div className="col-span-3 min-w-0 pr-3">
+                  <p className="text-xs font-bold text-gray-900 truncate">{e.description}</p>
                 </div>
+                {/* Category */}
                 <div className="col-span-2">
                   <CategoryBadge category={e.category} />
                 </div>
-                <div className="col-span-2 text-right pr-3">
+                {/* Amount */}
+                <div className="col-span-2 text-right pr-6">
                   <span className="text-sm font-extrabold text-rose-700">{fmtAmt(e.amount)}</span>
                 </div>
-                <div className="col-span-4 min-w-0 pr-3">
-                  <p className="text-xs text-gray-700 truncate">{e.description}</p>
-                </div>
-                <div className="col-span-2">
+                {/* Date */}
+                <div className="col-span-3 pl-4">
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-3 h-3 text-gray-400" />
-                    <span className="text-[11px] text-gray-600 font-medium">{fmtDate(e.date)}</span>
+                    <span className="text-[11px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(e.date)}</span>
                   </div>
                 </div>
-                <div className="col-span-1 flex items-center justify-center gap-1.5">
+                {/* Actions */}
+                <div className="col-span-2 flex items-center justify-center gap-1.5">
                   <button onClick={() => setEditExpense(e)}
                     className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all" title="Edit">
                     <Edit2 className="w-3 h-3" />

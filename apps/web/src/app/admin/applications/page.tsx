@@ -885,9 +885,9 @@ export default function ApplicationsPage() {
           <div className="min-w-[660px]">
             {/* Header */}
             <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-              <div className="col-span-4">Customer</div>
+              <div className="col-span-3">Customer</div>
               <div className="col-span-3">Service</div>
-              <div className="col-span-1">Date</div>
+              <div className="col-span-2">Date</div>
               <div className="col-span-2 text-center">Status</div>
               <div className="col-span-2 text-center">Actions</div>
             </div>
@@ -902,7 +902,7 @@ export default function ApplicationsPage() {
             ) : filtered.map((a, idx) => (
               <div key={a.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
                 {/* Customer */}
-                <div className="col-span-4 flex items-center gap-2.5 min-w-0 pr-2">
+                <div className="col-span-3 flex items-center gap-2.5 min-w-0 pr-2">
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">
                     {a.customer.charAt(0)}
                   </div>
@@ -916,7 +916,7 @@ export default function ApplicationsPage() {
                   <p className="text-xs text-gray-700 font-semibold truncate">{a.serviceType}</p>
                 </div>
                 {/* Date */}
-                <div className="col-span-1">
+                <div className="col-span-2">
                   <p className="text-[11px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(a.createdDate)}</p>
                 </div>
                 {/* Status */}
