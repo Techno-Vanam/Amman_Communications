@@ -2876,6 +2876,59 @@
           "Finance"
         ]
       }
+    },
+    "/api/v1/customer/payments": {
+      "get": {
+        "operationId": "CustomerPaymentsController_listPayments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer Payments"
+        ]
+      },
+      "post": {
+        "operationId": "CustomerPaymentsController_createPayment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCustomerPaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer Payments"
+        ]
+      }
     }
   },
   "info": {
@@ -3419,6 +3472,27 @@
           },
           "address": {
             "type": "string"
+          },
+          "dob": {
+            "type": "string"
+          },
+          "aadhaarNumber": {
+            "type": "string"
+          },
+          "panNumber": {
+            "type": "string"
+          },
+          "occupation": {
+            "type": "string"
+          },
+          "altPhone": {
+            "type": "string"
+          },
+          "emergencyContact": {
+            "type": "string"
+          },
+          "isProfileCompleted": {
+            "type": "boolean"
           }
         }
       },
@@ -3961,6 +4035,10 @@
           "amount",
           "paymentMethod"
         ]
+      },
+      "CreateCustomerPaymentDto": {
+        "type": "object",
+        "properties": {}
       }
     }
   }

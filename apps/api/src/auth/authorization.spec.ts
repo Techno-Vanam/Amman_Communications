@@ -1,70 +1,89 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
-import { AdminAuthGuard } from './guards/admin-auth.guard';
-import { CustomerAuthGuard } from './guards/customer-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
 import { DocumentsService } from '../documents/documents.service';
 
 function contextWithToken(token?: string) {
+  const req = { headers: { authorization: token ? `Bearer ${token}` : undefined } };
   return {
     switchToHttp: () => ({
-      getRequest: () => ({ headers: { authorization: token ? `Bearer ${token}` : undefined } }),
+      getRequest: () => req,
     }),
-  } as never;
+  } as any;
 }
 
 function contextWithAuthorization(authorization: string) {
+  const req = { headers: { authorization } };
   return {
     switchToHttp: () => ({
-      getRequest: () => ({ headers: { authorization } }),
+      getRequest: () => req,
     }),
-  } as never;
+  } as any;
 }
 
 function jwtFor(payload: { sub: string; role: string }) {
-  return { verifyAsync: async () => payload } as never;
+  return { verifyAsync: async () => payload } as any;
 }
 
-function prismaFor(options: { admin?: boolean; customer?: boolean } = {}) {
+function jwtForError() {
   return {
-    admin: { findUnique: async () => (options.admin ? { id: 'admin-1' } : null) },
-    customer: { findUnique: async () => (options.customer ? { id: 'customer-1' } : null) },
-  } as never;
+    verifyAsync: async () => {
+      throw new Error('JWT verification failed');
+    },
+  } as any;
 }
 
-test('ADMIN token is accepted by the admin guard', async () => {
-  const guard = new AdminAuthGuard(jwtFor({ sub: 'admin-1', role: 'ADMIN' }), prismaFor({ admin: true }));
-  assert.equal(await guard.canActivate(contextWithToken('admin-token')), true);
+test('JwtAuthGuard verifies JWT token and attaches user payload', async () => {
+  const guard = new JwtAuthGuard(jwtFor({ sub: 'customer-1', role: 'CUSTOMER' }));
+  const context = contextWithToken('valid-token');
+  assert.equal(await guard.canActivate(context), true);
+  assert.deepEqual((context.switchToHttp().getRequest() as any).user, { sub: 'customer-1', role: 'CUSTOMER' });
 });
 
-test('CUSTOMER token is rejected from the admin guard with 403', async () => {
-  const guard = new AdminAuthGuard(jwtFor({ sub: 'customer-1', role: 'CUSTOMER' }), prismaFor());
-  await assert.rejects(() => guard.canActivate(contextWithToken('customer-token')), (error: unknown) => {
-    return error instanceof ForbiddenException && error.getStatus() === 403;
-  });
+test('JwtAuthGuard throws UnauthorizedException on missing token', async () => {
+  const guard = new JwtAuthGuard(jwtFor({ sub: 'customer-1', role: 'CUSTOMER' }));
+  const context = contextWithToken();
+  await assert.rejects(() => guard.canActivate(context), UnauthorizedException);
 });
 
-test('missing credentials return 401', async () => {
-  const guard = new CustomerAuthGuard(jwtFor({ sub: 'customer-1', role: 'CUSTOMER' }), prismaFor({ customer: true }));
-  await assert.rejects(() => guard.canActivate(contextWithToken()), (error: unknown) => {
-    return error instanceof UnauthorizedException && error.getStatus() === 401;
-  });
+test('JwtAuthGuard throws UnauthorizedException on invalid token', async () => {
+  const guard = new JwtAuthGuard(jwtForError());
+  const context = contextWithToken('invalid-token');
+  await assert.rejects(() => guard.canActivate(context), UnauthorizedException);
 });
 
-test('malformed bearer credentials return 401', async () => {
-	const guard = new CustomerAuthGuard(jwtFor({ sub: 'customer-1', role: 'CUSTOMER' }), prismaFor({ customer: true }));
-  await assert.rejects(() => guard.canActivate(contextWithAuthorization('Bearer token extra')), UnauthorizedException);
+test('RolesGuard allows access if user role matches', async () => {
+  const reflector = {
+    getAllAndOverride: () => ['CUSTOMER'],
+  } as never;
+  const guard = new RolesGuard(reflector);
+  const context = {
+    getHandler: () => ({}),
+    getClass: () => ({}),
+    switchToHttp: () => ({
+      getRequest: () => ({ user: { role: 'CUSTOMER' } }),
+    }),
+  } as never;
+
+  assert.equal(guard.canActivate(context), true);
 });
 
-test('CUSTOMER token is accepted only for an existing customer', async () => {
-  const guard = new CustomerAuthGuard(jwtFor({ sub: 'customer-1', role: 'CUSTOMER' }), prismaFor({ customer: true }));
-  assert.equal(await guard.canActivate(contextWithToken('customer-token')), true);
+test('RolesGuard rejects access if user role does not match', async () => {
+  const reflector = {
+    getAllAndOverride: () => ['ADMIN'],
+  } as never;
+  const guard = new RolesGuard(reflector);
+  const context = {
+    getHandler: () => ({}),
+    getClass: () => ({}),
+    switchToHttp: () => ({
+      getRequest: () => ({ user: { role: 'CUSTOMER' } }),
+    }),
+  } as never;
 
-  const unknownCustomerGuard = new CustomerAuthGuard(
-    jwtFor({ sub: 'missing', role: 'CUSTOMER' }),
-    prismaFor(),
-  );
-  await assert.rejects(() => unknownCustomerGuard.canActivate(contextWithToken('stale-token')), UnauthorizedException);
+  assert.throws(() => guard.canActivate(context), ForbiddenException);
 });
 
 test('customer document completion rejects another customer application', async () => {

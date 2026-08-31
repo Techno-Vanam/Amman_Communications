@@ -1,48 +1,42 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { BadRequestException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
-import { AdminAuthGuard } from '../../auth/guards/admin-auth.guard';
+import { RolesGuard } from '../../auth/guards/roles.guard';
 import { BusinessProfileService } from './business-profile.service';
 import { UpdateBusinessProfileDto } from './dto/update-business-profile.dto';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 
-function contextWithToken(token?: string) {
-  return {
+test('RolesGuard allows ADMIN role to access Business Profile', async () => {
+  const reflector = {
+    getAllAndOverride: () => ['ADMIN'],
+  } as never;
+  const guard = new RolesGuard(reflector);
+  const context = {
+    getHandler: () => ({}),
+    getClass: () => ({}),
     switchToHttp: () => ({
-      getRequest: () => ({ headers: { authorization: token ? `Bearer ${token}` : undefined } }),
+      getRequest: () => ({ user: { role: 'ADMIN' } }),
     }),
   } as never;
-}
 
-function jwtFor(payload: { sub: string; role: string }) {
-  return { verifyAsync: async () => payload } as never;
-}
+  assert.equal(guard.canActivate(context), true);
+});
 
-function prismaFor(options: { admin?: boolean; customer?: boolean } = {}) {
-  return {
-    admin: { findUnique: async () => (options.admin ? { id: 'admin-1' } : null) },
-    customer: { findUnique: async () => (options.customer ? { id: 'customer-1' } : null) },
+test('RolesGuard rejects CUSTOMER role if ADMIN is required', async () => {
+  const reflector = {
+    getAllAndOverride: () => ['ADMIN'],
   } as never;
-}
+  const guard = new RolesGuard(reflector);
+  const context = {
+    getHandler: () => ({}),
+    getClass: () => ({}),
+    switchToHttp: () => ({
+      getRequest: () => ({ user: { role: 'CUSTOMER' } }),
+    }),
+  } as never;
 
-test('AdminAuthGuard allows ADMIN role to access Business Profile', async () => {
-  const guard = new AdminAuthGuard(jwtFor({ sub: 'admin-1', role: 'ADMIN' }), prismaFor({ admin: true }));
-  assert.equal(await guard.canActivate(contextWithToken('admin-token')), true);
-});
-
-test('AdminAuthGuard rejects CUSTOMER role with 403 Forbidden', async () => {
-  const guard = new AdminAuthGuard(jwtFor({ sub: 'customer-1', role: 'CUSTOMER' }), prismaFor({ customer: true }));
-  await assert.rejects(() => guard.canActivate(contextWithToken('customer-token')), (err: unknown) => {
-    return err instanceof ForbiddenException && err.getStatus() === 403;
-  });
-});
-
-test('AdminAuthGuard rejects unauthenticated requests with 401 Unauthorized', async () => {
-  const guard = new AdminAuthGuard(jwtFor({ sub: 'admin-1', role: 'ADMIN' }), prismaFor({ admin: true }));
-  await assert.rejects(() => guard.canActivate(contextWithToken()), (err: unknown) => {
-    return err instanceof UnauthorizedException && err.getStatus() === 401;
-  });
+  assert.throws(() => guard.canActivate(context), ForbiddenException);
 });
 
 test('UpdateBusinessProfileDto validation rules', async () => {

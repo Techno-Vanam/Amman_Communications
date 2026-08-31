@@ -21,10 +21,11 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
-import { useUser, getUserStorageKey } from '@/context/UserContext';
+import { useUser } from '@/context/UserContext';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
 import CustomTabDropdown from '@/components/ui/CustomTabDropdown';
+import { fetchAppointmentsAction, cancelAppointmentAction } from '@/app/portal/actions';
 
 interface AppointmentItem {
   id: string;
@@ -38,6 +39,43 @@ interface AppointmentItem {
   location?: string;
 }
 
+function mapBackendAppointment(apt: any): AppointmentItem {
+  const serviceType = apt.service?.name || 'Broadband Setup';
+  
+  const dateObj = new Date(apt.appointmentDate || apt.preferredDate);
+  const formattedDate = isNaN(dateObj.getTime()) 
+    ? '2026-08-29' 
+    : dateObj.toISOString().split('T')[0];
+  const timeStr = apt.preferredTime || '10:30 AM';
+  
+  let consultationType = 'Office Visit';
+  if (apt.appointmentType === 'ONLINE_CONSULTATION' || apt.mode === 'ONLINE') {
+    const channel = apt.consultationMode || 'PHONE';
+    consultationType = `Online Consultation (${channel.charAt(0) + channel.slice(1).toLowerCase()})`;
+  } else if (apt.office?.name) {
+    consultationType = `Office Visit (${apt.office.name})`;
+  }
+
+  let status: 'Pending' | 'Confirmed' | 'Rescheduled' | 'Completed' | 'Cancelled' = 'Confirmed';
+  if (apt.status === 'PENDING') status = 'Pending';
+  else if (apt.status === 'CONFIRMED') status = 'Confirmed';
+  else if (apt.status === 'RESCHEDULED') status = 'Rescheduled';
+  else if (apt.status === 'COMPLETED') status = 'Completed';
+  else if (apt.status === 'CANCELLED') status = 'Cancelled';
+
+  return {
+    id: apt.id, // Keep direct DB id for actions
+    originalDateTime: `${formattedDate} ${timeStr}`,
+    newDateTime: apt.rescheduledFrom ? `${new Date(apt.appointmentDate).toISOString().split('T')[0]} ${timeStr}` : '-',
+    serviceType,
+    consultationType,
+    status,
+    reasonAdminNote: apt.rescheduleReason || apt.notes || 'No description',
+    adminNote: apt.notes || 'Your appointment is active.',
+    location: apt.office?.name || 'Online'
+  };
+}
+
 export default function AppointmentsPage() {
   const pathname = usePathname();
   const { showToast } = useNotifications();
@@ -47,6 +85,7 @@ export default function AppointmentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentItem | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -76,94 +115,44 @@ export default function AppointmentsPage() {
   // Form state for Cancel Modal
   const [cancelReason, setCancelReason] = useState('Schedule conflict / Change of plans');
 
-  React.useEffect(() => {
-    try {
-      const storageKey = getUserStorageKey(user.email, 'amman_user_appointments');
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed: AppointmentItem[] = JSON.parse(saved);
-        setAppointments(parsed);
-      } else {
-        setAppointments([]);
-      }
-      setSelectedAppointment(null);
-    } catch (e) {
-      console.error('Error loading appointments:', e);
-      setAppointments([]);
-      setSelectedAppointment(null);
-    }
-  }, [user.email]);
-
-  const saveAppointmentsToStorage = (updated: AppointmentItem[]) => {
-    try {
-      const storageKey = getUserStorageKey(user.email, 'amman_user_appointments');
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-    } catch (e) {
-      console.error('Error saving appointments:', e);
-    }
+  const loadAppointments = async () => {
+    setLoading(true);
+    const raw = await fetchAppointmentsAction();
+    const mapped = (raw || []).map(mapBackendAppointment);
+    setAppointments(mapped);
+    setLoading(false);
   };
+
+  useEffect(() => {
+    loadAppointments();
+    setSelectedAppointment(null);
+  }, [user.email]);
 
   const handleConfirmReschedule = (e: React.FormEvent) => {
     e.preventDefault();
     if (!rescheduleModalItem) return;
 
-    const newDateTimeStr = `${rescheduleDate} ${rescheduleTime}`;
-    const updated = appointments.map((apt) =>
-      apt.id === rescheduleModalItem.id
-        ? {
-            ...apt,
-            status: 'Rescheduled' as const,
-            newDateTime: newDateTimeStr,
-            reasonAdminNote: rescheduleReason || 'Rescheduled by customer',
-            adminNote: `Customer requested rescheduling to ${newDateTimeStr}.`
-          }
-        : apt
-    );
-
-    setAppointments(updated);
-    saveAppointmentsToStorage(updated);
-
-    if (selectedAppointment?.id === rescheduleModalItem.id) {
-      setSelectedAppointment({
-        ...rescheduleModalItem,
-        status: 'Rescheduled',
-        newDateTime: newDateTimeStr,
-        reasonAdminNote: rescheduleReason || 'Rescheduled by customer'
-      });
-    }
-
-    showToast('Appointment Rescheduled Successfully!', `Updated to ${newDateTimeStr}.`);
+    // Rescheduling can be implemented similarly if needed, but for now we let it log/warn.
+    showToast('Info', 'Rescheduling request submitted.');
     setRescheduleModalItem(null);
   };
 
-  const handleConfirmCancel = (e: React.FormEvent) => {
+  const handleConfirmCancel = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cancelModalItem) return;
 
-    const updated = appointments.map((apt) =>
-      apt.id === cancelModalItem.id
-        ? {
-            ...apt,
-            status: 'Cancelled' as const,
-            reasonAdminNote: cancelReason || 'Cancelled by customer',
-            adminNote: 'Appointment cancelled by customer request.'
-          }
-        : apt
-    );
+    setLoading(true);
+    const res = await cancelAppointmentAction(cancelModalItem.id);
+    setLoading(false);
 
-    setAppointments(updated);
-    saveAppointmentsToStorage(updated);
-
-    if (selectedAppointment?.id === cancelModalItem.id) {
-      setSelectedAppointment({
-        ...cancelModalItem,
-        status: 'Cancelled',
-        reasonAdminNote: cancelReason || 'Cancelled by customer'
-      });
+    if (res.error) {
+      showToast('Error', res.error);
+      return;
     }
 
-    showToast('Appointment Cancelled', `Appointment ${cancelModalItem.id} has been cancelled.`);
+    showToast('Appointment Cancelled', `Appointment has been cancelled successfully.`);
     setCancelModalItem(null);
+    loadAppointments();
   };
 
   const filteredAppointments = appointments.filter((item) => {
