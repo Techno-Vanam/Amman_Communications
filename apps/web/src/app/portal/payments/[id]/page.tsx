@@ -122,11 +122,18 @@ export default function ReceiptDetailPage({ params }: ReceiptPageProps) {
 
   const handleDownloadPDF = async () => {
     if (!payment) return;
-    const targetElement = document.getElementById('payment-receipt-download-target');
-    if (!targetElement) return;
+    const targetWrapper = document.getElementById('payment-receipt-pdf-wrapper');
+    const targetElement = document.getElementById('payment-receipt-pdf-render-target');
+    if (!targetWrapper || !targetElement) return;
 
     try {
-      showToast('Downloading Invoice', 'Preparing pixel-perfect PDF...', 'info');
+      showToast('Downloading Invoice', 'Generating full-page PDF document...', 'info');
+
+      // Temporarily reveal targetWrapper offscreen for html2canvas capture
+      targetWrapper.style.position = 'fixed';
+      targetWrapper.style.top = '-9999px';
+      targetWrapper.style.left = '-9999px';
+      targetWrapper.style.display = 'block';
 
       // Dynamically load html2canvas and jsPDF from CDN
       await Promise.all([
@@ -164,6 +171,8 @@ export default function ReceiptDetailPage({ params }: ReceiptPageProps) {
         backgroundColor: '#ffffff',
       });
 
+      targetWrapper.style.display = 'none';
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
@@ -171,25 +180,26 @@ export default function ReceiptDetailPage({ params }: ReceiptPageProps) {
         format: 'a4',
       });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const pdfWidth = pdf.internal.pageSize.getWidth();   // 210 mm
+      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297 mm
 
-      const margin = 6;
-      const maxWidth = pdfWidth - margin * 2;
-      const maxHeight = pdfHeight - margin * 2;
+      const marginX = 6;
+      const marginY = 8;
+      const availableWidth = pdfWidth - marginX * 2;   // 198 mm
+      const availableHeight = pdfHeight - marginY * 2; // 281 mm
 
-      let renderedWidth = maxWidth;
-      let renderedHeight = (canvas.height * maxWidth) / canvas.width;
+      let imgWidth = availableWidth;
+      let imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      if (renderedHeight > maxHeight) {
-        renderedHeight = maxHeight;
-        renderedWidth = (canvas.width * maxHeight) / canvas.height;
+      if (imgHeight > availableHeight) {
+        imgHeight = availableHeight;
+        imgWidth = (canvas.width * imgHeight) / canvas.height;
       }
 
-      const xOffset = margin + (maxWidth - renderedWidth) / 2;
-      const yOffset = margin + (maxHeight - renderedHeight) / 2;
+      const x = (pdfWidth - imgWidth) / 2;
+      const y = marginY; // Start directly at top margin (8mm)
 
-      pdf.addImage(imgData, 'PNG', xOffset, yOffset, renderedWidth, renderedHeight);
+      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
       pdf.save(`Invoice-${payment.receiptNumber}.pdf`);
 
       showToast('Download Complete', `Invoice-${payment.receiptNumber}.pdf saved.`, 'success');
@@ -231,6 +241,13 @@ export default function ReceiptDetailPage({ params }: ReceiptPageProps) {
       {/* Reusable receipt wrapper target for DOM canvas capture */}
       <div id="payment-receipt-download-target" className="w-full print:m-0 print:p-0 print:border-none print:shadow-none bg-white">
         <PaymentReceipt data={payment} />
+      </div>
+
+      {/* Dedicated Offscreen A4 PDF Render Target */}
+      <div id="payment-receipt-pdf-wrapper" style={{ display: 'none' }}>
+        <div id="payment-receipt-pdf-render-target">
+          <PaymentReceipt data={payment} isPdfDownload={true} />
+        </div>
       </div>
     </div>
   );
