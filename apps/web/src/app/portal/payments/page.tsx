@@ -168,7 +168,7 @@ export default function PaymentsPage() {
       )
     );
     setSelectedTxnForPayNow(null);
-    showToast('Payment Completed Successfully!', `Payment for ${txn.service} received.`);
+    showToast('Payment Completed Successfully!', `Payment for ${txn.service} received.`, 'success', 'View Details', '/portal/payments', true);
   };
 
 

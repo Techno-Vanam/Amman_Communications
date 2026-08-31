@@ -115,7 +115,7 @@ export default function PortalDocumentsPage() {
     loadDocuments();
   }, [loadDocuments]);
 
-  const handleUpload = async (file: File, appId: string) => {
+  const handleUpload = async (file: File, appId: string, docTypeOverride?: string) => {
     if (!appId) {
       showToast('No Application Selected', 'Please select an application to upload a document for.');
       return;
@@ -130,11 +130,13 @@ export default function PortalDocumentsPage() {
       return;
     }
 
+    const targetDocType = docTypeOverride || selectedDocType;
+
     setUploading(appId);
     try {
       const base64Data = await fileToBase64(file);
       const result = await uploadDocumentAction(appId, {
-        documentType: selectedDocType,
+        documentType: targetDocType,
         fileName: file.name,
         mimeType: file.type,
         fileSize: file.size,
@@ -167,17 +169,30 @@ export default function PortalDocumentsPage() {
       showToast('Downloading Document', 'Decrypting and preparing your file...');
       const res = await getDecryptedDocumentAction(doc.storagePath);
       if (res.success && res.base64) {
-        const byteCharacters = atob(res.base64);
+        const rawBase64 = res.base64.includes(',') ? res.base64.split(',')[1] : res.base64;
+        const cleanBase64 = rawBase64.replace(/\s/g, '');
+        const byteCharacters = atob(cleanBase64);
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
+        const fileName = res.fileName || doc.originalFileName || doc.fileName || 'document';
+        const ext = fileName.split('.').pop()?.toLowerCase();
+        let mime = res.mimeType || doc.mimeType;
+        if (!mime || mime === 'application/octet-stream') {
+          if (ext === 'jpeg' || ext === 'jpg') mime = 'image/jpeg';
+          else if (ext === 'png') mime = 'image/png';
+          else if (ext === 'webp') mime = 'image/webp';
+          else if (ext === 'pdf') mime = 'application/pdf';
+          else mime = 'application/octet-stream';
+        }
+
         const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: res.mimeType || doc.mimeType || 'application/octet-stream' });
+        const blob = new Blob([byteArray], { type: mime });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = res.fileName || doc.originalFileName || doc.fileName || 'document';
+        link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -425,9 +440,8 @@ export default function PortalDocumentsPage() {
                                   accept=".pdf,.png,.jpg,.jpeg,.webp"
                                   onChange={(e) => {
                                     if (e.target.files?.[0]) {
-                                      // Re-upload uses same doc type
-                                      setSelectedDocType(doc.documentType);
-                                      handleUpload(e.target.files[0], group.applicationId);
+                                      // Re-upload uses exact target doc type directly to avoid async state race condition
+                                      handleUpload(e.target.files[0], group.applicationId, doc.documentType);
                                       e.target.value = '';
                                     }
                                   }}
