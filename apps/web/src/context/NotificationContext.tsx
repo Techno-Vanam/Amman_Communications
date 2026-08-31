@@ -81,7 +81,8 @@ interface NotificationContextType {
     message?: string,
     type?: 'success' | 'info' | 'warning',
     actionText?: string,
-    actionUrl?: string
+    actionUrl?: string,
+    shouldCreateNotification?: boolean
   ) => void;
 }
 
@@ -128,30 +129,33 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     message?: string,
     type: 'success' | 'info' | 'warning' = 'success',
     actionText: string = 'View Details',
-    actionUrl: string = '/portal/dashboard'
+    actionUrl: string = '/portal/dashboard',
+    shouldCreateNotification: boolean = false
   ) => {
     const id = Date.now().toString();
     setToast({ id, title, message, type });
 
-    // Automatically push a real notification item into user's notification list with actual timestamp & formatted time
-    const nowMs = Date.now();
-    const newNotif: NotificationItem = {
-      id: `n-${nowMs}`,
-      title,
-      message: message || title,
-      createdAt: nowMs,
-      time: getFormattedActualDateTime(),
-      actionText,
-      actionUrl,
-      read: false,
-      iconType: type === 'warning' ? 'document-red' : 'check-blue'
-    };
+    if (shouldCreateNotification) {
+      // Automatically push a real notification item into user's notification list with actual timestamp & formatted time
+      const nowMs = Date.now();
+      const newNotif: NotificationItem = {
+        id: `n-${nowMs}`,
+        title,
+        message: message || title,
+        createdAt: nowMs,
+        time: getFormattedActualDateTime(),
+        actionText,
+        actionUrl,
+        read: false,
+        iconType: type === 'warning' ? 'document-red' : 'check-blue'
+      };
 
-    setNotifications((prev) => {
-      const updated = [newNotif, ...prev];
-      saveNotificationsToStorage(updated);
-      return updated;
-    });
+      setNotifications((prev) => {
+        const updated = [newNotif, ...prev];
+        saveNotificationsToStorage(updated);
+        return updated;
+      });
+    }
   };
 
   const markAsRead = (id: string) => {
