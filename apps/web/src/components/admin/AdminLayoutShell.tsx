@@ -3,6 +3,7 @@
 import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import NotificationDropdown from '../ui/NotificationDropdown';
 import {
   LayoutDashboard,
   FileText,
@@ -200,14 +201,7 @@ function AdminTopHeader() {
 
       <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
         {/* Notification Bell */}
-        <button
-          type="button"
-          suppressHydrationWarning
-          className="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative"
-          title="Notifications"
-        >
-          <Bell className="w-4 h-4 sm:w-6 sm:h-6" />
-        </button>
+        <NotificationDropdown />
 
         {/* Admin Profile Pill Badge — links to Profile */}
         <Link

@@ -14,8 +14,6 @@ import {
   Filter,
   FileText,
   CalendarDays,
-  MessageSquare,
-  Edit2,
   Hourglass,
 } from 'lucide-react';
 import {
@@ -413,13 +411,10 @@ export default function VerificationPage() {
           <div className="min-w-[700px]">
             {/* Table Header */}
             <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-              <div className="col-span-1">ID</div>
-              <div className="col-span-2">App. ID</div>
-              <div className="col-span-2">Document Type</div>
-              <div className="col-span-2">Customer</div>
-              <div className="col-span-1">Uploaded</div>
-              <div className="col-span-2 text-center">Verif. Status</div>
-              <div className="col-span-1">Remarks</div>
+              <div className="col-span-4">Customer</div>
+              <div className="col-span-3">Document Type</div>
+              <div className="col-span-2">Uploaded</div>
+              <div className="col-span-2 text-center">Status</div>
               <div className="col-span-1 text-center">Action</div>
             </div>
 
@@ -432,51 +427,40 @@ export default function VerificationPage() {
               </div>
             ) : filtered.map((r, idx) => (
               <div key={r.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                {/* ID */}
-                <div className="col-span-1 min-w-0 pr-2">
-                  <span className="text-[11px] font-bold text-gray-500 truncate block">{r.id}</span>
-                </div>
-                {/* App ID */}
-                <div className="col-span-2 min-w-0 pr-2">
-                  <span className="text-xs font-bold text-[#12372A] truncate block">{r.appId}</span>
+                {/* Customer */}
+                <div className="col-span-4 min-w-0 pr-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">
+                      {r.customer.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-gray-900 truncate">{r.customer}</p>
+                      <p className="text-[10px] text-gray-400 truncate">{r.appId}</p>
+                    </div>
+                  </div>
                 </div>
                 {/* Doc Type */}
-                <div className="col-span-2 min-w-0 pr-2">
+                <div className="col-span-3 min-w-0 pr-2">
                   <div className="flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                     <span className="text-xs font-semibold text-gray-700 truncate">{r.docType}</span>
                   </div>
                 </div>
-                {/* Customer */}
-                <div className="col-span-2 min-w-0 pr-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[9px] font-extrabold flex items-center justify-center shrink-0">
-                      {r.customer.charAt(0)}
-                    </div>
-                    <span className="text-xs font-semibold text-gray-800 truncate">{r.customer}</span>
-                  </div>
-                </div>
                 {/* Uploaded Date */}
-                <div className="col-span-1">
+                <div className="col-span-2">
                   <div className="flex items-center gap-1">
                     <CalendarDays className="w-3 h-3 text-gray-400" />
-                    <span className="text-[10px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(r.uploadedDate)}</span>
+                    <span className="text-[11px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(r.uploadedDate)}</span>
                   </div>
                 </div>
                 {/* Status */}
                 <div className="col-span-2 flex justify-center">
-                  <VerifBadge status={r.status} />
-                </div>
-                {/* Remarks preview */}
-                <div className="col-span-1 min-w-0">
-                  {r.remarks ? (
-                    <div className="flex items-center gap-1" title={r.remarks}>
-                      <MessageSquare className="w-3 h-3 text-gray-400 shrink-0" />
-                      <span className="text-[10px] text-gray-500 truncate max-w-[80px]">{r.remarks}</span>
-                    </div>
-                  ) : (
-                    <span className="text-[10px] text-gray-300 italic">—</span>
-                  )}
+                  <div title={r.remarks || undefined}>
+                    <VerifBadge status={r.status} />
+                    {r.remarks && (
+                      <p className="text-[9px] text-gray-400 text-center mt-0.5 truncate max-w-[90px]">{r.remarks}</p>
+                    )}
+                  </div>
                 </div>
                 {/* Actions */}
                 <div className="col-span-1 flex items-center justify-center gap-1.5">
