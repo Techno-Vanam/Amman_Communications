@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 
 import { useUser, getUserStorageKey } from '@/context/UserContext';
+import { fetchApplicationsAction, fetchAppointmentsAction } from '@/app/portal/actions';
 
 interface DashboardAppItem {
   id: string;
@@ -37,19 +38,63 @@ export default function PortalDashboardPage() {
   const [appointments, setAppointments] = useState<DashboardAptItem[]>([]);
 
   useEffect(() => {
-    try {
-      const appsKey = getUserStorageKey(user.email, 'amman_user_applications');
-      const savedApps = localStorage.getItem(appsKey);
-      setApplications(savedApps ? JSON.parse(savedApps) : []);
+    async function loadDashboardData() {
+      try {
+        const [appsData, aptsData] = await Promise.all([
+          fetchApplicationsAction(),
+          fetchAppointmentsAction(),
+        ]);
 
-      const aptsKey = getUserStorageKey(user.email, 'amman_user_appointments');
-      const savedApts = localStorage.getItem(aptsKey);
-      setAppointments(savedApts ? JSON.parse(savedApts) : []);
-    } catch (e) {
-      console.error('Error loading dashboard state:', e);
-      setApplications([]);
-      setAppointments([]);
+        if (appsData && Array.isArray(appsData) && appsData.length > 0) {
+          setApplications(appsData.map((app: any) => ({
+            id: app.applicationNumber || app.id,
+            serviceType: app.serviceType || 'Service',
+            status: app.status === 'COMPLETED' ? 'Completed' : (app.status === 'PROCESSING' ? 'Processing' : 'Verification'),
+            submittedDate: app.submittedAt
+              ? new Date(app.submittedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+              : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          })));
+        } else {
+          // Fallback to localStorage
+          try {
+            const appsKey = getUserStorageKey(user.email, 'amman_user_applications');
+            const savedApps = localStorage.getItem(appsKey);
+            if (savedApps) setApplications(JSON.parse(savedApps));
+          } catch {}
+        }
+
+        if (aptsData && Array.isArray(aptsData) && aptsData.length > 0) {
+          setAppointments(aptsData.map((apt: any) => {
+            const dateStr = apt.appointmentDate ? new Date(apt.appointmentDate).toISOString().split('T')[0] : '';
+            const timeStr = apt.appointmentTime || '';
+            let consultationType = 'Office Visit';
+            if (apt.appointmentType === 'ONLINE_CONSULTATION') {
+              const channel = apt.consultationMode || 'Phone';
+              consultationType = `Online (${channel})`;
+            } else if (apt.office?.name) {
+              consultationType = `Office (${apt.office.name})`;
+            }
+            return {
+              id: apt.id,
+              serviceType: apt.service?.name || apt.notes || 'Service Appointment',
+              consultationType,
+              originalDateTime: `${dateStr} ${timeStr}`.trim() || 'Scheduled',
+              status: apt.status,
+            };
+          }));
+        } else {
+          // Fallback to localStorage
+          try {
+            const aptsKey = getUserStorageKey(user.email, 'amman_user_appointments');
+            const savedApts = localStorage.getItem(aptsKey);
+            if (savedApts) setAppointments(JSON.parse(savedApts));
+          } catch {}
+        }
+      } catch (e) {
+        console.error('Error loading dashboard state:', e);
+      }
     }
+    loadDashboardData();
   }, [user.email]);
 
   const activeAppsCount = applications.filter((a) => a.status !== 'Completed').length;

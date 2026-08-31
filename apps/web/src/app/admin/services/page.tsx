@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Building2,
   Plus,
@@ -23,6 +23,27 @@ import {
   AlertCircle,
   BadgeCheck,
 } from 'lucide-react';
+import {
+  fetchAdminServicesAction,
+  createAdminServiceAction,
+  updateAdminServiceAction,
+  updateAdminServiceStatusAction,
+  deleteAdminServiceAction,
+} from '@/app/admin/actions';
+
+function mapBackendService(s: any): Service {
+  return {
+    id: s.id,
+    name: s.name,
+    category: s.category || 'Broadband',
+    requiredDocs: (s.requiredDocuments || []).map((d: any) => ({ name: d.name })),
+    govtFee: Number(s.governmentFee || 0),
+    officeCharge: Number(s.serviceFee || 0),
+    estDays: parseInt(s.estimatedTime || '7', 10) || 7,
+    status: s.status === 'ACTIVE' ? 'Active' : s.status === 'INACTIVE' ? 'Inactive' : 'Draft',
+    description: s.description || ''
+  };
+}
 
 // ── Types ─────────────────────────────────────────────────────
 type ServiceStatus = 'Active' | 'Inactive' | 'Draft';
@@ -381,7 +402,8 @@ function DeleteModal({ service, onClose, onConfirm }: { service: Service; onClos
 type FilterType = 'All' | ServiceStatus;
 
 export default function ServicesPage() {
-  const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterType>('All');
   const [filterCategory, setFilterCategory] = useState<string>('All');
@@ -392,6 +414,18 @@ export default function ServicesPage() {
   const [editService, setEditService] = useState<Service | null>(null);
   const [deleteService, setDeleteService] = useState<Service | null>(null);
 
+  const loadServices = async () => {
+    setLoading(true);
+    const raw = await fetchAdminServicesAction();
+    const mapped = (raw || []).map(mapBackendService);
+    setServices(mapped);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadServices();
+  }, []);
+
   const filtered = useMemo(() => services.filter(s => {
     const q = search.toLowerCase();
     const matchSearch = s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || s.id.toLowerCase().includes(q);
@@ -400,32 +434,62 @@ export default function ServicesPage() {
     return matchSearch && matchStatus && matchCat;
   }), [services, search, filterStatus, filterCategory]);
 
-  function handleAdd(data: Partial<Service>) {
-    const newSvc: Service = {
-      id: `SVC-${String(services.length + 1).padStart(3, '0')}`,
+  async function handleAdd(data: Partial<Service>) {
+    const statusMap = { 'Active': 'ACTIVE', 'Inactive': 'INACTIVE', 'Draft': 'DRAFT' };
+    const res = await createAdminServiceAction({
       name: data.name ?? '',
-      category: data.category ?? 'Support',
-      requiredDocs: data.requiredDocs ?? [],
-      govtFee: data.govtFee ?? 0,
-      officeCharge: data.officeCharge ?? 0,
-      estDays: data.estDays ?? 7,
-      status: data.status ?? 'Draft',
       description: data.description ?? '',
-    };
-    setServices(prev => [newSvc, ...prev]);
+      governmentFee: Number(data.govtFee || 0),
+      serviceFee: Number(data.officeCharge || 0),
+      estimatedTime: `${data.estDays || 7} Days`,
+      status: statusMap[data.status || 'Active'] as any,
+      requiredDocuments: (data.requiredDocs || []).map((d, i) => ({ name: d.name, displayOrder: i + 1, isRequired: true }))
+    });
+    if (res.error) {
+      alert(res.error);
+      return;
+    }
+    loadServices();
   }
 
-  function handleEdit(data: Partial<Service>) {
+  async function handleEdit(data: Partial<Service>) {
     if (!editService) return;
-    setServices(prev => prev.map(s => s.id === editService.id ? { ...s, ...data } : s));
+    const statusMap = { 'Active': 'ACTIVE', 'Inactive': 'INACTIVE', 'Draft': 'DRAFT' };
+    const res = await updateAdminServiceAction(editService.id, {
+      name: data.name,
+      description: data.description,
+      governmentFee: data.govtFee !== undefined ? Number(data.govtFee) : undefined,
+      serviceFee: data.officeCharge !== undefined ? Number(data.officeCharge) : undefined,
+      estimatedTime: data.estDays ? `${data.estDays} Days` : undefined,
+      status: data.status ? (statusMap[data.status] as any) : undefined,
+      requiredDocuments: data.requiredDocs ? data.requiredDocs.map((d, i) => ({ name: d.name, displayOrder: i + 1, isRequired: true })) : undefined
+    });
+    if (res.error) {
+      alert(res.error);
+      return;
+    }
+    loadServices();
   }
 
-  function toggleStatus(id: string) {
-    setServices(prev => prev.map(s => s.id === id ? { ...s, status: s.status === 'Active' ? 'Inactive' : 'Active' } : s));
+  async function toggleStatus(id: string) {
+    const svc = services.find(s => s.id === id);
+    if (!svc) return;
+    const nextStatus = svc.status === 'Active' ? 'INACTIVE' : 'ACTIVE';
+    const res = await updateAdminServiceStatusAction(id, nextStatus as any);
+    if (res.error) {
+      alert(res.error);
+      return;
+    }
+    loadServices();
   }
 
-  function handleDelete(id: string) {
-    setServices(prev => prev.filter(s => s.id !== id));
+  async function handleDelete(id: string) {
+    const res = await deleteAdminServiceAction(id);
+    if (res.error) {
+      alert(res.error);
+      return;
+    }
+    loadServices();
   }
 
   const counts = {

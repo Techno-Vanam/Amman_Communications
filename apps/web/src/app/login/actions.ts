@@ -76,3 +76,9 @@ export async function loginAction(formData: FormData) {
     return { error: 'Network error or backend unavailable' };
   }
 }
+
+export async function logoutAction() {
+  const cookieStore = await cookies();
+  cookieStore.delete('access_token');
+  return { success: true };
+}

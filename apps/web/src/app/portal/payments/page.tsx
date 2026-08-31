@@ -18,10 +18,6 @@ import {
   RotateCcw,
   FileText
 } from 'lucide-react';
-import { useNotifications } from '@/context/NotificationContext';
-import { useUser, getUserStorageKey } from '@/context/UserContext';
-import CustomDatePicker from '@/components/ui/CustomDatePicker';
-import CustomSelect from '@/components/ui/CustomSelect';
 
 interface TransactionItem {
   id: string;
@@ -35,68 +31,19 @@ interface TransactionItem {
   date: string; // YYYY-MM-DD
 }
 
-const DEFAULT_SAMPLE_TRANSACTIONS: TransactionItem[] = [
-  {
-    id: 'TXN-2026-8801',
-    appId: 'AMC-2026-402616',
-    service: 'Passport Services & Renewal',
-    totalAmount: 2000,
-    paidAmount: 2000,
-    pendingAmount: 0,
-    paymentMode: 'UPI / NetBanking',
-    status: 'Paid',
-    date: '2026-08-28'
-  },
-  {
-    id: 'TXN-2026-8802',
-    appId: 'AMC-2026-509611',
-    service: 'Biometric & Identity Verification',
-    totalAmount: 2000,
-    paidAmount: 2000,
-    pendingAmount: 0,
-    paymentMode: 'UPI / NetBanking',
-    status: 'Paid',
-    date: '2026-08-27'
-  },
-  {
-    id: 'TXN-2026-8803',
-    appId: 'AMC-2026-546936',
-    service: 'Patta Transfer & Revenue Services',
-    totalAmount: 2000,
-    paidAmount: 2000,
-    pendingAmount: 0,
-    paymentMode: 'UPI / NetBanking',
-    status: 'Paid',
-    date: '2026-08-26'
-  },
-  {
-    id: 'TXN-2026-8804',
-    appId: 'AMC-2026-612490',
-    service: 'Encumbrance Certificate (EC)',
-    totalAmount: 1500,
-    paidAmount: 1500,
-    pendingAmount: 0,
-    paymentMode: 'Credit Card',
-    status: 'Paid',
-    date: '2026-08-25'
-  },
-  {
-    id: 'TXN-2026-8805',
-    appId: 'AMC-2026-781204',
-    service: 'Property Registration & Sales Deed',
-    totalAmount: 3500,
-    paidAmount: 3500,
-    pendingAmount: 0,
-    paymentMode: 'Bank Transfer',
-    status: 'Paid',
-    date: '2026-08-24'
-  }
-];
+const INITIAL_TRANSACTIONS: TransactionItem[] = [];
+
+import { useNotifications } from '@/context/NotificationContext';
+import { useUser, getUserStorageKey } from '@/context/UserContext';
+import CustomDatePicker from '@/components/ui/CustomDatePicker';
+import CustomSelect from '@/components/ui/CustomSelect';
+
+import { fetchCustomerPaymentsAction } from '@/app/portal/actions';
 
 export default function PaymentsPage() {
   const { showToast } = useNotifications();
   const { user } = useUser();
-  const [transactions, setTransactions] = useState<TransactionItem[]>(DEFAULT_SAMPLE_TRANSACTIONS);
+  const [transactions, setTransactions] = useState<TransactionItem[]>(INITIAL_TRANSACTIONS);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('All Services/Applications');
   
   // Date Filtering State
@@ -106,19 +53,42 @@ export default function PaymentsPage() {
   const [showDatePickerModal, setShowDatePickerModal] = useState(false);
 
   React.useEffect(() => {
-    try {
-      const storageKey = getUserStorageKey(user.email, 'amman_user_payments');
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setTransactions(parsed.length > 0 ? parsed : DEFAULT_SAMPLE_TRANSACTIONS);
-      } else {
-        setTransactions(DEFAULT_SAMPLE_TRANSACTIONS);
+    async function loadPayments() {
+      try {
+        // Try loading from DB first
+        const dbPayments = await fetchCustomerPaymentsAction();
+        if (dbPayments && dbPayments.length > 0) {
+          setTransactions(dbPayments.map((p: any) => ({
+            id: p.id || p.invoiceNumber || '',
+            appId: p.appId || '',
+            service: p.service || '',
+            totalAmount: p.totalAmount || 0,
+            paidAmount: p.paidAmount || 0,
+            pendingAmount: p.pendingAmount || 0,
+            paymentMode: p.paymentMode || 'Pending',
+            status: p.status || 'Pending',
+            date: p.date || new Date().toISOString().split('T')[0],
+          })));
+          return;
+        }
+
+        // Fallback: load from localStorage
+        const storageKey = getUserStorageKey(user.email, 'amman_user_payments');
+        const saved = localStorage.getItem(storageKey);
+        setTransactions(saved ? JSON.parse(saved) : []);
+      } catch (e) {
+        console.error('Error loading payments:', e);
+        // Final fallback: localStorage
+        try {
+          const storageKey = getUserStorageKey(user.email, 'amman_user_payments');
+          const saved = localStorage.getItem(storageKey);
+          setTransactions(saved ? JSON.parse(saved) : []);
+        } catch {
+          setTransactions([]);
+        }
       }
-    } catch (e) {
-      console.error('Error loading payments:', e);
-      setTransactions(DEFAULT_SAMPLE_TRANSACTIONS);
     }
+    loadPayments();
   }, [user.email]);
 
   // More Filters State
@@ -128,6 +98,12 @@ export default function PaymentsPage() {
   const [minAmount, setMinAmount] = useState<string>('');
   const [maxAmount, setMaxAmount] = useState<string>('');
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Modals state
+  // const [selectedTxnForReceipt, setSelectedTxnForReceipt] = useState<TransactionItem | null>(null);
   const [selectedTxnForPayNow, setSelectedTxnForPayNow] = useState<TransactionItem | null>(null);
 
   const formatCurrency = (val: number) => {
@@ -137,6 +113,38 @@ export default function PaymentsPage() {
       maximumFractionDigits: 2
     }).format(val);
   };
+
+  // Receipt Download Function
+  // const handleDownloadReceipt = (txn: TransactionItem) => {
+  //   const receiptContent = `=====================================================
+  // AMMAN COMMUNICATIONS HQ - OFFICIAL PAYMENT RECEIPT
+  // =====================================================
+  // Receipt Number : ${txn.id}
+  // Application Ref: ${txn.appId}
+  // Date           : ${txn.date}
+  // Service        : ${txn.service}
+  // Payment Mode   : ${txn.paymentMode}
+  // Status         : ${txn.status}
+  // -----------------------------------------------------
+  // Total Amount   : ₹${txn.totalAmount.toFixed(2)}
+  // Paid Amount    : ₹${txn.paidAmount.toFixed(2)}
+  // Pending Amount : ₹${txn.pendingAmount.toFixed(2)}
+  // -----------------------------------------------------
+  // Thank you for using Amman Communications Portal!
+  // Digital Tax Reference: TAX-INV-${txn.id}
+  // =====================================================`;
+
+  //   const blob = new Blob([receiptContent], { type: 'text/plain;charset=utf-8' });
+  //   const url = URL.createObjectURL(blob);
+  //   const link = document.createElement('a');
+  //   link.href = url;
+  //   link.download = `Receipt-${txn.id}.txt`;
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  //   URL.revokeObjectURL(url);
+  //   showToast('Receipt Downloaded Successfully!', `Receipt-${txn.id}.txt saved.`);
+  // };
 
   const handlePayNowSubmit = (txn: TransactionItem) => {
     setTransactions(
@@ -156,19 +164,22 @@ export default function PaymentsPage() {
     showToast('Payment Completed Successfully!', `Payment for ${txn.service} received.`);
   };
 
+
+
   const resetAllFilters = () => {
     setSelectedCategoryFilter('All Services/Applications');
     setFilterStatus('All');
     setFilterMode('All');
     setMinAmount('');
     setMaxAmount('');
-    setDatePreset('All Time');
-    setCustomStartDate('');
-    setCustomEndDate('');
+    setDatePreset('Oct 1, 2023 - Oct 31, 2023');
+    setCustomStartDate('2023-10-01');
+    setCustomEndDate('2023-10-31');
   };
 
   // Filtered transactions logic
   const filteredTransactions = transactions.filter((t) => {
+    // Service Filter
     if (
       selectedCategoryFilter !== 'All Services/Applications' &&
       !t.service.toLowerCase().includes(selectedCategoryFilter.toLowerCase())
@@ -176,22 +187,27 @@ export default function PaymentsPage() {
       return false;
     }
 
+    // Status Filter
     if (filterStatus !== 'All' && t.status !== filterStatus) {
       return false;
     }
 
+    // Payment Mode Filter
     if (filterMode !== 'All' && t.paymentMode !== filterMode) {
       return false;
     }
 
+    // Min Amount Filter
     if (minAmount && t.totalAmount < parseFloat(minAmount)) {
       return false;
     }
 
+    // Max Amount Filter
     if (maxAmount && t.totalAmount > parseFloat(maxAmount)) {
       return false;
     }
 
+    // Date Range Filter
     if (datePreset === 'Oct 1, 2023 - Oct 31, 2023') {
       if (t.date < '2023-10-01' || t.date > '2023-10-31') return false;
     } else if (datePreset === 'Custom Date Range') {
@@ -202,64 +218,79 @@ export default function PaymentsPage() {
     return true;
   });
 
+  // Calculate dynamic metric card values strictly based on transactions present
   const totalPaidSum = filteredTransactions.reduce((acc, curr) => acc + curr.paidAmount, 0);
   const pendingPaymentsSum = filteredTransactions.reduce((acc, curr) => acc + curr.pendingAmount, 0);
   const overdueInvoicesCount = filteredTransactions.filter((t) => t.pendingAmount > 0).length;
   const totalTransactionsCount = filteredTransactions.length;
 
+  // Pagination Math
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
-    <div className="max-w-7xl mx-auto space-y-4 font-sans">
-      {/* 3 Metric Cards - Compact sizing for non-scrollable page fit */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
+    <div className="max-w-7xl mx-auto space-y-8 font-sans pb-12">
+
+      {/* 3 Metric Cards - Dynamically reflect transactions */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
         {/* Card 1: Total Paid */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-3.5 sm:p-4 shadow-2xs flex flex-col justify-between h-28 sm:h-32">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-            <span className="text-xs font-bold text-gray-600 truncate">Total Paid</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-extrabold text-[#0e2a47] tracking-tight mt-1">
-            {formatCurrency(totalPaidSum)}
-          </p>
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
           <div>
-            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Total Paid</span>
+            </div>
+            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
+              {formatCurrency(totalPaidSum)}
+            </p>
+          </div>
+          <div className="mt-3">
+            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
               Last 30 days
             </span>
           </div>
         </div>
 
         {/* Card 2: Pending Payments */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-3.5 sm:p-4 shadow-2xs flex flex-col justify-between h-28 sm:h-32">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
-              <Clock className="w-4 h-4" />
-            </div>
-            <span className="text-xs font-bold text-gray-600 truncate">Pending Payments</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-extrabold text-[#0e2a47] tracking-tight mt-1">
-            {formatCurrency(pendingPaymentsSum)}
-          </p>
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
           <div>
-            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200/60">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Pending Payments</span>
+            </div>
+            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
+              {formatCurrency(pendingPaymentsSum)}
+            </p>
+          </div>
+          <div className="mt-3">
+            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200/60">
               {overdueInvoicesCount} Invoices Overdue
             </span>
           </div>
         </div>
 
         {/* Card 3: Total Transactions */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-3.5 sm:p-4 shadow-2xs flex flex-col justify-between h-28 sm:h-32">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-700 border border-gray-200 flex items-center justify-center shrink-0">
-              <Receipt className="w-4 h-4" />
-            </div>
-            <span className="text-xs font-bold text-gray-600 truncate">Total Transactions</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-extrabold text-[#0e2a47] tracking-tight mt-1">
-            {totalTransactionsCount}
-          </p>
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44 sm:col-span-2 md:col-span-1">
           <div>
-            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200/60">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-gray-100 text-gray-700 border border-gray-200 flex items-center justify-center shrink-0">
+                <Receipt className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Total Transactions</span>
+            </div>
+            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
+              {totalTransactionsCount}
+            </p>
+          </div>
+          <div className="mt-3">
+            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200/60">
               All time
             </span>
           </div>
@@ -267,9 +298,9 @@ export default function PaymentsPage() {
       </div>
 
       {/* Main Transactions Container Card */}
-      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs overflow-hidden space-y-3">
+      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs overflow-hidden space-y-4">
         {/* Filter Toolbar */}
-        <div className="p-4 pb-1 flex flex-col lg:flex-row items-center justify-between gap-3">
+        <div className="p-6 pb-2 flex flex-col lg:flex-row items-center justify-between gap-4">
           {/* Left Controls */}
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             {/* Category Dropdown */}
@@ -280,19 +311,20 @@ export default function PaymentsPage() {
                 options={[
                   'All Services/Applications',
                   'Passport Services & Renewal',
-                  'Biometric & Identity Verification',
                   'Patta Transfer & Revenue Services',
                   'Encumbrance Certificate (EC)',
                   'Property Registration & Sales Deed',
-                  'Legal & Civil Services'
+                  'Legal & Civil Services',
+                  'Visa Processing',
+                  'Work Permit Renewal'
                 ]}
               />
             </div>
 
-            {/* Date Range Button */}
+            {/* Changeable Date Range Selector Button */}
             <button
               onClick={() => setShowDatePickerModal(true)}
-              className="flex items-center gap-2 bg-gray-50/80 border border-gray-200 hover:bg-gray-100 rounded-xl px-3.5 py-2 text-xs font-semibold text-gray-700 transition-colors w-full sm:w-auto justify-center"
+              className="flex items-center gap-2 bg-gray-50/80 border border-gray-200 hover:bg-gray-100 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-gray-700 transition-colors w-full sm:w-auto justify-center"
             >
               <Calendar className="w-4 h-4 text-gray-400" />
               <span>{datePreset}</span>
@@ -301,10 +333,10 @@ export default function PaymentsPage() {
           </div>
 
           {/* Right Controls */}
-          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-end sm:justify-start">
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end sm:justify-start">
             <button
               onClick={() => setShowMoreFilters(!showMoreFilters)}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-all shadow-2xs ${
+              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all shadow-2xs ${
                 showMoreFilters
                   ? 'bg-[#0e2a47] text-white border-[#0e2a47]'
                   : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
@@ -326,7 +358,7 @@ export default function PaymentsPage() {
                 a.download = `Transactions_Export.csv`;
                 a.click();
               }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs"
             >
               <Download className="w-3.5 h-3.5 text-gray-500" />
               <span>Export</span>
@@ -336,7 +368,7 @@ export default function PaymentsPage() {
 
         {/* Collapsible "More Filters" Options Panel */}
         {showMoreFilters && (
-          <div className="mx-4 p-3 bg-[#f8fafc] border border-gray-200 rounded-xl space-y-3 animate-in slide-in-from-top-2 duration-200">
+          <div className="mx-6 p-4 bg-[#f8fafc] border border-gray-200 rounded-2xl space-y-4 animate-in slide-in-from-top-2 duration-200">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">Filter Options</h3>
               <button
@@ -347,7 +379,7 @@ export default function PaymentsPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
               <div className="space-y-1">
                 <label className="block font-bold text-gray-600 text-[11px]">Payment Status</label>
                 <CustomSelect
@@ -373,7 +405,7 @@ export default function PaymentsPage() {
                   placeholder="e.g. 100"
                   value={minAmount}
                   onChange={(e) => setMinAmount(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded-xl text-gray-800 font-semibold focus:outline-none"
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-gray-800 font-semibold focus:outline-none"
                 />
               </div>
 
@@ -384,56 +416,56 @@ export default function PaymentsPage() {
                   placeholder="e.g. 2000"
                   value={maxAmount}
                   onChange={(e) => setMaxAmount(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-white border border-gray-300 rounded-xl text-gray-800 font-semibold focus:outline-none"
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-gray-800 font-semibold focus:outline-none"
                 />
               </div>
             </div>
           </div>
         )}
 
-        {/* Scrollable Data Table Container - Strictly configured so EXACTLY 4 complete rows are visible at once */}
-        <div className="overflow-x-auto h-[275px] max-h-[275px] overflow-y-auto border-t border-b border-gray-100 relative">
+        {/* Data Table */}
+        <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[850px]">
-            <thead className="sticky top-0 z-10 bg-[#f8fafc] shadow-xs">
-              <tr className="border-b border-gray-200/80 text-[11px] font-bold uppercase tracking-wider text-gray-500">
-                <th className="py-2.5 px-6">SERVICE/APPLICATION</th>
-                <th className="py-2.5 px-4">TOTAL AMOUNT</th>
-                <th className="py-2.5 px-4">PAID AMOUNT</th>
-                <th className="py-2.5 px-4">PENDING AMOUNT</th>
-                <th className="py-2.5 px-4">PAYMENT MODE</th>
-                <th className="py-2.5 px-4">STATUS</th>
-                <th className="py-2.5 px-6 text-center">ACTION</th>
+            <thead>
+              <tr className="border-y border-gray-200/80 text-[11px] font-bold uppercase tracking-wider text-gray-500 bg-[#f8fafc]">
+                <th className="py-3.5 px-6">SERVICE/APPLICATION</th>
+                <th className="py-3.5 px-4">TOTAL AMOUNT</th>
+                <th className="py-3.5 px-4">PAID AMOUNT</th>
+                <th className="py-3.5 px-4">PENDING AMOUNT</th>
+                <th className="py-3.5 px-4">PAYMENT MODE</th>
+                <th className="py-3.5 px-4">STATUS</th>
+                <th className="py-3.5 px-6 text-center">ACTION</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-xs text-gray-800">
-              {filteredTransactions.length === 0 ? (
+              {paginatedTransactions.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-gray-500 font-medium">
                     No transactions found matching the selected filters.
                   </td>
                 </tr>
               ) : (
-                filteredTransactions.map((txn, index) => {
+                paginatedTransactions.map((txn, index) => {
                   return (
                     <tr key={`${txn.id}-${txn.appId}-${index}`} className="hover:bg-gray-50/70 transition-colors">
                       {/* Service & Application ID */}
-                      <td className="py-3 sm:py-3.5 px-6">
+                      <td className="py-4 px-6">
                         <p className="font-bold text-gray-900 leading-tight">{txn.service}</p>
                         <p className="text-[11px] font-mono text-gray-400 mt-0.5">{txn.appId}</p>
                       </td>
 
                       {/* Total Amount */}
-                      <td className="py-3 sm:py-3.5 px-4 font-bold text-gray-900">
+                      <td className="py-4 px-4 font-bold text-gray-900">
                         {formatCurrency(txn.totalAmount)}
                       </td>
 
                       {/* Paid Amount */}
-                      <td className="py-3 sm:py-3.5 px-4 font-bold text-gray-900">
+                      <td className="py-4 px-4 font-bold text-gray-900">
                         {formatCurrency(txn.paidAmount)}
                       </td>
 
                       {/* Pending Amount */}
-                      <td className="py-3 sm:py-3.5 px-4 font-bold">
+                      <td className="py-4 px-4 font-bold">
                         {txn.pendingAmount > 0 ? (
                           <span className="text-rose-600">{formatCurrency(txn.pendingAmount)}</span>
                         ) : (
@@ -442,50 +474,50 @@ export default function PaymentsPage() {
                       </td>
 
                       {/* Payment Mode Badge */}
-                      <td className="py-3 sm:py-3.5 px-4">
+                      <td className="py-4 px-4">
                         {txn.paymentMode === 'Credit Card' && (
-                          <span className="inline-block text-[11px] font-semibold bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-lg border border-indigo-100">
+                          <span className="inline-block text-[11px] font-semibold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg border border-indigo-100">
                             Credit Card
                           </span>
                         )}
                         {txn.paymentMode === 'Bank Transfer' && (
-                          <span className="inline-block text-[11px] font-semibold bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-lg border border-blue-100">
+                          <span className="inline-block text-[11px] font-semibold bg-blue-50 text-blue-700 px-3 py-1 rounded-lg border border-blue-100">
                             Bank Transfer
                           </span>
                         )}
                         {txn.paymentMode === 'Wire Transfer' && (
-                          <span className="inline-block text-[11px] font-semibold bg-purple-50 text-purple-700 px-2.5 py-0.5 rounded-lg border border-purple-100">
+                          <span className="inline-block text-[11px] font-semibold bg-purple-50 text-purple-700 px-3 py-1 rounded-lg border border-purple-100">
                             Wire Transfer
                           </span>
                         )}
                         {txn.paymentMode === 'Pending' && (
-                          <span className="inline-block text-[11px] font-medium text-gray-400 italic bg-gray-50 px-2.5 py-0.5 rounded-lg">
+                          <span className="inline-block text-[11px] font-medium text-gray-400 italic bg-gray-50 px-3 py-1 rounded-lg">
                             Pending
                           </span>
                         )}
                         {txn.paymentMode === 'UPI / NetBanking' && (
-                          <span className="inline-block text-[11px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-lg border border-emerald-100">
+                          <span className="inline-block text-[11px] font-semibold bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg border border-emerald-100">
                             UPI / NetBanking
                           </span>
                         )}
                       </td>
 
                       {/* Status Badge */}
-                      <td className="py-3 sm:py-3.5 px-4">
+                      <td className="py-4 px-4">
                         {txn.status === 'Paid' && (
-                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             Paid
                           </span>
                         )}
                         {txn.status === 'Partial' && (
-                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full">
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                             Partial
                           </span>
                         )}
                         {txn.status === 'Pending' && (
-                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1 rounded-full">
                             <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                             Pending
                           </span>
@@ -493,11 +525,11 @@ export default function PaymentsPage() {
                       </td>
 
                       {/* Action Button */}
-                      <td className="py-3 sm:py-3.5 px-6 text-center">
+                      <td className="py-4 px-6 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <Link
                             href={`/portal/payments/${txn.id}`}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl transition-all shadow-2xs"
+                            className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl transition-all shadow-2xs"
                             title="View Official Invoice"
                           >
                             <FileText className="w-3.5 h-3.5 text-white" />
@@ -507,7 +539,7 @@ export default function PaymentsPage() {
                           {txn.status !== 'Paid' && (
                             <button
                               onClick={() => setSelectedTxnForPayNow(txn)}
-                              className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition-all shadow-2xs"
+                              className="inline-flex items-center gap-1 px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition-all shadow-2xs"
                             >
                               <span>Pay Now</span>
                             </button>
@@ -522,46 +554,145 @@ export default function PaymentsPage() {
           </table>
         </div>
 
-        {/* Table Footer - Anchored to bottom of card */}
-        <div className="mt-auto shrink-0 p-3.5 px-6 flex items-center justify-between text-xs text-gray-500 font-medium bg-gray-50/50 border-t border-gray-100">
+        {/* Table Pagination Footer - Render page numbers ONLY if totalPages > 1 */}
+        <div className="p-6 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 font-medium">
           <div>
-            Showing 1 to {Math.min(4, filteredTransactions.length)} of {filteredTransactions.length} entries (Scroll table to view all)
+            Showing {filteredTransactions.length === 0 ? 0 : 1} to {filteredTransactions.length} of {filteredTransactions.length} entries
           </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`w-8 h-8 rounded-lg font-bold flex items-center justify-center transition-all ${
+                    currentPage === pageNum
+                      ? 'bg-[#0e2a47] text-white shadow-xs'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Pay Now Modal */}
-      {selectedTxnForPayNow && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-5">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
-                  <CreditCard className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-extrabold text-gray-900">Complete Payment</h3>
-                  <p className="text-[11px] text-gray-400">Ref: {selectedTxnForPayNow.id}</p>
-                </div>
+      {/* DATE RANGE SELECTOR MODAL */}
+      {showDatePickerModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-[#0e2a47]" />
+                <h3 className="text-base font-bold text-gray-900">Select Date Timeline</h3>
               </div>
               <button
-                onClick={() => setSelectedTxnForPayNow(null)}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+                onClick={() => setShowDatePickerModal(false)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 space-y-2 text-xs">
+            <div className="space-y-3 text-xs">
+              <label className="block font-bold text-gray-700">Presets</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  'Oct 1, 2023 - Oct 31, 2023',
+                  'Last 30 Days',
+                  'All Time',
+                  'Custom Date Range'
+                ].map((preset) => (
+                  <button
+                    key={preset}
+                    onClick={() => setDatePreset(preset)}
+                    className={`p-2.5 rounded-xl border text-left font-semibold transition-all ${
+                      datePreset === preset
+                        ? 'border-[#0e2a47] bg-[#f0f7ff] text-[#0e2a47] font-bold ring-1 ring-[#0e2a47]'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                    }`}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+
+              {datePreset === 'Custom Date Range' && (
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="space-y-1">
+                    <label className="block font-bold text-gray-600 text-[11px]">Start Date</label>
+                    <CustomDatePicker
+                      value={customStartDate}
+                      onChange={setCustomStartDate}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block font-bold text-gray-600 text-[11px]">End Date</label>
+                    <CustomDatePicker
+                      value={customEndDate}
+                      onChange={setCustomEndDate}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-gray-100 flex items-center justify-end">
+              <button
+                onClick={() => setShowDatePickerModal(false)}
+                className="px-6 py-2.5 bg-[#0e2a47] hover:bg-[#153e68] text-white font-bold text-xs rounded-xl shadow-sm"
+              >
+                Apply Timeline
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Pay Now Confirmation */}
+      {selectedTxnForPayNow && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-6 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-900">Pay Outstanding Balance</h3>
+              <button
+                onClick={() => setSelectedTxnForPayNow(null)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-4 space-y-2 text-xs text-blue-950">
               <div className="flex justify-between">
-                <span className="text-gray-500">Service:</span>
+                <span className="text-gray-600 font-medium">Service:</span>
                 <span className="font-bold text-gray-900">{selectedTxnForPayNow.service}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Application Ref:</span>
+                <span className="text-gray-600 font-medium">Application Ref:</span>
                 <span className="font-mono text-gray-800">{selectedTxnForPayNow.appId}</span>
               </div>
-              <div className="flex justify-between pt-2 border-t border-gray-200">
+              <div className="flex justify-between pt-2 border-t border-blue-200/80">
                 <span className="text-gray-700 font-bold">Amount Due:</span>
                 <span className="font-extrabold text-rose-600 text-sm">
                   {formatCurrency(selectedTxnForPayNow.pendingAmount || selectedTxnForPayNow.totalAmount)}
@@ -569,70 +700,37 @@ export default function PaymentsPage() {
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2 text-xs">
+              <label className="block font-bold text-gray-700 uppercase tracking-wider text-[10px]">
+                Choose Payment Gateway
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 border-2 border-[#0e2a47] bg-[#f0f7ff] rounded-xl flex items-center gap-2 cursor-pointer font-bold text-[#0e2a47]">
+                  <CreditCard className="w-4 h-4 text-[#0e2a47]" />
+                  <span>Card / UPI</span>
+                </div>
+                <div className="p-3 border border-gray-200 bg-white rounded-xl flex items-center gap-2 cursor-pointer font-semibold text-gray-700 hover:border-gray-300">
+                  <Building className="w-4 h-4 text-gray-500" />
+                  <span>Bank Wire</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-end gap-3">
               <button
-                onClick={() => handlePayNowSubmit(selectedTxnForPayNow)}
-                className="w-full py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white text-xs font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
-              >
-                <CreditCard className="w-4 h-4 text-[#a8d5b9]" />
-                <span>Confirm &amp; Pay {formatCurrency(selectedTxnForPayNow.pendingAmount || selectedTxnForPayNow.totalAmount)}</span>
-              </button>
-              <button
+                type="button"
                 onClick={() => setSelectedTxnForPayNow(null)}
-                className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-colors"
+                className="px-4 py-2 border border-gray-300 rounded-xl text-gray-700 font-semibold text-xs hover:bg-gray-50"
               >
                 Cancel
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Date Picker Modal */}
-      {showDatePickerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-sm font-bold text-gray-900">Select Date Range</h3>
               <button
-                onClick={() => setShowDatePickerModal(false)}
-                className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+                onClick={() => handlePayNowSubmit(selectedTxnForPayNow)}
+                className="px-6 py-2.5 bg-[#0e2a47] hover:bg-[#153e68] text-white font-bold text-xs rounded-xl transition-all shadow-sm"
               >
-                <X className="w-4 h-4" />
+                Pay {formatCurrency(selectedTxnForPayNow.pendingAmount || selectedTxnForPayNow.totalAmount)} Now
               </button>
             </div>
-
-            <div className="space-y-3 text-xs">
-              <div
-                onClick={() => {
-                  setDatePreset('All Time');
-                  setShowDatePickerModal(false);
-                }}
-                className={`p-3 rounded-xl border cursor-pointer font-bold ${
-                  datePreset === 'All Time' ? 'border-[#12372A] bg-[#f0f7f2] text-[#12372A]' : 'border-gray-200 hover:bg-gray-50 text-gray-700'
-                }`}
-              >
-                All Time
-              </div>
-              <div
-                onClick={() => {
-                  setDatePreset('Oct 1, 2023 - Oct 31, 2023');
-                  setShowDatePickerModal(false);
-                }}
-                className={`p-3 rounded-xl border cursor-pointer font-bold ${
-                  datePreset === 'Oct 1, 2023 - Oct 31, 2023' ? 'border-[#12372A] bg-[#f0f7f2] text-[#12372A]' : 'border-gray-200 hover:bg-gray-50 text-gray-700'
-                }`}
-              >
-                October 2023
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowDatePickerModal(false)}
-              className="w-full py-2 bg-[#12372A] text-white text-xs font-bold rounded-xl hover:bg-[#1a4a38] transition-colors"
-            >
-              Apply Filter
-            </button>
           </div>
         </div>
       )}

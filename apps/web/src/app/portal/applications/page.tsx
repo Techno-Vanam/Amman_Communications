@@ -33,9 +33,12 @@ import { useUser, getUserStorageKey } from '@/context/UserContext';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
 import CustomTabDropdown from '@/components/ui/CustomTabDropdown';
+import { fetchServicesAction, fetchApplicationsAction, createApplicationAction, uploadDocumentAction, fetchApplicationDocumentsAction, createCustomerPaymentAction, getDecryptedDocumentAction } from '@/app/portal/actions';
+import { Building, Loader2 } from 'lucide-react';
 
 interface ApplicationItem {
-  id: string;
+  id: string;    // Display id (applicationNumber like AMC-2026-...)
+  dbId?: string; // Real DB cuid used for API calls
   serviceType: string;
   submittedDate: string;
   updatedDate: string;
@@ -85,6 +88,9 @@ interface RequiredDocItem {
   uploadedFile: string;
   uploaded: 'Yes' | 'No';
   status: 'Not Uploaded' | 'Uploaded' | 'Under Review' | 'Approved';
+  storagePath?: string;
+  downloadUrl?: string;
+  mimeType?: string;
 }
 
 const SERVICE_REQUIRED_DOCS: Record<string, RequiredDocItem[]> = {
@@ -147,12 +153,31 @@ export default function ApplicationsPage() {
   // Mode: 'list' | 'create' | 'view'
   const [mode, setMode] = useState<'list' | 'create' | 'view'>('list');
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedService, setSelectedService] = useState('passport');
+  const [selectedService, setSelectedService] = useState('');
   const [activeTabFilter, setActiveTabFilter] = useState<'All' | 'Verification' | 'Processing' | 'Completed'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   // History modal & document view modal toggles
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [viewingDoc, setViewingDoc] = useState<RequiredDocItem | null>(null);
+
+  const [dbServices, setDbServices] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadServices() {
+      const fetched = await fetchServicesAction();
+      setDbServices(fetched);
+      if (fetched.length > 0) {
+        setSelectedService(fetched[0].id);
+      }
+    }
+    loadServices();
+  }, []);
+
+  const getServiceIcon = (serviceId: string) => {
+    if (serviceId.includes('fiber')) return Building;
+    if (serviceId.includes('residential')) return Home;
+    return FileText;
+  };
 
   // Automatically clear open view popups whenever pathname changes or component unmounts
   useEffect(() => {
@@ -185,6 +210,10 @@ export default function ApplicationsPage() {
   });
 
   const [cashVerified, setCashVerified] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Holds actual File objects staged at step 4 — keyed by docId
+  const [pendingFiles, setPendingFiles] = useState<Record<string, File>>({});
 
   const [requiredDocs, setRequiredDocs] = useState<RequiredDocItem[]>(SERVICE_REQUIRED_DOCS.passport);
 
@@ -194,7 +223,7 @@ export default function ApplicationsPage() {
     setRequiredDocs(docsForService);
   }, [selectedService]);
 
-  const serviceObj = SERVICES.find((s) => s.id === selectedService) || SERVICES[0];
+  const serviceObj = dbServices.find((s) => s.id === selectedService) || { name: 'Broadband Setup', id: '' };
 
   // Filter applications by tab and search query
   const filteredApps = applications.filter((app) => {
@@ -241,48 +270,217 @@ export default function ApplicationsPage() {
     return null;
   }, [selectedApp, user.email]);
 
-  const handleOpenView = (app: ApplicationItem) => {
+  const handleOpenView = async (app: ApplicationItem) => {
     setSelectedApp(app);
     setMode('view');
-  };
 
-  const handleFileUploadInDetail = (docId: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const fileName = e.target.files[0].name;
-      setRequiredDocs(
-        requiredDocs.map((doc) =>
-          doc.id === docId
-            ? { ...doc, uploadedFile: fileName, uploaded: 'Yes', status: 'Under Review' }
-            : doc
-        )
-      );
-      showToast('Document Uploaded / Updated!', `${fileName} submitted for verification.`);
+    // Fetch uploaded documents from DB and merge into requiredDocs
+    if (app.dbId) {
+      try {
+        const uploadedDocs = await fetchApplicationDocumentsAction(app.dbId);
+        if (uploadedDocs && uploadedDocs.length > 0) {
+          // Build a map of documentType -> uploaded doc
+          const uploadedMap = new Map<string, any>();
+          for (const doc of uploadedDocs) {
+            uploadedMap.set(doc.documentType, doc);
+          }
+
+          // Update requiredDocs to reflect what's already uploaded
+          setRequiredDocs((prevDocs) =>
+            prevDocs.map((rd) => {
+              // Match by converting doc name to the same format used in upload
+              const rdType = rd.name.toUpperCase().replace(/[^A-Z0-9]/g, '_');
+              const match = uploadedMap.get(rdType) || uploadedDocs.find((d: any) => d.id === rd.id || d.fileName === rd.uploadedFile);
+              if (match) {
+                return {
+                  ...rd,
+                  uploadedFile: match.originalFileName || match.fileName,
+                  storagePath: match.storagePath,
+                  downloadUrl: match.downloadUrl,
+                  mimeType: match.mimeType,
+                  uploaded: 'Yes' as const,
+                  status: match.status === 'APPROVED' ? 'Approved' as const
+                    : match.status === 'UPLOADED' || match.status === 'UNDER_REVIEW' ? 'Under Review' as const
+                    : 'Uploaded' as const,
+                };
+              }
+              return rd;
+            })
+          );
+        }
+      } catch (e) {
+        console.error('Error loading application documents:', e);
+      }
     }
   };
 
-  const handleDownloadDocFile = (fileName?: string, docName?: string) => {
-    const fileTitle = fileName || docName || 'Application-Document';
-    const content = `=====================================================
-AMMAN COMMUNICATIONS - OFFICIAL SERVICE DOCUMENT
-=====================================================
-Document Title   : ${fileTitle}
-Service Context  : Official Service Document Verification
-Security Code    : ${Math.random().toString(36).substring(2, 12).toUpperCase()}
-Timestamp        : ${new Date().toLocaleString()}
-Status           : Official Verified Record
-=====================================================`;
+  const handleFileUploadInDetail = async (docId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('File Too Large', 'Maximum allowed file size is 10 MB.');
+        return;
+      }
+      console.log('[UPLOAD] Started. docId:', docId, 'file:', file.name, 'size:', file.size, 'type:', file.type);
+      console.log('[UPLOAD] mode:', mode, 'selectedApp:', selectedApp?.id, 'dbId:', selectedApp?.dbId);
 
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    const cleanName = fileTitle.includes('.') ? fileTitle : `${fileTitle}.pdf`;
-    link.download = cleanName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Document Download Started', `${cleanName} saved to your device.`);
+      // VIEW MODE: existing application — upload immediately to DB
+      if (selectedApp && selectedApp.dbId) {
+        const appDbId = selectedApp.dbId;
+        console.log('[UPLOAD] VIEW MODE → uploading to DB. appDbId:', appDbId);
+
+        try {
+          const docMeta = requiredDocs.find((d) => d.id === docId);
+          const documentType = docMeta
+            ? docMeta.name.toUpperCase().replace(/[^A-Z0-9]/g, '_')
+            : 'OTHER';
+          console.log('[UPLOAD] documentType:', documentType);
+
+          // Convert to base64
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+          });
+          console.log('[UPLOAD] base64 ready. length:', base64Data.length);
+
+          const result = await uploadDocumentAction(appDbId, {
+            documentType,
+            fileName: file.name,
+            mimeType: file.type,
+            fileSize: file.size,
+            base64Data,
+          });
+          console.log('[UPLOAD] Server action result:', JSON.stringify(result).slice(0, 300));
+
+          if (result.error) {
+            showToast('Upload Failed', result.error);
+            return;
+          }
+
+          const savedDoc = result.document;
+
+          // Update local UI to reflect upload
+          setRequiredDocs(
+            requiredDocs.map((doc) =>
+              doc.id === docId
+                ? {
+                    ...doc,
+                    uploadedFile: file.name,
+                    storagePath: savedDoc?.storagePath,
+                    downloadUrl: savedDoc?.downloadUrl,
+                    mimeType: file.type,
+                    uploaded: 'Yes',
+                    status: 'Under Review',
+                  }
+                : doc
+            )
+          );
+          showToast('Document Uploaded!', `${file.name} saved and encrypted in your vault.`);
+        } catch (err) {
+          console.error('[UPLOAD] Exception during upload:', err);
+          showToast('Upload Error', `Unexpected error: ${err instanceof Error ? err.message : String(err)}`);
+        }
+        return;
+      }
+
+      // Fallback: selectedApp exists but dbId is missing
+      if (selectedApp && !selectedApp.dbId) {
+        console.warn('[UPLOAD] selectedApp exists but dbId is MISSING!', selectedApp);
+        showToast('Upload Error', 'Application ID not found. Please go back and re-open this application.');
+        return;
+      }
+
+      // CREATE MODE (wizard step 4): stage for upload after application is created
+      console.log('[UPLOAD] CREATE MODE → staging in pendingFiles');
+      setPendingFiles((prev) => ({ ...prev, [docId]: file }));
+      setRequiredDocs(
+        requiredDocs.map((doc) =>
+          doc.id === docId
+            ? { ...doc, uploadedFile: file.name, uploaded: 'Yes', status: 'Under Review' }
+            : doc
+        )
+      );
+      showToast('Document Staged', `${file.name} will be uploaded when you submit the application.`);
+    }
+  };
+
+  const handleDownloadDocFile = async (docItemOrFileName?: RequiredDocItem | string, docNameFallback?: string) => {
+    let targetDoc: RequiredDocItem | undefined;
+    let fileName = 'document';
+
+    if (typeof docItemOrFileName === 'object' && docItemOrFileName !== null) {
+      targetDoc = docItemOrFileName;
+      fileName = docItemOrFileName.uploadedFile || docItemOrFileName.name;
+    } else if (typeof docItemOrFileName === 'string') {
+      fileName = docItemOrFileName;
+      targetDoc = requiredDocs.find((d) => d.uploadedFile === docItemOrFileName || d.name === docItemOrFileName || d.name === docNameFallback);
+    }
+
+    if (targetDoc?.storagePath) {
+      showToast('Downloading Document', 'Decrypting and preparing your file...');
+      const res = await getDecryptedDocumentAction(targetDoc.storagePath);
+      if (res.success && res.base64) {
+        const byteCharacters = atob(res.base64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: res.mimeType || targetDoc.mimeType || 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = res.fileName || fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showToast('Download Complete', `${link.download} saved to your device.`);
+        return;
+      }
+    }
+
+    // Try fetching live documents from DB for this application
+    if (selectedApp?.dbId) {
+      try {
+        const docs = await fetchApplicationDocumentsAction(selectedApp.dbId);
+        const match = docs.find(
+          (d: any) =>
+            d.fileName === fileName ||
+            d.originalFileName === fileName ||
+            (targetDoc && d.documentType === targetDoc.name.toUpperCase().replace(/[^A-Z0-9]/g, '_'))
+        );
+        if (match?.storagePath) {
+          showToast('Downloading Document', 'Decrypting and preparing your file...');
+          const res = await getDecryptedDocumentAction(match.storagePath);
+          if (res.success && res.base64) {
+            const byteCharacters = atob(res.base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: res.mimeType || match.mimeType || 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = res.fileName || match.originalFileName || match.fileName || fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast('Download Complete', `${link.download} saved to your device.`);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching live application document:', err);
+      }
+    }
+
+    showToast('Download Unavailable', 'Document file is not yet available in secure storage.');
   };
 
   const handleDownloadSummary = () => {
@@ -314,64 +512,129 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
     showToast('Summary Downloaded Successfully!', `Application-Summary-${selectedApp.id}.txt saved.`);
   };
 
-  // Hydrate applications from localStorage per user account
+  // Load applications from backend DB
   React.useEffect(() => {
-    try {
-      const storageKey = getUserStorageKey(user.email, 'amman_user_applications');
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        setApplications(JSON.parse(saved));
-      } else {
+    async function loadApplications() {
+      try {
+        const data = await fetchApplicationsAction();
+        setApplications(data.map((app: any) => ({
+          id: app.applicationNumber || app.id,
+          dbId: app.id, // real DB cuid for API calls
+          serviceType: app.serviceType,
+          submittedDate: app.submittedAt
+            ? new Date(app.submittedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          updatedDate: app.updatedAt
+            ? new Date(app.updatedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          addedBy: 'You' as const,
+          status: (app.status === 'COMPLETED' ? 'Completed' : app.status === 'PROCESSING' ? 'Processing' : 'Verification') as ApplicationItem['status'],
+          stepPhase: app.stepPhase || 1,
+          adminRemarks: app.notes || 'Application submitted successfully.',
+          assignedOfficer: app.assignedOfficer || 'Officer Rajesh Kumar',
+          estimatedDays: '7 days left',
+        })));
+      } catch (e) {
+        console.error('Error loading applications from DB:', e);
         setApplications([]);
       }
-    } catch (e) {
-      console.error('Error loading applications:', e);
-      setApplications([]);
     }
-  }, [user.email]);
+    loadApplications();
+  }, []);
 
-  const handleFinishCreate = () => {
-    const newId = `AMC-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+  const handleFinishCreate = async () => {
+    setSubmitting(true);
     const todayDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    // 1. Create the application in DB first
+    const result = await createApplicationAction({
+      serviceType: serviceObj.name,
+      fullName: details.applicantName,
+      email: details.applicantEmail,
+      phone: details.applicantPhone,
+      dateOfBirth: details.dob || undefined,
+      address: details.address || undefined,
+      notes: details.description || details.remarks || undefined,
+    });
+
+    if (result.error) {
+      showToast('Submission Failed', result.error);
+      setSubmitting(false);
+      return;
+    }
+
+    const savedApp = result.application;
+    // Use the real DB id for document upload, applicationNumber for display
+    const dbAppId: string = savedApp?.id || '';
+    const displayId: string = savedApp?.applicationNumber || savedApp?.id || `AMC-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    // 2. Upload any staged documents from step 4
+    const pendingEntries = Object.entries(pendingFiles);
+    if (dbAppId && pendingEntries.length > 0) {
+      const uploadResults = await Promise.allSettled(
+        pendingEntries.map(async ([docId, file]) => {
+          // Find doc metadata to get documentType
+          const docMeta = requiredDocs.find((d) => d.id === docId);
+          const documentType = docMeta
+            ? docMeta.name.toUpperCase().replace(/[^A-Z0-9]/g, '_')
+            : 'OTHER';
+
+          // Convert file to base64
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+          });
+
+          return uploadDocumentAction(dbAppId, {
+            documentType,
+            fileName: file.name,
+            mimeType: file.type,
+            fileSize: file.size,
+            base64Data,
+          });
+        })
+      );
+
+      const failed = uploadResults.filter((r) => r.status === 'rejected' || (r.status === 'fulfilled' && r.value?.error));
+      if (failed.length > 0) {
+        showToast('Some Documents Failed', `${failed.length} of ${pendingEntries.length} document(s) could not be uploaded. You can retry from the Documents page.`);
+      } else if (pendingEntries.length > 0) {
+        showToast('Documents Uploaded!', `${pendingEntries.length} document(s) saved to the database.`);
+      }
+    }
+
     const newApp: ApplicationItem = {
-      id: newId,
+      id: displayId,
+      dbId: dbAppId, // store real cuid for future uploads
       serviceType: serviceObj.name,
       submittedDate: todayDate,
       updatedDate: todayDate,
       addedBy: 'You',
       status: 'Verification',
       stepPhase: 1,
-      phaseDates: {
-        1: todayDate
-      },
+      phaseDates: { 1: todayDate },
       adminRemarks: 'Application submitted successfully. Verification officer assigned.',
       assignedOfficer: 'Officer Rajesh Kumar',
       estimatedDays: '7 days left'
     };
-    const updated = [newApp, ...applications];
-    setApplications(updated);
-    try {
-      const storageKey = getUserStorageKey(user.email, 'amman_user_applications');
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-    } catch (e) {
-      console.error('Error saving application:', e);
-    }
+    setApplications([newApp, ...applications]);
+    setPendingFiles({});
 
-    // Record payment transaction so Step 3 payment reflects in the Payments & Receipts section
+    // Record payment locally for Payments & Receipts page (fallback)
     try {
       const paymentStorageKey = getUserStorageKey(user.email, 'amman_user_payments');
       const savedPayments = localStorage.getItem(paymentStorageKey);
       const existingPayments = savedPayments ? JSON.parse(savedPayments) : [];
-
       const parsedAmount = parseFloat(details.paymentAmount) || 2000;
       const isCashPending = details.paymentMode.includes('Cash') && !cashVerified;
       const todayISO = new Date().toISOString().split('T')[0];
-
       const newPaymentTxn = {
         id: details.paymentRef && details.paymentRef.startsWith('TXN-')
           ? details.paymentRef
           : `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
-        appId: newId,
+        appId: displayId,
         service: serviceObj.name,
         totalAmount: parsedAmount,
         paidAmount: isCashPending ? 0 : parsedAmount,
@@ -380,16 +643,26 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
         status: isCashPending ? 'Pending' : 'Paid',
         date: todayISO
       };
+      localStorage.setItem(paymentStorageKey, JSON.stringify([newPaymentTxn, ...existingPayments]));
 
-      const updatedPayments = [newPaymentTxn, ...existingPayments];
-      localStorage.setItem(paymentStorageKey, JSON.stringify(updatedPayments));
+      // Also save to DB (Invoice + Payment)
+      if (dbAppId) {
+        createCustomerPaymentAction({
+          applicationId: dbAppId,
+          amount: isCashPending ? 0 : parsedAmount,
+          serviceFee: parsedAmount,
+          paymentMode: details.paymentMode,
+          reference: newPaymentTxn.id,
+        }).catch((e) => console.error('Error saving payment to DB:', e));
+      }
     } catch (e) {
       console.error('Error saving payment transaction:', e);
     }
 
+    setSubmitting(false);
     setMode('list');
     setCurrentStep(1);
-    showToast('Application Submitted Successfully!', `Application ${newId} registered and payment recorded.`);
+    showToast('Application Submitted!', `Application ${displayId} saved${pendingEntries.length > 0 ? ' with documents' : ''}.`);
   };
 
   return (
@@ -970,8 +1243,8 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
 
           {currentStep === 1 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {SERVICES.map((srv) => {
-                const Icon = srv.icon;
+              {dbServices.map((srv) => {
+                const Icon = getServiceIcon(srv.id);
                 const isSelected = selectedService === srv.id;
                 return (
                   <div
@@ -987,13 +1260,13 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                       <div className="w-10 h-10 rounded-xl bg-white text-[#12372A] flex items-center justify-center border border-gray-200">
                         <Icon className="w-5 h-5 text-[#12372A]" />
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                        {srv.tag}
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200/50">
+                        Active
                       </span>
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-gray-900">{srv.name}</h3>
-                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{srv.desc}</p>
+                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{srv.description || 'Service description not provided'}</p>
                     </div>
                   </div>
                 );
@@ -1328,9 +1601,14 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             ) : (
               <button
                 onClick={handleFinishCreate}
-                className="px-6 py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-full hover:bg-[#1a4a38] shadow-md"
+                disabled={submitting}
+                className="px-6 py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-full hover:bg-[#1a4a38] shadow-md flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Submit Application
+                {submitting ? (
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Submitting…</span></>
+                ) : (
+                  <span>Submit Application</span>
+                )}
               </button>
             )}
           </div>
