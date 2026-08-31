@@ -255,11 +255,14 @@ export async function uploadDocumentAction(
   },
 ) {
   try {
+    const cleanBase64 = dto.base64Data.includes(',') ? dto.base64Data.split(',')[1] : dto.base64Data;
+    const sanitizedDto = { ...dto, base64Data: cleanBase64 };
+
     const res = await authenticatedFetch(
       `/customer/applications/${applicationId}/documents/upload`,
       {
         method: 'POST',
-        body: JSON.stringify(dto),
+        body: JSON.stringify(sanitizedDto),
       },
     );
     const text = await res.text();
