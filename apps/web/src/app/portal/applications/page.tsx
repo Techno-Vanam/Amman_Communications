@@ -429,17 +429,30 @@ export default function ApplicationsPage() {
       showToast('Downloading Document', 'Decrypting and preparing your file...');
       const res = await getDecryptedDocumentAction(targetDoc.storagePath);
       if (res.success && res.base64) {
-        const byteCharacters = atob(res.base64);
+        const rawBase64 = res.base64.includes(',') ? res.base64.split(',')[1] : res.base64;
+        const cleanBase64 = rawBase64.replace(/\s/g, '');
+        const byteCharacters = atob(cleanBase64);
         const byteNumbers = new Array(byteCharacters.length);
         for (let i = 0; i < byteCharacters.length; i++) {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
+        const finalFileName = res.fileName || fileName;
+        const ext = finalFileName.split('.').pop()?.toLowerCase();
+        let mime = res.mimeType || targetDoc.mimeType;
+        if (!mime || mime === 'application/octet-stream') {
+          if (ext === 'jpeg' || ext === 'jpg') mime = 'image/jpeg';
+          else if (ext === 'png') mime = 'image/png';
+          else if (ext === 'webp') mime = 'image/webp';
+          else if (ext === 'pdf') mime = 'application/pdf';
+          else mime = 'application/octet-stream';
+        }
+
         const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: res.mimeType || targetDoc.mimeType || 'application/octet-stream' });
+        const blob = new Blob([byteArray], { type: mime });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = res.fileName || fileName;
+        link.download = finalFileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -463,17 +476,30 @@ export default function ApplicationsPage() {
           showToast('Downloading Document', 'Decrypting and preparing your file...');
           const res = await getDecryptedDocumentAction(match.storagePath);
           if (res.success && res.base64) {
-            const byteCharacters = atob(res.base64);
+            const rawBase64 = res.base64.includes(',') ? res.base64.split(',')[1] : res.base64;
+            const cleanBase64 = rawBase64.replace(/\s/g, '');
+            const byteCharacters = atob(cleanBase64);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) {
               byteNumbers[i] = byteCharacters.charCodeAt(i);
             }
             const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: res.mimeType || match.mimeType || 'application/octet-stream' });
+            const finalFileName = res.fileName || match.originalFileName || match.fileName || fileName;
+            const ext = finalFileName.split('.').pop()?.toLowerCase();
+            let mime = res.mimeType || match.mimeType;
+            if (!mime || mime === 'application/octet-stream') {
+              if (ext === 'jpeg' || ext === 'jpg') mime = 'image/jpeg';
+              else if (ext === 'png') mime = 'image/png';
+              else if (ext === 'webp') mime = 'image/webp';
+              else if (ext === 'pdf') mime = 'application/pdf';
+              else mime = 'application/octet-stream';
+            }
+
+            const blob = new Blob([byteArray], { type: mime });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = res.fileName || match.originalFileName || match.fileName || fileName;
+            link.download = finalFileName;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);

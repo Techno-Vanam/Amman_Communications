@@ -162,7 +162,7 @@ export default function NotificationsPage() {
                         <button
                           onClick={() => {
                             markAsRead(notif.id);
-                            showToast('Notification Marked as Read!', 'Unread count updated.');
+                            showToast('Notification Marked as Read!', 'Unread count updated.', 'success', 'View Details', '/portal/dashboard', false);
                           }}
                           className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-[#1c3a63] transition-colors"
                         >

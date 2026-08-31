@@ -167,7 +167,7 @@ export default function BookAppointmentPage() {
 
       const returnedId = res.appointment?.appointmentNumber || res.appointment?.id || `APT-2026-${Math.floor(100 + Math.random() * 900)}`;
       setCreatedAptId(returnedId);
-      showToast('Appointment Booked Successfully!', `Reference ID: ${returnedId} has been scheduled.`);
+      showToast('Appointment Booked Successfully!', `Reference ID: ${returnedId} has been scheduled.`, 'success', 'View Details', '/portal/appointments', true);
     }
     if (currentStep < 5) setCurrentStep(currentStep + 1);
   };
