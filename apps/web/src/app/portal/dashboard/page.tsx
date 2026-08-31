@@ -103,7 +103,7 @@ export default function PortalDashboardPage() {
   ].slice(0, 3);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12">
+    <div className="max-w-7xl mx-auto space-y-4 lg:space-y-5 font-sans">
       {/* 4 KPI Summary Cards Grid - Matching Payments Card Styling & Size */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Card 1: Active Applications */}

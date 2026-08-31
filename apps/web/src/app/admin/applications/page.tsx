@@ -117,7 +117,7 @@ const STATUS_CFG: Record<AppStatus, { badge: string; icon: React.ReactNode }> = 
 function StatusBadge({ status }: { status: AppStatus }) {
   const { badge, icon } = STATUS_CFG[status];
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge}`}>
+    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold border whitespace-nowrap shrink-0 ${badge}`}>
       {icon}{status}
     </span>
   );
@@ -940,14 +940,14 @@ Remarks          : ${selectedApp.notes || 'None'}
             ) : (
               /* ── TABLE VIEW ── */
               <div className="overflow-x-auto w-full">
-                <div className="min-w-[800px]">
+                <div className="min-w-[950px]">
                   <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
                     <div className="col-span-2">App. ID</div>
                     <div className="col-span-3">Customer</div>
                     <div className="col-span-2">Service Type</div>
                     <div className="col-span-2 text-center">Process Phase</div>
-                    <div className="col-span-1 text-center">Status</div>
-                    <div className="col-span-2 text-center">Actions</div>
+                    <div className="col-span-2 text-center">Status</div>
+                    <div className="col-span-1 text-center">Actions</div>
                   </div>
 
                   {filteredApps.map((a, idx) => {
@@ -977,27 +977,27 @@ Remarks          : ${selectedApp.notes || 'None'}
                         <div className="col-span-2 text-center flex flex-col items-center justify-center space-y-1">
                           <button
                             onClick={() => handleOpenView(a)}
-                            className="px-2.5 py-1 rounded-full bg-[#f0f7f2] hover:bg-[#dce9f7] border border-[#a8d5b9] text-[10px] font-extrabold text-[#12372A] flex items-center gap-1 shadow-2xs transition-all"
+                            className="px-2.5 py-1 rounded-full bg-[#f0f7f2] hover:bg-[#dce9f7] border border-[#a8d5b9] text-[10px] font-extrabold text-[#12372A] flex items-center gap-1 shadow-2xs transition-all whitespace-nowrap"
                           >
-                            <span className="w-4 h-4 rounded-full bg-[#12372A] text-white text-[9px] flex items-center justify-center font-bold">
+                            <span className="w-4 h-4 rounded-full bg-[#12372A] text-white text-[9px] flex items-center justify-center font-bold shrink-0">
                               {currentStep}
                             </span>
-                            <span className="truncate max-w-[90px]">{currentPhaseTitle}</span>
+                            <span className="truncate max-w-[100px]">{currentPhaseTitle}</span>
                           </button>
                         </div>
 
-                        <div className="col-span-1 flex justify-center">
+                        <div className="col-span-2 flex justify-center items-center">
                           <StatusBadge status={a.status} />
                         </div>
 
-                        <div className="col-span-2 flex items-center justify-center gap-1.5">
-                          <button onClick={() => handleOpenView(a)} className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all" title="View Tracker & Details">
+                        <div className="col-span-1 flex items-center justify-center gap-1">
+                          <button onClick={() => handleOpenView(a)} className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all shrink-0" title="View Tracker & Details">
                             <Eye className="w-3 h-3" />
                           </button>
-                          <button onClick={() => setEditApp(a)} className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all" title="Edit">
+                          <button onClick={() => setEditApp(a)} className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all shrink-0" title="Edit">
                             <Edit2 className="w-3 h-3" />
                           </button>
-                          <button onClick={() => setDeleteApp(a)} className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all" title="Delete">
+                          <button onClick={() => setDeleteApp(a)} className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all shrink-0" title="Delete">
                             <Trash2 className="w-3 h-3" />
                           </button>
                         </div>

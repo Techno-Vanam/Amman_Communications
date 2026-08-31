@@ -342,7 +342,7 @@ export default function PortalLayout({ children }: Readonly<{ children: React.Re
           <PortalSidebarContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
           {/* Main Content Area */}
-          <main className="min-w-0 flex-1 h-full overflow-y-auto p-3.5 sm:p-4 md:p-5 lg:p-8 max-w-full print:h-auto print:overflow-visible print:p-0 print:m-0 print:bg-white print:w-full">
+          <main className="min-w-0 flex-1 h-full flex flex-col p-3.5 sm:p-4 md:p-5 lg:p-8 max-w-full overflow-y-auto print:h-auto print:overflow-visible print:p-0 print:m-0 print:bg-white print:w-full">
             <PortalTopHeader />
             {children}
           </main>
