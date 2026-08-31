@@ -55,11 +55,44 @@ const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   },
 ];
 
+const STORAGE_KEY = 'admin_notifications';
+
+function loadNotifications(): NotificationItem[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed: NotificationItem[] = JSON.parse(saved);
+      // Merge saved read/dismissed state into INITIAL_NOTIFICATIONS
+      // so new notifications from code updates still appear
+      return INITIAL_NOTIFICATIONS.map(n => {
+        const savedItem = parsed.find(p => p.id === n.id);
+        return savedItem ? { ...n, read: savedItem.read } : n;
+      }).filter(n => {
+        // Keep only items not explicitly removed (not in saved at all = new item, keep it)
+        const wasRemoved = parsed.find(p => p.id === n.id + '_removed');
+        return !wasRemoved;
+      });
+    }
+  } catch (_) {}
+  return INITIAL_NOTIFICATIONS;
+}
+
+function saveNotifications(notifications: NotificationItem[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+  } catch (_) {}
+}
+
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Load persisted state on mount (client-only)
+  useEffect(() => {
+    setNotifications(loadNotifications());
+  }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -79,20 +112,29 @@ export default function NotificationDropdown() {
   }, [isOpen]);
 
   const markAllAsRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, read: true })));
+    const updated = notifications.map((n) => ({ ...n, read: true }));
+    setNotifications(updated);
+    saveNotifications(updated);
   };
 
   const removeNotification = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setNotifications(notifications.filter((n) => n.id !== id));
+    const updated = notifications.filter((n) => n.id !== id);
+    setNotifications(updated);
+    // Store removed IDs so they don't reappear on remount
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') as NotificationItem[];
+      const withRemoved = [...saved.filter(n => n.id !== id), { id: id + '_removed' } as any];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(withRemoved));
+    } catch (_) {}
   };
 
   const handleNotificationClick = (notification: NotificationItem) => {
-    // Mark as read
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
+    const updated = notifications.map((n) =>
+      n.id === notification.id ? { ...n, read: true } : n
     );
-    // Close dropdown then navigate
+    setNotifications(updated);
+    saveNotifications(updated);
     setIsOpen(false);
     router.push(notification.href);
   };

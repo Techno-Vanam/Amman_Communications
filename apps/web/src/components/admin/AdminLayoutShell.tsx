@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import NotificationDropdown from '../ui/NotificationDropdown';
 import {
   LayoutDashboard,
@@ -158,6 +158,85 @@ function AdminSidebarNavContent({
   );
 }
 
+// ── Profile Dropdown ─────────────────────────────────────────────
+function ProfileDropdown() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [open]);
+
+  function handleLogout() {
+    setOpen(false);
+    try { localStorage.removeItem('user_email'); } catch (_) {}
+    router.push('/login');
+  }
+
+  return (
+    <div className="relative shrink-0" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className={`flex items-center gap-2 sm:gap-3.5 bg-white border rounded-full pl-1.5 sm:pl-3 pr-2.5 sm:pr-5 py-1 sm:py-2 shadow-xs transition-all
+          ${open ? 'border-[#a8d5b9] bg-[#f0f7f2]' : 'border-gray-200/90 hover:bg-[#f0f7f2] hover:border-[#a8d5b9] hover:shadow-sm'}`}
+      >
+        <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-xs sm:text-sm flex items-center justify-center border border-[#a8d5b9]/30 shadow-2xs shrink-0">
+          AD
+        </div>
+        <div className="text-left leading-tight hidden sm:block">
+          <p className="text-sm font-extrabold text-gray-900">Administrator</p>
+          <p className="text-xs text-gray-500 font-semibold mt-0.5">Admin Account</p>
+        </div>
+        <ChevronDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 ml-0.5 sm:ml-1 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-3 w-52 bg-white rounded-2xl border border-gray-100 shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+          {/* User info header */}
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/60">
+            <p className="text-xs font-extrabold text-gray-900">Administrator</p>
+            <p className="text-[10px] text-gray-400 font-medium mt-0.5">Admin Account</p>
+          </div>
+
+          {/* Menu items */}
+          <div className="py-1.5">
+            <Link
+              href="/admin/profile"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-[#f0f7f2] hover:text-[#12372A] transition-colors group"
+            >
+              <div className="w-7 h-7 rounded-full bg-gray-100 group-hover:bg-[#12372A]/10 flex items-center justify-center transition-colors">
+                <User className="w-3.5 h-3.5 text-gray-500 group-hover:text-[#12372A]" />
+              </div>
+              My Profile
+            </Link>
+
+            <div className="mx-3 my-1 border-t border-gray-100" />
+
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-rose-50 hover:text-rose-600 transition-colors group"
+            >
+              <div className="w-7 h-7 rounded-full bg-gray-100 group-hover:bg-rose-100 flex items-center justify-center transition-colors">
+                <LogOut className="w-3.5 h-3.5 text-gray-500 group-hover:text-rose-600" />
+              </div>
+              Log Out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const PATH_METADATA: Record<
   string,
   { title: string; subtext: string; icon: React.ComponentType<{ className?: string }> }
@@ -203,20 +282,8 @@ function AdminTopHeader() {
         {/* Notification Bell */}
         <NotificationDropdown />
 
-        {/* Admin Profile Pill Badge — links to Profile */}
-        <Link
-          href="/admin/profile"
-          className="flex items-center gap-2 sm:gap-3.5 bg-white border border-gray-200/90 rounded-full pl-1.5 sm:pl-3 pr-2.5 sm:pr-6 py-1 sm:py-2 shadow-xs hover:bg-[#f0f7f2] hover:border-[#a8d5b9] hover:shadow-sm transition-all"
-        >
-          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-xs sm:text-sm flex items-center justify-center border border-[#a8d5b9]/30 shadow-2xs shrink-0">
-            AD
-          </div>
-          <div className="text-left leading-tight hidden sm:block">
-            <p className="text-sm font-extrabold text-gray-900">Administrator</p>
-            <p className="text-xs text-gray-500 font-semibold mt-0.5">Admin Account</p>
-          </div>
-          <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 ml-0.5 sm:ml-1" />
-        </Link>
+        {/* Admin Profile Dropdown */}
+        <ProfileDropdown />
       </div>
     </header>
   );
