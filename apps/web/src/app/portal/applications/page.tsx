@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import {
   Plus,
@@ -159,6 +160,12 @@ export default function ApplicationsPage() {
   // History modal & document view modal toggles
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [viewingDoc, setViewingDoc] = useState<RequiredDocItem | null>(null);
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [dbServices, setDbServices] = useState<any[]>([]);
 
@@ -1618,12 +1625,21 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
       {/* ======================================================== */}
       {/* 4. MODALS: HISTORY & DOCUMENT PREVIEW */}
       {/* ======================================================== */}
-      {showHistoryModal && selectedApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between border-b pb-3">
+      {mounted && showHistoryModal && selectedApp && createPortal(
+        <div
+          onClick={() => setShowHistoryModal(false)}
+          className="fixed inset-0 z-[999999] bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-2xl border border-gray-200/90 ring-1 ring-black/5 animate-in zoom-in-95 duration-200"
+          >
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="font-bold text-base text-gray-900">Application History - {selectedApp.id}</h3>
-              <button onClick={() => setShowHistoryModal(false)} className="p-1 text-gray-400 hover:text-gray-600">
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1643,20 +1659,30 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             </div>
             <button
               onClick={() => setShowHistoryModal(false)}
-              className="w-full py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-xl hover:bg-[#1a4a38]"
+              className="w-full py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl transition-colors shadow-md"
             >
               Close History
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {viewingDoc && (
-        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl animate-in zoom-in-95 border border-gray-200/90">
-            <div className="flex items-center justify-between border-b pb-3">
+      {mounted && viewingDoc && createPortal(
+        <div
+          onClick={() => setViewingDoc(null)}
+          className="fixed inset-0 z-[999999] bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-gray-200/90 ring-1 ring-black/5 animate-in zoom-in-95 duration-200"
+          >
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="font-bold text-sm text-gray-900">Viewing Document: {viewingDoc.name}</h3>
-              <button onClick={() => setViewingDoc(null)} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg">
+              <button
+                onClick={() => setViewingDoc(null)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1693,7 +1719,8 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
