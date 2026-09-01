@@ -385,14 +385,14 @@ export default function CustomersPage() {
       {/* ── Customers Table ── */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto w-full">
-          <div className="min-w-[620px]">
+          <div className="min-w-[680px]">
             {/* Table Header */}
             <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
               <div className="col-span-3">Customer</div>
-              <div className="col-span-2 hidden sm:block">Phone</div>
+              <div className="col-span-2">Phone</div>
               <div className="col-span-2 text-center">Applications</div>
               <div className="col-span-2 text-center">Pending Bal.</div>
-              <div className="col-span-1 text-center hidden md:block">Status</div>
+              <div className="col-span-1 text-center">Status</div>
               <div className="col-span-2 text-center">Actions</div>
             </div>
 
@@ -421,7 +421,7 @@ export default function CustomersPage() {
                   </div>
 
                   {/* Phone */}
-                  <div className="col-span-2 hidden sm:block">
+                  <div className="col-span-2">
                     <p className="text-xs text-gray-600 font-medium truncate">{c.phone}</p>
                   </div>
 
@@ -442,7 +442,7 @@ export default function CustomersPage() {
                   </div>
 
                   {/* Status */}
-                  <div className="col-span-1 hidden md:flex justify-center">
+                  <div className="col-span-1 flex justify-center">
                     <StatusBadge status={c.status} />
                   </div>
 
