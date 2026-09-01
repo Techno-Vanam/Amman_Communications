@@ -249,11 +249,14 @@ export class AppointmentsService {
       throw new BadRequestException('Invalid appointment date format for rescheduling');
     }
 
+    const originalDate = existing.rescheduledFrom || existing.appointmentDate || existing.preferredDate;
+
     return this.prisma.appointment.update({
       where: { id },
       data: {
         appointmentDate: newDate,
-        rescheduledFrom: existing.appointmentDate,
+        preferredDate: newDate,
+        rescheduledFrom: originalDate,
         rescheduleReason: dto.reason?.trim() || 'Rescheduled by administrator',
         status: AppointmentStatus.RESCHEDULED,
         ...(dto.mode !== undefined && { mode: dto.mode }),
