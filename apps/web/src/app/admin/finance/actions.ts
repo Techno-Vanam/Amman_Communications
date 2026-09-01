@@ -59,15 +59,61 @@ export async function fetchInvoicesAction(search?: string, status?: string) {
 
     const res = await apiFetch(`/admin/finance/invoices?${params.toString()}`);
 
+    let manualSalesRes: any = null;
+    if (!status || status === 'All' || status === 'Paid') {
+      const msParams = new URLSearchParams();
+      if (search) msParams.append('search', search);
+      manualSalesRes = await apiFetch(`/admin/finance/manual-sales?${msParams.toString()}`);
+    }
+
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
       return { error: errData.message || 'Failed to fetch invoices' };
     }
 
     const data = await res.json();
-    const items = data.items || data.data || [];
+    let items = data.items || data.data || [];
 
-    const mapped = items.map((inv: any) => ({
+    if (manualSalesRes && manualSalesRes.ok) {
+      const msData = await manualSalesRes.json();
+      const msItems = msData.items || msData.data || msData || [];
+      
+      const mappedMs = msItems.map((ms: any) => ({
+        id: ms.id,
+        invoiceNumber: ms.saleNumber,
+        appId: '—',
+        customerId: 'manual',
+        customer: ms.customerName,
+        email: '—',
+        phone: '—',
+        serviceType: ms.category, // using category here
+        governmentFee: 0,
+        serviceFee: 0,
+        totalCost: ms.amount,
+        paidAmount: ms.amount,
+        outstandingAmount: 0,
+        paymentsCount: 1,
+        dueDate: ms.createdAt ? ms.createdAt.split('T')[0] : '',
+        createdAt: ms.createdAt || '',
+        status: DB_TO_UI_STATUS[ms.status] || 'Paid',
+        notes: ms.details || '',
+        paymentMethod: ms.paymentMethod || 'CASH',
+        isManualSale: true,
+      }));
+      
+      items = [...items, ...mappedMs];
+      // sort by createdAt desc
+      items.sort((a: any, b: any) => {
+        const d1 = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const d2 = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return d2 - d1;
+      });
+    }
+
+    const mapped = items.map((inv: any) => {
+      if (inv.isManualSale) return inv;
+      
+      return {
       // IDs
       id: inv.id,
       invoiceNumber: inv.invoiceNumber || inv.id,
@@ -93,7 +139,9 @@ export async function fetchInvoicesAction(search?: string, status?: string) {
       // Status & notes
       status: DB_TO_UI_STATUS[inv.status] || 'Pending',
       notes: inv.notes || '',
-    }));
+      paymentMethod: inv.payments?.[0]?.paymentMethod || '—',
+    };
+    });
 
     return { success: true, data: mapped };
   } catch (error: any) {
@@ -232,6 +280,26 @@ export async function recordInvoicePaymentAction(
     return { success: true, data };
   } catch (error: any) {
     console.error('recordInvoicePaymentAction error:', error);
+    return { error: error.message || 'Network error' };
+  }
+}
+
+// ── Create Manual Sale ──────────────────────────────────────────────────
+export async function createManualSaleAction(data: { customerName: string; category: string; amount: number; paymentMethod?: string; details?: string }) {
+  try {
+    const res = await apiFetch(`/admin/finance/manual-sales`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      return { error: errData.message || 'Failed to create manual sale' };
+    }
+    const result = await res.json();
+    return { success: true, data: result };
+  } catch (error: any) {
+    console.error('createManualSaleAction error:', error);
     return { error: error.message || 'Network error' };
   }
 }
