@@ -63,21 +63,28 @@ enum PaymentStatus {
 }
 
 model Customer {
-  id           String         @id @default(cuid())
-  email        String         @unique
-  phone        String?
-  passwordHash String
-  name         String
-  address      String?
-  contactNumber String?
-  applications Application[]
-  documents    Document[]
-  appointments Appointment[]
-  invoices     Invoice[]
-  payments     Payment[]
-  status       CustomerStatus @default(ACTIVE)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id                 String         @id @default(cuid())
+  email              String         @unique
+  phone              String?
+  passwordHash       String
+  name               String
+  address            String?
+  contactNumber      String?
+  dob                String?
+  aadhaarNumber      String?
+  panNumber          String?
+  occupation         String?
+  altPhone           String?
+  emergencyContact   String?
+  isProfileCompleted Boolean        @default(false)
+  applications       Application[]
+  documents          Document[]
+  appointments       Appointment[]
+  invoices           Invoice[]
+  payments           Payment[]
+  status             CustomerStatus @default(ACTIVE)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
 }
 
 model Admin {
@@ -359,4 +366,18 @@ model Payment {
   @@index([customerId])
   @@index([status])
   @@index([paidAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  otpHash   String
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
 }

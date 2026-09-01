@@ -17,6 +17,16 @@ export class CustomerProfileService {
         id: true,
         name: true,
         email: true,
+        phone: true,
+        contactNumber: true,
+        address: true,
+        dob: true,
+        aadhaarNumber: true,
+        panNumber: true,
+        occupation: true,
+        altPhone: true,
+        emergencyContact: true,
+        isProfileCompleted: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -49,16 +59,40 @@ export class CustomerProfileService {
       }
     }
 
+    // If name, contactNumber, address or explicit flag is passed, profile is marked completed
+    const shouldMarkCompleted = dto.isProfileCompleted !== undefined
+      ? dto.isProfileCompleted
+      : Boolean(dto.name || dto.contactNumber || dto.address || existing.address || existing.phone);
+
     const updated = await this.prisma.customer.update({
       where: { id: customerId },
       data: {
         ...(dto.name ? { name: dto.name.trim() } : {}),
         ...(dto.email ? { email: dto.email.toLowerCase().trim() } : {}),
+        ...(dto.contactNumber ? { phone: dto.contactNumber, contactNumber: dto.contactNumber } : {}),
+        ...(dto.address !== undefined ? { address: dto.address?.trim() || null } : {}),
+        ...(dto.dob !== undefined ? { dob: dto.dob?.trim() || null } : {}),
+        ...(dto.aadhaarNumber !== undefined ? { aadhaarNumber: dto.aadhaarNumber?.trim() || null } : {}),
+        ...(dto.panNumber !== undefined ? { panNumber: dto.panNumber?.trim() || null } : {}),
+        ...(dto.occupation !== undefined ? { occupation: dto.occupation?.trim() || null } : {}),
+        ...(dto.altPhone !== undefined ? { altPhone: dto.altPhone?.trim() || null } : {}),
+        ...(dto.emergencyContact !== undefined ? { emergencyContact: dto.emergencyContact?.trim() || null } : {}),
+        isProfileCompleted: shouldMarkCompleted,
       },
       select: {
         id: true,
         name: true,
         email: true,
+        phone: true,
+        contactNumber: true,
+        address: true,
+        dob: true,
+        aadhaarNumber: true,
+        panNumber: true,
+        occupation: true,
+        altPhone: true,
+        emergencyContact: true,
+        isProfileCompleted: true,
         createdAt: true,
         updatedAt: true,
       },

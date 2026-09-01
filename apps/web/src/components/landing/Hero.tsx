@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Star, Shield, Calendar, ArrowRight, ChevronDown } from 'lucide-react';
+import { CheckCircle2, Star, Shield, Calendar, ArrowRight } from 'lucide-react';
 
 interface HeroProps {
   onOpenAppointmentModal: () => void;
@@ -70,16 +70,6 @@ export const Hero: React.FC<HeroProps> = ({ onOpenAppointmentModal }) => {
           </div>
         </div>
       </div>
-
-      {/* Bottom Scroll Cue */}
-      <a
-        href="#services"
-        className="mt-auto pt-4 flex flex-col items-center gap-1 text-slate-400 hover:text-brand-600 transition-colors text-xs font-medium cursor-pointer animate-bounce"
-        aria-label="Scroll to services"
-      >
-        <span>Explore</span>
-        <ChevronDown className="w-4 h-4" />
-      </a>
     </section>
   );
 };
