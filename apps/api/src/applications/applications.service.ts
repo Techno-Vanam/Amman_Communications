@@ -155,6 +155,7 @@ export class ApplicationsService {
     });
   }
 
+<<<<<<< HEAD
   async adminGetApplications(search?: string, status?: string, page: number = 1, limit: number = 10) {
     const skip = (page - 1) * limit;
 
@@ -289,6 +290,38 @@ export class ApplicationsService {
         notes: dto.notes || '',
       },
       include: { customer: true, documents: true },
+=======
+  async adminListApplications(filters: { search?: string; status?: any }) {
+    const where: any = {};
+    if (filters.status && filters.status !== 'ALL') {
+      where.status = filters.status;
+    }
+    if (filters.search && filters.search.trim()) {
+      const q = filters.search.trim();
+      where.OR = [
+        { applicationNumber: { contains: q, mode: 'insensitive' } },
+        { fullName: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+        { serviceType: { contains: q, mode: 'insensitive' } },
+        { title: { contains: q, mode: 'insensitive' } },
+      ];
+    }
+
+    return this.prisma.application.findMany({
+      where,
+      include: {
+        customer: {
+          select: { id: true, name: true, email: true, phone: true },
+        },
+        service: {
+          select: { id: true, name: true, totalFee: true },
+        },
+        documents: {
+          orderBy: { uploadedAt: 'asc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+>>>>>>> origin/backend-merge
     });
   }
 
@@ -296,7 +329,12 @@ export class ApplicationsService {
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
       include: {
+<<<<<<< HEAD
         customer: { select: { id: true, name: true, email: true, phone: true } },
+=======
+        customer: true,
+        service: true,
+>>>>>>> origin/backend-merge
         documents: true,
       },
     });
@@ -308,7 +346,11 @@ export class ApplicationsService {
     return application;
   }
 
+<<<<<<< HEAD
   async getApplicationDocuments(applicationId: string) {
+=======
+  async adminUpdateApplicationStatus(applicationId: string, status: any) {
+>>>>>>> origin/backend-merge
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
     });
@@ -317,9 +359,20 @@ export class ApplicationsService {
       throw new NotFoundException('Application not found');
     }
 
+<<<<<<< HEAD
     return this.prisma.document.findMany({
       where: { applicationId },
       orderBy: { uploadedAt: 'desc' },
+=======
+    return this.prisma.application.update({
+      where: { id: applicationId },
+      data: { status },
+      include: {
+        customer: true,
+        service: true,
+        documents: true,
+      },
+>>>>>>> origin/backend-merge
     });
   }
 }

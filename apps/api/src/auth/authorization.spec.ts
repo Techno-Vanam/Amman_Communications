@@ -29,10 +29,16 @@ function jwtFor(payload: { sub: string; role: string }) {
 
 function jwtForError() {
   return {
+<<<<<<< HEAD
     verifyAsync: async () => {
       throw new Error('JWT verification failed');
     },
   } as any;
+=======
+    admin: { findUnique: async () => (options.admin ? { id: 'admin-1' } : null) },
+    customer: { findUnique: async () => (options.customer ? { id: 'customer-1', status: 'ACTIVE' } : null) },
+  } as never;
+>>>>>>> origin/backend-merge
 }
 
 test('JwtAuthGuard verifies JWT token and attaches user payload', async () => {

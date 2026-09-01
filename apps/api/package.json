@@ -42,7 +42,11 @@
     "@nestjs/testing": "^11.2.1",
     "@repo/eslint-config": "workspace:*",
     "@repo/tsconfig": "workspace:*",
+<<<<<<< HEAD
     "@types/cookie-parser": "^1.4.10",
+=======
+    "@types/express": "^5.0.6",
+>>>>>>> origin/backend-merge
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.0",
     "eslint": "^9.25.0",

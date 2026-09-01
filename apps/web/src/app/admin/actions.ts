@@ -1,5 +1,6 @@
 'use server';
 
+<<<<<<< HEAD
 import { cookies } from 'next/headers';
 import { fetchInvoicesAction } from './finance/actions';
 import { fetchExpensesAction } from './expenses/actions';
@@ -14,6 +15,20 @@ async function getAuthHeader(): Promise<Record<string, string>> {
   const cookieStore = await cookies();
   const token = cookieStore.get('access_token')?.value;
   return token ? { Authorization: `Bearer ${token}` } : {};
+=======
+import { getAccessToken } from '@/lib/server-auth';
+
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003')
+  .replace(/\/api\/v1\/?$/, '')
+  .replace(/\/api\/?$/, '');
+
+async function getAuthHeader() {
+  const token = await getAccessToken();
+  return {
+    Authorization: token ? `Bearer ${token}` : '',
+    'Content-Type': 'application/json',
+  };
+>>>>>>> origin/backend-merge
 }
 
 export async function fetchAdminDashboardStatsAction() {
