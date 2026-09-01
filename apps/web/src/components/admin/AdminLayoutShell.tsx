@@ -73,13 +73,11 @@ function AdminSidebarNavContent({
         </div>
       </div>
 
-      {/* Scrollable Navigation */}
-      <div className="p-5 pt-4 space-y-1 overflow-y-auto flex-1 admin-scrollbar">
+      {/* Navigation */}
+      <div className="p-5 pt-4 space-y-1 flex-1">
         {/* Main Nav Section */}
         <div className="space-y-1">
-          <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
-            Main Menu
-          </p>
+
           <nav aria-label="Admin portal main navigation" className="space-y-1.5">
             {ADMIN_NAV_ITEMS.map((item) => {
               const Icon = item.icon;

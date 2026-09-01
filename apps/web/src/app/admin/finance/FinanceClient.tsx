@@ -440,7 +440,7 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
   const loadInvoices = async () => {
     setIsLoading(true);
     setErrorMsg(null);
-    const res = await fetchInvoicesAction(search, filterStatus);
+    const res = await fetchInvoicesAction(search, 'All');
     if (res.error) {
       setErrorMsg(res.error);
     } else if (res.success && res.data) {
@@ -453,7 +453,7 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
   useEffect(() => {
     // We already do client-side filtering, so we don't strictly need to refetch unless we want real-time updates.
     // We can just rely on the client-side filter for now to keep it fast.
-  }, [search, filterStatus]);
+  }, [search]);
 
   const filtered = useMemo(() => records.filter(r => {
     const q = search.toLowerCase();
@@ -676,8 +676,7 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between flex-wrap gap-2">
-          <p className="text-[11px] text-gray-400">Showing {filtered.length} of {records.length} records</p>
+        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-end flex-wrap gap-2">
           <div className="flex items-center gap-4 text-[11px] font-bold">
             <span className="text-gray-700">Collected: <span className="text-emerald-700">{fmtAmt(filtered.reduce((s, r) => s + r.paidAmount, 0))}</span></span>
             <span className="text-gray-700">Outstanding: <span className="text-rose-700">{fmtAmt(filtered.reduce((s, r) => s + r.outstandingAmount, 0))}</span></span>

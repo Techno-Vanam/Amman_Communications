@@ -375,7 +375,7 @@ export default function ExpensesPage() {
       {/* ── Filters Row ── */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
         {/* Search */}
-        <div className="relative w-full sm:max-w-sm mr-auto">
+        <div className="relative w-full flex-1 mr-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -498,8 +498,7 @@ export default function ExpensesPage() {
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-[11px] text-gray-400">Showing {filtered.length} of {expenses.length} expenses</p>
+        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-end gap-2">
           <p className="text-xs font-extrabold text-rose-700">
             Filtered Total: {fmtAmt(totalFiltered)}
           </p>

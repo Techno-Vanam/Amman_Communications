@@ -47,7 +47,7 @@ type FilterStatus = 'All' | 'Active' | 'Inactive' | 'Pending';
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     Active: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    Inactive: 'bg-gray-100 text-gray-600 border-gray-200',
+    Inactive: 'bg-rose-100 text-rose-800 border-rose-200',
     Pending: 'bg-amber-100 text-amber-800 border-amber-200',
   };
   const icons: Record<string, React.ReactNode> = {
@@ -271,7 +271,7 @@ export default function CustomersPage() {
   const loadCustomers = async () => {
     setIsLoading(true);
     setErrorMsg(null);
-    const res = await fetchCustomersAction(search, filterStatus);
+    const res = await fetchCustomersAction(search, 'All');
     if (res.error) {
       setErrorMsg(res.error);
       setCustomers([]);
@@ -299,7 +299,7 @@ export default function CustomersPage() {
 
   useEffect(() => {
     loadCustomers();
-  }, [search, filterStatus]);
+  }, [search]);
 
   async function handleAdd(data: Partial<Customer>) {
     setErrorMsg(null);
@@ -349,6 +349,10 @@ export default function CustomersPage() {
     Pending: customers.filter(c => c.status === 'Pending').length,
   };
 
+  const filteredCustomers = filterStatus === 'All' 
+    ? customers 
+    : customers.filter(c => c.status === filterStatus);
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
@@ -374,7 +378,7 @@ export default function CustomersPage() {
       {/* ── Search & Filter Bar ── */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
         {/* Search */}
-        <div className="relative w-full sm:max-w-sm mr-auto">
+        <div className="relative w-full flex-1 mr-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -444,17 +448,17 @@ export default function CustomersPage() {
             </div>
 
             {/* Rows */}
-            {customers.length === 0 ? (
+            {filteredCustomers.length === 0 ? (
               <div className="py-16 text-center">
                 <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
                 <p className="text-sm font-bold text-gray-400">No customers found</p>
                 <p className="text-xs text-gray-300 mt-1">Try changing your search or filter</p>
               </div>
             ) : (
-              customers.map((c, idx) => (
+              filteredCustomers.map((c, idx) => (
                 <div
                   key={c.id}
-                  className={`grid grid-cols-12 px-5 py-3.5 items-center transition-colors hover:bg-gray-50/80 ${idx !== customers.length - 1 ? 'border-b border-gray-100' : ''}`}
+                  className={`grid grid-cols-12 px-5 py-3.5 items-center transition-colors hover:bg-gray-50/80 ${idx !== filteredCustomers.length - 1 ? 'border-b border-gray-100' : ''}`}
                 >
                   {/* Name + Email */}
                   <div className="col-span-3 flex items-center gap-3 min-w-0">
@@ -518,13 +522,7 @@ export default function CustomersPage() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-[11px] text-gray-400 font-medium">
-            Showing {customers.length} of {customers.length} customers
-          </p>
-          <p className="text-[11px] text-gray-400">Last updated · Just now</p>
-        </div>
+
       </div>
 
       {/* ── Modals ── */}

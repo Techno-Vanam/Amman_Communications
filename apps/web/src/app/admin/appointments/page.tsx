@@ -486,7 +486,7 @@ export default function AppointmentsPage() {
   const loadAppointments = async () => {
     setIsLoading(true);
     setErrorMsg(null);
-    const res = await fetchAppointmentsAction(search, filterStatus);
+    const res = await fetchAppointmentsAction(search, 'All');
     if (res.error) {
       setErrorMsg(res.error);
       setAppointments([]);
@@ -523,7 +523,7 @@ export default function AppointmentsPage() {
 
   useEffect(() => {
     loadAppointments();
-  }, [search, filterStatus]);
+  }, [search]);
 
   useEffect(() => {
     fetchCustomersForSelectAction().then(res => {
@@ -644,7 +644,7 @@ export default function AppointmentsPage() {
 
       {/* ── Search & Filter ── */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
-        <div className="relative w-full sm:max-w-sm mr-auto">
+        <div className="relative w-full flex-1 mr-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -810,13 +810,7 @@ export default function AppointmentsPage() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
-          <p className="text-[11px] text-gray-400 font-medium">
-            Showing {filtered.length} of {appointments.length} appointments
-          </p>
-          <p className="text-[11px] text-gray-400">Reschedule only available for Confirmed &amp; Pending</p>
-        </div>
+
       </div>
 
       {/* ── Modals ── */}
