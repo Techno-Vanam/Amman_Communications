@@ -15,6 +15,7 @@ import {
   FileText,
   CalendarDays,
   Hourglass,
+  Edit2,
 } from 'lucide-react';
 import {
   fetchVerificationRecordsAction,
@@ -486,11 +487,7 @@ export default function VerificationPage() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-[11px] text-gray-400 font-medium">Showing {filtered.length} of {records.length} documents</p>
-          <p className="text-[11px] text-gray-400">{pendingCount} pending officer action</p>
-        </div>
+
       </div>
 
       {/* ── Modals ── */}

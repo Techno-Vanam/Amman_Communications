@@ -404,7 +404,7 @@ export default function ServicesPage() {
   const loadServices = async () => {
     setIsLoading(true);
     setErrorMsg(null);
-    const res = await fetchServicesAction(search, filterStatus);
+    const res = await fetchServicesAction(search, 'All');
     if (res.error) {
       setErrorMsg(res.error);
       setServices([]);
@@ -441,7 +441,7 @@ export default function ServicesPage() {
 
   useEffect(() => {
     loadServices();
-  }, [search, filterStatus]);
+  }, [search]);
 
   const filtered = useMemo(() => services.filter(s => {
     const q = search.toLowerCase();
@@ -548,7 +548,7 @@ export default function ServicesPage() {
 
       {/* ── Search + Filters ── */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
-        <div className="relative w-full sm:max-w-sm mr-auto">
+        <div className="relative w-full flex-1 mr-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input type="text" placeholder="Search by service name or ID..."
             value={search} onChange={e => setSearch(e.target.value)}
@@ -705,8 +705,7 @@ export default function ServicesPage() {
         ))}
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
-          <p className="text-[11px] text-gray-400">Showing {filtered.length} of {services.length} services</p>
+        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-end">
           <p className="text-[11px] text-gray-400">{counts.active} active · {counts.draft} drafts</p>
         </div>
       </div>

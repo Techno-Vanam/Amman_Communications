@@ -834,7 +834,7 @@ export default function ApplicationsPage() {
 
       {/* ── Search + Filter ── */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
-        <div className="relative w-full sm:max-w-sm mr-auto">
+        <div className="relative w-full flex-1 mr-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -949,8 +949,7 @@ export default function ApplicationsPage() {
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-[11px] text-gray-400 font-medium">Showing {filtered.length} of {apps.length} applications</p>
+        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-end gap-2">
           <button onClick={() => exportCSV(filtered)} className="text-[11px] font-bold text-[#12372A] hover:underline flex items-center gap-1">
             <Download className="w-3 h-3" /> Export filtered
           </button>

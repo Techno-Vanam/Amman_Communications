@@ -525,10 +525,7 @@ export default function PaymentsPage() {
         </div>
 
         {/* Table Pagination Footer - Render page numbers ONLY if totalPages > 1 */}
-        <div className="p-6 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 font-medium">
-          <div>
-            Showing {filteredTransactions.length === 0 ? 0 : 1} to {filteredTransactions.length} of {filteredTransactions.length} entries
-          </div>
+        <div className="p-6 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-end gap-4 text-xs text-gray-500 font-medium">
 
           {totalPages > 1 && (
             <div className="flex items-center gap-1.5">

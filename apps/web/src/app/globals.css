@@ -236,18 +236,8 @@ button { cursor: pointer; }
 
 /* Admin sidebar specific scrollbar */
 .admin-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-.admin-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-  margin: 8px 0;
-}
-.admin-scrollbar::-webkit-scrollbar-thumb {
-  background: #d1e8da;
-  border-radius: 100px;
-}
-.admin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #12372A;
+  display: none;
+  width: 0;
 }
 
 /* Firefox scrollbar */
@@ -256,6 +246,5 @@ button { cursor: pointer; }
   scrollbar-color: #c8d8cf transparent;
 }
 .admin-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #d1e8da transparent;
+  scrollbar-width: none;
 }
