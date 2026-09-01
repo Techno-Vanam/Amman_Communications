@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import {
   Plus,
@@ -24,15 +25,21 @@ import {
   Lock,
   Clock,
   RefreshCw,
-  Eye
+  Eye,
+  Filter,
+  ChevronDown
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser, getUserStorageKey } from '@/context/UserContext';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
+import CustomTabDropdown from '@/components/ui/CustomTabDropdown';
+import { fetchServicesAction, fetchApplicationsAction, createApplicationAction, uploadDocumentAction, fetchApplicationDocumentsAction, createCustomerPaymentAction, getDecryptedDocumentAction } from '@/app/portal/actions';
+import { Building, Loader2 } from 'lucide-react';
 
 interface ApplicationItem {
-  id: string;
+  id: string;    // Display id (applicationNumber like AMC-2026-...)
+  dbId?: string; // Real DB cuid used for API calls
   serviceType: string;
   submittedDate: string;
   updatedDate: string;
@@ -82,6 +89,9 @@ interface RequiredDocItem {
   uploadedFile: string;
   uploaded: 'Yes' | 'No';
   status: 'Not Uploaded' | 'Uploaded' | 'Under Review' | 'Approved';
+  storagePath?: string;
+  downloadUrl?: string;
+  mimeType?: string;
 }
 
 const SERVICE_REQUIRED_DOCS: Record<string, RequiredDocItem[]> = {
@@ -144,12 +154,37 @@ export default function ApplicationsPage() {
   // Mode: 'list' | 'create' | 'view'
   const [mode, setMode] = useState<'list' | 'create' | 'view'>('list');
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedService, setSelectedService] = useState('passport');
+  const [selectedService, setSelectedService] = useState('');
   const [activeTabFilter, setActiveTabFilter] = useState<'All' | 'Verification' | 'Processing' | 'Completed'>('All');
   const [searchQuery, setSearchQuery] = useState('');
   // History modal & document view modal toggles
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [viewingDoc, setViewingDoc] = useState<RequiredDocItem | null>(null);
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const [dbServices, setDbServices] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadServices() {
+      const fetched = await fetchServicesAction();
+      setDbServices(fetched);
+      if (fetched.length > 0) {
+        setSelectedService(fetched[0].id);
+      }
+    }
+    loadServices();
+  }, []);
+
+  const getServiceIcon = (serviceId: string) => {
+    if (serviceId.includes('fiber')) return Building;
+    if (serviceId.includes('residential')) return Home;
+    return FileText;
+  };
 
   // Automatically clear open view popups whenever pathname changes or component unmounts
   useEffect(() => {
@@ -182,6 +217,10 @@ export default function ApplicationsPage() {
   });
 
   const [cashVerified, setCashVerified] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Holds actual File objects staged at step 4 — keyed by docId
+  const [pendingFiles, setPendingFiles] = useState<Record<string, File>>({});
 
   const [requiredDocs, setRequiredDocs] = useState<RequiredDocItem[]>(SERVICE_REQUIRED_DOCS.passport);
 
@@ -191,7 +230,7 @@ export default function ApplicationsPage() {
     setRequiredDocs(docsForService);
   }, [selectedService]);
 
-  const serviceObj = SERVICES.find((s) => s.id === selectedService) || SERVICES[0];
+  const serviceObj = dbServices.find((s) => s.id === selectedService) || { name: 'Broadband Setup', id: '' };
 
   // Filter applications by tab and search query
   const filteredApps = applications.filter((app) => {
@@ -238,48 +277,243 @@ export default function ApplicationsPage() {
     return null;
   }, [selectedApp, user.email]);
 
-  const handleOpenView = (app: ApplicationItem) => {
+  const handleOpenView = async (app: ApplicationItem) => {
     setSelectedApp(app);
     setMode('view');
-  };
 
-  const handleFileUploadInDetail = (docId: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const fileName = e.target.files[0].name;
-      setRequiredDocs(
-        requiredDocs.map((doc) =>
-          doc.id === docId
-            ? { ...doc, uploadedFile: fileName, uploaded: 'Yes', status: 'Under Review' }
-            : doc
-        )
-      );
-      showToast('Document Uploaded / Updated!', `${fileName} submitted for verification.`);
+    // Fetch uploaded documents from DB and merge into requiredDocs
+    if (app.dbId) {
+      try {
+        const uploadedDocs = await fetchApplicationDocumentsAction(app.dbId);
+        if (uploadedDocs && uploadedDocs.length > 0) {
+          // Build a map of documentType -> uploaded doc
+          const uploadedMap = new Map<string, any>();
+          for (const doc of uploadedDocs) {
+            uploadedMap.set(doc.documentType, doc);
+          }
+
+          // Update requiredDocs to reflect what's already uploaded
+          setRequiredDocs((prevDocs) =>
+            prevDocs.map((rd) => {
+              // Match by converting doc name to the same format used in upload
+              const rdType = rd.name.toUpperCase().replace(/[^A-Z0-9]/g, '_');
+              const match = uploadedMap.get(rdType) || uploadedDocs.find((d: any) => d.id === rd.id || d.fileName === rd.uploadedFile);
+              if (match) {
+                return {
+                  ...rd,
+                  uploadedFile: match.originalFileName || match.fileName,
+                  storagePath: match.storagePath,
+                  downloadUrl: match.downloadUrl,
+                  mimeType: match.mimeType,
+                  uploaded: 'Yes' as const,
+                  status: match.status === 'APPROVED' ? 'Approved' as const
+                    : match.status === 'UPLOADED' || match.status === 'UNDER_REVIEW' ? 'Under Review' as const
+                    : 'Uploaded' as const,
+                };
+              }
+              return rd;
+            })
+          );
+        }
+      } catch (e) {
+        console.error('Error loading application documents:', e);
+      }
     }
   };
 
-  const handleDownloadDocFile = (fileName?: string, docName?: string) => {
-    const fileTitle = fileName || docName || 'Application-Document';
-    const content = `=====================================================
-AMMAN COMMUNICATIONS - OFFICIAL SERVICE DOCUMENT
-=====================================================
-Document Title   : ${fileTitle}
-Service Context  : Official Service Document Verification
-Security Code    : ${Math.random().toString(36).substring(2, 12).toUpperCase()}
-Timestamp        : ${new Date().toLocaleString()}
-Status           : Official Verified Record
-=====================================================`;
+  const handleFileUploadInDetail = async (docId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('File Too Large', 'Maximum allowed file size is 10 MB.');
+        return;
+      }
+      console.log('[UPLOAD] Started. docId:', docId, 'file:', file.name, 'size:', file.size, 'type:', file.type);
+      console.log('[UPLOAD] mode:', mode, 'selectedApp:', selectedApp?.id, 'dbId:', selectedApp?.dbId);
 
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    const cleanName = fileTitle.includes('.') ? fileTitle : `${fileTitle}.pdf`;
-    link.download = cleanName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Document Download Started', `${cleanName} saved to your device.`);
+      // VIEW MODE: existing application — upload immediately to DB
+      if (selectedApp && selectedApp.dbId) {
+        const appDbId = selectedApp.dbId;
+        console.log('[UPLOAD] VIEW MODE → uploading to DB. appDbId:', appDbId);
+
+        try {
+          const docMeta = requiredDocs.find((d) => d.id === docId);
+          const documentType = docMeta
+            ? docMeta.name.toUpperCase().replace(/[^A-Z0-9]/g, '_')
+            : 'OTHER';
+          console.log('[UPLOAD] documentType:', documentType);
+
+          // Convert to base64
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+          });
+          console.log('[UPLOAD] base64 ready. length:', base64Data.length);
+
+          const result = await uploadDocumentAction(appDbId, {
+            documentType,
+            fileName: file.name,
+            mimeType: file.type,
+            fileSize: file.size,
+            base64Data,
+          });
+          console.log('[UPLOAD] Server action result:', JSON.stringify(result).slice(0, 300));
+
+          if (result.error) {
+            showToast('Upload Failed', result.error);
+            return;
+          }
+
+          const savedDoc = result.document;
+
+          // Update local UI to reflect upload
+          setRequiredDocs(
+            requiredDocs.map((doc) =>
+              doc.id === docId
+                ? {
+                    ...doc,
+                    uploadedFile: file.name,
+                    storagePath: savedDoc?.storagePath,
+                    downloadUrl: savedDoc?.downloadUrl,
+                    mimeType: file.type,
+                    uploaded: 'Yes',
+                    status: 'Under Review',
+                  }
+                : doc
+            )
+          );
+          showToast('Document Uploaded!', `${file.name} saved and encrypted in your vault.`);
+        } catch (err) {
+          console.error('[UPLOAD] Exception during upload:', err);
+          showToast('Upload Error', `Unexpected error: ${err instanceof Error ? err.message : String(err)}`);
+        }
+        return;
+      }
+
+      // Fallback: selectedApp exists but dbId is missing
+      if (selectedApp && !selectedApp.dbId) {
+        console.warn('[UPLOAD] selectedApp exists but dbId is MISSING!', selectedApp);
+        showToast('Upload Error', 'Application ID not found. Please go back and re-open this application.');
+        return;
+      }
+
+      // CREATE MODE (wizard step 4): stage for upload after application is created
+      console.log('[UPLOAD] CREATE MODE → staging in pendingFiles');
+      setPendingFiles((prev) => ({ ...prev, [docId]: file }));
+      setRequiredDocs(
+        requiredDocs.map((doc) =>
+          doc.id === docId
+            ? { ...doc, uploadedFile: file.name, uploaded: 'Yes', status: 'Under Review' }
+            : doc
+        )
+      );
+      showToast('Document Staged', `${file.name} will be uploaded when you submit the application.`);
+    }
+  };
+
+  const handleDownloadDocFile = async (docItemOrFileName?: RequiredDocItem | string, docNameFallback?: string) => {
+    let targetDoc: RequiredDocItem | undefined;
+    let fileName = 'document';
+
+    if (typeof docItemOrFileName === 'object' && docItemOrFileName !== null) {
+      targetDoc = docItemOrFileName;
+      fileName = docItemOrFileName.uploadedFile || docItemOrFileName.name;
+    } else if (typeof docItemOrFileName === 'string') {
+      fileName = docItemOrFileName;
+      targetDoc = requiredDocs.find((d) => d.uploadedFile === docItemOrFileName || d.name === docItemOrFileName || d.name === docNameFallback);
+    }
+
+    if (targetDoc?.storagePath) {
+      showToast('Downloading Document', 'Decrypting and preparing your file...');
+      const res = await getDecryptedDocumentAction(targetDoc.storagePath);
+      if (res.success && res.base64) {
+        const rawBase64 = res.base64.includes(',') ? res.base64.split(',')[1] : res.base64;
+        const cleanBase64 = rawBase64.replace(/\s/g, '');
+        const byteCharacters = atob(cleanBase64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const finalFileName = res.fileName || fileName;
+        const ext = finalFileName.split('.').pop()?.toLowerCase();
+        let mime = res.mimeType || targetDoc.mimeType;
+        if (!mime || mime === 'application/octet-stream') {
+          if (ext === 'jpeg' || ext === 'jpg') mime = 'image/jpeg';
+          else if (ext === 'png') mime = 'image/png';
+          else if (ext === 'webp') mime = 'image/webp';
+          else if (ext === 'pdf') mime = 'application/pdf';
+          else mime = 'application/octet-stream';
+        }
+
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = finalFileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showToast('Download Complete', `${link.download} saved to your device.`);
+        return;
+      }
+    }
+
+    // Try fetching live documents from DB for this application
+    if (selectedApp?.dbId) {
+      try {
+        const docs = await fetchApplicationDocumentsAction(selectedApp.dbId);
+        const match = docs.find(
+          (d: any) =>
+            d.fileName === fileName ||
+            d.originalFileName === fileName ||
+            (targetDoc && d.documentType === targetDoc.name.toUpperCase().replace(/[^A-Z0-9]/g, '_'))
+        );
+        if (match?.storagePath) {
+          showToast('Downloading Document', 'Decrypting and preparing your file...');
+          const res = await getDecryptedDocumentAction(match.storagePath);
+          if (res.success && res.base64) {
+            const rawBase64 = res.base64.includes(',') ? res.base64.split(',')[1] : res.base64;
+            const cleanBase64 = rawBase64.replace(/\s/g, '');
+            const byteCharacters = atob(cleanBase64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const finalFileName = res.fileName || match.originalFileName || match.fileName || fileName;
+            const ext = finalFileName.split('.').pop()?.toLowerCase();
+            let mime = res.mimeType || match.mimeType;
+            if (!mime || mime === 'application/octet-stream') {
+              if (ext === 'jpeg' || ext === 'jpg') mime = 'image/jpeg';
+              else if (ext === 'png') mime = 'image/png';
+              else if (ext === 'webp') mime = 'image/webp';
+              else if (ext === 'pdf') mime = 'application/pdf';
+              else mime = 'application/octet-stream';
+            }
+
+            const blob = new Blob([byteArray], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = finalFileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast('Download Complete', `${link.download} saved to your device.`);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching live application document:', err);
+      }
+    }
+
+    showToast('Download Unavailable', 'Document file is not yet available in secure storage.');
   };
 
   const handleDownloadSummary = () => {
@@ -311,64 +545,129 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
     showToast('Summary Downloaded Successfully!', `Application-Summary-${selectedApp.id}.txt saved.`);
   };
 
-  // Hydrate applications from localStorage per user account
+  // Load applications from backend DB
   React.useEffect(() => {
-    try {
-      const storageKey = getUserStorageKey(user.email, 'amman_user_applications');
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        setApplications(JSON.parse(saved));
-      } else {
+    async function loadApplications() {
+      try {
+        const data = await fetchApplicationsAction();
+        setApplications(data.map((app: any) => ({
+          id: app.applicationNumber || app.id,
+          dbId: app.id, // real DB cuid for API calls
+          serviceType: app.serviceType,
+          submittedDate: app.submittedAt
+            ? new Date(app.submittedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          updatedDate: app.updatedAt
+            ? new Date(app.updatedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          addedBy: 'You' as const,
+          status: (app.status === 'COMPLETED' ? 'Completed' : app.status === 'PROCESSING' ? 'Processing' : 'Verification') as ApplicationItem['status'],
+          stepPhase: app.stepPhase || 1,
+          adminRemarks: app.notes || 'Application submitted successfully.',
+          assignedOfficer: app.assignedOfficer || 'Officer Rajesh Kumar',
+          estimatedDays: '7 days left',
+        })));
+      } catch (e) {
+        console.error('Error loading applications from DB:', e);
         setApplications([]);
       }
-    } catch (e) {
-      console.error('Error loading applications:', e);
-      setApplications([]);
     }
-  }, [user.email]);
+    loadApplications();
+  }, []);
 
-  const handleFinishCreate = () => {
-    const newId = `AMC-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+  const handleFinishCreate = async () => {
+    setSubmitting(true);
     const todayDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    // 1. Create the application in DB first
+    const result = await createApplicationAction({
+      serviceType: serviceObj.name,
+      fullName: details.applicantName,
+      email: details.applicantEmail,
+      phone: details.applicantPhone,
+      dateOfBirth: details.dob || undefined,
+      address: details.address || undefined,
+      notes: details.description || details.remarks || undefined,
+    });
+
+    if (result.error) {
+      showToast('Submission Failed', result.error);
+      setSubmitting(false);
+      return;
+    }
+
+    const savedApp = result.application;
+    // Use the real DB id for document upload, applicationNumber for display
+    const dbAppId: string = savedApp?.id || '';
+    const displayId: string = savedApp?.applicationNumber || savedApp?.id || `AMC-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    // 2. Upload any staged documents from step 4
+    const pendingEntries = Object.entries(pendingFiles);
+    if (dbAppId && pendingEntries.length > 0) {
+      const uploadResults = await Promise.allSettled(
+        pendingEntries.map(async ([docId, file]) => {
+          // Find doc metadata to get documentType
+          const docMeta = requiredDocs.find((d) => d.id === docId);
+          const documentType = docMeta
+            ? docMeta.name.toUpperCase().replace(/[^A-Z0-9]/g, '_')
+            : 'OTHER';
+
+          // Convert file to base64
+          const base64Data = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+          });
+
+          return uploadDocumentAction(dbAppId, {
+            documentType,
+            fileName: file.name,
+            mimeType: file.type,
+            fileSize: file.size,
+            base64Data,
+          });
+        })
+      );
+
+      const failed = uploadResults.filter((r) => r.status === 'rejected' || (r.status === 'fulfilled' && r.value?.error));
+      if (failed.length > 0) {
+        showToast('Some Documents Failed', `${failed.length} of ${pendingEntries.length} document(s) could not be uploaded. You can retry from the Documents page.`);
+      } else if (pendingEntries.length > 0) {
+        showToast('Documents Uploaded!', `${pendingEntries.length} document(s) saved to the database.`);
+      }
+    }
+
     const newApp: ApplicationItem = {
-      id: newId,
+      id: displayId,
+      dbId: dbAppId, // store real cuid for future uploads
       serviceType: serviceObj.name,
       submittedDate: todayDate,
       updatedDate: todayDate,
       addedBy: 'You',
       status: 'Verification',
       stepPhase: 1,
-      phaseDates: {
-        1: todayDate
-      },
+      phaseDates: { 1: todayDate },
       adminRemarks: 'Application submitted successfully. Verification officer assigned.',
       assignedOfficer: 'Officer Rajesh Kumar',
       estimatedDays: '7 days left'
     };
-    const updated = [newApp, ...applications];
-    setApplications(updated);
-    try {
-      const storageKey = getUserStorageKey(user.email, 'amman_user_applications');
-      localStorage.setItem(storageKey, JSON.stringify(updated));
-    } catch (e) {
-      console.error('Error saving application:', e);
-    }
+    setApplications([newApp, ...applications]);
+    setPendingFiles({});
 
-    // Record payment transaction so Step 3 payment reflects in the Payments & Receipts section
+    // Record payment locally for Payments & Receipts page (fallback)
     try {
       const paymentStorageKey = getUserStorageKey(user.email, 'amman_user_payments');
       const savedPayments = localStorage.getItem(paymentStorageKey);
       const existingPayments = savedPayments ? JSON.parse(savedPayments) : [];
-
       const parsedAmount = parseFloat(details.paymentAmount) || 2000;
       const isCashPending = details.paymentMode.includes('Cash') && !cashVerified;
       const todayISO = new Date().toISOString().split('T')[0];
-
       const newPaymentTxn = {
         id: details.paymentRef && details.paymentRef.startsWith('TXN-')
           ? details.paymentRef
           : `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
-        appId: newId,
+        appId: displayId,
         service: serviceObj.name,
         totalAmount: parsedAmount,
         paidAmount: isCashPending ? 0 : parsedAmount,
@@ -377,16 +676,26 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
         status: isCashPending ? 'Pending' : 'Paid',
         date: todayISO
       };
+      localStorage.setItem(paymentStorageKey, JSON.stringify([newPaymentTxn, ...existingPayments]));
 
-      const updatedPayments = [newPaymentTxn, ...existingPayments];
-      localStorage.setItem(paymentStorageKey, JSON.stringify(updatedPayments));
+      // Also save to DB (Invoice + Payment)
+      if (dbAppId) {
+        createCustomerPaymentAction({
+          applicationId: dbAppId,
+          amount: isCashPending ? 0 : parsedAmount,
+          serviceFee: parsedAmount,
+          paymentMode: details.paymentMode,
+          reference: newPaymentTxn.id,
+        }).catch((e) => console.error('Error saving payment to DB:', e));
+      }
     } catch (e) {
       console.error('Error saving payment transaction:', e);
     }
 
+    setSubmitting(false);
     setMode('list');
     setCurrentStep(1);
-    showToast('Application Submitted Successfully!', `Application ${newId} registered and payment recorded.`);
+    showToast('Application Submitted!', `Application ${displayId} saved${pendingEntries.length > 0 ? ' with documents' : ''}.`);
   };
 
   return (
@@ -463,14 +772,23 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
           <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-2xs space-y-6">
             {/* Top Control Bar with Search */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div className="bg-gray-100/90 p-1.5 rounded-full inline-flex items-center gap-1 border border-gray-200/60 overflow-x-auto max-w-full shrink-0 scrollbar-none">
+              {/* Mobile Custom Tab Dropdown (Animated Custom Menu - No "Filter:" text) */}
+              <CustomTabDropdown
+                value={activeTabFilter}
+                options={['All', 'Verification', 'Processing', 'Completed']}
+                onChange={(val) => setActiveTabFilter(val)}
+                className="sm:hidden self-start"
+              />
+
+              {/* Desktop Capsule Filter Tabs */}
+              <div className="hidden sm:inline-flex bg-gray-100/90 p-1.5 rounded-full items-center gap-1 border border-gray-200/60 shrink-0">
                 {(['All', 'Verification', 'Processing', 'Completed'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTabFilter(tab)}
                     className={`px-4 py-1.5 rounded-full transition-all text-xs whitespace-nowrap ${
                       activeTabFilter === tab
-                        ? 'bg-white text-gray-900 font-extrabold shadow-xs'
+                        ? 'bg-[#12372A] text-white font-extrabold shadow-xs'
                         : 'text-gray-600 hover:text-gray-900 font-semibold'
                     }`}
                   >
@@ -735,10 +1053,17 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             </h2>
 
             {/* Stepper Nodes */}
-            <div className="relative pt-4 pb-2 overflow-x-auto">
-              <div className="flex items-start justify-between min-w-[700px] relative">
-                {/* Connecting Track Line */}
-                <div className="absolute top-5 left-8 right-8 h-1 bg-gray-200 -z-0" />
+            <div className="relative pt-2 pb-2 w-full">
+              <div className="w-full grid grid-cols-8 relative py-1">
+                {/* Connecting Track Line (100% Equal Center-to-Center Spacing) */}
+                <div className="absolute top-[12px] sm:top-[18px] left-[6.25%] right-[6.25%] h-1 bg-gray-200 z-0 overflow-hidden rounded-full">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#12372A] to-[#2d6a4f] rounded-full transition-all duration-500 ease-in-out"
+                    style={{
+                      width: `${Math.min(100, Math.max(0, ((selectedApp.stepPhase - 1) / (TRACKER_PHASES.length - 1)) * 100))}%`
+                    }}
+                  />
+                </div>
 
                 {TRACKER_PHASES.map((phase) => {
                   const isCompleted = phase.step < selectedApp.stepPhase;
@@ -755,14 +1080,14 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                   }
 
                   return (
-                    <div key={phase.step} className="flex flex-col items-center text-center space-y-2 z-10 w-24">
+                    <div key={phase.step} className="flex flex-col items-center text-center space-y-1 z-10 px-0.5">
                       {/* Step Circle */}
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-2xs ${
+                        className={`w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-[10px] sm:text-xs transition-all shadow-2xs ${
                           isCompleted
-                            ? 'bg-[#12372A] text-white ring-4 ring-gray-300'
+                            ? 'bg-[#12372A] text-white ring-2 sm:ring-4 ring-gray-300'
                             : isActive
-                            ? 'bg-[#1c3a63] text-white ring-4 ring-gray-300 scale-110'
+                            ? 'bg-[#1c3a63] text-white ring-2 sm:ring-4 ring-gray-300 scale-105'
                             : 'bg-white text-gray-800'
                         }`}
                         style={{
@@ -770,16 +1095,16 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                           backgroundColor: isCompleted ? '#12372A' : isActive ? '#1c3a63' : '#ffffff'
                         }}
                       >
-                        {isCompleted ? <Check className="w-5 h-5 text-white stroke-[3]" /> : phase.step}
+                        {isCompleted ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white stroke-[3]" /> : phase.step}
                       </div>
 
                       {/* Step Title & Date */}
                       <div className="space-y-0.5">
-                        <p className={`text-[11px] font-bold leading-tight ${isActive ? 'text-[#1c3a63]' : isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
+                        <p className={`text-[7px] sm:text-[9px] md:text-[11px] font-bold leading-tight line-clamp-2 ${isActive ? 'text-[#1c3a63]' : isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
                           {phase.title}
                         </p>
                         {phaseDate && (
-                          <p className="text-[10px] text-gray-500 font-medium">{phaseDate}</p>
+                          <p className="text-[6px] sm:text-[8px] md:text-[10px] text-gray-500 font-medium hidden sm:block">{phaseDate}</p>
                         )}
                       </div>
                     </div>
@@ -951,8 +1276,8 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
 
           {currentStep === 1 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {SERVICES.map((srv) => {
-                const Icon = srv.icon;
+              {dbServices.map((srv) => {
+                const Icon = getServiceIcon(srv.id);
                 const isSelected = selectedService === srv.id;
                 return (
                   <div
@@ -968,13 +1293,13 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                       <div className="w-10 h-10 rounded-xl bg-white text-[#12372A] flex items-center justify-center border border-gray-200">
                         <Icon className="w-5 h-5 text-[#12372A]" />
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                        {srv.tag}
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200/50">
+                        Active
                       </span>
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-gray-900">{srv.name}</h3>
-                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{srv.desc}</p>
+                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{srv.description || 'Service description not provided'}</p>
                     </div>
                   </div>
                 );
@@ -1309,9 +1634,14 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             ) : (
               <button
                 onClick={handleFinishCreate}
-                className="px-6 py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-full hover:bg-[#1a4a38] shadow-md"
+                disabled={submitting}
+                className="px-6 py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-full hover:bg-[#1a4a38] shadow-md flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Submit Application
+                {submitting ? (
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Submitting…</span></>
+                ) : (
+                  <span>Submit Application</span>
+                )}
               </button>
             )}
           </div>
@@ -1321,12 +1651,21 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
       {/* ======================================================== */}
       {/* 4. MODALS: HISTORY & DOCUMENT PREVIEW */}
       {/* ======================================================== */}
-      {showHistoryModal && selectedApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between border-b pb-3">
+      {mounted && showHistoryModal && selectedApp && createPortal(
+        <div
+          onClick={() => setShowHistoryModal(false)}
+          className="fixed inset-0 z-[999999] bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-2xl border border-gray-200/90 ring-1 ring-black/5 animate-in zoom-in-95 duration-200"
+          >
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="font-bold text-base text-gray-900">Application History - {selectedApp.id}</h3>
-              <button onClick={() => setShowHistoryModal(false)} className="p-1 text-gray-400 hover:text-gray-600">
+              <button
+                onClick={() => setShowHistoryModal(false)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1346,20 +1685,30 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             </div>
             <button
               onClick={() => setShowHistoryModal(false)}
-              className="w-full py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-xl hover:bg-[#1a4a38]"
+              className="w-full py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl transition-colors shadow-md"
             >
               Close History
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {viewingDoc && (
-        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/70 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl animate-in zoom-in-95 border border-gray-200/90">
-            <div className="flex items-center justify-between border-b pb-3">
+      {mounted && viewingDoc && createPortal(
+        <div
+          onClick={() => setViewingDoc(null)}
+          className="fixed inset-0 z-[999999] bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl border border-gray-200/90 ring-1 ring-black/5 animate-in zoom-in-95 duration-200"
+          >
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="font-bold text-sm text-gray-900">Viewing Document: {viewingDoc.name}</h3>
-              <button onClick={() => setViewingDoc(null)} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg">
+              <button
+                onClick={() => setViewingDoc(null)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1396,7 +1745,8 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

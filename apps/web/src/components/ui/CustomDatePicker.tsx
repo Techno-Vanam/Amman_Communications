@@ -57,8 +57,12 @@ export default function CustomDatePicker({
   const todayStr = formatYYYYMMDD(todayYear, todayMonth, todayDate);
 
   // Effective maxDate & minDate
-  const effectiveMaxDate = maxDate || (disableFuture ? todayStr : undefined);
-  const effectiveMinDate = minDate || (disablePast ? todayStr : undefined);
+  const effectiveMaxDate = disableFuture
+    ? (maxDate ? (maxDate < todayStr ? maxDate : todayStr) : todayStr)
+    : maxDate;
+  const effectiveMinDate = disablePast
+    ? (minDate ? (minDate > todayStr ? minDate : todayStr) : todayStr)
+    : minDate;
 
   // Parse initial selected date or fallback to today
   const parseDate = (str: string): Date => {

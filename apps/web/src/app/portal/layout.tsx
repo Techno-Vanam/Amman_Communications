@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   CalendarPlus,
@@ -17,11 +17,14 @@ import {
   X,
   LogOut,
   ShieldCheck,
-  ChevronDown,
-  Plus
+  ShieldAlert,
+  Lock,
+  Plus,
+  ChevronRight
 } from 'lucide-react';
 import { NotificationProvider, useNotifications } from '@/context/NotificationContext';
 import { UserProvider, useUser } from '@/context/UserContext';
+import { fetchProfileAction } from '@/app/portal/actions';
 
 const MAIN_NAV_ITEMS = [
   { name: 'Dashboard', href: '/portal/dashboard', icon: LayoutDashboard },
@@ -35,7 +38,8 @@ const MAIN_NAV_ITEMS = [
 function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen: boolean; setMobileMenuOpen: (v: boolean) => void }) {
   const pathname = usePathname();
   const { unreadCount } = useNotifications();
-  const { logoutUser } = useUser();
+  const { user, logoutUser } = useUser();
+  const isProfileLocked = user.isProfileCompleted === false;
 
   // Distinguish Profile vs Settings pages so ONLY ONE gets highlighted
   const isProfileActive = pathname === '/portal/profile';
@@ -46,7 +50,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
       className={`
         fixed inset-y-0 left-0 z-40 w-72 md:w-60 lg:w-72 bg-white text-gray-800 flex flex-col justify-between transition-transform duration-300 ease-in-out md:static md:translate-x-0 print:hidden
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-3 lg:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:sticky md:top-4 overflow-hidden print:hidden
+        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-3 lg:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:shrink-0 overflow-hidden print:hidden
       `}
     >
       {/* Scrollable Top Area: Brand & Navigation */}
@@ -57,7 +61,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
             <ShieldCheck className="w-6 h-6 text-[#a8d5b9]" />
           </div>
           <div>
-            <Link href="/portal/dashboard" className="text-lg font-bold tracking-tight text-[#12372A] hover:opacity-80 transition-opacity block leading-tight">
+            <Link href={isProfileLocked ? "/portal/profile" : "/portal/dashboard"} className="text-lg font-bold tracking-tight text-[#12372A] hover:opacity-80 transition-opacity block leading-tight">
               Amman Comm
             </Link>
             <p className="text-[10px] font-bold tracking-wider text-gray-400 uppercase mt-0.5">
@@ -74,19 +78,23 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
               const Icon = item.icon;
               const isActive = pathname === item.href || (item.href !== '/portal/dashboard' && pathname.startsWith(item.href));
               const badgeValue = item.name === 'Notifications' && unreadCount > 0 ? String(unreadCount) : null;
+              const targetHref = isProfileLocked ? '/portal/profile' : item.href;
 
               return (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={targetHref}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`
                     flex items-center justify-between px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 group
                     ${isActive
                       ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold shadow-2xs'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-semibold'
+                      : isProfileLocked
+                        ? 'text-gray-400 hover:bg-amber-50/60 hover:text-amber-800'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-semibold'
                     }
                   `}
+                  title={isProfileLocked ? 'Complete your profile setup to unlock' : item.name}
                 >
                   <div className="flex items-center space-x-3">
                     <div
@@ -102,11 +110,14 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
                     </div>
                     <span className="text-xs">{item.name}</span>
                   </div>
-                  {badgeValue && (
+
+                  {isProfileLocked ? (
+                    <Lock className="w-3.5 h-3.5 text-amber-500 mr-1" />
+                  ) : badgeValue ? (
                     <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500 text-white shadow-2xs mr-1">
                       {badgeValue}
                     </span>
-                  )}
+                  ) : null}
                 </Link>
               );
             })}
@@ -141,12 +152,19 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
           >
             <User className="w-4 h-4" />
           </div>
-          <span>Profile</span>
+          <span className="flex items-center gap-1.5">
+            <span>Profile</span>
+            {isProfileLocked && (
+              <span className="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[9px] font-bold">
+                Setup Required
+              </span>
+            )}
+          </span>
         </Link>
 
         {/* Settings Link */}
         <Link
-          href="/portal/settings"
+          href={isProfileLocked ? "/portal/profile" : "/portal/settings"}
           onClick={() => setMobileMenuOpen(false)}
           className={`
             flex items-center space-x-3 px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 group
@@ -268,7 +286,7 @@ function PortalTopHeader() {
   const { title, subtitle, action } = getHeaderInfo();
 
   return (
-    <header className="mb-6 flex items-center justify-between gap-4 print:hidden">
+    <header className="mb-3.5 sm:mb-4 flex items-center justify-between gap-4 print:hidden">
       {/* Title & Subtitle - Aligned to the left */}
       <div className="min-w-0">
         <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
@@ -288,81 +306,149 @@ function PortalTopHeader() {
         {/* Notification Bell */}
         <Link
           href="/portal/notifications"
-          className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative shrink-0"
+          className="w-10 h-10 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative shrink-0"
           title="Notifications"
         >
-          <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+          <Bell className="w-5 h-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] sm:min-w-[20px] h-[18px] sm:h-[20px] px-1 rounded-full bg-rose-500 text-white text-[9px] sm:text-[10px] font-extrabold flex items-center justify-center shadow-xs border-2 border-white leading-none shrink-0">
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center shadow-xs border-2 border-white leading-none shrink-0">
               {unreadCount}
             </span>
           )}
         </Link>
 
-        {/* User Profile Pill */}
+        {/* User Profile Badge: Small screen = w-10 h-10 single circle; Big screen = h-10 pill with avatar + name & view profile */}
         <Link
           href="/portal/profile"
-          className="flex items-center gap-2 sm:gap-3.5 bg-white border border-gray-200/90 rounded-full pl-1.5 sm:pl-3 pr-2.5 sm:pr-6 py-1 sm:py-2 shadow-xs hover:bg-[#f0f7f2] hover:border-[#a8d5b9] hover:shadow-sm transition-all"
+          className="h-10 w-10 sm:w-auto rounded-full bg-[#12372A] sm:bg-white border border-[#12372A] sm:border-gray-200/90 hover:border-gray-300 hover:bg-[#1a4a38] sm:hover:bg-gray-50 transition-all shadow-xs flex items-center justify-center sm:justify-start p-0 sm:p-1 sm:pr-3 sm:gap-2 group shrink-0"
+          title={`Profile (${user.name})`}
         >
-          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-xs sm:text-sm flex items-center justify-center border border-[#a8d5b9]/30 shadow-2xs shrink-0">
+          <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-[#12372A] text-white font-extrabold text-xs flex items-center justify-center shrink-0 border border-transparent sm:border-[#12372A] shadow-2xs">
             {user.initials}
           </div>
-          <div className="text-left leading-tight hidden sm:block">
-            <p className="text-sm font-extrabold text-gray-900">{user.name}</p>
-            <p className="text-xs text-gray-500 font-semibold mt-0.5">View Profile</p>
+          <div className="hidden sm:flex flex-col text-left pr-0.5">
+            <span className="text-[11px] font-bold text-gray-900 group-hover:text-[#12372A] leading-tight truncate max-w-[110px] lg:max-w-[140px]">
+              {user.name}
+            </span>
+            <span className="text-[10px] font-semibold text-[#12372A]/75 group-hover:text-[#12372A] leading-tight flex items-center gap-0.5 mt-0.5">
+              View profile
+              <ChevronRight className="w-2.5 h-2.5 text-[#12372A]/60 group-hover:translate-x-0.5 transition-transform" />
+            </span>
           </div>
-          <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 ml-0.5 sm:ml-1" />
         </Link>
       </div>
     </header>
   );
 }
 
-export default function PortalLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+function PortalContentWrapper({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, updateUser } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Sync profile data from database on mount
+  useEffect(() => {
+    async function checkProfile() {
+      try {
+        const dbProfile = await fetchProfileAction();
+        if (dbProfile) {
+          updateUser({
+            name: dbProfile.name,
+            email: dbProfile.email,
+            phone: dbProfile.phone || dbProfile.contactNumber || '+91 ',
+            address: dbProfile.address || '',
+            dob: dbProfile.dob || '',
+            aadhaarNumber: dbProfile.aadhaarNumber || '',
+            panNumber: dbProfile.panNumber || '',
+            occupation: dbProfile.occupation || '',
+            altPhone: dbProfile.altPhone || '+91 ',
+            emergencyContact: dbProfile.emergencyContact || '',
+            isProfileCompleted: dbProfile.isProfileCompleted ?? false,
+          });
+        }
+      } catch (err) {
+        console.error('Error syncing profile in layout:', err);
+      }
+    }
+    checkProfile();
+  }, []);
+
+  const isProfileLocked = user.isProfileCompleted === false && pathname !== '/portal/profile';
+
+  return (
+    <div className="min-h-screen md:h-screen min-h-dvh bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-x-hidden md:overflow-hidden print:bg-white print:h-auto print:overflow-visible print:p-0 print:m-0">
+      {/* Profile Setup Required Modal Guard */}
+      {isProfileLocked && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-gray-100 text-center space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 mx-auto flex items-center justify-center border border-amber-200 shadow-inner">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+            <div>
+              <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">Complete Profile Setup</h3>
+              <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                Welcome to Amman Communications! To comply with official service verification and unlock your account, please complete your profile information first.
+              </p>
+            </div>
+            <Link
+              href="/portal/profile"
+              className="w-full py-3 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl transition-all shadow-md block"
+            >
+              Complete Profile Setup &rarr;
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Header */}
+      <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-40 border-b border-[#1f4e3c] print:hidden">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 rounded-xl bg-[#a8d5b9]/20 flex items-center justify-center border border-[#a8d5b9]/40 text-[#a8d5b9]">
+            <ShieldCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="font-bold text-base tracking-tight text-white block leading-none">Amman Comm</span>
+            <span className="text-[10px] text-[#a8d5b9] font-medium tracking-wide">SERVICES MANAGEMENT</span>
+          </div>
+        </div>
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-[#a8d5b9] transition-colors"
+          aria-label="Toggle navigation menu"
+        >
+          {mobileMenuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
+        </button>
+      </div>
+
+      {/* Sidebar Navigation */}
+      <PortalSidebarContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+
+      {/* Main Content Area */}
+      <main className="min-w-0 flex-1 h-full overflow-y-auto p-3.5 sm:p-4 md:p-5 lg:p-8 max-w-full print:h-auto print:overflow-visible print:p-0 print:m-0 print:bg-white print:w-full">
+        <PortalTopHeader />
+        {children}
+      </main>
+
+      {/* Backdrop for Mobile */}
+      {mobileMenuOpen && (
+        <div
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
+        />
+      )}
+    </div>
+  );
+}
+
+export default function PortalLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <UserProvider>
       <NotificationProvider>
-        <div className="min-h-screen bg-[#f4f6f8] print:bg-white text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-x-hidden print:p-0 print:m-0">
-          {/* Mobile Header */}
-          <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c] print:hidden">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-xl bg-[#a8d5b9]/20 flex items-center justify-center border border-[#a8d5b9]/40 text-[#a8d5b9]">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="font-bold text-base tracking-tight text-white block leading-none">Amman Comm</span>
-                <span className="text-[10px] text-[#a8d5b9] font-medium tracking-wide">SERVICES MANAGEMENT</span>
-              </div>
-            </div>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-[#a8d5b9] transition-colors"
-              aria-label="Toggle navigation menu"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
-            </button>
-          </div>
-
-          {/* Sidebar Navigation */}
-          <PortalSidebarContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
-
-          {/* Main Content Area */}
-          <main className="min-w-0 flex-1 p-3.5 sm:p-4 md:p-5 lg:p-8 overflow-y-auto max-w-full overflow-x-hidden print:p-0 print:m-0 print:bg-white print:w-full">
-            <PortalTopHeader />
-            {children}
-          </main>
-
-          {/* Backdrop for Mobile */}
-          {mobileMenuOpen && (
-            <div
-              onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
-            />
-          )}
-        </div>
+        <PortalContentWrapper>
+          {children}
+        </PortalContentWrapper>
       </NotificationProvider>
     </UserProvider>
   );
-}
+}

@@ -5,22 +5,23 @@ import {
   Bell,
   Shield,
   Save,
-  CheckCircle2,
-  KeyRound
+  CheckCircle2
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import CustomSelect from '@/components/ui/CustomSelect';
 
+import { changePasswordAction } from '@/app/portal/actions';
+
 export default function SettingsPage() {
   const { showToast } = useNotifications();
   const [saved, setSaved] = useState(false);
+  const [loadingSecurity, setLoadingSecurity] = useState(false);
 
   // Security Form
   const [securityForm, setSecurityForm] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
-    twoFactor: false
   });
 
   // Notification Preferences
@@ -42,10 +43,42 @@ export default function SettingsPage() {
     return val;
   }
 
-  const handleSaveSecurity = (e: React.FormEvent) => {
+  const handleSaveSecurity = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!securityForm.currentPassword) {
+      showToast('Validation Error', 'Please enter your current password.');
+      return;
+    }
+    if (!securityForm.newPassword || securityForm.newPassword.length < 8) {
+      showToast('Validation Error', 'New password must be at least 8 characters long.');
+      return;
+    }
+    if (securityForm.newPassword !== securityForm.confirmPassword) {
+      showToast('Validation Error', 'New password and confirmation do not match.');
+      return;
+    }
+
+    setLoadingSecurity(true);
+    const res = await changePasswordAction({
+      currentPassword: securityForm.currentPassword,
+      newPassword: securityForm.newPassword,
+      confirmNewPassword: securityForm.confirmPassword,
+    });
+    setLoadingSecurity(false);
+
+    if (res.error) {
+      showToast('Password Update Failed', res.error);
+      return;
+    }
+
     setSaved(true);
-    showToast('Security Settings Updated!', 'Your password and authentication settings have been updated.');
+    setSecurityForm({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    });
+    showToast('Password Changed!', 'Your login password has been updated in the database.');
     setTimeout(() => setSaved(false), 3000);
   };
 
@@ -74,7 +107,7 @@ export default function SettingsPage() {
             <h2 className="text-lg font-bold text-gray-900">Security &amp; Password</h2>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            Update your login password and configure two-factor authentication (2FA).
+            Update your login password to keep your account secure.
           </p>
           <div className="mt-4 border-b border-gray-100" />
         </div>
@@ -114,30 +147,14 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* 2FA Toggle */}
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200 text-xs">
-          <div className="flex items-center gap-3">
-            <KeyRound className="w-5 h-5 text-[#1c3a63]" />
-            <div>
-              <p className="font-bold text-gray-900">Two-Factor Authentication (2FA)</p>
-              <p className="text-[11px] text-gray-500 mt-0.5">Require an OTP verification code sent to your phone upon login.</p>
-            </div>
-          </div>
-          <input
-            type="checkbox"
-            checked={securityForm.twoFactor}
-            onChange={(e) => setSecurityForm({ ...securityForm, twoFactor: e.target.checked })}
-            className="w-5 h-5 text-[#0e2a47] rounded cursor-pointer"
-          />
-        </div>
-
         <div className="pt-2 flex justify-end">
           <button
             type="submit"
-            className="px-6 py-2.5 bg-[#0e2a47] hover:bg-[#153e68] text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-2"
+            disabled={loadingSecurity}
+            className="px-6 py-2.5 bg-[#0e2a47] hover:bg-[#153e68] text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Save className="w-4 h-4" />
-            <span>Update Password &amp; Security</span>
+            <span>{loadingSecurity ? 'Updating Password...' : 'Update Password'}</span>
           </button>
         </div>
       </form>

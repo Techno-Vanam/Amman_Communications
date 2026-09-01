@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   BookOpen,
@@ -29,16 +29,13 @@ import {
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
 
-const SERVICES = [
-  { id: 'passport', name: 'Passport Renewal', icon: BookOpen },
-  { id: 'property', name: 'Property Registration', icon: Home },
-  { id: 'dl', name: 'Driving License', icon: Car },
-  { id: 'pan', name: 'PAN Card', icon: CreditCard },
-  { id: 'aadhaar', name: 'Aadhaar Update', icon: Fingerprint },
-  { id: 'ec_patta', name: 'EC / Patta / Chitta', icon: FileText },
-  { id: 'legal', name: 'Legal & Affidavit', icon: Scale },
-  { id: 'other', name: 'Other Services', icon: MoreHorizontal },
-];
+import { useNotifications } from '@/context/NotificationContext';
+import { useUser } from '@/context/UserContext';
+import {
+  createAppointmentAction,
+  fetchServicesAction,
+  fetchOfficesAction,
+} from '@/app/portal/actions';
 
 const STEPS = [
   { id: 1, label: 'Service' },
@@ -48,14 +45,32 @@ const STEPS = [
   { id: 5, label: 'Success' },
 ];
 
-import { useNotifications } from '@/context/NotificationContext';
-import { useUser, getUserStorageKey } from '@/context/UserContext';
+function convertTimeTo24h(time12h: string): string {
+  const parts = time12h.split(' ');
+  if (parts.length < 2) return '10:30';
+  const time = parts[0];
+  const modifier = parts[1];
+  let [hours, minutes] = time.split(':');
+  if (hours === '12') {
+    hours = '00';
+  }
+  if (modifier === 'PM') {
+    hours = String(parseInt(hours, 10) + 12);
+  }
+  return `${hours.padStart(2, '0')}:${minutes}`;
+}
 
 export default function BookAppointmentPage() {
   const { showToast } = useNotifications();
   const { user } = useUser();
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedService, setSelectedService] = useState('property');
+  
+  const [services, setServices] = useState<any[]>([]);
+  const [offices, setOffices] = useState<any[]>([]);
+  const [selectedService, setSelectedService] = useState('');
+  const [selectedOffice, setSelectedOffice] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [createdAptId, setCreatedAptId] = useState('APT-2026-9042');
 
   // Form State
   const [details, setDetails] = useState({
@@ -67,7 +82,7 @@ export default function BookAppointmentPage() {
     whatsappOption: 'WhatsApp Voice Call' as 'WhatsApp Voice Call' | 'WhatsApp Video Call' | 'WhatsApp Text Chat',
     date: '2026-08-28',
     timeSlot: '10:30 AM',
-    location: 'Main Branch - Amman Comm HQ',
+    location: '',
     applicantName: user.name,
     applicantEmail: user.email,
     applicantPhone: user.phone || '+91 ',
@@ -75,13 +90,32 @@ export default function BookAppointmentPage() {
     description: ''
   });
 
+  // Fetch services and offices on mount
+  useEffect(() => {
+    async function loadInitialData() {
+      const fetchedServices = await fetchServicesAction();
+      const fetchedOffices = await fetchOfficesAction();
+      setServices(fetchedServices);
+      setOffices(fetchedOffices);
+      
+      if (fetchedServices.length > 0) {
+        setSelectedService(fetchedServices[0].id);
+      }
+      if (fetchedOffices.length > 0) {
+        setSelectedOffice(fetchedOffices[0].id);
+        setDetails(prev => ({ ...prev, location: fetchedOffices[0].name }));
+      }
+    }
+    loadInitialData();
+  }, []);
+
   React.useEffect(() => {
     setDetails((prev) => ({
       ...prev,
       applicantName: user.name,
       applicantEmail: user.email,
       applicantPhone: user.phone || '+91 ',
-      address: user.address,
+      address: user.address || '',
       whatsappNumber: user.phone || prev.whatsappNumber || '+91 ',
       phoneCallNumber: user.phone || prev.phoneCallNumber || '+91 '
     }));
@@ -102,31 +136,38 @@ export default function BookAppointmentPage() {
 
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
 
-  const serviceObj = SERVICES.find((s) => s.id === selectedService) || SERVICES[1];
+  const serviceObj = services.find((s) => s.id === selectedService) || { name: 'Broadband Setup', id: '' };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep === 4) {
-      const aptId = `APT-2026-${Math.floor(100 + Math.random() * 900)}`;
-      const newApt = {
-        id: aptId,
-        originalDateTime: `${details.date} ${details.timeSlot}`,
-        newDateTime: '-',
-        serviceType: serviceObj.name,
-        consultationType: getFormattedConsultationType(),
-        status: 'Confirmed' as const,
-        reasonAdminNote: 'Booking Confirmed',
-        adminNote: 'Your appointment has been scheduled. Officer assigned.',
-        location: details.location
-      };
-      try {
-        const storageKey = getUserStorageKey(user.email, 'amman_user_appointments');
-        const saved = localStorage.getItem(storageKey);
-        const existing = saved ? JSON.parse(saved) : [];
-        localStorage.setItem(storageKey, JSON.stringify([newApt, ...existing]));
-      } catch (e) {
-        console.error('Error saving appointment:', e);
+      setLoading(true);
+      const consultationMode = details.onlineSubMode === 'Phone Call'
+        ? 'PHONE'
+        : details.onlineSubMode === 'WhatsApp'
+        ? 'WHATSAPP'
+        : 'VIDEO';
+
+      const res = await createAppointmentAction({
+        serviceId: selectedService,
+        appointmentType: details.mainMode === 'Office Visit' ? 'OFFICE_VISIT' : 'ONLINE_CONSULTATION',
+        officeId: details.mainMode === 'Office Visit' ? selectedOffice : undefined,
+        consultationMode: details.mainMode === 'Office Visit' ? undefined : (consultationMode as any),
+        preferredDate: details.date,
+        preferredTime: convertTimeTo24h(details.timeSlot),
+        contactNumber: details.applicantPhone,
+        address: details.address || undefined,
+        notes: details.description || undefined
+      });
+
+      setLoading(false);
+      if (res.error) {
+        showToast('Error', res.error);
+        return;
       }
-      showToast('Appointment Booked Successfully!', `Reference ID: ${aptId} has been scheduled.`);
+
+      const returnedId = res.appointment?.appointmentNumber || res.appointment?.id || `APT-2026-${Math.floor(100 + Math.random() * 900)}`;
+      setCreatedAptId(returnedId);
+      showToast('Appointment Booked Successfully!', `Reference ID: ${returnedId} has been scheduled.`, 'success', 'View Details', '/portal/appointments', true);
     }
     if (currentStep < 5) setCurrentStep(currentStep + 1);
   };
@@ -145,26 +186,43 @@ export default function BookAppointmentPage() {
     setUploadedFiles(uploadedFiles.filter((_, i) => i !== index));
   };
 
+  const getServiceIcon = (serviceId: string) => {
+    if (serviceId.includes('fiber')) return Building;
+    if (serviceId.includes('residential')) return Home;
+    return FileText;
+  };
+
+
   return (
     <div className="max-w-7xl w-full mx-auto space-y-8 font-sans pb-12">
       {/* 5-Step Stepper Progress Bar */}
-      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-5 md:p-6 overflow-hidden">
-        <div className="flex items-center justify-between max-w-5xl mx-auto px-1 sm:px-5">
-          {STEPS.map((step, index) => {
-            const isCompleted = step.id < currentStep;
-            const isCurrent = step.id === currentStep;
-            const isClickable = step.id < currentStep;
+      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-4 sm:p-6 overflow-hidden">
+        <div className="relative w-full max-w-5xl mx-auto">
+          <div className="relative w-full grid grid-cols-5 py-1">
+            {/* Continuous Connecting Line (100% Equal Center-to-Center Spacing) */}
+            <div className="absolute top-[12px] sm:top-[18px] left-[10%] right-[10%] h-1 bg-gray-200 z-0 overflow-hidden rounded-full">
+              <div
+                className="h-full bg-gradient-to-r from-[#12372A] to-[#2d6a4f] rounded-full transition-all duration-500 ease-in-out"
+                style={{
+                  width: `${Math.min(100, Math.max(0, ((currentStep - 1) / (STEPS.length - 1)) * 100))}%`
+                }}
+              />
+            </div>
 
-            return (
-              <React.Fragment key={step.id}>
-                {/* Stepper Node */}
+            {STEPS.map((step) => {
+              const isCompleted = step.id < currentStep;
+              const isCurrent = step.id === currentStep;
+              const isClickable = step.id < currentStep;
+
+              return (
                 <div
+                  key={step.id}
                   onClick={() => isClickable && setCurrentStep(step.id)}
-                  className={`relative z-10 flex flex-col items-center group shrink-0 ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
+                  className={`relative z-10 flex flex-col items-center text-center px-0.5 group ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
                 >
                   <div
                     className={`
-                      w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-extrabold text-xs sm:text-sm transition-all duration-300 transform
+                      w-6 h-6 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-extrabold text-[10px] sm:text-sm transition-all duration-300 transform
                       ${isCompleted || isCurrent
                         ? 'bg-[#12372A] text-white border-2 border-[#12372A] shadow-md'
                         : 'bg-white text-gray-700 border-2 border-gray-300 shadow-xs'
@@ -172,7 +230,7 @@ export default function BookAppointmentPage() {
                     `}
                   >
                     {isCompleted ? (
-                      <Check className="w-4 h-4 sm:w-5 sm:h-5 text-[#a8d5b9] stroke-[3]" />
+                      <Check className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#a8d5b9] stroke-[3]" />
                     ) : (
                       <span className={`font-extrabold ${isCurrent || isCompleted ? 'text-white' : 'text-gray-800'}`}>
                         {step.id}
@@ -180,7 +238,7 @@ export default function BookAppointmentPage() {
                     )}
                   </div>
                   <span
-                    className={`mt-1.5 text-[9px] sm:text-xs transition-all duration-300 tracking-wide whitespace-nowrap ${
+                    className={`mt-1 sm:mt-1.5 text-[8px] sm:text-xs transition-all duration-300 tracking-tight text-center leading-tight break-words max-w-full ${
                       isCurrent
                         ? 'text-[#12372A] font-bold scale-105'
                         : isCompleted
@@ -191,21 +249,9 @@ export default function BookAppointmentPage() {
                     {step.label}
                   </span>
                 </div>
-
-                {/* Connector Line between Steps */}
-                {index < STEPS.length - 1 && (
-                  <div className="flex-1 mx-2 sm:mx-4 h-1 bg-gray-200 rounded-full relative -top-3">
-                    <div
-                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#12372A] to-[#2d6a4f] rounded-full transition-all duration-500 ease-in-out"
-                      style={{
-                        width: isCompleted ? '100%' : '0%'
-                      }}
-                    />
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -221,10 +267,10 @@ export default function BookAppointmentPage() {
               </p>
             </div>
 
-            {/* 8 Grid Service Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {SERVICES.map((srv) => {
-                const Icon = srv.icon;
+            {/* Grid Service Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {services.map((srv) => {
+                const Icon = getServiceIcon(srv.id);
                 const isSelected = selectedService === srv.id;
 
                 return (
@@ -250,7 +296,7 @@ export default function BookAppointmentPage() {
                         w-12 h-12 rounded-xl flex items-center justify-center transition-colors
                         ${isSelected
                           ? 'bg-[#12372A] text-white'
-                          : 'bg-blue-50 text-blue-600 group-hover:bg-[#12372A]/10 group-hover:text-[#12372A]'
+                          : 'bg-emerald-50 text-emerald-600 group-hover:bg-[#12372A]/10 group-hover:text-[#12372A]'
                         }
                       `}
                     >
@@ -451,35 +497,26 @@ export default function BookAppointmentPage() {
                 <div className="md:col-span-2 space-y-2">
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Select Branch Office</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div
-                      onClick={() => setDetails({ ...details, location: 'Main Branch - Amman Comm HQ' })}
-                      className={`p-4 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
-                        details.location.includes('Main')
-                          ? 'border-[#12372A] bg-[#f0f7f2]'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <MapPin className="w-5 h-5 text-[#12372A] mt-0.5" />
-                      <div>
-                        <p className="text-xs font-bold text-gray-900">Main Branch - Amman Comm HQ</p>
-                        <p className="text-[11px] text-gray-500 mt-0.5">Central District, Tower No. 42</p>
+                    {offices.map((off) => (
+                      <div
+                        key={off.id}
+                        onClick={() => {
+                          setSelectedOffice(off.id);
+                          setDetails({ ...details, location: off.name });
+                        }}
+                        className={`p-4 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
+                          selectedOffice === off.id
+                            ? 'border-[#12372A] bg-[#f0f7f2]'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <MapPin className="w-5 h-5 text-[#12372A] mt-0.5" />
+                        <div>
+                          <p className="text-xs font-bold text-gray-900">{off.name}</p>
+                          <p className="text-[11px] text-gray-500 mt-0.5">{off.address}</p>
+                        </div>
                       </div>
-                    </div>
-
-                    <div
-                      onClick={() => setDetails({ ...details, location: 'West Regional Office' })}
-                      className={`p-4 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
-                        details.location.includes('West')
-                          ? 'border-[#12372A] bg-[#f0f7f2]'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <MapPin className="w-5 h-5 text-[#12372A] mt-0.5" />
-                      <div>
-                        <p className="text-xs font-bold text-gray-900">West Regional Office</p>
-                        <p className="text-[11px] text-gray-500 mt-0.5">West Zone Plaza, Suite 104</p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -799,7 +836,7 @@ export default function BookAppointmentPage() {
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Appointment Scheduled Successfully!</h2>
             <p className="text-sm text-gray-600 max-w-md mx-auto">
-              Your reference ID is <strong className="text-[#12372A] font-mono">APT-2026-9042</strong>. A confirmation email and SMS notification have been sent to <strong className="text-gray-900">{details.applicantEmail}</strong>.
+              Your reference ID is <strong className="text-[#12372A] font-mono">{createdAptId}</strong>. A confirmation email and SMS notification have been sent to <strong className="text-gray-900">{details.applicantEmail}</strong>.
             </p>
 
             <div className="pt-6 flex flex-wrap justify-center gap-4">
@@ -812,7 +849,7 @@ export default function BookAppointmentPage() {
               <button
                 onClick={() => {
                   setCurrentStep(1);
-                  setSelectedService('property');
+                  setSelectedService(services[0]?.id || '');
                 }}
                 className="px-6 py-3 border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-colors"
               >
