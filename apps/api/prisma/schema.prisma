@@ -3,14 +3,260 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model HealthCheck {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
+}
+
+model Customer {
+  id                 String         @id @default(cuid())
+  email              String         @unique
+  phone              String?
+  passwordHash       String
+  name               String
+  address            String?
+  contactNumber      String?
+  dob                String?
+  aadhaarNumber      String?
+  panNumber          String?
+  occupation         String?
+  altPhone           String?
+  emergencyContact   String?
+  isProfileCompleted Boolean        @default(false)
+  status             CustomerStatus @default(ACTIVE)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @default(now()) @updatedAt
+  applications       Application[]
+  appointments       Appointment[]
+  documents          Document[]
+  invoices           Invoice[]
+  payments           Payment[]
+}
+
+model Admin {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now()) @updatedAt
+  expenses     Expense[]
+}
+
+model Application {
+  id                String            @id @default(cuid())
+  applicationNumber String?           @unique
+  customerId        String
+  serviceId         String?
+  title             String?
+  serviceType       String?
+  fullName          String?
+  email             String?
+  phone             String?
+  dateOfBirth       String?
+  nationality       String?
+  address           String?
+  notes             String?
+  status            ApplicationStatus @default(DRAFT)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @default(now()) @updatedAt
+  customer          Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  service           Service?          @relation(fields: [serviceId], references: [id])
+  documents         Document[]
+  invoices          Invoice[]
+}
+
+model Document {
+  id                  String                     @id @default(cuid())
+  customerId          String
+  applicationId       String
+  documentType        String
+  storagePath         String
+  fileName            String
+  mimeType            String
+  fileSize            Int
+  originalFileName    String?
+  version             Int                        @default(1)
+  isEncrypted         Boolean                    @default(false)
+  status              DocumentStatus             @default(UPLOADED)
+  rejectionReason     String?
+  verificationStatus  DocumentVerificationStatus @default(PENDING)
+  verificationRemarks String?
+  uploadedAt          DateTime                   @default(now())
+  updatedAt           DateTime                   @default(now()) @updatedAt
+  fileUrl             String?
+  verifiedAt          DateTime?
+  verifiedBy          String?
+  application         Application                @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  customer            Customer                   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, documentType])
+}
+
+model Service {
+  id                String             @id @default(cuid())
+  name              String
+  description       String?
+  governmentFee     Decimal            @db.Decimal(10, 2)
+  serviceFee        Decimal            @db.Decimal(10, 2)
+  totalFee          Decimal            @db.Decimal(10, 2)
+  estimatedTime     String?
+  status            ServiceStatus      @default(DRAFT)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @default(now()) @updatedAt
+  applications      Application[]
+  appointments      Appointment[]
+  invoices          Invoice[]
+  requiredDocuments RequiredDocument[]
+}
+
+model Office {
+  id           String        @id @default(uuid())
+  name         String
+  address      String
+  isActive     Boolean       @default(true)
+  appointments Appointment[]
+}
+
+model Appointment {
+  id                String                @id @default(cuid())
+  appointmentNumber String?               @unique
+  customerId        String?
+  customerName      String
+  customerEmail     String
+  email             String?
+  customerPhone     String
+  serviceId         String?
+  officeId          String?
+  appointmentDate   DateTime
+  preferredDate     DateTime?
+  preferredTime     String?
+  durationMinutes   Int                   @default(30)
+  mode              AppointmentMode       @default(OFFLINE)
+  appointmentType   AppointmentType       @default(OFFICE_VISIT)
+  onlineType        OnlineMeetingType?
+  consultationMode  ConsultationMode?
+  meetingLink       String?
+  status            AppointmentStatus     @default(CONFIRMED)
+  notes             String?
+  rescheduledFrom   DateTime?
+  rescheduleReason  String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @default(now()) @updatedAt
+  customer          Customer?             @relation(fields: [customerId], references: [id])
+  office            Office?               @relation(fields: [officeId], references: [id])
+  service           Service?              @relation(fields: [serviceId], references: [id])
+  documents         AppointmentDocument[]
+}
+
+model BusinessProfile {
+  id                 String   @id @default(cuid())
+  businessName       String
+  registrationNumber String?
+  officeAddress      String
+  primaryPhone       String
+  supportEmail       String
+  logoUrl            String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
+}
+
+model RequiredDocument {
+  id           String   @id @default(cuid())
+  serviceId    String
+  name         String
+  displayOrder Int      @default(0)
+  isRequired   Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+  service      Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+}
+
+model Expense {
+  id            String          @id @default(cuid())
+  title         String
+  description   String?
+  category      ExpenseCategory
+  amount        Decimal         @db.Decimal(10, 2)
+  expenseDate   DateTime
+  paymentMethod PaymentMethod?
+  isVoided      Boolean         @default(false)
+  notes         String?
+  createdById   String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @default(now()) @updatedAt
+  createdBy     Admin           @relation(fields: [createdById], references: [id])
+
+  @@index([expenseDate])
+  @@index([category])
+}
+
+model AppointmentCounter {
+  year       Int @id
+  lastNumber Int @default(0)
+}
+
+model AppointmentDocument {
+  id            String      @id @default(cuid())
+  appointmentId String
+  documentType  String
+  fileType      String?
+  fileSize      Int?
+  fileUrl       String
+  fileName      String
+  uploadedAt    DateTime    @default(now())
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  customerId    String
+  applicationId String?
+  serviceId     String?
+  governmentFee Decimal       @db.Decimal(10, 2)
+  serviceFee    Decimal       @db.Decimal(10, 2)
+  totalAmount   Decimal       @db.Decimal(10, 2)
+  status        InvoiceStatus @default(UNPAID)
+  dueDate       DateTime?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now()) @updatedAt
+  application   Application?  @relation(fields: [applicationId], references: [id])
+  customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  service       Service?      @relation(fields: [serviceId], references: [id])
+  payments      Payment[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  paymentNumber String        @unique
+  invoiceId     String
+  customerId    String
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentMethod PaymentMethod @default(BANK_TRANSFER)
+  status        PaymentStatus @default(PAID)
+  reference     String?
+  notes         String?
+  paidAt        DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now()) @updatedAt
+  customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([customerId])
+  @@index([status])
+  @@index([paidAt])
 }
 
 enum DocumentStatus {
@@ -59,91 +305,6 @@ enum PaymentStatus {
   CANCELLED
 }
 
-model Customer {
-  id                 String         @id @default(cuid())
-  email              String         @unique
-  phone              String?
-  passwordHash       String
-  name               String
-  address            String?
-  contactNumber      String?
-  dob                String?
-  aadhaarNumber      String?
-  panNumber          String?
-  occupation         String?
-  altPhone           String?
-  emergencyContact   String?
-  isProfileCompleted Boolean        @default(false)
-  applications       Application[]
-  documents          Document[]
-  appointments       Appointment[]
-  invoices           Invoice[]
-  payments           Payment[]
-  status             CustomerStatus @default(ACTIVE)
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-}
-
-model Admin {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  expenses     Expense[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-model Application {
-  id                String            @id @default(cuid())
-  applicationNumber String?           @unique
-  customer          Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  customerId        String
-  service           Service?          @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  serviceId         String?
-  title             String?
-  serviceType       String?
-  fullName          String?
-  email             String?
-  phone             String?
-  dateOfBirth       String?
-  nationality       String?
-  address           String?
-  notes             String?
-  status            ApplicationStatus @default(DRAFT)
-  documents         Document[]
-  invoices          Invoice[]
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-}
-
-model Document {
-  id                  String                    @id @default(cuid())
-  customer            Customer                  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  customerId          String
-  application         Application               @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  applicationId       String
-  documentType        String
-  storagePath         String
-  fileName            String
-  mimeType            String
-  fileSize            Int
-  originalFileName    String?
-  version             Int                        @default(1)
-  isEncrypted         Boolean                    @default(false)
-  status              DocumentStatus             @default(UPLOADED)
-  rejectionReason     String?
-  verificationStatus  DocumentVerificationStatus @default(PENDING)
-  verificationRemarks String?
-  uploadedAt          DateTime                  @default(now())
-  updatedAt           DateTime                  @updatedAt
-  fileUrl             String?
-  verifiedAt          DateTime?
-  verifiedBy          String?
-
-  @@unique([applicationId, documentType])
-}
-
 enum AppointmentType {
   OFFICE_VISIT
   ONLINE_CONSULTATION
@@ -169,31 +330,6 @@ enum ServiceStatus {
   INACTIVE
 }
 
-model Service {
-  id                String             @id @default(cuid())
-  name              String
-  description       String?
-  governmentFee     Decimal            @db.Decimal(10, 2)
-  serviceFee        Decimal            @db.Decimal(10, 2)
-  totalFee          Decimal            @db.Decimal(10, 2)
-  estimatedTime     String?
-  status            ServiceStatus      @default(DRAFT)
-  requiredDocuments RequiredDocument[]
-  applications      Application[]
-  appointments      Appointment[]
-  invoices          Invoice[]
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-}
-
-model Office {
-  id           String        @id @default(uuid())
-  name         String
-  address      String
-  isActive     Boolean       @default(true)
-  appointments Appointment[]
-}
-
 enum AppointmentMode {
   OFFLINE
   ONLINE
@@ -205,64 +341,10 @@ enum OnlineMeetingType {
   MEETING
 }
 
-model Appointment {
-  id               String            @id @default(cuid())
-  appointmentNumber String?          @unique
-  customer         Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  customerId       String?
-  customerName     String
-  customerEmail    String
-  email            String?
-  customerPhone    String
-  service          Service?          @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  serviceId        String?
-  office           Office?           @relation(fields: [officeId], references: [id])
-  officeId         String?
-  appointmentDate  DateTime
-  preferredDate    DateTime?
-  preferredTime    String?
-  durationMinutes  Int               @default(30)
-  mode             AppointmentMode   @default(OFFLINE)
-  appointmentType  AppointmentType   @default(OFFICE_VISIT)
-  onlineType       OnlineMeetingType?
-  consultationMode ConsultationMode?
-  meetingLink      String?
-  status           AppointmentStatus @default(CONFIRMED)
-  documents        AppointmentDocument[]
-  notes            String?
-  rescheduledFrom  DateTime?
-  rescheduleReason String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-}
-
-model BusinessProfile {
-  id                 String   @id @default(cuid())
-  businessName       String
-  registrationNumber String?
-  officeAddress      String
-  primaryPhone       String
-  supportEmail       String
-  logoUrl            String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-}
-
 enum DocumentVerificationStatus {
   PENDING
   VERIFIED
   REJECTED
-}
-
-model RequiredDocument {
-  id           String   @id @default(cuid())
-  service      Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  serviceId    String
-  name         String
-  displayOrder Int      @default(0)
-  isRequired   Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
 }
 
 enum ExpenseCategory {
@@ -275,7 +357,6 @@ enum ExpenseCategory {
   EQUIPMENT
   OTHER
 }
-
 model Expense {
   id             String          @id @default(cuid())
   title          String
