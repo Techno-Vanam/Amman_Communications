@@ -12,7 +12,9 @@ export interface ReceiptData {
   subtotal: number;
   tax: number;
   totalAmount: number;
+  serviceTotalFee?: number;
+  pendingBalance?: number;
   paymentMethod: string;
   transactionId: string;
-  paymentStatus: 'PAID' | 'FAILED' | 'PENDING';
+  paymentStatus: 'PAID' | 'FAILED' | 'PENDING' | 'PARTIAL';
 }

@@ -1,6 +1,11 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import {
+  fetchAdminAppointmentsAction,
+  rescheduleAdminAppointmentAction,
+  updateAdminAppointmentStatusAction,
+} from '@/app/admin/actions';
 import {
   Calendar,
   Plus,
@@ -342,6 +347,31 @@ function AppointmentModal({
   );
 }
 
+function mapAdminBackendAppointment(raw: any): Appointment {
+  let status: AppointmentStatus = 'Confirmed';
+  if (raw.status === 'PENDING') status = 'Pending';
+  else if (raw.status === 'CONFIRMED') status = 'Confirmed';
+  else if (raw.status === 'RESCHEDULED') status = 'Rescheduled';
+  else if (raw.status === 'COMPLETED') status = 'Completed';
+  else if (raw.status === 'CANCELLED') status = 'Cancelled';
+
+  const dateObj = new Date(raw.appointmentDate || raw.preferredDate);
+  const date = isNaN(dateObj.getTime()) ? '' : dateObj.toISOString().split('T')[0];
+
+  return {
+    id: raw.id,
+    customer: raw.customerName || raw.customer?.name || 'Customer',
+    email: raw.customerEmail || raw.customer?.email || '',
+    phone: raw.customerPhone || raw.customer?.contactNumber || '',
+    service: raw.service?.name || 'Service Consultation',
+    date,
+    time: raw.preferredTime || '10:30 AM',
+    mode: raw.appointmentType === 'ONLINE_CONSULTATION' || raw.mode === 'ONLINE' ? 'Online' : 'Offline',
+    status,
+    notes: raw.rescheduleReason || raw.notes || '',
+  };
+}
+
 // ── Main Page ─────────────────────────────────────────────────
 type FilterType = 'All' | AppointmentStatus;
 
@@ -353,6 +383,17 @@ export default function AppointmentsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editApt, setEditApt] = useState<Appointment | null>(null);
   const [rescheduleApt, setRescheduleApt] = useState<Appointment | null>(null);
+
+  const loadAppointments = async () => {
+    const raw = await fetchAdminAppointmentsAction();
+    if (Array.isArray(raw)) {
+      setAppointments(raw.map(mapAdminBackendAppointment));
+    }
+  };
+
+  useEffect(() => {
+    loadAppointments();
+  }, []);
 
   const filtered = useMemo(() => {
     return appointments.filter(a => {
@@ -382,14 +423,24 @@ export default function AppointmentsPage() {
     }, ...prev]);
   }
 
-  function handleEdit(data: Partial<Appointment>) {
+  async function handleEdit(data: Partial<Appointment>) {
     if (!editApt) return;
-    setAppointments(prev => prev.map(a => a.id === editApt.id ? { ...a, ...data } : a));
+    if (data.status) {
+      const st = data.status.toUpperCase() as any;
+      await updateAdminAppointmentStatusAction(editApt.id, st);
+      loadAppointments();
+    }
   }
 
-  function handleReschedule(data: Partial<Appointment>) {
+  async function handleReschedule(data: Partial<Appointment>) {
     if (!rescheduleApt) return;
-    setAppointments(prev => prev.map(a => a.id === rescheduleApt.id ? { ...a, date: data.date ?? a.date, time: data.time ?? a.time, status: 'Rescheduled' } : a));
+    if (data.date) {
+      await rescheduleAdminAppointmentAction(rescheduleApt.id, {
+        newDate: data.date,
+        reason: data.notes || 'Rescheduled by Administrator',
+      });
+      loadAppointments();
+    }
   }
 
   const statusList: FilterType[] = ['All', 'Confirmed', 'Pending', 'Completed', 'Cancelled', 'Rescheduled'];
