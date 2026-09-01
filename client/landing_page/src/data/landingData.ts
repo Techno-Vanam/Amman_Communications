@@ -220,8 +220,8 @@ export const FAQ_DATA: FAQItem[] = [
   {
     id: 'faq-1',
     category: 'General',
-    question: 'Is Amman Communications a government office?',
-    answer: 'No. Amman Communications is an independent professional consultancy and business service provider. We offer expert documentation, application filing assistance, deed drafting, and procedural guidance to help clients navigate official processes smoothly.'
+    question: 'Is TechnoVanam Communications a government office?',
+    answer: 'No. TechnoVanam Communications is an independent professional consultancy and business service provider. We offer expert documentation, application filing assistance, deed drafting, and procedural guidance to help clients navigate official processes smoothly.'
   },
   {
     id: 'faq-2',

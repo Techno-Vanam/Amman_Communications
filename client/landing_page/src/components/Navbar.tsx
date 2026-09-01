@@ -62,6 +62,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center justify-between gap-3">
           {/* Brand Logo */}
           <a href="#hero" className="flex items-center gap-2.5 group">
+<<<<<<< HEAD
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center shadow-md shadow-brand-600/20 group-hover:scale-105 transition-transform">
               <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-white stroke-[2.2]" />
             </div>
@@ -73,6 +74,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Registration & Consultancy
               </span>
             </div>
+=======
+            <img src="/logo@4x-8.png" alt="TechnoVanam Communications" className="w-32 sm:w-36 h-auto group-hover:scale-[1.02] transition-transform" />
+>>>>>>> origin/feature/landing-technovanam
           </a>
 
           {/* INNER NAVIGATION LAYER - Light Frosted Glass Capsule */}

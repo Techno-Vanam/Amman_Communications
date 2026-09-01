@@ -61,7 +61,7 @@ export const HowItWorks: React.FC<HowItWorksProps> = () => {
             <span>Simple 4-Step Process</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-700 tracking-tight">
-            How Amman Communications Works
+            How TechnoVanam Communications Works
           </h2>
           <p className="text-base sm:text-lg text-slate-600">
             A structured, transparent workflow designed to save you time and eliminate administrative uncertainty.
