@@ -32,7 +32,63 @@ interface TransactionItem {
   date: string; // YYYY-MM-DD
 }
 
-const INITIAL_TRANSACTIONS: TransactionItem[] = [];
+const INITIAL_TRANSACTIONS: TransactionItem[] = [
+  {
+    id: 'AMC-2026-768324',
+    appId: 'AMC-2026-768324',
+    service: 'Commercial High-Speed Fiber Broadband',
+    totalAmount: 2000,
+    paidAmount: 2000,
+    pendingAmount: 0,
+    paymentMode: 'UPI / NetBanking',
+    status: 'Paid',
+    date: '2026-08-15',
+  },
+  {
+    id: 'AMC-2026-642879',
+    appId: 'AMC-2026-642879',
+    service: 'Residential FTTH Broadband Setup',
+    totalAmount: 2000,
+    paidAmount: 2000,
+    pendingAmount: 0,
+    paymentMode: 'UPI / NetBanking',
+    status: 'Paid',
+    date: '2026-08-16',
+  },
+  {
+    id: 'AMC-2026-345706',
+    appId: 'AMC-2026-345706',
+    service: 'Document Clearance & Legal Verification',
+    totalAmount: 2000,
+    paidAmount: 2000,
+    pendingAmount: 0,
+    paymentMode: 'UPI / NetBanking',
+    status: 'Paid',
+    date: '2026-08-18',
+  },
+  {
+    id: 'AMC-2026-703488',
+    appId: 'AMC-2026-703488',
+    service: 'Document Clearance & Legal Verification',
+    totalAmount: 2000,
+    paidAmount: 2000,
+    pendingAmount: 0,
+    paymentMode: 'UPI / NetBanking',
+    status: 'Paid',
+    date: '2026-08-20',
+  },
+  {
+    id: 'AMC-2026-358677',
+    appId: 'AMC-2026-358677',
+    service: 'Document Clearance & Legal Verification',
+    totalAmount: 2000,
+    paidAmount: 2000,
+    pendingAmount: 0,
+    paymentMode: 'UPI / NetBanking',
+    status: 'Paid',
+    date: '2026-08-22',
+  },
+];
 
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser, getUserStorageKey } from '@/context/UserContext';
@@ -49,6 +105,7 @@ export default function PaymentsPage() {
   
   // Date Filtering State
   const [datePreset, setDatePreset] = useState('All Time');
+  const [singleSelectedDate, setSingleSelectedDate] = useState('');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [showDatePickerModal, setShowDatePickerModal] = useState(false);
@@ -76,17 +133,18 @@ export default function PaymentsPage() {
         // Fallback: load from localStorage
         const storageKey = getUserStorageKey(user.email, 'amman_user_payments');
         const saved = localStorage.getItem(storageKey);
-        setTransactions(saved ? JSON.parse(saved) : []);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && parsed.length > 0) {
+            setTransactions(parsed);
+            return;
+          }
+        }
+        setTransactions(INITIAL_TRANSACTIONS);
       } catch (e) {
         console.error('Error loading payments:', e);
-        // Final fallback: localStorage
-        try {
-          const storageKey = getUserStorageKey(user.email, 'amman_user_payments');
-          const saved = localStorage.getItem(storageKey);
-          setTransactions(saved ? JSON.parse(saved) : []);
-        } catch {
-          setTransactions([]);
-        }
+        // Final fallback: INITIAL_TRANSACTIONS
+        setTransactions(INITIAL_TRANSACTIONS);
       }
     }
     loadPayments();
@@ -104,8 +162,8 @@ export default function PaymentsPage() {
   const itemsPerPage = 10;
 
   // Modals state
-  // const [selectedTxnForReceipt, setSelectedTxnForReceipt] = useState<TransactionItem | null>(null);
   const [selectedTxnForPayNow, setSelectedTxnForPayNow] = useState<TransactionItem | null>(null);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   const [mounted, setMounted] = useState(false);
 
@@ -121,37 +179,104 @@ export default function PaymentsPage() {
     }).format(val);
   };
 
-  // Receipt Download Function
-  // const handleDownloadReceipt = (txn: TransactionItem) => {
-  //   const receiptContent = `=====================================================
-  // AMMAN COMMUNICATIONS HQ - OFFICIAL PAYMENT RECEIPT
-  // =====================================================
-  // Receipt Number : ${txn.id}
-  // Application Ref: ${txn.appId}
-  // Date           : ${txn.date}
-  // Service        : ${txn.service}
-  // Payment Mode   : ${txn.paymentMode}
-  // Status         : ${txn.status}
-  // -----------------------------------------------------
-  // Total Amount   : ₹${txn.totalAmount.toFixed(2)}
-  // Paid Amount    : ₹${txn.paidAmount.toFixed(2)}
-  // Pending Amount : ₹${txn.pendingAmount.toFixed(2)}
-  // -----------------------------------------------------
-  // Thank you for using Amman Communications Portal!
-  // Digital Tax Reference: TAX-INV-${txn.id}
-  // =====================================================`;
+  const handleExportPDF = async () => {
+    if (filteredTransactions.length === 0) {
+      showToast('No Transactions', 'There are no transactions to export for the selected filter timeline.', 'warning');
+      return;
+    }
 
-  //   const blob = new Blob([receiptContent], { type: 'text/plain;charset=utf-8' });
-  //   const url = URL.createObjectURL(blob);
-  //   const link = document.createElement('a');
-  //   link.href = url;
-  //   link.download = `Receipt-${txn.id}.txt`;
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  //   URL.revokeObjectURL(url);
-  //   showToast('Receipt Downloaded Successfully!', `Receipt-${txn.id}.txt saved.`);
-  // };
+    const targetWrapper = document.getElementById('payments-statement-pdf-wrapper');
+    const targetElement = document.getElementById('payments-statement-pdf-target');
+    if (!targetWrapper || !targetElement) return;
+
+    try {
+      setIsExportingPDF(true);
+      showToast('Generating PDF Statement', 'Preparing official transactions document...', 'info');
+
+      // Temporarily reveal targetWrapper offscreen for html2canvas capture
+      targetWrapper.style.position = 'fixed';
+      targetWrapper.style.top = '-9999px';
+      targetWrapper.style.left = '-9999px';
+      targetWrapper.style.display = 'block';
+
+      // Dynamically load html2canvas and jsPDF from CDN if needed
+      await Promise.all([
+        new Promise<void>((resolve, reject) => {
+          if ((window as any).html2canvas) {
+            resolve();
+            return;
+          }
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+          script.onload = () => resolve();
+          script.onerror = (e) => reject(e);
+          document.body.appendChild(script);
+        }),
+        new Promise<void>((resolve, reject) => {
+          if ((window as any).jspdf) {
+            resolve();
+            return;
+          }
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+          script.onload = () => resolve();
+          script.onerror = (e) => reject(e);
+          document.body.appendChild(script);
+        }),
+      ]);
+
+      const html2canvas = (window as any).html2canvas;
+      const { jsPDF } = (window as any).jspdf;
+
+      const canvas = await html2canvas(targetElement, {
+        scale: 2, // High resolution rendering
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      targetWrapper.style.display = 'none';
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();   // 210 mm
+      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297 mm
+
+      const marginX = 8;
+      const marginY = 10;
+      const availableWidth = pdfWidth - marginX * 2;   // 194 mm
+      const availableHeight = pdfHeight - marginY * 2; // 277 mm
+
+      let imgWidth = availableWidth;
+      let imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      if (imgHeight > availableHeight) {
+        imgHeight = availableHeight;
+        imgWidth = (canvas.width * imgHeight) / canvas.height;
+      }
+
+      const x = (pdfWidth - imgWidth) / 2;
+      const y = marginY;
+
+      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+
+      const safeTimeline = getDateTimelineLabel().replace(/[^a-zA-Z0-9_-]/g, '_');
+      pdf.save(`Transactions_Statement_${safeTimeline}.pdf`);
+
+      showToast('PDF Exported Successfully!', `Transactions_Statement_${safeTimeline}.pdf generated.`, 'success');
+    } catch (err) {
+      console.error('Error generating PDF statement:', err);
+      showToast('PDF Generation Failed', 'Failed to generate PDF document.', 'warning');
+    } finally {
+      setIsExportingPDF(false);
+      if (targetWrapper) targetWrapper.style.display = 'none';
+    }
+  };
 
   const handlePayNowSubmit = (txn: TransactionItem) => {
     setTransactions(
@@ -179,9 +304,10 @@ export default function PaymentsPage() {
     setFilterMode('All');
     setMinAmount('');
     setMaxAmount('');
-    setDatePreset('Oct 1, 2023 - Oct 31, 2023');
-    setCustomStartDate('2023-10-01');
-    setCustomEndDate('2023-10-31');
+    setDatePreset('All Time');
+    setSingleSelectedDate('');
+    setCustomStartDate('');
+    setCustomEndDate('');
   };
 
   // Filtered transactions logic
@@ -214,9 +340,14 @@ export default function PaymentsPage() {
       return false;
     }
 
-    // Date Range Filter
-    if (datePreset === 'Oct 1, 2023 - Oct 31, 2023') {
-      if (t.date < '2023-10-01' || t.date > '2023-10-31') return false;
+    // Date Filter
+    if (datePreset === 'Select Date') {
+      if (singleSelectedDate && t.date !== singleSelectedDate) return false;
+    } else if (datePreset === 'Last 30 Days') {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+      if (t.date < thirtyDaysAgoStr) return false;
     } else if (datePreset === 'Custom Date Range') {
       if (customStartDate && t.date < customStartDate) return false;
       if (customEndDate && t.date > customEndDate) return false;
@@ -238,76 +369,88 @@ export default function PaymentsPage() {
     currentPage * itemsPerPage
   );
 
+  const getDateTimelineLabel = () => {
+    if (datePreset === 'Select Date') {
+      return singleSelectedDate || 'Selected Date';
+    }
+    if (datePreset === 'Custom Date Range') {
+      if (customStartDate && customEndDate) return `${customStartDate} - ${customEndDate}`;
+      if (customStartDate) return `From ${customStartDate}`;
+      return 'Custom Range';
+    }
+    return datePreset;
+  };
+
   return (
-    <div className="max-w-7xl mx-auto space-y-8 font-sans pb-12">
+    <div className="max-w-7xl mx-auto space-y-4 font-sans pb-1">
 
       {/* 3 Metric Cards - Dynamically reflect transactions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
         {/* Card 1: Total Paid */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 shadow-2xs relative flex flex-col justify-between h-44">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
               <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Total Paid</span>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
+            <p className="text-3xl sm:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {formatCurrency(totalPaidSum)}
             </p>
           </div>
           <div className="mt-3">
-            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
-              Last 30 days
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
+              {getDateTimelineLabel()}
             </span>
           </div>
         </div>
 
         {/* Card 2: Pending Payments */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 shadow-2xs relative flex flex-col justify-between h-44">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
                 <Clock className="w-5 h-5" />
               </div>
               <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Pending Payments</span>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
+            <p className="text-3xl sm:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {formatCurrency(pendingPaymentsSum)}
             </p>
           </div>
           <div className="mt-3">
-            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200/60">
-              {overdueInvoicesCount} Invoices Overdue
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200/60">
+              {overdueInvoicesCount} {overdueInvoicesCount === 1 ? 'Invoice Overdue' : 'Invoices Overdue'}
             </span>
           </div>
         </div>
 
         {/* Card 3: Total Transactions */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44 sm:col-span-2 md:col-span-1">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 shadow-2xs relative flex flex-col justify-between h-44 sm:col-span-2 md:col-span-1">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-gray-100 text-gray-700 border border-gray-200 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-700 border border-gray-200 flex items-center justify-center shrink-0">
                 <Receipt className="w-5 h-5" />
               </div>
               <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Total Transactions</span>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
+            <p className="text-3xl sm:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {totalTransactionsCount}
             </p>
           </div>
           <div className="mt-3">
-            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200/60">
-              All time
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200/60">
+              {getDateTimelineLabel()}
             </span>
           </div>
         </div>
       </div>
 
       {/* Main Transactions Container Card */}
-      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs overflow-hidden space-y-4">
+      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs overflow-hidden space-y-3">
         {/* Filter Toolbar */}
-        <div className="p-6 pb-2 flex flex-col lg:flex-row items-center justify-between gap-4">
+        <div className="p-4 sm:p-5 pb-2 flex flex-col lg:flex-row items-center justify-between gap-3">
           {/* Left Controls */}
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             {/* Category Dropdown */}
@@ -334,7 +477,13 @@ export default function PaymentsPage() {
               className="flex items-center gap-2 bg-gray-50/80 border border-gray-200 hover:bg-gray-100 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-gray-700 transition-colors w-full sm:w-auto justify-center"
             >
               <Calendar className="w-4 h-4 text-gray-400" />
-              <span>{datePreset}</span>
+              <span>
+                {datePreset === 'Select Date' && singleSelectedDate
+                  ? singleSelectedDate
+                  : datePreset === 'Custom Date Range' && customStartDate && customEndDate
+                  ? `${customStartDate} - ${customEndDate}`
+                  : datePreset}
+              </span>
               <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-1" />
             </button>
           </div>
@@ -354,21 +503,13 @@ export default function PaymentsPage() {
             </button>
 
             <button
-              onClick={() => {
-                const csvData = filteredTransactions
-                  .map((t) => `${t.id},${t.service},${t.totalAmount},${t.paymentMode},${t.status}`)
-                  .join('\n');
-                const blob = new Blob([`ID,Service,Amount,Mode,Status\n${csvData}`], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Transactions_Export.csv`;
-                a.click();
-              }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs"
+              onClick={handleExportPDF}
+              disabled={isExportingPDF}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 hover:border-gray-300 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs disabled:opacity-50"
+              title="Export Transactions Statement as PDF"
             >
               <Download className="w-3.5 h-3.5 text-gray-500" />
-              <span>Export</span>
+              <span>{isExportingPDF ? 'Generating PDF...' : 'Export PDF'}</span>
             </button>
           </div>
         </div>
@@ -430,24 +571,24 @@ export default function PaymentsPage() {
           </div>
         )}
 
-        {/* Data Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[850px]">
+        {/* Scrollable Data Table Container (Shows 4 entries at a time, entries scrollable) */}
+        <div className="overflow-x-auto max-h-[295px] overflow-y-auto admin-scrollbar relative">
+          <table className="w-full text-left border-separate border-spacing-0 min-w-[850px]">
             <thead>
-              <tr className="border-y border-gray-200/80 text-[11px] font-bold uppercase tracking-wider text-gray-500 bg-[#f8fafc]">
-                <th className="py-3.5 px-6">SERVICE/APPLICATION</th>
-                <th className="py-3.5 px-4">TOTAL AMOUNT</th>
-                <th className="py-3.5 px-4">PAID AMOUNT</th>
-                <th className="py-3.5 px-4">PENDING AMOUNT</th>
-                <th className="py-3.5 px-4">PAYMENT MODE</th>
-                <th className="py-3.5 px-4">STATUS</th>
-                <th className="py-3.5 px-6 text-center">ACTION</th>
+              <tr className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                <th className="sticky top-0 z-20 py-3.5 px-6 bg-[#f8fafc] border-y border-gray-200/80">SERVICE/APPLICATION</th>
+                <th className="sticky top-0 z-20 py-3.5 px-4 bg-[#f8fafc] border-y border-gray-200/80">TOTAL AMOUNT</th>
+                <th className="sticky top-0 z-20 py-3.5 px-4 bg-[#f8fafc] border-y border-gray-200/80">PAID AMOUNT</th>
+                <th className="sticky top-0 z-20 py-3.5 px-4 bg-[#f8fafc] border-y border-gray-200/80">PENDING AMOUNT</th>
+                <th className="sticky top-0 z-20 py-3.5 px-4 bg-[#f8fafc] border-y border-gray-200/80">PAYMENT MODE</th>
+                <th className="sticky top-0 z-20 py-3.5 px-4 bg-[#f8fafc] border-y border-gray-200/80">STATUS</th>
+                <th className="sticky top-0 z-20 py-3.5 px-6 text-center bg-[#f8fafc] border-y border-gray-200/80">ACTION</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-xs text-gray-800">
+            <tbody className="text-xs text-gray-800 bg-white">
               {paginatedTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-500 font-medium">
+                  <td colSpan={7} className="py-8 text-center text-gray-500 font-medium border-b border-gray-100">
                     No transactions found matching the selected filters.
                   </td>
                 </tr>
@@ -456,23 +597,23 @@ export default function PaymentsPage() {
                   return (
                     <tr key={`${txn.id}-${txn.appId}-${index}`} className="hover:bg-gray-50/70 transition-colors">
                       {/* Service & Application ID */}
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-6 border-b border-gray-100">
                         <p className="font-bold text-gray-900 leading-tight">{txn.service}</p>
                         <p className="text-[11px] font-mono text-gray-400 mt-0.5">{txn.appId}</p>
                       </td>
 
                       {/* Total Amount */}
-                      <td className="py-4 px-4 font-bold text-gray-900">
+                      <td className="py-4 px-4 font-bold text-gray-900 border-b border-gray-100">
                         {formatCurrency(txn.totalAmount)}
                       </td>
 
                       {/* Paid Amount */}
-                      <td className="py-4 px-4 font-bold text-gray-900">
+                      <td className="py-4 px-4 font-bold text-gray-900 border-b border-gray-100">
                         {formatCurrency(txn.paidAmount)}
                       </td>
 
                       {/* Pending Amount */}
-                      <td className="py-4 px-4 font-bold">
+                      <td className="py-4 px-4 font-bold border-b border-gray-100">
                         {txn.pendingAmount > 0 ? (
                           <span className="text-rose-600">{formatCurrency(txn.pendingAmount)}</span>
                         ) : (
@@ -481,7 +622,7 @@ export default function PaymentsPage() {
                       </td>
 
                       {/* Payment Mode Badge */}
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-4 border-b border-gray-100">
                         {txn.paymentMode === 'Credit Card' && (
                           <span className="inline-block text-[11px] font-semibold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg border border-indigo-100">
                             Credit Card
@@ -510,7 +651,7 @@ export default function PaymentsPage() {
                       </td>
 
                       {/* Status Badge */}
-                      <td className="py-4 px-4">
+                      <td className="py-4 px-4 border-b border-gray-100">
                         {txn.status === 'Paid' && (
                           <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -532,7 +673,7 @@ export default function PaymentsPage() {
                       </td>
 
                       {/* Action Button */}
-                      <td className="py-4 px-6 text-center">
+                      <td className="py-4 px-6 text-center border-b border-gray-100">
                         <div className="flex items-center justify-center gap-2">
                           <Link
                             href={`/portal/payments/${txn.id}`}
@@ -561,10 +702,10 @@ export default function PaymentsPage() {
           </table>
         </div>
 
-        {/* Table Pagination Footer - Render page numbers ONLY if totalPages > 1 */}
-        <div className="p-6 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500 font-medium">
+        {/* Table Footer - Total entries counter */}
+        <div className="px-5 py-2.5 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-medium bg-gray-50/50">
           <div>
-            Showing {filteredTransactions.length === 0 ? 0 : 1} to {filteredTransactions.length} of {filteredTransactions.length} entries
+            Showing <span className="font-bold text-gray-900">{filteredTransactions.length}</span> {filteredTransactions.length === 1 ? 'entry' : 'entries'}
           </div>
 
           {totalPages > 1 && (
@@ -630,7 +771,7 @@ export default function PaymentsPage() {
               <label className="block font-bold text-gray-700">Presets</label>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  'Oct 1, 2023 - Oct 31, 2023',
+                  'Select Date',
                   'Last 30 Days',
                   'All Time',
                   'Custom Date Range'
@@ -649,13 +790,32 @@ export default function PaymentsPage() {
                 ))}
               </div>
 
+              {datePreset === 'Select Date' && (
+                <div className="space-y-1 pt-2">
+                  <label className="block font-bold text-gray-600 text-[11px]">Choose Single Date</label>
+                  <CustomDatePicker
+                    value={singleSelectedDate}
+                    onChange={setSingleSelectedDate}
+                    disableFuture={true}
+                    placeholder="Select specific date"
+                  />
+                </div>
+              )}
+
               {datePreset === 'Custom Date Range' && (
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <div className="space-y-1">
                     <label className="block font-bold text-gray-600 text-[11px]">Start Date</label>
                     <CustomDatePicker
                       value={customStartDate}
-                      onChange={setCustomStartDate}
+                      onChange={(newStart) => {
+                        setCustomStartDate(newStart);
+                        if (customEndDate && newStart && customEndDate < newStart) {
+                          setCustomEndDate(newStart);
+                        }
+                      }}
+                      disableFuture={true}
+                      maxDate={customEndDate || undefined}
                     />
                   </div>
 
@@ -664,6 +824,8 @@ export default function PaymentsPage() {
                     <CustomDatePicker
                       value={customEndDate}
                       onChange={setCustomEndDate}
+                      disableFuture={true}
+                      minDate={customStartDate || undefined}
                     />
                   </div>
                 </div>
@@ -755,6 +917,118 @@ export default function PaymentsPage() {
         </div>,
         document.body
       )}
+
+      {/* HIDDEN RENDER TARGET FOR PDF EXPORT */}
+      <div
+        id="payments-statement-pdf-wrapper"
+        style={{ display: 'none', position: 'fixed', top: '-9999px', left: '-9999px', zIndex: -1 }}
+      >
+        <div
+          id="payments-statement-pdf-target"
+          style={{ width: '800px', backgroundColor: '#ffffff', color: '#111827', padding: '32px', fontFamily: 'sans-serif' }}
+        >
+          {/* Header Banner */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #12372A', paddingBottom: '16px', marginBottom: '24px' }}>
+            <div>
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#12372A', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Amman Communications
+              </h2>
+              <p style={{ fontSize: '11px', color: '#4b5563', margin: '3px 0 0 0', fontWeight: '600' }}>
+                Services & Financial Transactions Management Portal
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#12372A', backgroundColor: '#f0f7f2', padding: '4px 12px', borderRadius: '12px', border: '1px solid #a8d5b9', display: 'inline-block' }}>
+                OFFICIAL STATEMENT
+              </span>
+              <p style={{ fontSize: '10px', color: '#6b7280', margin: '4px 0 0 0' }}>
+                Generated: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </p>
+            </div>
+          </div>
+
+          {/* Statement Metadata & Summary Grid */}
+          <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '16px', marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '12px' }}>
+            <div>
+              <p style={{ margin: '0 0 4px 0', color: '#6b7280', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>Account Holder</p>
+              <p style={{ margin: 0, fontWeight: 'bold', color: '#111827', fontSize: '13px' }}>{user.name || 'Account User'}</p>
+              <p style={{ margin: '2px 0 0 0', color: '#4b5563' }}>{user.email}</p>
+            </div>
+            <div>
+              <p style={{ margin: '0 0 4px 0', color: '#6b7280', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>Filter Timeline / Category</p>
+              <p style={{ margin: 0, fontWeight: 'bold', color: '#12372A' }}>Timeline: {getDateTimelineLabel()}</p>
+              <p style={{ margin: '2px 0 0 0', color: '#4b5563' }}>Category: {selectedCategoryFilter}</p>
+            </div>
+          </div>
+
+          {/* Financial Totals Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+            <div style={{ border: '1px solid #e5e7eb', borderRadius: '10px', padding: '12px', backgroundColor: '#ffffff' }}>
+              <p style={{ margin: 0, fontSize: '10px', color: '#6b7280', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Transactions</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '18px', fontWeight: 'bold', color: '#111827' }}>{filteredTransactions.length}</p>
+            </div>
+            <div style={{ border: '1px solid #bfdbfe', borderRadius: '10px', padding: '12px', backgroundColor: '#eff6ff' }}>
+              <p style={{ margin: 0, fontSize: '10px', color: '#1d4ed8', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Amount Paid</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '18px', fontWeight: 'bold', color: '#1e40af' }}>{formatCurrency(totalPaidSum)}</p>
+            </div>
+            <div style={{ border: '1px solid #fecdd3', borderRadius: '10px', padding: '12px', backgroundColor: '#fff1f2' }}>
+              <p style={{ margin: 0, fontSize: '10px', color: '#be123c', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Outstanding</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '18px', fontWeight: 'bold', color: '#9f1239' }}>{formatCurrency(pendingPaymentsSum)}</p>
+            </div>
+          </div>
+
+          {/* Transactions Data Table */}
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', textAlign: 'left', marginBottom: '24px' }}>
+            <thead>
+              <tr style={{ backgroundColor: '#12372A', color: '#ffffff', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px' }}>
+                <th style={{ padding: '8px 10px', border: '1px solid #12372A' }}>Date</th>
+                <th style={{ padding: '8px 10px', border: '1px solid #12372A' }}>Ref / App ID</th>
+                <th style={{ padding: '8px 10px', border: '1px solid #12372A' }}>Service Description</th>
+                <th style={{ padding: '8px 10px', border: '1px solid #12372A' }}>Mode</th>
+                <th style={{ padding: '8px 10px', border: '1px solid #12372A' }}>Status</th>
+                <th style={{ padding: '8px 10px', border: '1px solid #12372A', textAlign: 'right' }}>Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredTransactions.map((t, idx) => (
+                <tr key={t.id + idx} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '8px 10px', fontWeight: '600' }}>{t.date}</td>
+                  <td style={{ padding: '8px 10px', fontFamily: 'monospace', color: '#4b5563' }}>{t.appId || t.id}</td>
+                  <td style={{ padding: '8px 10px', fontWeight: 'bold', color: '#111827' }}>{t.service}</td>
+                  <td style={{ padding: '8px 10px', color: '#4b5563' }}>{t.paymentMode}</td>
+                  <td style={{ padding: '8px 10px' }}>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '2px 8px',
+                      borderRadius: '10px',
+                      fontSize: '10px',
+                      fontWeight: 'bold',
+                      backgroundColor: t.status === 'Paid' ? '#dcfce7' : t.status === 'Partial' ? '#fef3c7' : '#ffe4e6',
+                      color: t.status === 'Paid' ? '#15803d' : t.status === 'Partial' ? '#b45309' : '#be123c',
+                    }}>
+                      {t.status}
+                    </span>
+                  </td>
+                  <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', color: '#111827' }}>
+                    {formatCurrency(t.totalAmount)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Footer Statement Disclaimer */}
+          <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#6b7280' }}>
+            <div>
+              <p style={{ margin: 0, fontWeight: 'bold', color: '#374151' }}>Amman Communications Portal Digital Verification Seal</p>
+              <p style={{ margin: '2px 0 0 0' }}>This is an official computer-generated transaction statement valid without physical signature.</p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ margin: 0, fontWeight: 'bold', color: '#12372A' }}>Page 1 of 1</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
