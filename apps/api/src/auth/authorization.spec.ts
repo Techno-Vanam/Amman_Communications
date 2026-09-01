@@ -88,7 +88,7 @@ test('RolesGuard rejects access if user role does not match', async () => {
 
 test('customer document completion rejects another customer application', async () => {
   const prisma = {
-    application: { findFirst: async () => null },
+    application: { findFirst: async () => null, findUnique: async () => null },
     document: { create: async () => { throw new Error('must not create'); } },
   } as never;
   const storageMock = {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Users,
   Search,
@@ -20,6 +20,12 @@ import {
   Clock,
   UserCircle2,
 } from 'lucide-react';
+import {
+  fetchCustomersAction,
+  createCustomerAction,
+  updateCustomerAction,
+  deleteCustomerAction,
+} from './actions';
 
 export interface Customer {
   id: string;
@@ -252,47 +258,88 @@ function DeleteConfirmModal({ customer, onClose, onConfirm }: { customer: Custom
 
 // ── Main Page ─────────────────────────────────────────────────
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('All');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editCustomer, setEditCustomer] = useState<Customer | null>(null);
   const [deleteCustomer, setDeleteCustomer] = useState<Customer | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    return customers.filter(c => {
-      const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.email.toLowerCase().includes(search.toLowerCase()) ||
-        c.phone.includes(search) ||
-        c.id.toLowerCase().includes(search.toLowerCase());
-      const matchFilter = filterStatus === 'All' || c.status === filterStatus;
-      return matchSearch && matchFilter;
-    });
-  }, [customers, search, filterStatus]);
+  const loadCustomers = async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+    const res = await fetchCustomersAction(search, filterStatus);
+    if (res.error) {
+      setErrorMsg(res.error);
+      setCustomers([]);
+    } else if (res.success && res.data) {
+      // Map backend schema to UI format
+      const mapped = res.data.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        phone: c.phone || '—',
+        applications: c._count?.applications ?? 0,
+        pending: c._count?.documents ?? 0,
+        balance: '₹0',
+        status: c.status === 'ACTIVE' ? 'Active' : c.status === 'INACTIVE' ? 'Inactive' : 'Pending',
+        joinedDate: new Date(c.createdAt).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }),
+      }));
+      setCustomers(mapped);
+    }
+    setIsLoading(false);
+  };
 
-  function handleAdd(data: Partial<Customer>) {
-    const newCustomer: Customer = {
-      id: `C-${String(customers.length + 1).padStart(4, '0')}`,
+  useEffect(() => {
+    loadCustomers();
+  }, [search, filterStatus]);
+
+  async function handleAdd(data: Partial<Customer>) {
+    setErrorMsg(null);
+    const res = await createCustomerAction({
       name: data.name ?? '',
       email: data.email ?? '',
       phone: data.phone ?? '',
-      applications: 0,
-      pending: 0,
-      balance: '₹0',
       status: data.status ?? 'Active',
-      joinedDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-    };
-    setCustomers(prev => [newCustomer, ...prev]);
+    });
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      loadCustomers();
+    }
   }
 
-  function handleEdit(data: Partial<Customer>) {
+  async function handleEdit(data: Partial<Customer>) {
     if (!editCustomer) return;
-    setCustomers(prev => prev.map(c => c.id === editCustomer.id ? { ...c, ...data } : c));
+    setErrorMsg(null);
+    const res = await updateCustomerAction(editCustomer.id, {
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      status: data.status,
+    });
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      loadCustomers();
+    }
   }
 
-  function handleDelete(id: string) {
-    setCustomers(prev => prev.filter(c => c.id !== id));
+  async function handleDelete(id: string) {
+    setErrorMsg(null);
+    const res = await deleteCustomerAction(id);
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      loadCustomers();
+    }
   }
 
   const statusCounts = {
@@ -305,17 +352,7 @@ export default function CustomersPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
-      {/* ── Page Header ── */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setShowAddModal(true)}
-          suppressHydrationWarning
-          className="flex items-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 text-[#a8d5b9]" />
-          New Customer
-        </button>
-      </div>
+
 
       {/* ── Stats Summary Row ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -335,9 +372,9 @@ export default function CustomersPage() {
       </div>
 
       {/* ── Search & Filter Bar ── */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row items-center gap-3">
         {/* Search */}
-        <div className="relative flex-1">
+        <div className="relative w-full sm:max-w-sm mr-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -355,11 +392,11 @@ export default function CustomersPage() {
         </div>
 
         {/* Filter Dropdown */}
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <button
             onClick={() => setShowFilterMenu(s => !s)}
             suppressHydrationWarning
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-xs"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-xs"
           >
             <Filter className="w-4 h-4 text-gray-500" />
             Filter: {filterStatus}
@@ -380,6 +417,16 @@ export default function CustomersPage() {
             </div>
           )}
         </div>
+
+        {/* New Customer Button */}
+        <button
+          onClick={() => setShowAddModal(true)}
+          suppressHydrationWarning
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md shrink-0"
+        >
+          <Plus className="w-4 h-4 text-[#a8d5b9]" />
+          New Customer
+        </button>
       </div>
 
       {/* ── Customers Table ── */}
@@ -397,17 +444,17 @@ export default function CustomersPage() {
             </div>
 
             {/* Rows */}
-            {filtered.length === 0 ? (
+            {customers.length === 0 ? (
               <div className="py-16 text-center">
                 <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
                 <p className="text-sm font-bold text-gray-400">No customers found</p>
                 <p className="text-xs text-gray-300 mt-1">Try changing your search or filter</p>
               </div>
             ) : (
-              filtered.map((c, idx) => (
+              customers.map((c, idx) => (
                 <div
                   key={c.id}
-                  className={`grid grid-cols-12 px-5 py-3.5 items-center transition-colors hover:bg-gray-50/80 ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}
+                  className={`grid grid-cols-12 px-5 py-3.5 items-center transition-colors hover:bg-gray-50/80 ${idx !== customers.length - 1 ? 'border-b border-gray-100' : ''}`}
                 >
                   {/* Name + Email */}
                   <div className="col-span-3 flex items-center gap-3 min-w-0">
@@ -474,7 +521,7 @@ export default function CustomersPage() {
         {/* Footer */}
         <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-[11px] text-gray-400 font-medium">
-            Showing {filtered.length} of {customers.length} customers
+            Showing {customers.length} of {customers.length} customers
           </p>
           <p className="text-[11px] text-gray-400">Last updated · Just now</p>
         </div>
