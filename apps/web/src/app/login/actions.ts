@@ -16,7 +16,7 @@ export async function loginAction(formData: FormData) {
   }
 
   try {
-    let res = await fetch(`${API_BASE_URL}/v1/auth/login`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -26,19 +26,6 @@ export async function loginAction(formData: FormData) {
         password: String(password),
       }),
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: String(email).trim().toLowerCase(),
-          password: String(password),
-        }),
-      });
-    }
 
     const data = await res.json().catch(() => ({}));
 

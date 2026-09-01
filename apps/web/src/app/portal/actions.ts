@@ -90,6 +90,33 @@ export async function cancelAppointmentAction(appointmentId: string) {
   }
 }
 
+export async function rescheduleAppointmentAction(
+  appointmentId: string,
+  dto: {
+    preferredDate: string;
+    preferredTime?: string;
+    reason?: string;
+  },
+) {
+  try {
+    const res = await authenticatedFetch(`/customer/appointments/${appointmentId}/reschedule`, {
+      method: 'PATCH',
+      body: JSON.stringify(dto),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { error: data.message || 'Failed to reschedule appointment' };
+    }
+
+    revalidatePath('/portal/appointments');
+    return { success: true, appointment: data.data || data };
+  } catch (error) {
+    console.error('Error rescheduling appointment:', error);
+    return { error: 'Network error occurred while rescheduling appointment.' };
+  }
+}
+
 export async function fetchServicesAction() {
   try {
     const res = await authenticatedFetch('/customer/services');

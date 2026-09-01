@@ -889,7 +889,7 @@ export default function PaymentsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 border-2 border-[#0e2a47] bg-[#f0f7ff] rounded-xl flex items-center gap-2 cursor-pointer font-bold text-[#0e2a47]">
                   <CreditCard className="w-4 h-4 text-[#0e2a47]" />
-                  <span>Card / UPI</span>
+                  <span>UPI / QR Code</span>
                 </div>
                 <div className="p-3 border border-gray-200 bg-white rounded-xl flex items-center gap-2 cursor-pointer font-semibold text-gray-700 hover:border-gray-300">
                   <Building className="w-4 h-4 text-gray-500" />

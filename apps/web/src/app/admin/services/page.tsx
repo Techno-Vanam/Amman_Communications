@@ -445,7 +445,7 @@ export default function ServicesPage() {
 
   const filtered = useMemo(() => services.filter(s => {
     const q = search.toLowerCase();
-    const matchSearch = s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || s.id.toLowerCase().includes(q);
+    const matchSearch = s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || s.id.toLowerCase().includes(q) || (s.description && s.description.toLowerCase().includes(q));
     const matchStatus = filterStatus === 'All' || s.status === filterStatus;
     const matchCat = filterCategory === 'All' || s.category === filterCategory;
     return matchSearch && matchStatus && matchCat;
