@@ -365,7 +365,7 @@ function PortalContentWrapper({ children }: { children: React.ReactNode }) {
   const isProfileLocked = user.isProfileCompleted === false && pathname !== '/portal/profile';
 
   return (
-    <div className="h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-hidden print:bg-white print:h-auto print:overflow-visible print:p-0 print:m-0">
+    <div className="min-h-screen md:h-screen min-h-dvh bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-x-hidden md:overflow-hidden print:bg-white print:h-auto print:overflow-visible print:p-0 print:m-0">
       {/* Profile Setup Required Modal Guard */}
       {isProfileLocked && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">

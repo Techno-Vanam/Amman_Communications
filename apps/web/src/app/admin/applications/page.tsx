@@ -238,8 +238,8 @@ function AdminStatusTracker({
       </div>
 
       {/* Stepper Nodes */}
-      <div className="relative pt-2 pb-2 w-full">
-        <div className="w-full grid grid-cols-8 relative py-1">
+      <div className="relative pt-2 pb-2 w-full overflow-x-auto admin-scrollbar">
+        <div className="w-full min-w-[560px] sm:min-w-0 grid grid-cols-8 relative py-1">
           {/* Connecting Track Line (100% Equal Center-to-Center Spacing) */}
           <div className="absolute top-[12px] sm:top-[18px] left-[6.25%] right-[6.25%] h-1 bg-gray-200 z-0 overflow-hidden rounded-full">
             <div
