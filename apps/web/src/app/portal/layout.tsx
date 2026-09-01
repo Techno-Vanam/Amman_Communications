@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   ShieldAlert,
   Lock,
-  Plus
+  Plus,
+  ChevronRight
 } from 'lucide-react';
 import { NotificationProvider, useNotifications } from '@/context/NotificationContext';
 import { UserProvider, useUser } from '@/context/UserContext';
@@ -285,7 +286,7 @@ function PortalTopHeader() {
   const { title, subtitle, action } = getHeaderInfo();
 
   return (
-    <header className="mb-6 flex items-center justify-between gap-4 print:hidden">
+    <header className="mb-3.5 sm:mb-4 flex items-center justify-between gap-4 print:hidden">
       {/* Title & Subtitle - Aligned to the left */}
       <div className="min-w-0">
         <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold tracking-tight text-gray-900 leading-tight">
@@ -316,13 +317,24 @@ function PortalTopHeader() {
           )}
         </Link>
 
-        {/* User Profile Circle Option */}
+        {/* User Profile Badge: Small screen = w-10 h-10 single circle; Big screen = h-10 pill with avatar + name & view profile */}
         <Link
           href="/portal/profile"
-          className="w-10 h-10 rounded-full bg-[#12372A] text-white font-extrabold text-xs sm:text-sm flex items-center justify-center border border-[#12372A] shadow-xs hover:bg-[#1a4a38] transition-all shrink-0"
+          className="h-10 w-10 sm:w-auto rounded-full bg-[#12372A] sm:bg-white border border-[#12372A] sm:border-gray-200/90 hover:border-gray-300 hover:bg-[#1a4a38] sm:hover:bg-gray-50 transition-all shadow-xs flex items-center justify-center sm:justify-start p-0 sm:p-1 sm:pr-3 sm:gap-2 group shrink-0"
           title={`Profile (${user.name})`}
         >
-          {user.initials}
+          <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-[#12372A] text-white font-extrabold text-xs flex items-center justify-center shrink-0 border border-transparent sm:border-[#12372A] shadow-2xs">
+            {user.initials}
+          </div>
+          <div className="hidden sm:flex flex-col text-left pr-0.5">
+            <span className="text-[11px] font-bold text-gray-900 group-hover:text-[#12372A] leading-tight truncate max-w-[110px] lg:max-w-[140px]">
+              {user.name}
+            </span>
+            <span className="text-[10px] font-semibold text-[#12372A]/75 group-hover:text-[#12372A] leading-tight flex items-center gap-0.5 mt-0.5">
+              View profile
+              <ChevronRight className="w-2.5 h-2.5 text-[#12372A]/60 group-hover:translate-x-0.5 transition-transform" />
+            </span>
+          </div>
         </Link>
       </div>
     </header>
