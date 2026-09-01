@@ -52,8 +52,9 @@ export class CustomerDocumentsController {
     @Query('path') storagePath: string,
     @Res({ passthrough: true }) res: any,
   ) {
+    const customerId = (req.user as any)?.customerId || req.user?.sub;
     const allowed = await this.documentsService.verifyCustomerOwnsPath(
-      req.user.sub,
+      customerId,
       storagePath,
     );
     if (!allowed) {

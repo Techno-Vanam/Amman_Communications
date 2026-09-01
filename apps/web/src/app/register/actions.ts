@@ -25,7 +25,7 @@ export async function registerAction(formData: FormData) {
   }
 
   try {
-    let res = await fetch(`${API_BASE_URL}/v1/auth/register`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -36,20 +36,6 @@ export async function registerAction(formData: FormData) {
         password: String(password),
       }),
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-          email: String(email).trim().toLowerCase(),
-          password: String(password),
-        }),
-      });
-    }
 
     const data = await res.json().catch(() => ({}));
 

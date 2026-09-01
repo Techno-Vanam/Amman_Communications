@@ -16,7 +16,7 @@ export async function loginAction(formData: FormData) {
   }
 
   try {
-    let res = await fetch(`${API_BASE_URL}/v1/auth/login`, {
+    let res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -26,19 +26,6 @@ export async function loginAction(formData: FormData) {
         password: String(password),
       }),
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: String(email).trim().toLowerCase(),
-          password: String(password),
-        }),
-      });
-    }
 
     const data = await res.json().catch(() => ({}));
 
@@ -75,4 +62,10 @@ export async function loginAction(formData: FormData) {
     console.error('Login action error:', error);
     return { error: 'Network error or backend unavailable' };
   }
+}
+
+export async function logoutAction() {
+  const cookieStore = await cookies();
+  cookieStore.delete('access_token');
+  return { success: true };
 }

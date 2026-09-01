@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { ShieldCheck, Menu, X, LogIn, UserPlus, ArrowRight } from 'lucide-react';
 
 interface NavbarProps {
@@ -96,15 +97,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             })}
           </nav>
 
-          {/* RIGHT ACTION BUTTONS - Outside drawer on tablet/desktop (>= 640px) */}
+          {/* RIGHT ACTION BUTTONS - Outside drawer on desktop (>= 1024px) */}
           <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <button
-              onClick={onNavigateLogin}
+            <Link
+              href="/login"
               className="px-2.5 sm:px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-slate-700 hover:text-brand-700 hover:bg-white/80 rounded-full transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <LogIn className="w-3.5 h-3.5 text-brand-600" />
               <span>Login</span>
-            </button>
+            </Link>
 
             {onOpenModal ? (
               <button
@@ -115,13 +116,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             ) : (
-              <button
-                onClick={onNavigateSignUp}
+              <Link
+                href="/register"
                 className="px-3 sm:px-5 py-1.5 sm:py-2 text-[11px] sm:text-sm font-bold text-white bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-700 hover:to-brand-800 rounded-full transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-brand-600/25 hover:scale-[1.02]"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>Get Started</span>
-              </button>
+              </Link>
             )}
           </div>
 
@@ -129,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             suppressHydrationWarning
-            className="md:hidden p-2 rounded-full text-slate-700 hover:text-brand-600 hover:bg-white/80 transition-colors cursor-pointer"
+            className="lg:hidden p-2 rounded-full text-slate-700 hover:text-brand-600 hover:bg-white/80 transition-colors cursor-pointer"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -161,19 +162,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             })}
           </div>
 
-          {/* Actions for Mobile Phones Only (< 640px) inside the drawer */}
-          <div className="sm:hidden flex flex-col gap-2 pt-3 border-t border-slate-100">
+          {/* Actions for Mobile / Tablet Drawer */}
+          <div className="flex flex-col gap-2 pt-3 border-t border-slate-100">
             <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onNavigateLogin();
-                }}
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
                 className="py-2.5 px-3 rounded-xl border border-slate-200/80 bg-white/70 text-center font-semibold text-slate-700 hover:bg-white transition-colors flex items-center justify-center gap-1.5 text-xs cursor-pointer shadow-xs"
               >
                 <LogIn className="w-3.5 h-3.5 text-brand-600" />
                 <span>Login</span>
-              </button>
+              </Link>
 
               <button
                 onClick={() => {
