@@ -8,11 +8,57 @@ export interface NotificationItem {
   id: string;
   title: string;
   message: string;
-  time: string;
+  time?: string;
+  createdAt?: number;
   actionText: string;
   actionUrl: string;
   read: boolean;
   iconType: 'calendar-dark' | 'calendar-light' | 'document-red' | 'info-gray' | 'check-blue';
+}
+
+export function formatRelativeTime(createdAt?: number, fallbackTime?: string): string {
+  if (!createdAt && !fallbackTime) return 'Just now';
+
+  let timeMs = createdAt;
+  if (!timeMs && fallbackTime) {
+    const parsed = new Date(fallbackTime).getTime();
+    if (!isNaN(parsed)) {
+      timeMs = parsed;
+    } else {
+      return fallbackTime;
+    }
+  }
+
+  if (!timeMs) return fallbackTime || 'Just now';
+
+  const diffSeconds = Math.max(0, Math.floor((Date.now() - timeMs) / 1000));
+
+  if (diffSeconds < 45) {
+    return 'Just now';
+  }
+
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  if (diffMinutes < 60) {
+    return `${diffMinutes} ${diffMinutes === 1 ? 'min' : 'mins'} ago`;
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) {
+    return `${diffHours} ${diffHours === 1 ? 'hr' : 'hrs'} ago`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) {
+    return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+  }
+
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) {
+    return `${diffMonths} ${diffMonths === 1 ? 'month' : 'months'} ago`;
+  }
+
+  const diffYears = Math.floor(diffMonths / 12);
+  return `${diffYears} ${diffYears === 1 ? 'yr' : 'yrs'} ago`;
 }
 
 interface ToastMessage {
@@ -30,7 +76,14 @@ interface NotificationContextType {
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   loadMore: () => void;
-  showToast: (title: string, message?: string, type?: 'success' | 'info' | 'warning') => void;
+  showToast: (
+    title: string,
+    message?: string,
+    type?: 'success' | 'info' | 'warning',
+    actionText?: string,
+    actionUrl?: string,
+    shouldCreateNotification?: boolean
+  ) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -64,27 +117,45 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const showToast = (title: string, message?: string, type: 'success' | 'info' | 'warning' = 'success') => {
+  const getFormattedActualDateTime = () => {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return `${timeStr}, ${dateStr}`;
+  };
+
+  const showToast = (
+    title: string,
+    message?: string,
+    type: 'success' | 'info' | 'warning' = 'success',
+    actionText: string = 'View Details',
+    actionUrl: string = '/portal/dashboard',
+    shouldCreateNotification: boolean = false
+  ) => {
     const id = Date.now().toString();
     setToast({ id, title, message, type });
 
-    // Automatically push a real notification item into user's notification list
-    const newNotif: NotificationItem = {
-      id: `n-${Date.now()}`,
-      title,
-      message: message || title,
-      time: 'Just now',
-      actionText: 'View Details',
-      actionUrl: '/portal/dashboard',
-      read: false,
-      iconType: type === 'warning' ? 'document-red' : 'check-blue'
-    };
+    if (shouldCreateNotification) {
+      // Automatically push a real notification item into user's notification list with actual timestamp & formatted time
+      const nowMs = Date.now();
+      const newNotif: NotificationItem = {
+        id: `n-${nowMs}`,
+        title,
+        message: message || title,
+        createdAt: nowMs,
+        time: getFormattedActualDateTime(),
+        actionText,
+        actionUrl,
+        read: false,
+        iconType: type === 'warning' ? 'document-red' : 'check-blue'
+      };
 
-    setNotifications((prev) => {
-      const updated = [newNotif, ...prev];
-      saveNotificationsToStorage(updated);
-      return updated;
-    });
+      setNotifications((prev) => {
+        const updated = [newNotif, ...prev];
+        saveNotificationsToStorage(updated);
+        return updated;
+      });
+    }
   };
 
   const markAsRead = (id: string) => {
@@ -104,29 +175,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   };
 
   const loadMore = () => {
-    const moreItems: NotificationItem[] = [
-      {
-        id: `n-${Date.now()}-1`,
-        title: 'Passbook Verification Approved',
-        message: 'Your bank passbook details have been verified successfully.',
-        time: '4 days ago',
-        actionText: 'View Details',
-        actionUrl: '/portal/documents',
-        read: true,
-        iconType: 'check-blue'
-      },
-      {
-        id: `n-${Date.now()}-2`,
-        title: 'New Service Request Submitted',
-        message: 'Your Patta Transfer application was registered under AMC-2026-000008.',
-        time: '5 days ago',
-        actionText: 'View',
-        actionUrl: '/portal/applications',
-        read: true,
-        iconType: 'info-gray'
-      }
-    ];
-    setNotifications((prev) => [...prev, ...moreItems]);
+    // No-op: pagination handled in page view without injecting mock items
   };
 
   const [mounted, setMounted] = useState(false);

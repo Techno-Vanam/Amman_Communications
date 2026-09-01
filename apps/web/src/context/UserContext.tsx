@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { logoutAction } from '@/app/login/actions';
 
 export interface UserProfile {
   name: string;
@@ -15,12 +16,13 @@ export interface UserProfile {
   occupation?: string;
   altPhone?: string;
   emergencyContact?: string;
+  isProfileCompleted?: boolean;
 }
 
 interface UserContextType {
   user: UserProfile;
   updateUser: (updates: Partial<UserProfile>) => void;
-  loginUser: (email: string, name?: string) => void;
+  loginUser: (email: string, name?: string, isProfileCompleted?: boolean) => void;
   logoutUser: () => void;
 }
 
@@ -41,7 +43,8 @@ const DEFAULT_JAI_USER: UserProfile = {
   panNumber: '',
   occupation: '',
   altPhone: '+91 ',
-  emergencyContact: ''
+  emergencyContact: '',
+  isProfileCompleted: true
 };
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -114,14 +117,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const loginUser = (email: string, name?: string) => {
+  const loginUser = (email: string, name?: string, isProfileCompleted?: boolean) => {
     const accountKey = getUserStorageKey(email, 'amman_user_profile');
     try {
       const existingProfile = localStorage.getItem(accountKey);
       if (existingProfile) {
         const parsed = JSON.parse(existingProfile);
-        setUser(parsed);
-        localStorage.setItem('amman_user_profile', JSON.stringify(parsed));
+        const merged = {
+          ...parsed,
+          isProfileCompleted: isProfileCompleted !== undefined ? isProfileCompleted : parsed.isProfileCompleted
+        };
+        setUser(merged);
+        localStorage.setItem('amman_user_profile', JSON.stringify(merged));
+        localStorage.setItem(accountKey, JSON.stringify(merged));
         localStorage.setItem('user_email', email);
         return;
       }
@@ -143,7 +151,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       panNumber: '',
       occupation: '',
       altPhone: '+91 ',
-      emergencyContact: ''
+      emergencyContact: '',
+      isProfileCompleted: isProfileCompleted ?? false
     };
     setUser(newUser);
     try {
@@ -158,6 +167,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const logoutUser = () => {
     try {
       localStorage.removeItem('user_email');
+      logoutAction().catch(err => console.error('Error clearing secure cookie:', err));
     } catch (e) {
       console.error('Error clearing user session:', e);
     }
