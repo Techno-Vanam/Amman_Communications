@@ -3095,6 +3095,64 @@
           "Finance"
         ]
       }
+    },
+    "/api/v1/admin/finance/manual-sales": {
+      "post": {
+        "operationId": "ManualSalesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateManualSaleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new manual sale (e.g. walk-in customer)",
+        "tags": [
+          "Admin - Finance - Manual Sales"
+        ]
+      },
+      "get": {
+        "operationId": "ManualSalesController_findAll",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Search by customer name or sale number",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all manual sales",
+        "tags": [
+          "Admin - Finance - Manual Sales"
+        ]
+      }
     }
   },
   "info": {
@@ -4214,6 +4272,58 @@
         "required": [
           "amount",
           "paymentMethod"
+        ]
+      },
+      "CreateManualSaleDto": {
+        "type": "object",
+        "properties": {
+          "customerName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The name of the walk-in customer",
+            "example": "John Doe"
+          },
+          "category": {
+            "enum": [
+              "APPLICATION",
+              "XEROX",
+              "STATIONARY",
+              "OTHER"
+            ],
+            "type": "string",
+            "description": "Category of the sale",
+            "example": "XEROX"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Amount for the sale",
+            "example": 10.5
+          },
+          "paymentMethod": {
+            "enum": [
+              "CASH",
+              "BANK_TRANSFER",
+              "CREDIT_CARD",
+              "DEBIT_CARD",
+              "UPI",
+              "CHEQUE",
+              "OTHER"
+            ],
+            "type": "string",
+            "description": "Payment Method",
+            "example": "CASH"
+          },
+          "details": {
+            "type": "string",
+            "description": "Optional details about the sale",
+            "example": "2 copies of A4"
+          }
+        },
+        "required": [
+          "customerName",
+          "category",
+          "amount"
         ]
       }
     }

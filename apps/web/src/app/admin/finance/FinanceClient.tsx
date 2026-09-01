@@ -12,6 +12,7 @@ import {
   fetchInvoiceDetailAction,
   updateInvoiceAction,
   recordInvoicePaymentAction,
+  createManualSaleAction,
 } from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -36,6 +37,8 @@ export interface FinanceRecord {
   createdAt: string;
   status: PaymentStatus;
   notes: string;
+  isManualSale?: boolean;
+  paymentMethod?: string;
 }
 
 interface PaymentRecord {
@@ -313,11 +316,16 @@ function ViewModal({ record, onClose }: { record: FinanceRecord; onClose: () => 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (record.isManualSale) {
+      setDetail({ payments: [] });
+      setLoading(false);
+      return;
+    }
     fetchInvoiceDetailAction(record.id).then(res => {
       if (res.success) setDetail(res.data);
       setLoading(false);
     });
-  }, [record.id]);
+  }, [record.id, record.isManualSale]);
 
   const balance = record.outstandingAmount;
 
@@ -341,13 +349,16 @@ function ViewModal({ record, onClose }: { record: FinanceRecord; onClose: () => 
 
         <div className="px-6 py-5 space-y-4">
           {/* Payment breakdown */}
-          <div className="grid grid-cols-4 gap-2">
-            {[
+          <div className={`grid ${record.isManualSale ? 'grid-cols-2' : 'grid-cols-4'} gap-2`}>
+            {(record.isManualSale ? [
+              { label: 'Total', value: fmtAmt(record.totalCost), color: 'text-gray-900', bg: 'bg-gray-50 border-gray-100' },
+              { label: 'Paid', value: fmtAmt(record.paidAmount), color: 'text-emerald-800', bg: 'bg-emerald-50 border-emerald-100' },
+            ] : [
               { label: 'Govt Fee', value: fmtAmt(record.governmentFee), color: 'text-gray-900', bg: 'bg-gray-50 border-gray-100' },
               { label: 'Service Fee', value: fmtAmt(record.serviceFee), color: 'text-indigo-700', bg: 'bg-indigo-50 border-indigo-100' },
               { label: 'Paid', value: fmtAmt(record.paidAmount), color: 'text-emerald-800', bg: 'bg-emerald-50 border-emerald-100' },
               { label: 'Balance', value: fmtAmt(balance), color: balance > 0 ? 'text-rose-800' : 'text-emerald-800', bg: balance > 0 ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100' },
-            ].map(s => (
+            ]).map(s => (
               <div key={s.label} className={`p-3 rounded-xl border text-center ${s.bg}`}>
                 <p className="text-[9px] text-gray-400 font-semibold uppercase mb-1">{s.label}</p>
                 <p className={`text-sm font-extrabold ${s.color}`}>{s.value}</p>
@@ -357,11 +368,11 @@ function ViewModal({ record, onClose }: { record: FinanceRecord; onClose: () => 
 
           {/* Info rows */}
           {[
-            { icon: <FileText className="w-4 h-4 text-gray-400" />, label: 'Application ID', value: record.appId },
-            { icon: <User className="w-4 h-4 text-gray-400" />, label: 'Customer', value: `${record.customer} · ${record.email}` },
-            { icon: <CreditCard className="w-4 h-4 text-gray-400" />, label: 'Service', value: record.serviceType },
-            { icon: <Calendar className="w-4 h-4 text-gray-400" />, label: 'Due Date', value: fmtDate(record.dueDate) },
-          ].map(r => (
+            !record.isManualSale && { icon: <FileText className="w-4 h-4 text-gray-400" />, label: 'Application ID', value: record.appId },
+            { icon: <User className="w-4 h-4 text-gray-400" />, label: 'Customer', value: record.isManualSale ? record.customer : `${record.customer} · ${record.email}` },
+            { icon: <CreditCard className="w-4 h-4 text-gray-400" />, label: record.isManualSale ? 'Category' : 'Service', value: record.serviceType },
+            !record.isManualSale && { icon: <Calendar className="w-4 h-4 text-gray-400" />, label: 'Due Date', value: fmtDate(record.dueDate) },
+          ].filter(Boolean).map((r: any) => (
             <div key={r.label} className="flex items-center gap-3 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
               <div className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center shrink-0">{r.icon}</div>
               <div>
@@ -391,13 +402,23 @@ function ViewModal({ record, onClose }: { record: FinanceRecord; onClose: () => 
             </div>
             {loading ? (
               <p className="text-xs text-gray-400 py-3 text-center">Loading…</p>
-            ) : detail?.payments?.length > 0 ? (
+            ) : record.isManualSale || detail?.payments?.length > 0 ? (
               <div className="space-y-2">
-                {detail.payments.map((p: PaymentRecord) => (
+                {(record.isManualSale
+                  ? [{
+                      id: record.id,
+                      amount: record.paidAmount,
+                      paymentMethod: record.paymentMethod || 'CASH',
+                      paidAt: record.createdAt,
+                      paymentNumber: record.invoiceNumber,
+                      reference: ''
+                    }]
+                  : detail.payments
+                ).map((p: any) => (
                   <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-100">
                     <div>
                       <p className="text-xs font-bold text-emerald-800">{fmtAmt(p.amount)}</p>
-                      <p className="text-[10px] text-emerald-600 font-medium">{p.paymentMethod.replace('_', ' ')} {p.reference ? `· ${p.reference}` : ''}</p>
+                      <p className="text-[10px] text-emerald-600 font-medium">{p.paymentMethod.replace(/_/g, ' ')} {p.reference ? `· ${p.reference}` : ''}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-[10px] text-gray-500 font-semibold">{fmtDate(p.paidAt)}</p>
@@ -423,6 +444,122 @@ function ViewModal({ record, onClose }: { record: FinanceRecord; onClose: () => 
   );
 }
 
+// ── Add Manual Sale Modal ──────────────────────────────────────
+function AddManualSaleModal({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [customerName, setCustomerName] = useState('');
+  const [category, setCategory] = useState('XEROX');
+  const [amount, setAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('CASH');
+  const [details, setDetails] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!customerName || !amount) {
+      setError('Name and Amount are required.');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    const res = await createManualSaleAction({
+      customerName,
+      category,
+      amount: Number(amount),
+      paymentMethod,
+      details,
+    });
+    setSaving(false);
+    if (res.error) {
+      setError(res.error);
+      return;
+    }
+    onSuccess();
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center">
+              <Plus className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold text-gray-900">Add Manual Sale</h2>
+              <p className="text-[11px] text-gray-400">Directly record sales (e.g. Xerox)</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+            <X className="w-4 h-4 text-gray-600" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">Customer Name</label>
+            <input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} required
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all" />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">Category</label>
+            <select value={category} onChange={e => setCategory(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all">
+              <option value="XEROX">Xerox</option>
+              <option value="STATIONARY">Stationary</option>
+              <option value="APPLICATION">Application</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">Amount (₹)</label>
+            <input type="number" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all" />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">Payment Method</label>
+            <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all">
+              <option value="CASH">Cash</option>
+              <option value="UPI">UPI</option>
+              <option value="BANK_TRANSFER">Bank Transfer</option>
+              <option value="CREDIT_CARD">Credit Card</option>
+              <option value="DEBIT_CARD">Debit Card</option>
+              <option value="CHEQUE">Cheque</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">Details (optional)</label>
+            <textarea value={details} onChange={e => setDetails(e.target.value)} rows={2}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all resize-none" />
+          </div>
+
+          {error && <p className="text-xs text-rose-600 font-semibold bg-rose-50 border border-rose-100 px-3 py-2 rounded-xl">{error}</p>}
+
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-full border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
+            <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-full bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors shadow-md disabled:opacity-60">
+              {saving ? 'Saving...' : 'Save Sale'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────
 type FilterType = 'All' | PaymentStatus;
 
@@ -431,6 +568,7 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterType>('All');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [showManualSaleModal, setShowManualSaleModal] = useState(false);
   const [viewRecord, setViewRecord] = useState<FinanceRecord | null>(null);
   const [editRecord, setEditRecord] = useState<FinanceRecord | null>(null);
   const [payRecord, setPayRecord] = useState<FinanceRecord | null>(null);
@@ -562,6 +700,13 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
             </div>
           )}
         </div>
+        <button
+          onClick={() => setShowManualSaleModal(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#12372A] text-white text-xs font-bold hover:bg-[#1a4a38] shadow-xs transition-all"
+        >
+          <Plus className="w-4 h-4" />
+          Add Manual Sale
+        </button>
       </div>
 
       {errorMsg && (
@@ -576,15 +721,13 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
           <div className="min-w-[780px]">
             {/* Header */}
             <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-              <div className="col-span-2">Customer</div>
-              <div className="col-span-2">Application</div>
-              <div className="col-span-1 text-right pr-2">Govt Fee</div>
-              <div className="col-span-1 text-right pr-2">Svc Fee</div>
+              <div className="col-span-3">Customer</div>
+              <div className="col-span-3">Category</div>
               <div className="col-span-1 text-right pr-2">Total</div>
-              <div className="col-span-1 text-right pr-3">Paid</div>
+              <div className="col-span-2 text-right pr-3">Paid</div>
               <div className="col-span-1 text-right pr-2">Balance</div>
               <div className="col-span-1 text-center">Status</div>
-              <div className="col-span-2 text-center">Actions</div>
+              <div className="col-span-1 text-center">Actions</div>
             </div>
 
             {/* Rows */}
@@ -602,7 +745,7 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
             ) : filtered.map((r, idx) => (
               <div key={r.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
                 {/* Customer */}
-                <div className="col-span-2 flex items-center gap-2 min-w-0 pr-2">
+                <div className="col-span-3 flex items-center gap-2 min-w-0 pr-2">
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">
                     {r.customer.charAt(0)}
                   </div>
@@ -612,20 +755,14 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
                   </div>
                 </div>
 
-                {/* Application */}
-                <div className="col-span-2 min-w-0 pr-2">
-                  <p className="text-xs font-bold text-[#12372A] truncate">{r.appId}</p>
-                  <p className="text-[9px] text-gray-400 truncate">{r.serviceType}</p>
-                </div>
-
-                {/* Govt Fee */}
-                <div className="col-span-1 text-right pr-2">
-                  <span className="text-xs font-semibold text-gray-700">{fmtAmt(r.governmentFee)}</span>
-                </div>
-
-                {/* Service Fee */}
-                <div className="col-span-1 text-right pr-2">
-                  <span className="text-xs font-semibold text-indigo-700">{fmtAmt(r.serviceFee)}</span>
+                {/* Category */}
+                <div className="col-span-3 min-w-0 pr-2">
+                  <p className="text-xs font-bold text-[#12372A] truncate">
+                    {r.isManualSale ? r.serviceType : r.appId}
+                  </p>
+                  <p className="text-[9px] text-gray-400 truncate">
+                    {r.isManualSale ? 'Manual Sale' : r.serviceType}
+                  </p>
                 </div>
 
                 {/* Total */}
@@ -634,10 +771,17 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
                 </div>
 
                 {/* Paid */}
-                <div className="col-span-1 text-right pr-3">
+                <div className="col-span-2 text-right pr-3">
                   <span className="text-xs font-bold text-emerald-700">{fmtAmt(r.paidAmount)}</span>
-                  {r.paymentsCount > 0 && (
-                    <p className="text-[9px] text-gray-400">{r.paymentsCount} txn{r.paymentsCount > 1 ? 's' : ''}</p>
+                  {r.paymentsCount > 0 ? (
+                    <p className="text-[9px] text-gray-400 uppercase">
+                      {r.paymentsCount} txn{r.paymentsCount > 1 ? 's' : ''}
+                      {r.paymentMethod && r.paymentMethod !== '—' && ` • ${r.paymentMethod.replace(/_/g, ' ')}`}
+                    </p>
+                  ) : (
+                    r.paymentMethod && r.paymentMethod !== '—' && (
+                      <p className="text-[9px] text-gray-400 uppercase">{r.paymentMethod.replace(/_/g, ' ')}</p>
+                    )
                   )}
                 </div>
 
@@ -654,7 +798,7 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
                 </div>
 
                 {/* Actions */}
-                <div className="col-span-2 flex items-center justify-center gap-1.5">
+                <div className="col-span-1 flex items-center justify-center gap-1.5">
                   <button onClick={() => setViewRecord(r)}
                     className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all" title="View details">
                     <Eye className="w-3 h-3" />
@@ -689,6 +833,7 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
       {viewRecord && <ViewModal record={viewRecord} onClose={() => setViewRecord(null)} />}
       {editRecord && <EditModal record={editRecord} onClose={() => setEditRecord(null)} onSave={handleSave} />}
       {payRecord && <RecordPaymentModal record={payRecord} onClose={() => setPayRecord(null)} onSuccess={loadInvoices} />}
+      {showManualSaleModal && <AddManualSaleModal onClose={() => setShowManualSaleModal(false)} onSuccess={loadInvoices} />}
     </div>
   );
 }
