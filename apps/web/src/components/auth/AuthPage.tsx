@@ -5,16 +5,28 @@ import Link from 'next/link';
 import { Eye, EyeOff, ArrowLeft, ShieldCheck, Lock, Sparkles } from 'lucide-react';
 import { loginAction } from '../../app/login/actions';
 import { registerAction } from '../../app/register/actions';
+import { ForgotPassword } from './ForgotPassword';
+import { VerifyOTP } from './VerifyOTP';
+import { ResetPassword } from './ResetSuccess';
+import { ResetSuccess } from './PasswordResetSuccess';
+
+type AuthMode = 'login' | 'signup';
+type ResetStep = 'forgot' | 'verify' | 'reset' | 'success';
 
 interface AuthPageProps {
-  initialMode: 'login' | 'signup';
+  initialMode: AuthMode;
 }
 
 export default function AuthPage({ initialMode }: AuthPageProps) {
-  const [currentMode, setCurrentMode] = useState<'login' | 'signup'>(initialMode);
+  const [currentMode, setCurrentMode] = useState<AuthMode>(initialMode);
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+
+  // Password reset flow states
+  const [resetStep, setResetStep] = useState<ResetStep | null>(null);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetToken, setResetToken] = useState('');
 
   // Form states
   const [loginEmail, setLoginEmail] = useState('');
@@ -26,11 +38,43 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
   const [regPassword, setRegPassword] = useState('');
 
   const isSignUp = currentMode === 'signup';
+  const isPasswordReset = resetStep !== null;
 
   const switchMode = (mode: 'login' | 'signup') => {
     setError(null);
     setCurrentMode(mode);
     window.history.pushState({}, '', mode === 'signup' ? '/register' : '/login');
+  };
+
+  const handleForgotPasswordClick = () => {
+    setError(null);
+    setResetStep('forgot');
+  };
+
+  const handleResetBack = () => {
+    setResetStep(null);
+    setResetEmail('');
+    setResetToken('');
+    setError(null);
+  };
+
+  const handleEmailSubmitted = (email: string) => {
+    setResetEmail(email);
+    setResetStep('verify');
+  };
+
+  const handleOTPVerified = (token: string) => {
+    setResetToken(token);
+    setResetStep('reset');
+  };
+
+  const handlePasswordReset = () => {
+    setResetStep('success');
+  };
+
+  const handleContinueToSignIn = () => {
+    handleResetBack();
+    switchMode('login');
   };
 
   const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -136,7 +180,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
   };
 
   const brandingPanel = (
-    <div className="lg:w-1/2 bg-gradient-to-br from-brand-700 via-brand-800 to-[#062117] p-6 sm:p-10 lg:p-14 text-white flex flex-col justify-between relative overflow-hidden self-stretch w-full min-h-[280px] sm:min-h-[360px] lg:min-h-[400px]">
+    <div className="hidden md:flex lg:w-1/2 bg-gradient-to-br from-brand-700 via-brand-800 to-[#062117] p-6 sm:p-10 lg:p-14 text-white flex flex-col justify-between relative overflow-hidden self-stretch w-full min-h-[280px] sm:min-h-[360px] lg:min-h-[400px]">
       {/* Subtle Ambient Lighting */}
       <div className="absolute -top-[10%] -right-[10%] w-96 h-96 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-[10%] -left-[10%] w-80 h-80 rounded-full bg-emerald-400/15 blur-3xl pointer-events-none" />
@@ -190,166 +234,200 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
 
   const formPanel = (
     <div className="lg:w-1/2 flex flex-col justify-between p-5 sm:p-8 lg:p-12 bg-white self-stretch w-full overflow-y-auto">
-      {/* Back to Home Header */}
-      <div className={`w-full flex items-center mb-4 ${isSignUp ? 'justify-start' : 'justify-end'}`}>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 text-xs sm:text-sm font-bold transition-all shadow-xs cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4 text-brand-600" />
-          <span>Back to Home</span>
-        </Link>
-      </div>
+      {/* Back to Home Header - Only for login/signup, not for reset */}
+      {!isPasswordReset && (
+        <div className={`w-full flex items-center mb-4 ${isSignUp ? 'justify-start' : 'justify-end'}`}>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200 text-xs sm:text-sm font-bold transition-all shadow-xs cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 text-brand-600" />
+            <span>Back to Home</span>
+          </Link>
+        </div>
+      )}
 
       <div className="w-full max-w-md mx-auto my-auto space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-            {isSignUp ? 'Create an Account' : 'Sign In'}
-          </h1>
-          <p className="text-sm text-slate-500 mt-1.5">
-            {isSignUp
-              ? 'Fill in your details below to register with Amman Communications'
-              : 'Welcome back! Enter your details below to access your account'}
-          </p>
-        </div>
-
-        {error && (
-          <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold">
-            {error}
-          </div>
+        {/* Password Reset Flow */}
+        {isPasswordReset && (
+          <>
+            {resetStep === 'forgot' && (
+              <ForgotPassword
+                onBack={handleResetBack}
+                onEmailSubmitted={handleEmailSubmitted}
+              />
+            )}
+            {resetStep === 'verify' && (
+              <VerifyOTP
+                email={resetEmail}
+                onBack={() => setResetStep('forgot')}
+                onVerified={handleOTPVerified}
+              />
+            )}
+            {resetStep === 'reset' && (
+              <ResetPassword
+                email={resetEmail}
+                resetToken={resetToken}
+                onPasswordReset={handlePasswordReset}
+              />
+            )}
+            {resetStep === 'success' && (
+              <ResetSuccess onContinueToSignIn={handleContinueToSignIn} />
+            )}
+          </>
         )}
 
-        {isSignUp ? (
-          /* Sign Up Form */
-          <form onSubmit={handleRegisterSubmit} className="space-y-4" noValidate>
-            {/* Full Name */}
-            <div className="space-y-1.5">
-              <label htmlFor="reg-name" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="reg-name"
-                name="name"
-                type="text"
-                autoComplete="name"
-                required
-                placeholder="John Doe"
-                value={regName}
-                onChange={(e) => setRegName(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
-                disabled={isPending}
-              />
-            </div>
-
-            {/* Email Address */}
-            <div className="space-y-1.5">
-              <label htmlFor="reg-email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Email Address <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="reg-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                placeholder="name@example.com"
-                value={regEmail}
-                onChange={(e) => setRegEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
-                disabled={isPending}
-              />
-            </div>
-
-            {/* Mobile Number */}
-            <div className="space-y-1.5">
-              <label htmlFor="reg-mobile" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Mobile Number (Optional)
-              </label>
-              <input
-                id="reg-mobile"
-                name="mobile"
-                type="tel"
-                autoComplete="tel"
-                placeholder="+91 98765 43210"
-                value={regMobile}
-                onChange={(e) => setRegMobile(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
-                disabled={isPending}
-              />
-            </div>
-
-            {/* Password with Eye Icon */}
-            <div className="space-y-1.5">
-              <label htmlFor="reg-password" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Password <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  id="reg-password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  required
-                  placeholder="At least 8 characters"
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-10 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
-                  disabled={isPending}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-brand-600 transition-colors cursor-pointer"
-                  aria-label="Toggle password visibility"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isPending}
-              className="w-full py-3.5 px-6 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-sm transition-all cursor-pointer disabled:opacity-60 hover:scale-[1.01]"
-            >
-              {isPending ? 'Creating Account...' : 'Create Account'}
-            </button>
-
-            <div className="text-center pt-1">
-              <p className="text-xs text-slate-500">
-                Already have an account?{' '}
-                <button
-                  type="button"
-                  onClick={() => switchMode('login')}
-                  className="text-brand-700 font-bold hover:underline cursor-pointer"
-                >
-                  Sign In
-                </button>
+        {/* Login / Sign Up Forms */}
+        {!isPasswordReset && (
+          <>
+            {/* Header */}
+            <div>
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                {isSignUp ? 'Create an Account' : 'Sign In'}
+              </h1>
+              <p className="text-sm text-slate-500 mt-1.5">
+                {isSignUp
+                  ? 'Fill in your details below to register with Amman Communications'
+                  : 'Welcome back! Enter your details below to access your account'}
               </p>
             </div>
-          </form>
-        ) : (
-          /* Sign In Form */
-          <form onSubmit={handleLoginSubmit} className="space-y-4" noValidate>
-            {/* Email Address */}
-            <div className="space-y-1.5">
-              <label htmlFor="login-email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Email Address <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="login-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                placeholder="name@example.com"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
-                disabled={isPending}
-              />
-            </div>
+
+            {error && (
+              <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-semibold">
+                {error}
+              </div>
+            )}
+
+            {isSignUp ? (
+              /* Sign Up Form */
+              <form onSubmit={handleRegisterSubmit} className="space-y-4" noValidate>
+                {/* Full Name */}
+                <div className="space-y-1.5">
+                  <label htmlFor="reg-name" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="reg-name"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    required
+                    placeholder="John Doe"
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
+                    disabled={isPending}
+                  />
+                </div>
+
+                {/* Email Address */}
+                <div className="space-y-1.5">
+                  <label htmlFor="reg-email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="reg-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    placeholder="name@example.com"
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
+                    disabled={isPending}
+                  />
+                </div>
+
+                {/* Mobile Number */}
+                <div className="space-y-1.5">
+                  <label htmlFor="reg-mobile" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Mobile Number (Optional)
+                  </label>
+                  <input
+                    id="reg-mobile"
+                    name="mobile"
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="+91 98765 43210"
+                    value={regMobile}
+                    onChange={(e) => setRegMobile(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
+                    disabled={isPending}
+                  />
+                </div>
+
+                {/* Password with Eye Icon */}
+                <div className="space-y-1.5">
+                  <label htmlFor="reg-password" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="reg-password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      required
+                      placeholder="At least 8 characters"
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      className="w-full px-4 py-3 pr-10 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
+                      disabled={isPending}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-brand-600 transition-colors cursor-pointer"
+                      aria-label="Toggle password visibility"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-full py-3.5 px-6 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-sm transition-all cursor-pointer disabled:opacity-60 hover:scale-[1.01]"
+                >
+                  {isPending ? 'Creating Account...' : 'Create Account'}
+                </button>
+
+                <div className="text-center pt-1">
+                  <p className="text-xs text-slate-500">
+                    Already have an account?{' '}
+                    <button
+                      type="button"
+                      onClick={() => switchMode('login')}
+                      className="text-brand-700 font-bold hover:underline cursor-pointer"
+                    >
+                      Sign In
+                    </button>
+                  </p>
+                </div>
+              </form>
+            ) : (
+              /* Sign In Form */
+              <form onSubmit={handleLoginSubmit} className="space-y-4" noValidate>
+                {/* Email Address */}
+                <div className="space-y-1.5">
+                  <label htmlFor="login-email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    placeholder="name@example.com"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"
+                    disabled={isPending}
+                  />
+                </div>
 
             {/* Password Field with Eye Icon */}
             <div className="space-y-1.5">
@@ -357,16 +435,16 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                 <label htmlFor="login-password" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Password <span className="text-red-500">*</span>
                 </label>
-                <a
-                  href="#forgot"
+                <button
+                  type="button"
                   onClick={(e) => {
                     e.preventDefault();
-                    setError('Please contact your administrator at support@ammancomm.in to reset credentials.');
+                    handleForgotPasswordClick();
                   }}
-                  className="text-xs text-brand-600 font-semibold hover:underline"
+                  className="text-xs text-brand-600 font-semibold hover:underline cursor-pointer"
                 >
                   Forgot Password?
-                </a>
+                </button>
               </div>
               <div className="relative">
                 <input
@@ -412,7 +490,9 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                 </button>
               </p>
             </div>
-          </form>
+              </form>
+            )}
+          </>
         )}
       </div>
 
@@ -423,7 +503,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-2.5 sm:p-5 lg:p-8 overflow-y-auto w-full">
       {/* MAIN AUTHENTICATION CONTAINER: FULL 50/50 SPLIT */}
-      <div className="w-full max-w-[1400px] min-h-0 lg:min-h-[640px] lg:max-h-[850px] bg-white rounded-2xl sm:rounded-[2.5rem] border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col lg:flex-row items-stretch my-auto">
+      <div className="w-full max-w-[1400px] min-h-0 lg:h-[800px] lg:max-h-[90vh] bg-white rounded-2xl sm:rounded-[2.5rem] border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col lg:flex-row items-stretch my-auto">
         {isSignUp ? (
           <>
             {formPanel}

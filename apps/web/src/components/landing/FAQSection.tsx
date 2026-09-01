@@ -60,14 +60,18 @@ export const FAQSection: React.FC = () => {
               return (
                 <div
                   key={faq.id}
-                  onClick={() => toggleFaq(faq.id)}
-                  className={`rounded-2xl border transition-all duration-200 overflow-hidden cursor-pointer select-none ${
+                  className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
                     isOpen
                       ? 'bg-white border-brand-300 ring-1 ring-brand-500/20 shadow-sm'
                       : 'bg-slate-50/70 hover:bg-white border-slate-200/80 hover:border-brand-300 hover:shadow-xs'
                   }`}
                 >
-                  <div className="px-6 py-5 flex items-center justify-between gap-4">
+                  <button
+                    type="button"
+                    onClick={() => toggleFaq(faq.id)}
+                    aria-expanded={isOpen}
+                    className="w-full text-left px-6 py-5 flex items-center justify-between gap-4 cursor-pointer focus:outline-none"
+                  >
                     <span className="font-bold text-slate-900 text-base sm:text-lg tracking-tight">
                       {faq.question}
                     </span>
@@ -82,7 +86,7 @@ export const FAQSection: React.FC = () => {
                     >
                       {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                     </div>
-                  </div>
+                  </button>
 
                   {isOpen && (
                     <div className="px-6 pb-6 pt-2 text-slate-600 text-sm sm:text-base leading-relaxed border-t border-slate-100 animate-fade-in space-y-3">
