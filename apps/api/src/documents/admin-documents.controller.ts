@@ -3,15 +3,18 @@ import {
   Controller,
   Get,
   Param,
+  Post,
   Put,
   Req,
   Res,
   StreamableFile,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { DocumentsService } from './documents.service';
+import { DirectUploadDocumentDto } from './dto/upload-document.dto';
 import { UpdateDocumentStatusDto } from './dto/update-document-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -49,6 +52,7 @@ export class AdminDocumentsController {
   async streamDocumentById(
     @Param('applicationId') applicationId: string,
     @Param('documentId') documentId: string,
+    @Query('download') download: string,
     @Res({ passthrough: true }) res: any,
   ) {
     const document = await this.documentsService.adminGetDocumentById(
@@ -58,14 +62,25 @@ export class AdminDocumentsController {
     const { buffer, mimeType, fileName } =
       await this.documentsService.streamDecryptedDocument(document.storagePath);
 
+    const disposition = download ? `attachment; filename="${fileName}"` : `inline; filename="${fileName}"`;
+
     res.set({
       'Content-Type': mimeType || 'application/pdf',
-      'Content-Disposition': `inline; filename="${fileName}"`,
+      'Content-Disposition': disposition,
       'Content-Length': buffer.length,
       'Cache-Control': 'private, no-cache',
     });
 
     return new StreamableFile(buffer);
+  }
+
+  @Post(':applicationId/documents/upload')
+  @ApiOperation({ summary: 'Admin uploads a document on behalf of a customer (base64)' })
+  async adminUploadDocument(
+    @Param('applicationId') applicationId: string,
+    @Body() dto: DirectUploadDocumentDto,
+  ) {
+    return this.documentsService.adminDirectUploadDocument(applicationId, dto);
   }
 
   @Put(':applicationId/documents/:documentId/status')

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Calendar,
   Plus,
@@ -17,14 +17,27 @@ import {
   Phone,
   Mail,
   CalendarClock,
-  Video,
-  MapPin,
   Filter,
+  Eye,
+  ChevronRight,
+  Video,
+  FileText,
+  MapPin,
 } from 'lucide-react';
+import {
+  fetchAppointmentsAction,
+  createAppointmentAction,
+  updateAppointmentAction,
+  updateAppointmentStatusAction,
+  deleteAppointmentAction,
+  fetchCustomersForSelectAction,
+} from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
 type AppointmentMode = 'Online' | 'Offline';
 type AppointmentStatus = 'Confirmed' | 'Pending' | 'Completed' | 'Cancelled' | 'Rescheduled';
+
+const APT_PIPELINE: AppointmentStatus[] = ['Pending', 'Confirmed', 'Completed'];
 
 interface Appointment {
   id: string;
@@ -90,19 +103,108 @@ function StatusBadge({ status }: { status: AppointmentStatus }) {
   );
 }
 
+// ── Detail / View Modal ───────────────────────────────────────
+function ViewModal({ apt, onClose, onAdvance }: { apt: Appointment; onClose: () => void; onAdvance?: () => void }) {
+  const currStageIndex = APT_PIPELINE.indexOf(apt.status);
+  const nextStage = currStageIndex !== -1 && currStageIndex < APT_PIPELINE.length - 1 ? APT_PIPELINE[currStageIndex + 1] : null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md flex flex-col max-h-[92vh]">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-[#12372A] flex items-center justify-center">
+              <Eye className="w-5 h-5 text-[#a8d5b9]" />
+            </div>
+            <div>
+              <h2 className="text-base font-extrabold text-gray-900">Appointment Details</h2>
+              <p className="text-[11px] text-gray-400">{apt.id}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+            <X className="w-4 h-4 text-gray-600" />
+          </button>
+        </div>
+        <div className="px-6 py-5 overflow-y-auto space-y-5">
+          {currStageIndex !== -1 && (
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">Pipeline Progress</p>
+                <p className="text-[10px] font-bold text-gray-900">{currStageIndex + 1} / {APT_PIPELINE.length}</p>
+              </div>
+              <div className="flex items-center gap-1">
+                {APT_PIPELINE.map((stage, idx) => (
+                  <div key={stage} className={`h-1.5 flex-1 rounded-full ${idx <= currStageIndex ? 'bg-[#12372A]' : 'bg-gray-100'}`} title={stage} />
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="space-y-3">
+            {[
+              { label: 'Customer', value: apt.customer, icon: <User className="w-4 h-4 text-gray-400" /> },
+              { label: 'Email', value: apt.email, icon: <Mail className="w-4 h-4 text-gray-400" /> },
+              { label: 'Phone', value: apt.phone, icon: <Phone className="w-4 h-4 text-gray-400" /> },
+              { label: 'Service', value: apt.service, icon: <CalendarClock className="w-4 h-4 text-gray-400" /> },
+              { label: 'Date', value: fmtDate(apt.date), icon: <Calendar className="w-4 h-4 text-gray-400" /> },
+              { label: 'Time', value: fmtTime(apt.time), icon: <Clock className="w-4 h-4 text-gray-400" /> },
+              { label: 'Mode', value: apt.mode, icon: apt.mode === 'Online' ? <Video className="w-4 h-4 text-gray-400" /> : <MapPin className="w-4 h-4 text-gray-400" /> },
+            ].map(row => (
+              <div key={row.label} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center shrink-0">{row.icon}</div>
+                <div>
+                  <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">{row.label}</p>
+                  <p className="text-xs font-bold text-gray-800 mt-0.5">{row.value}</p>
+                </div>
+              </div>
+            ))}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
+              <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4 text-gray-400" />
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Status</p>
+                <div className="mt-1"><StatusBadge status={apt.status} /></div>
+              </div>
+            </div>
+            {apt.notes && (
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-100">
+                <p className="text-[10px] text-amber-700 font-bold uppercase tracking-wide mb-1">Notes</p>
+                <p className="text-xs text-amber-800">{apt.notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="px-6 py-4 border-t border-gray-100 shrink-0 bg-gray-50 rounded-b-3xl flex gap-3">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-full border border-gray-200 bg-white text-gray-700 text-xs font-bold hover:bg-gray-50 transition-colors">
+            Close
+          </button>
+          {nextStage && onAdvance && (
+            <button onClick={() => { onAdvance(); onClose(); }} className="flex-1 py-2.5 rounded-full bg-[#12372A] text-white text-xs font-bold hover:bg-[#1a4a38] transition-colors flex items-center justify-center gap-2">
+              Advance to {nextStage} <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Appointment Modal (Add / Edit / Reschedule) ───────────────
 function AppointmentModal({
   mode,
   appointment,
+  customers,
   onClose,
   onSave,
 }: {
   mode: 'add' | 'edit' | 'reschedule';
   appointment?: Appointment;
+  customers: { id: string; name: string; email: string; phone: string }[];
   onClose: () => void;
-  onSave: (data: Partial<Appointment>) => void;
+  onSave: (data: Partial<Appointment> & { customerId?: string }) => void;
 }) {
-  const [form, setForm] = useState<Partial<Appointment>>({
+  const [form, setForm] = useState({
+    customerId: mode === 'add' ? (customers[0]?.id ?? '') : '',
     customer: appointment?.customer ?? '',
     email: appointment?.email ?? '',
     phone: appointment?.phone ?? '',
@@ -117,7 +219,8 @@ function AppointmentModal({
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!form.customer?.trim()) e.customer = 'Customer name is required';
+    if (mode === 'add' && !form.customerId) e.customerId = 'Select a customer';
+    if (mode !== 'add' && !form.customer?.trim()) e.customer = 'Customer name is required';
     if (!form.email?.trim()) e.email = 'Email is required';
     if (!form.phone?.trim()) e.phone = 'Phone is required';
     if (!form.date) e.date = 'Date is required';
@@ -165,20 +268,42 @@ function AppointmentModal({
 
           {mode !== 'reschedule' && (
             <>
-              {/* Customer Name */}
+              {/* Customer */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">Customer Name</label>
-                <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Full name"
-                    value={form.customer}
-                    onChange={e => setForm(p => ({ ...p, customer: e.target.value }))}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all"
-                  />
-                </div>
-                {errors.customer && <p className="text-[10px] text-rose-600 mt-1">{errors.customer}</p>}
+                {mode === 'add' ? (
+                  <>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Select Customer</label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <select value={form.customerId}
+                        onChange={e => {
+                          const cust = customers.find(c => c.id === e.target.value);
+                          setForm(p => ({ ...p, customerId: e.target.value, customer: cust?.name || '', email: cust?.email || '', phone: cust?.phone || '' }));
+                        }}
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all appearance-none">
+                        {customers.length === 0 && <option value="">No customers found — create a customer first</option>}
+                        {customers.map(c => <option key={c.id} value={c.id}>{c.name} ({c.email})</option>)}
+                      </select>
+                      <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                    {errors.customerId && <p className="text-[10px] text-rose-600 mt-1">{errors.customerId}</p>}
+                  </>
+                ) : (
+                  <>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">Customer Name</label>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Full name"
+                        value={form.customer}
+                        onChange={e => setForm(p => ({ ...p, customer: e.target.value }))}
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all"
+                      />
+                    </div>
+                    {errors.customer && <p className="text-[10px] text-rose-600 mt-1">{errors.customer}</p>}
+                  </>
+                )}
               </div>
 
               {/* Email + Phone */}
@@ -346,13 +471,65 @@ function AppointmentModal({
 type FilterType = 'All' | AppointmentStatus;
 
 export default function AppointmentsPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterType>('All');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [viewApt, setViewApt] = useState<Appointment | null>(null);
   const [editApt, setEditApt] = useState<Appointment | null>(null);
   const [rescheduleApt, setRescheduleApt] = useState<Appointment | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [customers, setCustomers] = useState<{ id: string; name: string; email: string; phone: string }[]>([]);
+
+  const loadAppointments = async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+    const res = await fetchAppointmentsAction(search, filterStatus);
+    if (res.error) {
+      setErrorMsg(res.error);
+      setAppointments([]);
+    } else if (res.success && res.data) {
+      const DB_TO_UI_STATUS: Record<string, string> = {
+        CONFIRMED: 'Confirmed',
+        PENDING: 'Pending',
+        COMPLETED: 'Completed',
+        CANCELLED: 'Cancelled',
+        RESCHEDULED: 'Rescheduled',
+      };
+      const mapped = res.data.map((a: any) => {
+        const d = new Date(a.appointmentDate);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        return {
+          id: a.id,
+          customer: a.customerName || '—',
+          email: a.customerEmail || '—',
+          phone: a.customerPhone || '—',
+          service: a.service?.name || 'Technical Onsite Survey',
+          date,
+          time,
+          mode: a.mode === 'ONLINE' ? 'Online' : 'Offline',
+          status: DB_TO_UI_STATUS[a.status] || 'Confirmed',
+          notes: a.notes || '',
+        };
+      });
+      setAppointments(mapped);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadAppointments();
+  }, [search, filterStatus]);
+
+  useEffect(() => {
+    fetchCustomersForSelectAction().then(res => {
+      if (res.success && res.data) setCustomers(res.data);
+    });
+  }, []);
 
   const filtered = useMemo(() => {
     return appointments.filter(a => {
@@ -366,30 +543,78 @@ export default function AppointmentsPage() {
     });
   }, [appointments, search, filterStatus]);
 
-  function handleAdd(data: Partial<Appointment>) {
-    const newId = `APT-${1001 + appointments.length}`;
-    setAppointments(prev => [{
-      id: newId,
+  async function handleAdd(data: Partial<Appointment> & { customerId?: string }) {
+    if (!data.customerId) return;
+    setErrorMsg(null);
+    const res = await createAppointmentAction({
+      customerId: data.customerId,
       customer: data.customer ?? '',
       email: data.email ?? '',
       phone: data.phone ?? '',
-      service: data.service ?? '',
+      service: data.service ?? 'Technical Onsite Survey',
       date: data.date ?? '',
       time: data.time ?? '09:00',
-      mode: (data.mode as AppointmentMode) ?? 'Online',
-      status: 'Confirmed',
+      mode: data.mode ?? 'Online',
       notes: data.notes,
-    }, ...prev]);
+      status: data.status ?? 'Confirmed',
+    });
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      setShowAddModal(false);
+      loadAppointments();
+    }
   }
 
-  function handleEdit(data: Partial<Appointment>) {
+  async function handleEdit(data: Partial<Appointment>) {
     if (!editApt) return;
-    setAppointments(prev => prev.map(a => a.id === editApt.id ? { ...a, ...data } : a));
+    setErrorMsg(null);
+    const res = await updateAppointmentAction(editApt.id, {
+      customer: data.customer,
+      email: data.email,
+      phone: data.phone,
+      service: data.service,
+      date: data.date,
+      time: data.time,
+      mode: data.mode,
+      notes: data.notes,
+      status: data.status,
+    });
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      setEditApt(null);
+      loadAppointments();
+    }
   }
 
-  function handleReschedule(data: Partial<Appointment>) {
+  async function handleReschedule(data: Partial<Appointment>) {
     if (!rescheduleApt) return;
-    setAppointments(prev => prev.map(a => a.id === rescheduleApt.id ? { ...a, date: data.date ?? a.date, time: data.time ?? a.time, status: 'Rescheduled' } : a));
+    setErrorMsg(null);
+    const res = await updateAppointmentAction(rescheduleApt.id, {
+      date: data.date,
+      time: data.time,
+      status: 'Rescheduled',
+    });
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      setRescheduleApt(null);
+      loadAppointments();
+    }
+  }
+
+  async function handleAdvance(apt: Appointment) {
+    const idx = APT_PIPELINE.indexOf(apt.status);
+    if (idx !== -1 && idx < APT_PIPELINE.length - 1) {
+      const nextStatus = APT_PIPELINE[idx + 1];
+      const res = await updateAppointmentStatusAction(apt.id, nextStatus);
+      if (res.error) {
+        setErrorMsg(res.error);
+      } else {
+        loadAppointments();
+      }
+    }
   }
 
   const statusList: FilterType[] = ['All', 'Confirmed', 'Pending', 'Completed', 'Cancelled', 'Rescheduled'];
@@ -400,42 +625,26 @@ export default function AppointmentsPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
-      {/* ── Page Header ── */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 text-[#a8d5b9]" />
-          New Appointment
-        </button>
-      </div>
+
 
       {/* ── Status Summary Cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
         {statusList.filter(s => s !== 'All').map(s => {
-          const cfg: Record<string, string> = {
-            Confirmed: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-            Pending: 'border-amber-200 bg-amber-50 text-amber-800',
-            Completed: 'border-blue-200 bg-blue-50 text-blue-800',
-            Cancelled: 'border-rose-200 bg-rose-50 text-rose-800',
-            Rescheduled: 'border-violet-200 bg-violet-50 text-violet-800',
-          };
           return (
             <div
               key={s}
-              className={`rounded-2xl border p-3 text-left ${cfg[s]}`}
+              className="rounded-2xl border p-3 text-left bg-white border-gray-100"
             >
-              <p className="text-xl font-extrabold">{counts[s]}</p>
-              <p className="text-[10px] font-semibold mt-0.5 opacity-80 truncate">{s}</p>
+              <p className="text-xl font-extrabold text-[#0e2a47]">{counts[s]}</p>
+              <p className="text-[10px] font-semibold mt-0.5 text-gray-500 leading-tight truncate">{s}</p>
             </div>
           );
         })}
       </div>
 
       {/* ── Search & Filter ── */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className="relative w-full sm:max-w-sm mr-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -451,10 +660,10 @@ export default function AppointmentsPage() {
           )}
         </div>
 
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <button
             onClick={() => setShowFilterMenu(s => !s)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-xs"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-xs"
           >
             <Filter className="w-4 h-4 text-gray-500" />
             Status: {filterStatus}
@@ -474,6 +683,13 @@ export default function AppointmentsPage() {
             </div>
           )}
         </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md shrink-0"
+        >
+          <Plus className="w-4 h-4 text-[#a8d5b9]" />
+          New Appointment
+        </button>
       </div>
 
       {/* ── Appointments List ── */}
@@ -540,6 +756,26 @@ export default function AppointmentsPage() {
 
                   {/* Actions */}
                   <div className="col-span-2 flex items-center justify-center gap-1.5">
+                    {/* View */}
+                    <button
+                      onClick={() => setViewApt(a)}
+                      className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all"
+                      title="View Details"
+                    >
+                      <Eye className="w-3 h-3" />
+                    </button>
+
+                    {/* Advance Stage */}
+                    {APT_PIPELINE.indexOf(a.status) !== -1 && APT_PIPELINE.indexOf(a.status) < APT_PIPELINE.length - 1 && (
+                      <button
+                        onClick={() => handleAdvance(a)}
+                        className="w-7 h-7 rounded-full bg-indigo-50 hover:bg-indigo-600 text-indigo-600 hover:text-white flex items-center justify-center transition-all"
+                        title="Advance Stage"
+                      >
+                        <ChevronRight className="w-3 h-3" />
+                      </button>
+                    )}
+
                     {/* Edit */}
                     <button
                       onClick={() => setEditApt(a)}
@@ -585,13 +821,16 @@ export default function AppointmentsPage() {
 
       {/* ── Modals ── */}
       {showAddModal && (
-        <AppointmentModal mode="add" onClose={() => setShowAddModal(false)} onSave={handleAdd} />
+        <AppointmentModal mode="add" customers={customers} onClose={() => setShowAddModal(false)} onSave={handleAdd} />
+      )}
+      {viewApt && (
+        <ViewModal apt={viewApt} onClose={() => setViewApt(null)} onAdvance={() => handleAdvance(viewApt)} />
       )}
       {editApt && (
-        <AppointmentModal mode="edit" appointment={editApt} onClose={() => setEditApt(null)} onSave={handleEdit} />
+        <AppointmentModal mode="edit" appointment={editApt} customers={customers} onClose={() => setEditApt(null)} onSave={handleEdit} />
       )}
       {rescheduleApt && (
-        <AppointmentModal mode="reschedule" appointment={rescheduleApt} onClose={() => setRescheduleApt(null)} onSave={handleReschedule} />
+        <AppointmentModal mode="reschedule" appointment={rescheduleApt} customers={customers} onClose={() => setRescheduleApt(null)} onSave={handleReschedule} />
       )}
     </div>
   );

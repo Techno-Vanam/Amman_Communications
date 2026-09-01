@@ -180,6 +180,20 @@ export class AppointmentsService {
       throw new BadRequestException('Invalid appointment date format');
     }
 
+    if (!dto.customerId) {
+      const existingCustomer = await this.prisma.customer.findFirst({
+        where: {
+          OR: [
+            { email: { equals: dto.customerEmail.toLowerCase().trim(), mode: 'insensitive' } },
+            { name: { equals: dto.customerName.trim(), mode: 'insensitive' } },
+          ]
+        }
+      });
+      if (existingCustomer) {
+        throw new BadRequestException('A customer with this email or name already exists.');
+      }
+    }
+
     const appointment = await this.prisma.appointment.create({
       data: {
         customerName: dto.customerName.trim(),
