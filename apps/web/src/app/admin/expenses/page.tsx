@@ -95,7 +95,14 @@ function ExpenseModal({
     description: expense?.description ?? '',
     date: expense?.date ?? new Date().toISOString().split('T')[0],
   });
+<<<<<<< HEAD
   const [errors, setErrors] = useState<Record<string, string>>({});
+=======
+  
+  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; action: () => void } | null>(null);
+  
+  const router = useRouter();
+>>>>>>> origin/backend-merge
 
   function validate() {
     const e: Record<string, string> = {};
@@ -105,7 +112,65 @@ function ExpenseModal({
     return e;
   }
 
+<<<<<<< HEAD
   function handleSubmit(e: React.FormEvent) {
+=======
+      const res = await fetch(`/api/admin/expenses?${params.toString()}`);
+      if (res.status === 401) return router.push('/login');
+      if (!res.ok) throw new Error(`Unable to load expenses.`);
+      const data = await res.json();
+      setExpenses(data.data || []);
+      setError('');
+    } catch (e: unknown) {
+      if (e instanceof Error) setError(e.message);
+    }
+  }, [searchTerm, filterCategory, router]);
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filterCategory) params.append('category', filterCategory);
+      const res = await fetch(`/api/admin/expenses/stats?${params.toString()}`);
+      if (res.status === 401) return router.push('/login');
+      if (!res.ok) throw new Error(`API Error: ${res.status}`);
+      const data = await res.json();
+      setStats(data);
+    } catch (e: unknown) {
+      if (e instanceof Error) console.error(e.message);
+    }
+  }, [filterCategory, router]);
+
+  const loadData = useCallback(async (showLoader = true) => {
+    if (showLoader) setLoading(true);
+    await Promise.all([fetchExpenses(), fetchStats()]);
+    if (showLoader) setLoading(false);
+  }, [fetchExpenses, fetchStats]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const openConfirmation = (title: string, message: string, action: () => void) => {
+    setConfirmModal({ isOpen: true, title, message, action });
+  };
+
+
+
+  const handleDeleteExpense = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/expenses/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.status === 401) return router.push('/login');
+      if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
+      await loadData(false);
+      setConfirmModal(null);
+    } catch (e: unknown) {
+      if (e instanceof Error) alert(e.message);
+      setConfirmModal(null);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+>>>>>>> origin/backend-merge
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }

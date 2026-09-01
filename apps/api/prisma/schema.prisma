@@ -301,11 +301,74 @@ enum PaymentMethod {
   OTHER
 }
 
+<<<<<<< HEAD
 enum PaymentStatus {
   PENDING
   PAID
   FAILED
   CANCELLED
+=======
+model RefreshToken {
+  id        String    @id
+  tokenHash String    @unique
+  userId    String
+  role      String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, role])
+  @@index([expiresAt])
+}
+
+model Application {
+  id                String            @id @default(cuid())
+  applicationNumber String?           @unique
+  customer          Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId        String
+  service           Service?          @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  serviceId         String?
+  title             String?
+  serviceType       String?
+  fullName          String?
+  email             String?
+  phone             String?
+  dateOfBirth       String?
+  nationality       String?
+  address           String?
+  notes             String?
+  status            ApplicationStatus @default(DRAFT)
+  documents         Document[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+}
+
+model Document {
+  id                  String                    @id @default(cuid())
+  customer            Customer                  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId          String
+  application         Application               @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId       String
+  documentType        String
+  storagePath         String
+  fileName            String
+  mimeType            String
+  fileSize            Int
+  originalFileName    String?
+  version             Int                        @default(1)
+  isEncrypted         Boolean                    @default(false)
+  status              DocumentStatus             @default(UPLOADED)
+  rejectionReason     String?
+  verificationStatus  DocumentVerificationStatus @default(PENDING)
+  verificationRemarks String?
+  uploadedAt          DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+  fileUrl             String?
+  verifiedAt          DateTime?
+  verifiedBy          String?
+
+  @@unique([applicationId, documentType])
+>>>>>>> origin/backend-merge
 }
 
 enum AppointmentType {

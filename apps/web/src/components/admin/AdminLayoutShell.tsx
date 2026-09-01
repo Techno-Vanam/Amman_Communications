@@ -3,7 +3,11 @@
 import React, { useState, useRef, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+<<<<<<< HEAD
 import NotificationDropdown from '../ui/NotificationDropdown';
+=======
+import { useAuth } from '@/lib/auth-context';
+>>>>>>> origin/backend-merge
 import {
   LayoutDashboard,
   FileText,
@@ -24,6 +28,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 
+<<<<<<< HEAD
 const ADMIN_NAV_ITEMS = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Customers', href: '/admin/customers', icon: Users },
@@ -45,6 +50,40 @@ function AdminSidebarNavContent({
 }) {
   const pathname = usePathname();
   const isProfileActive = pathname === '/admin/profile';
+=======
+export default function AdminLayoutShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { ready, user, clearSession } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  React.useEffect(() => {
+    if (ready && !isSigningOut && (!user || user.role !== 'ADMIN')) router.replace('/login?forbidden=true');
+  }, [isSigningOut, ready, router, user]);
+
+  if (!ready || !user || user.role !== 'ADMIN') {
+    return <div className="min-h-screen bg-gray-50" />;
+  }
+
+  const handleLogout = async () => {
+    setIsSigningOut(true);
+    await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => undefined);
+    clearSession();
+    router.replace('/login');
+  };
+
+  const navItems = [
+    { name: 'Dashboard', href: '/admin', icon: Home },
+    { name: 'Applications', href: '/admin/applications', icon: FileText },
+    { name: 'Appointments', href: '/admin/appointments', icon: Calendar },
+    { name: 'Customers', href: '/admin/customers', icon: User },
+    { name: 'Services', href: '/admin/services', icon: Building2 },
+    { name: 'Expenses', href: '/admin/expenses', icon: Receipt },
+    { name: 'Settings', href: '/admin/settings', icon: Settings },
+  ];
+>>>>>>> origin/backend-merge
 
   return (
     <aside
@@ -67,9 +106,67 @@ function AdminSidebarNavContent({
             >
               Amman Admin
             </Link>
+<<<<<<< HEAD
             <p className="text-[10px] font-bold tracking-wider text-gray-400 uppercase mt-0.5">
               Control Center
             </p>
+=======
+          </div>
+
+          {/* Search bar */}
+          <div className="hidden md:flex items-center flex-1 max-w-md mx-4">
+            <div className="relative w-full text-emerald-200 focus-within:text-white">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+              <input
+                type="text"
+                placeholder="Search portal..."
+                className="w-full bg-emerald-900/60 border border-emerald-800 rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-emerald-900"
+              />
+            </div>
+          </div>
+
+          {/* Right Header Actions */}
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                className="flex items-center gap-2 py-1.5 px-3 rounded-xl hover:bg-emerald-900 text-sm font-medium transition-colors"
+                aria-expanded={userDropdownOpen}
+              >
+                <div className="w-8 h-8 rounded-full bg-emerald-800 flex items-center justify-center text-emerald-200 font-bold border border-emerald-700">
+                  <User className="w-4 h-4" />
+                </div>
+                <span className="hidden sm:inline text-white">Admin Account</span>
+                <ChevronDown className="w-4 h-4 text-emerald-400" />
+              </button>
+
+              {userDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 text-gray-800">
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-xs text-gray-500">Signed in as</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">admin@test.com</p>
+                  </div>
+                  <Link
+                    href="/admin/settings"
+                    onClick={() => setUserDropdownOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-emerald-700" />
+                    <span>Settings</span>
+                  </Link>
+                  <Link
+                    href="#"
+                    onClick={(event) => { event.preventDefault(); void handleLogout(); }}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+>>>>>>> origin/backend-merge
           </div>
         </div>
       </div>

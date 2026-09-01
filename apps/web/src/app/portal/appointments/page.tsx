@@ -50,6 +50,7 @@ function mapBackendAppointment(apt: any): AppointmentItem {
     : origDateObj.toISOString().split('T')[0];
   const timeStr = apt.preferredTime || '10:30 AM';
 
+<<<<<<< HEAD
   let newDateStr = '-';
   if (hasBeenRescheduled) {
     const newDateObj = new Date(apt.appointmentDate || apt.preferredDate);
@@ -134,6 +135,18 @@ export default function AppointmentsPage() {
     const mapped = (raw || []).map(mapBackendAppointment);
     setAppointments(mapped);
     setLoading(false);
+=======
+  const counts: Partial<Record<TabKey, number>> = {
+    ALL: allAppointments.length,
+    UPCOMING: allAppointments.filter(
+      (a) =>
+        (a.status === 'PENDING' || a.status === 'CONFIRMED') &&
+        new Date(a.preferredDate || a.appointmentDate || Date.now()) >= new Date()
+    ).length,
+    RESCHEDULED: allAppointments.filter((a) => a.status === 'RESCHEDULED').length,
+    COMPLETED: allAppointments.filter((a) => a.status === 'COMPLETED').length,
+    CANCELLED: allAppointments.filter((a) => a.status === 'CANCELLED').length,
+>>>>>>> origin/backend-merge
   };
 
   useEffect(() => {

@@ -12,6 +12,7 @@ import { ServicesModule } from './services/services.module';
 import { CustomersModule } from './customers/customers.module';
 import { CustomerAppointmentsModule } from './customer-appointments/customer-appointments.module';
 import { CustomerProfileModule } from './customer-profile/customer-profile.module';
+<<<<<<< HEAD
 import { ApplicationsModule } from './applications/applications.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { ExpensesModule } from './expenses/expenses.module';
@@ -19,6 +20,13 @@ import { BusinessProfileModule } from './settings/business-profile/business-prof
 import { StorageModule } from './storage/storage.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { FinanceModule } from './finance/finance.module';
+=======
+import { AppointmentsModule } from './appointments/appointments.module';
+import { ExpensesModule } from './expenses/expenses.module';
+import { BusinessProfileModule } from './settings/business-profile/business-profile.module';
+import { ApplicationsModule } from './applications/applications.module';
+import { NotificationsModule } from './notifications/notifications.module';
+>>>>>>> origin/backend-merge
 
 @Module({
   imports: [
@@ -39,6 +47,7 @@ import { FinanceModule } from './finance/finance.module';
     CustomersModule,
     CustomerAppointmentsModule,
     CustomerProfileModule,
+<<<<<<< HEAD
     ApplicationsModule,
     AppointmentsModule,
     ExpensesModule,
@@ -46,6 +55,13 @@ import { FinanceModule } from './finance/finance.module';
     StorageModule,
     NotificationsModule,
     FinanceModule,
+=======
+    AppointmentsModule,
+    ExpensesModule,
+    BusinessProfileModule,
+    ApplicationsModule,
+    NotificationsModule,
+>>>>>>> origin/backend-merge
   ],
 })
 export class AppModule {}

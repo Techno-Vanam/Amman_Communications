@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+<<<<<<< HEAD
 import { DocumentsService } from './documents.service';
 import { DirectUploadDocumentDto } from './dto/upload-document.dto';
 import { UpdateDocumentStatusDto } from './dto/update-document-status.dto';
@@ -26,6 +27,10 @@ import { Roles } from '../auth/decorators/roles.decorator';
 @Controller('admin/applications')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
+=======
+@Controller(['admin/applications', 'v1/admin/applications', 'api/v1/admin/applications'])
+@UseGuards(AdminAuthGuard)
+>>>>>>> origin/backend-merge
 export class AdminDocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
