@@ -1,0 +1,64 @@
+name: Auto Merge to Main
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Auto Merge Branch to Main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Git Identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge Branch into Main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          echo "Processing push to branch '$BRANCH_NAME'..."
+
+          # Attempt 1: Direct git merge & push
+          git checkout main
+          git pull origin main
+          if git merge "origin/$BRANCH_NAME" -m "chore(auto-merge): merge '$BRANCH_NAME' into main [skip ci]"; then
+            if git push origin main; then
+              echo "Successfully auto-merged '$BRANCH_NAME' into main via direct push."
+              exit 0
+            fi
+          fi
+
+          echo "Direct push not available. Creating & merging Pull Request via GitHub API..."
+
+          # Attempt 2: Create PR and auto-merge
+          PR_URL=$(gh pr create \
+            --base main \
+            --head "$BRANCH_NAME" \
+            --title "chore(auto-merge): merge '$BRANCH_NAME' into main" \
+            --body "Automated merge of \`$BRANCH_NAME\` into \`main\` triggered by push." || echo "")
+
+          if [ -n "$PR_URL" ]; then
+            echo "Created PR: $PR_URL"
+            gh pr merge "$PR_URL" --merge --auto || gh pr merge "$PR_URL" --merge --admin || true
+          else
+            echo "PR might already exist. Attempting to merge existing open PRs..."
+            gh pr list --head "$BRANCH_NAME" --base main --json number --jq '.[0].number' | while read -r PR_NUM; do
+              if [ -n "$PR_NUM" ]; then
+                gh pr merge "$PR_NUM" --merge --admin || gh pr merge "$PR_NUM" --merge || true
+              fi
+            done
+          fi
