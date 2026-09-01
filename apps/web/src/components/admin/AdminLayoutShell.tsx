@@ -20,7 +20,8 @@ import {
   Bell,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 
 const ADMIN_NAV_ITEMS = [

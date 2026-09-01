@@ -129,7 +129,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             suppressHydrationWarning
-            className="md:hidden p-2 rounded-full text-slate-700 hover:text-brand-600 hover:bg-white/80 transition-colors cursor-pointer"
+            className="lg:hidden p-2 rounded-full text-slate-700 hover:text-brand-600 hover:bg-white/80 transition-colors cursor-pointer"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
