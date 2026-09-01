@@ -121,19 +121,31 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ data, isPdfDownl
 
           {/* Summary calculations area */}
           <div className="flex justify-end pt-3 border-t-2 border-gray-200 text-sm mt-3">
-            <div className="w-72 space-y-1.5">
+            <div className="w-80 space-y-1.5">
               <div className="flex justify-between text-gray-700 font-bold text-sm">
-                <span>Subtotal:</span>
-                <span>₹{data.subtotal.toLocaleString('en-IN')}</span>
+                <span>Invoice Subtotal:</span>
+                <span>₹{data.subtotal.toLocaleString('en-IN')}.00</span>
               </div>
               <div className="flex justify-between text-gray-700 font-bold text-sm border-b-2 border-gray-200 pb-1.5">
                 <span>Tax (0%):</span>
-                <span>₹{data.tax.toLocaleString('en-IN')}</span>
+                <span>₹{data.tax.toLocaleString('en-IN')}.00</span>
               </div>
               <div className="flex justify-between py-1.5 text-base font-extrabold text-gray-900">
-                <span>Total Paid:</span>
-                <span className="text-[#12372A] text-xl font-extrabold">₹{data.totalAmount.toLocaleString('en-IN')}</span>
+                <span>Invoice Total Paid:</span>
+                <span className="text-[#12372A] text-xl font-extrabold">₹{data.totalAmount.toLocaleString('en-IN')}.00</span>
               </div>
+
+              {data.pendingBalance !== undefined && data.pendingBalance > 0 && (
+                <div className="p-3 bg-amber-50 border-2 border-amber-200 rounded-xl space-y-1 mt-2 text-xs">
+                  <div className="flex justify-between text-amber-950 font-extrabold">
+                    <span>Remaining Balance Due Later:</span>
+                    <span className="text-rose-700 font-mono font-extrabold">₹{data.pendingBalance.toLocaleString('en-IN')}.00</span>
+                  </div>
+                  <p className="text-[10px] text-amber-800 font-bold leading-tight">
+                    (50% Initial Partition Payment Billed &amp; Received. Balance due before receiving final information.)
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -362,19 +374,31 @@ export const PaymentReceipt: React.FC<PaymentReceiptProps> = ({ data, isPdfDownl
 
       {/* Summary calculations area */}
       <div className="flex justify-end pt-3 border-t border-gray-200 text-xs md:text-sm print:text-sm">
-        <div className="w-full sm:w-72 space-y-1.5">
+        <div className="w-full sm:w-80 space-y-1.5">
           <div className="flex justify-between text-gray-700 font-semibold">
-            <span>Subtotal:</span>
-            <span>₹{data.subtotal.toLocaleString('en-IN')}</span>
+            <span>Invoice Subtotal:</span>
+            <span>₹{data.subtotal.toLocaleString('en-IN')}.00</span>
           </div>
           <div className="flex justify-between text-gray-700 font-semibold border-b border-gray-200 pb-1.5">
             <span>Tax (0%):</span>
-            <span>₹{data.tax.toLocaleString('en-IN')}</span>
+            <span>₹{data.tax.toLocaleString('en-IN')}.00</span>
           </div>
           <div className="flex justify-between py-1.5 text-sm md:text-base font-extrabold text-gray-900">
-            <span>Total Paid:</span>
-            <span className="text-[#12372A] text-lg md:text-xl font-extrabold">₹{data.totalAmount.toLocaleString('en-IN')}</span>
+            <span>Invoice Total Paid:</span>
+            <span className="text-[#12372A] text-lg md:text-xl font-extrabold">₹{data.totalAmount.toLocaleString('en-IN')}.00</span>
           </div>
+
+          {data.pendingBalance !== undefined && data.pendingBalance > 0 && (
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1 mt-2 text-xs">
+              <div className="flex justify-between text-amber-950 font-bold">
+                <span>Remaining Balance Due Later:</span>
+                <span className="text-rose-700 font-mono font-extrabold">₹{data.pendingBalance.toLocaleString('en-IN')}.00</span>
+              </div>
+              <p className="text-[10px] text-amber-800 font-semibold leading-tight">
+                (50% Initial Partition Payment Billed &amp; Received. Balance due before receiving final information.)
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

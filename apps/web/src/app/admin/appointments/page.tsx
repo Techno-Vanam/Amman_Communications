@@ -467,6 +467,31 @@ function AppointmentModal({
   );
 }
 
+function mapAdminBackendAppointment(raw: any): Appointment {
+  let status: AppointmentStatus = 'Confirmed';
+  if (raw.status === 'PENDING') status = 'Pending';
+  else if (raw.status === 'CONFIRMED') status = 'Confirmed';
+  else if (raw.status === 'RESCHEDULED') status = 'Rescheduled';
+  else if (raw.status === 'COMPLETED') status = 'Completed';
+  else if (raw.status === 'CANCELLED') status = 'Cancelled';
+
+  const dateObj = new Date(raw.appointmentDate || raw.preferredDate);
+  const date = isNaN(dateObj.getTime()) ? '' : dateObj.toISOString().split('T')[0];
+
+  return {
+    id: raw.id,
+    customer: raw.customerName || raw.customer?.name || 'Customer',
+    email: raw.customerEmail || raw.customer?.email || '',
+    phone: raw.customerPhone || raw.customer?.contactNumber || '',
+    service: raw.service?.name || 'Service Consultation',
+    date,
+    time: raw.preferredTime || '10:30 AM',
+    mode: raw.appointmentType === 'ONLINE_CONSULTATION' || raw.mode === 'ONLINE' ? 'Online' : 'Offline',
+    status,
+    notes: raw.rescheduleReason || raw.notes || '',
+  };
+}
+
 // ── Main Page ─────────────────────────────────────────────────
 type FilterType = 'All' | AppointmentStatus;
 
@@ -568,6 +593,7 @@ export default function AppointmentsPage() {
 
   async function handleEdit(data: Partial<Appointment>) {
     if (!editApt) return;
+<<<<<<< HEAD
     setErrorMsg(null);
     const res = await updateAppointmentAction(editApt.id, {
       customer: data.customer,
@@ -584,12 +610,18 @@ export default function AppointmentsPage() {
       setErrorMsg(res.error);
     } else {
       setEditApt(null);
+=======
+    if (data.status) {
+      const st = data.status.toUpperCase() as any;
+      await updateAdminAppointmentStatusAction(editApt.id, st);
+>>>>>>> origin/ui-combined
       loadAppointments();
     }
   }
 
   async function handleReschedule(data: Partial<Appointment>) {
     if (!rescheduleApt) return;
+<<<<<<< HEAD
     setErrorMsg(null);
     const res = await updateAppointmentAction(rescheduleApt.id, {
       date: data.date,
@@ -615,6 +647,15 @@ export default function AppointmentsPage() {
         loadAppointments();
       }
     }
+=======
+    if (data.date) {
+      await rescheduleAdminAppointmentAction(rescheduleApt.id, {
+        newDate: data.date,
+        reason: data.notes || 'Rescheduled by Administrator',
+      });
+      loadAppointments();
+    }
+>>>>>>> origin/ui-combined
   }
 
   const statusList: FilterType[] = ['All', 'Confirmed', 'Pending', 'Completed', 'Cancelled', 'Rescheduled'];
