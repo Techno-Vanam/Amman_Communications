@@ -44,7 +44,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
     setIsPending(true);
 
     try {
-      const res = await fetch('http://localhost:3003/api/v1/auth/login', {
+      const res = await fetch(`http://127.0.0.1:3003/api/v1/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: loginEmail, mobile: loginMobile, password: loginPassword }),
@@ -94,7 +94,7 @@ export const LoginPlaceholder: React.FC<LoginPlaceholderProps> = ({
     setIsPending(true);
 
     try {
-      const res = await fetch('http://localhost:3003/api/v1/auth/register', {
+      const res = await fetch('http://localhost:3003/v1/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: regName, email: regEmail, mobile: regMobile, password: regPassword }),
