@@ -13,7 +13,6 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-<<<<<<< HEAD
 import { DocumentsService } from './documents.service';
 import { DirectUploadDocumentDto } from './dto/upload-document.dto';
 import { UpdateDocumentStatusDto } from './dto/update-document-status.dto';
@@ -21,16 +20,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
-
 @ApiTags('Admin - Documents')
 @ApiBearerAuth()
-@Controller('admin/applications')
+@Controller(['admin/applications', 'v1/admin/applications', 'api/v1/admin/applications'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
-=======
-@Controller(['admin/applications', 'v1/admin/applications', 'api/v1/admin/applications'])
-@UseGuards(AdminAuthGuard)
->>>>>>> origin/backend-merge
 export class AdminDocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
@@ -91,13 +85,14 @@ export class AdminDocumentsController {
   @Put(':applicationId/documents/:documentId/status')
   @ApiOperation({ summary: 'Update the status of a document (Approve/Reject)' })
   async updateDocumentStatus(
-    @Req() req: { user: { sub: string } },
+    @Req() req: { user: { sub?: string; id?: string } },
     @Param('applicationId') applicationId: string,
     @Param('documentId') documentId: string,
     @Body() dto: UpdateDocumentStatusDto,
   ) {
+    const adminId = req.user.sub || req.user.id || 'admin';
     return this.documentsService.adminUpdateDocumentStatus(
-      req.user.sub,
+      adminId,
       applicationId,
       documentId,
       dto,

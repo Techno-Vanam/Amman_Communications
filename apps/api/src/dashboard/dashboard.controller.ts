@@ -1,23 +1,16 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
-
 @ApiTags('Admin - Dashboard')
 @ApiBearerAuth()
-<<<<<<< HEAD
-@Controller('admin/dashboard')
+@Controller(['admin/dashboard', 'v1/admin/dashboard', 'api/v1/admin/dashboard'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
-=======
-@Controller(['v1/admin/dashboard', 'api/v1/admin/dashboard', 'admin/dashboard'])
-@UseGuards(AdminAuthGuard)
->>>>>>> origin/backend-merge
 export class AdminDashboardController {
   constructor(private readonly prisma: PrismaService) {}
 
@@ -69,21 +62,17 @@ export class AdminDashboardController {
 
 @ApiTags('Customer - Dashboard')
 @ApiBearerAuth()
-<<<<<<< HEAD
-@Controller('customer/dashboard')
+@Controller(['customer/dashboard', 'v1/customer/dashboard', 'api/v1/customer/dashboard'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('CUSTOMER')
-=======
-@Controller(['customer/dashboard', 'v1/customer/dashboard', 'api/v1/customer/dashboard'])
-@UseGuards(CustomerAuthGuard)
->>>>>>> origin/backend-merge
 export class CustomerDashboardController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get('summary')
   @ApiOperation({ summary: 'Get summary statistics for the customer dashboard' })
-  async summary(@Req() request: { user: { sub: string } }) {
-    const customerId = request.user.sub;
+  async summary(@Req() request: { user: { sub?: string; id?: string; customerId?: string } }) {
+    const customerId = request.user.sub || request.user.id || request.user.customerId;
+    if (!customerId) return { applications: 0, documents: 0, verifiedDocs: 0, pendingDocs: 0, actionRequiredDocs: 0 };
     const [applications, documents] = await Promise.all([
       this.prisma.application.count({ where: { customerId } }),
       this.prisma.document.findMany({ 
@@ -103,9 +92,10 @@ export class CustomerDashboardController {
 
   @Get('profile')
   @ApiOperation({ summary: 'Get customer profile details' })
-  async profile(@Req() request: { user: { sub: string } }) {
+  async profile(@Req() request: { user: { sub?: string; id?: string; customerId?: string } }) {
+    const customerId = request.user.sub || request.user.id || request.user.customerId;
     const customer = await this.prisma.customer.findUnique({
-      where: { id: request.user.sub },
+      where: { id: customerId },
       select: {
         id: true,
         name: true,
@@ -120,7 +110,7 @@ export class CustomerDashboardController {
 
   @Get('me')
   @ApiOperation({ summary: 'Get current customer session details (alias for profile)' })
-  async me(@Req() request: { user: { sub: string } }) {
+  async me(@Req() request: { user: { sub?: string; id?: string; customerId?: string } }) {
     return this.profile(request);
   }
 }

@@ -63,7 +63,8 @@ export async function registerAction(formData: FormData) {
     return {
       success: true,
       user,
-      redirectTo: '/portal/dashboard',
+      accessToken,
+      redirectTo: user.role === 'ADMIN' ? '/admin' : '/portal/dashboard',
     };
   } catch (error) {
     console.error('Registration action error:', error);

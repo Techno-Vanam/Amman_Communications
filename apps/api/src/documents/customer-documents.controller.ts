@@ -25,16 +25,11 @@ import {
   UploadOrReplaceDocumentDto,
 } from './dto/upload-document.dto';
 
-<<<<<<< HEAD
 @ApiTags('Customer - Documents')
 @ApiBearerAuth()
-@Controller('customer')
+@Controller(['customer', 'v1/customer', 'api/v1/customer'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('CUSTOMER')
-=======
-@Controller(['customer', 'v1/customer', 'api/v1/customer'])
-@UseGuards(CustomerAuthGuard)
->>>>>>> origin/backend-merge
 export class CustomerDocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
@@ -46,18 +41,19 @@ export class CustomerDocumentsController {
 
   @Get('documents')
   @ApiOperation({ summary: 'Convenience endpoint: grouped by application for Document Upload Center' })
-  async getAllDocumentsGrouped(@Req() req: { user: { sub: string } }) {
-    return this.documentsService.getAllCustomerDocumentsGrouped(req.user.sub);
+  async getAllDocumentsGrouped(@Req() req: { user: { sub?: string; id?: string; customerId?: string } }) {
+    const customerId = req.user.customerId || req.user.id || req.user.sub || '';
+    return this.documentsService.getAllCustomerDocumentsGrouped(customerId);
   }
 
   @Get('documents/download-stream')
   @ApiOperation({ summary: 'Decrypt and stream an encrypted document file to the browser' })
   async downloadStream(
-    @Req() req: { user: { sub: string } },
+    @Req() req: { user: { sub?: string; id?: string; customerId?: string } },
     @Query('path') storagePath: string,
     @Res({ passthrough: true }) res: any,
   ) {
-    const customerId = (req.user as any)?.customerId || req.user?.sub;
+    const customerId = req.user.customerId || req.user.id || req.user.sub || '';
     const allowed = await this.documentsService.verifyCustomerOwnsPath(
       customerId,
       storagePath,
@@ -83,12 +79,13 @@ export class CustomerDocumentsController {
   @Post('applications/:applicationId/documents/upload-url')
   @ApiOperation({ summary: 'Request signed upload URL' })
   async requestUploadUrl(
-    @Req() req: { user: { sub: string } },
+    @Req() req: { user: { sub?: string; id?: string; customerId?: string } },
     @Param('applicationId') applicationId: string,
     @Body() dto: RequestUploadUrlDto,
   ) {
+    const customerId = req.user.customerId || req.user.id || req.user.sub || '';
     return this.documentsService.requestUploadUrl(
-      req.user.sub,
+      customerId,
       applicationId,
       dto,
     );
@@ -97,12 +94,13 @@ export class CustomerDocumentsController {
   @Post('applications/:applicationId/documents/upload')
   @ApiOperation({ summary: 'Direct encrypted file upload (AES-256-GCM) with 10MB limit' })
   async directUpload(
-    @Req() req: { user: { sub: string } },
+    @Req() req: { user: { sub?: string; id?: string; customerId?: string } },
     @Param('applicationId') applicationId: string,
     @Body() dto: DirectUploadDocumentDto,
   ) {
+    const customerId = req.user.customerId || req.user.id || req.user.sub || '';
     return this.documentsService.directUploadAndEncrypt(
-      req.user.sub,
+      customerId,
       applicationId,
       dto,
     );
@@ -111,11 +109,12 @@ export class CustomerDocumentsController {
   @Get('applications/:applicationId/documents')
   @ApiOperation({ summary: 'Fetch all documents for an application' })
   async getApplicationDocuments(
-    @Req() req: { user: { sub: string } },
+    @Req() req: { user: { sub?: string; id?: string; customerId?: string } },
     @Param('applicationId') applicationId: string,
   ) {
+    const customerId = req.user.customerId || req.user.id || req.user.sub || '';
     return this.documentsService.getDocumentsForApplication(
-      req.user.sub,
+      customerId,
       applicationId,
     );
   }
@@ -123,12 +122,13 @@ export class CustomerDocumentsController {
   @Post('applications/:applicationId/documents')
   @ApiOperation({ summary: 'Upload or replace document for an application (Single Source of Truth)' })
   async uploadOrReplaceDocument(
-    @Req() req: { user: { sub: string } },
+    @Req() req: { user: { sub?: string; id?: string; customerId?: string } },
     @Param('applicationId') applicationId: string,
     @Body() dto: UploadOrReplaceDocumentDto,
   ) {
+    const customerId = req.user.customerId || req.user.id || req.user.sub || '';
     return this.documentsService.uploadOrReplaceDocument(
-      req.user.sub,
+      customerId,
       applicationId,
       dto,
     );
@@ -137,12 +137,13 @@ export class CustomerDocumentsController {
   @Get('applications/:applicationId/documents/:documentId')
   @ApiOperation({ summary: 'Fetch a single document' })
   async getDocument(
-    @Req() req: { user: { sub: string } },
+    @Req() req: { user: { sub?: string; id?: string; customerId?: string } },
     @Param('applicationId') applicationId: string,
     @Param('documentId') documentId: string,
   ) {
+    const customerId = req.user.customerId || req.user.id || req.user.sub || '';
     return this.documentsService.getCustomerDocumentById(
-      req.user.sub,
+      customerId,
       applicationId,
       documentId,
     );
@@ -151,13 +152,14 @@ export class CustomerDocumentsController {
   @Put('applications/:applicationId/documents/:documentId')
   @ApiOperation({ summary: 'Replace or update a single document' })
   async replaceDocument(
-    @Req() req: { user: { sub: string } },
+    @Req() req: { user: { sub?: string; id?: string; customerId?: string } },
     @Param('applicationId') applicationId: string,
     @Param('documentId') _documentId: string,
     @Body() dto: UploadOrReplaceDocumentDto,
   ) {
+    const customerId = req.user.customerId || req.user.id || req.user.sub || '';
     return this.documentsService.uploadOrReplaceDocument(
-      req.user.sub,
+      customerId,
       applicationId,
       dto,
     );
@@ -166,12 +168,13 @@ export class CustomerDocumentsController {
   @Delete('applications/:applicationId/documents/:documentId')
   @ApiOperation({ summary: 'Delete document' })
   async deleteDocument(
-    @Req() req: { user: { sub: string } },
+    @Req() req: { user: { sub?: string; id?: string; customerId?: string } },
     @Param('applicationId') applicationId: string,
     @Param('documentId') documentId: string,
   ) {
+    const customerId = req.user.customerId || req.user.id || req.user.sub || '';
     return this.documentsService.deleteCustomerDocument(
-      req.user.sub,
+      customerId,
       applicationId,
       documentId,
     );

@@ -14,8 +14,10 @@ import {
   ChevronDown,
   ChevronRight,
   AlertCircle,
+  Clock,
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
+import StatCard from '@/components/ui/StatCard';
 import {
   fetchDocumentsGroupedAction,
   uploadDocumentAction,
@@ -100,21 +102,11 @@ export default function PortalDocumentsPage() {
   const loadDocuments = useCallback(async () => {
     setLoading(true);
     try {
-<<<<<<< HEAD
       const data = await fetchDocumentsGroupedAction();
       setGroups(data);
       if (data.length > 0) {
         setSelectedAppId(data[0].applicationId);
         setExpandedGroups(new Set(data.map((g: ApplicationGroup) => g.applicationId)));
-=======
-      const [res, catRes] = await Promise.all([
-        apiRequest<ApplicationGroup[]>('/api/v1/customer/documents'),
-        apiRequest<ServiceDefinition[]>('/api/v1/customer/services-catalog'),
-      ]);
-
-      if (catRes.success && catRes.data && catRes.data.length > 0) {
-        setCatalog(catRes.data);
->>>>>>> origin/backend-merge
       }
     } finally {
       setLoading(false);
@@ -125,7 +117,6 @@ export default function PortalDocumentsPage() {
     loadDocuments();
   }, [loadDocuments]);
 
-<<<<<<< HEAD
   const handleUpload = async (file: File, appId: string, docTypeOverride?: string) => {
     if (!appId) {
       showToast('No Application Selected', 'Please select an application to upload a document for.');
@@ -138,38 +129,6 @@ export default function PortalDocumentsPage() {
     const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
     if (!allowed.includes(file.type)) {
       showToast('Unsupported Format', 'Only PDF, JPG, PNG and WEBP files are allowed.');
-=======
-  // Get the required documents spec for a service type
-  const getServiceSpec = (serviceType: string) => {
-    return (
-      catalog.find(
-        (s) =>
-          s.code === serviceType ||
-          s.id === serviceType ||
-          s.title?.toLowerCase() === serviceType?.toLowerCase() ||
-          (s as ServiceDefinition & { name?: string }).name?.toLowerCase() === serviceType?.toLowerCase(),
-      ) ||
-      DEFAULT_SERVICES.find(
-        (s) =>
-          s.code === serviceType ||
-          s.id === serviceType ||
-          s.title?.toLowerCase() === serviceType?.toLowerCase(),
-      )
-    );
-  };
-
-  // Upload or replace a document for a specific application
-  const handleUploadOrReplace = async (
-    applicationId: string,
-    documentType: string,
-    file: File,
-  ) => {
-    setMessage(null);
-
-    const maxBytes = 10 * 1024 * 1024;
-    if (file.size > maxBytes) {
-      setMessage({ type: 'error', text: `File "${file.name}" exceeds maximum 10MB limit.` });
->>>>>>> origin/backend-merge
       return;
     }
 
@@ -186,7 +145,6 @@ export default function PortalDocumentsPage() {
         base64Data,
       });
 
-<<<<<<< HEAD
       if (result.error) {
         showToast('Upload Failed', result.error);
       } else {
@@ -195,39 +153,6 @@ export default function PortalDocumentsPage() {
       }
     } finally {
       setUploading(null);
-=======
-        const res = await apiRequest(`/api/v1/customer/applications/${applicationId}/documents/upload`, {
-          method: 'POST',
-          body: JSON.stringify({
-            documentType,
-            fileName: file.name,
-            mimeType: file.type || 'application/octet-stream',
-            fileSize: file.size,
-            base64Data,
-          }),
-        });
-
-        setUploadingSlot(null);
-
-        if (res.success) {
-          setMessage({
-            type: 'success',
-            text: `Document "${file.name}" uploaded successfully! Single source of truth synchronized.`,
-          });
-          await fetchDocuments();
-        } else {
-          setMessage({
-            type: 'error',
-            text: res.message || 'Failed to upload document. Please try again.',
-          });
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch (err: unknown) {
-      setUploadingSlot(null);
-      const text = err instanceof Error ? err.message : 'Upload failed';
-      setMessage({ type: 'error', text });
->>>>>>> origin/backend-merge
     }
   };
 
@@ -306,8 +231,43 @@ export default function PortalDocumentsPage() {
     { value: 'OTHER', label: 'Other Supporting Document' },
   ];
 
+  const allDocs = groups.flatMap((g) => g.documents || []);
+  const approvedDocs = allDocs.filter((d) => d.status === 'APPROVED');
+  const pendingDocs = allDocs.filter((d) => d.status === 'UNDER_REVIEW' || d.status === 'UPLOADED');
+
   return (
     <div className="max-w-7xl w-full mx-auto space-y-6 font-sans">
+      {/* ── KPI Summary Cards ── */}
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Total Documents"
+          value={allDocs.length}
+          sub="Encrypted in vault"
+          icon={FileText}
+          variant="teal"
+        />
+        <StatCard
+          label="Approved / Verified"
+          value={approvedDocs.length}
+          sub="Verified by officer"
+          icon={FileCheck}
+          variant="emerald"
+        />
+        <StatCard
+          label="Under Review"
+          value={pendingDocs.length}
+          sub="Pending verification"
+          icon={Clock}
+          variant="amber"
+        />
+        <StatCard
+          label="Linked Applications"
+          value={groups.length}
+          sub="Active folders"
+          icon={FolderOpen}
+          variant="indigo"
+        />
+      </div>
 
       {/* Upload Panel */}
       <div

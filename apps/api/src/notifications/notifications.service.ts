@@ -33,37 +33,52 @@ export class NotificationsService {
   }
 
   async sendCustomerWelcomeEmail(event: CustomerCreatedEvent) {
-    const loginUrl = 'http://localhost:3000/login'; // Adjust based on env if needed
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const loginUrl = `${frontendUrl}/login`;
     
+    this.logger.log(
+      `\n` +
+      `══════════════════════════════════════════════════════\n` +
+      `  📧 NEW CUSTOMER CREDENTIALS ISSUED\n` +
+      `──────────────────────────────────────────────────────\n` +
+      `  Name:     ${event.name}\n` +
+      `  Email:    ${event.email}\n` +
+      `  Password: ${event.passwordRaw}\n` +
+      `  LoginURL: ${loginUrl}\n` +
+      `══════════════════════════════════════════════════════\n`,
+    );
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-        <div style="background-color: #0e2a47; padding: 20px; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0;">Welcome to Amman Communications!</h1>
+        <div style="background-color: #12372A; padding: 24px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 22px;">Welcome to Amman Communications</h1>
         </div>
-        <div style="padding: 20px; border: 1px solid #e0e0e0; border-top: none;">
+        <div style="padding: 24px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px; background-color: #ffffff;">
           <p>Hi <strong>${event.name}</strong>,</p>
-          <p>An administrator has created an account for you on our platform. You can now log in to view your applications, appointments, and payments.</p>
+          <p>An administrator has created an account for you on the Amman Communications platform. You can now log in to manage your applications, appointments, and documents.</p>
           
-          <div style="background-color: #f5f7fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
-            <p style="margin: 0 0 10px 0;"><strong>Your Login Credentials:</strong></p>
-            <p style="margin: 5px 0;"><strong>Email:</strong> ${event.email}</p>
-            <p style="margin: 5px 0;"><strong>Password:</strong> <span style="font-family: monospace; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">${event.passwordRaw}</span></p>
+          <div style="background-color: #f0f7f2; border: 1px solid #a8d5b9; padding: 18px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0; color: #12372A; font-weight: bold;">Your Login Credentials:</p>
+            <p style="margin: 6px 0;"><strong>Email:</strong> ${event.email}</p>
+            <p style="margin: 6px 0;"><strong>Password:</strong> <span style="font-family: monospace; background: #ffffff; padding: 3px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-weight: bold;">${event.passwordRaw}</span></p>
           </div>
           
-          <p>Please log in using the button below and we recommend changing your password after your first login.</p>
+          <p>Please log in using the button below. We recommend changing your password after your first login.</p>
           
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${loginUrl}" style="background-color: #0e2a47; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Login to Portal</a>
+          <div style="text-align: center; margin: 28px 0;">
+            <a href="${loginUrl}" style="background-color: #12372A; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Login to Portal</a>
           </div>
           
-          <p style="font-size: 12px; color: #777;">If you did not expect this email, please contact our support.</p>
+          <p style="font-size: 12px; color: #777; border-top: 1px solid #eeeeee; padding-top: 15px; margin-top: 25px;">
+            If you did not expect this email, please contact support at support@ammancomm.in.
+          </p>
         </div>
       </div>
     `;
 
     const success = await this.mailService.sendEmail(
       event.email,
-      'Welcome to Amman Communications - Your Account Details',
+      'Welcome to Amman Communications - Your Account Credentials',
       html,
     );
 

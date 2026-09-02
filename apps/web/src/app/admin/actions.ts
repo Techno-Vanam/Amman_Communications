@@ -1,10 +1,11 @@
 'use server';
 
-<<<<<<< HEAD
 import { cookies } from 'next/headers';
+import { revalidatePath } from 'next/cache';
 import { fetchInvoicesAction } from './finance/actions';
 import { fetchExpensesAction } from './expenses/actions';
 import { fetchAppointmentsAction } from './appointments/actions';
+import { getAccessToken } from '@/lib/server-auth';
 
 const API_BASE_URL =
   process.env.API_BASE_URL ??
@@ -12,23 +13,23 @@ const API_BASE_URL =
   'http://127.0.0.1:3003';
 
 async function getAuthHeader(): Promise<Record<string, string>> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
+  const token = (await getAccessToken()) || (await cookies()).get('access_token')?.value;
   return token ? { Authorization: `Bearer ${token}` } : {};
-=======
-import { getAccessToken } from '@/lib/server-auth';
+}
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003')
-  .replace(/\/api\/v1\/?$/, '')
-  .replace(/\/api\/?$/, '');
-
-async function getAuthHeader() {
-  const token = await getAccessToken();
-  return {
-    Authorization: token ? `Bearer ${token}` : '',
-    'Content-Type': 'application/json',
-  };
->>>>>>> origin/backend-merge
+async function authenticatedFetch(path: string, options: RequestInit = {}) {
+  const headers = await getAuthHeader();
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const prefix = normalizedPath.startsWith('/api') || normalizedPath.startsWith('/v1') ? '' : '/api/v1';
+  return fetch(`${API_BASE_URL}${prefix}${normalizedPath}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...headers,
+      ...(options.headers || {}),
+    },
+    cache: 'no-store',
+  });
 }
 
 export async function fetchAdminDashboardStatsAction() {

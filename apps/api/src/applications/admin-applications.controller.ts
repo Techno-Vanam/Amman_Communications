@@ -1,20 +1,15 @@
-<<<<<<< HEAD
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-=======
->>>>>>> origin/backend-merge
 import {
   Body,
   Controller,
   Get,
   Param,
   Patch,
-<<<<<<< HEAD
   Post,
   Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
-
+import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ApplicationsService } from './applications.service';
 import { AdminCreateApplicationDto } from './dto/admin-create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
@@ -23,30 +18,16 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
-
 @ApiTags('Admin - Applications')
 @ApiBearerAuth()
-@Controller('admin/applications')
+@Controller(['admin/applications', 'admin/applications-management'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
-=======
-  Query,
-  UseGuards,
-} from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AdminAuthGuard } from '../auth/guards/admin-auth.guard';
-import { ApplicationsService } from './applications.service';
-
-@ApiTags('Admin - Applications')
-@ApiBearerAuth()
-@Controller(['v1/admin/applications-management', 'api/v1/admin/applications-management', 'admin/applications-management'])
-@UseGuards(AdminAuthGuard)
->>>>>>> origin/backend-merge
 export class AdminApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}
 
   @Get()
-<<<<<<< HEAD
+  @ApiOperation({ summary: 'List applications with filters and pagination' })
   async getApplications(
     @Query('search') search?: string,
     @Query('status') status?: string,
@@ -54,7 +35,7 @@ export class AdminApplicationsController {
     @Query('limit') limit?: string,
   ) {
     const pageNumber = page ? parseInt(page, 10) : 1;
-    const limitNumber = limit ? parseInt(limit, 10) : 10;
+    const limitNumber = limit ? parseInt(limit, 10) : 100;
     return this.applicationsService.adminGetApplications(search, status, pageNumber, limitNumber);
   }
 
@@ -102,25 +83,5 @@ export class AdminApplicationsController {
   @ApiOperation({ summary: 'Get documents for application' })
   async getDocuments(@Param('id') id: string) {
     return this.applicationsService.getApplicationDocuments(id);
-=======
-  async listApplications(
-    @Query('search') search?: string,
-    @Query('status') status?: string,
-  ) {
-    return this.applicationsService.adminListApplications({ search, status });
-  }
-
-  @Get(':id')
-  async getApplicationById(@Param('id') id: string) {
-    return this.applicationsService.adminGetApplicationById(id);
-  }
-
-  @Patch(':id/status')
-  async updateStatus(
-    @Param('id') id: string,
-    @Body('status') status: string,
-  ) {
-    return this.applicationsService.adminUpdateApplicationStatus(id, status);
->>>>>>> origin/backend-merge
   }
 }

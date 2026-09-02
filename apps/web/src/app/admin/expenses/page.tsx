@@ -28,6 +28,7 @@ import {
   updateExpenseAction,
   deleteExpenseAction,
 } from './actions';
+import StatCard from '@/components/ui/StatCard';
 
 // ── Types ─────────────────────────────────────────────────────
 type Category =
@@ -95,14 +96,7 @@ function ExpenseModal({
     description: expense?.description ?? '',
     date: expense?.date ?? new Date().toISOString().split('T')[0],
   });
-<<<<<<< HEAD
   const [errors, setErrors] = useState<Record<string, string>>({});
-=======
-  
-  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; title: string; message: string; action: () => void } | null>(null);
-  
-  const router = useRouter();
->>>>>>> origin/backend-merge
 
   function validate() {
     const e: Record<string, string> = {};
@@ -112,65 +106,7 @@ function ExpenseModal({
     return e;
   }
 
-<<<<<<< HEAD
   function handleSubmit(e: React.FormEvent) {
-=======
-      const res = await fetch(`/api/admin/expenses?${params.toString()}`);
-      if (res.status === 401) return router.push('/login');
-      if (!res.ok) throw new Error(`Unable to load expenses.`);
-      const data = await res.json();
-      setExpenses(data.data || []);
-      setError('');
-    } catch (e: unknown) {
-      if (e instanceof Error) setError(e.message);
-    }
-  }, [searchTerm, filterCategory, router]);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      const params = new URLSearchParams();
-      if (filterCategory) params.append('category', filterCategory);
-      const res = await fetch(`/api/admin/expenses/stats?${params.toString()}`);
-      if (res.status === 401) return router.push('/login');
-      if (!res.ok) throw new Error(`API Error: ${res.status}`);
-      const data = await res.json();
-      setStats(data);
-    } catch (e: unknown) {
-      if (e instanceof Error) console.error(e.message);
-    }
-  }, [filterCategory, router]);
-
-  const loadData = useCallback(async (showLoader = true) => {
-    if (showLoader) setLoading(true);
-    await Promise.all([fetchExpenses(), fetchStats()]);
-    if (showLoader) setLoading(false);
-  }, [fetchExpenses, fetchStats]);
-
-  useEffect(() => { loadData(); }, [loadData]);
-
-  const openConfirmation = (title: string, message: string, action: () => void) => {
-    setConfirmModal({ isOpen: true, title, message, action });
-  };
-
-
-
-  const handleDeleteExpense = async (id: string) => {
-    try {
-      const res = await fetch(`/api/admin/expenses/${id}`, {
-        method: 'DELETE',
-      });
-      if (res.status === 401) return router.push('/login');
-      if (!res.ok) throw new Error(`Delete failed: ${res.status}`);
-      await loadData(false);
-      setConfirmModal(null);
-    } catch (e: unknown) {
-      if (e instanceof Error) alert(e.message);
-      setConfirmModal(null);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
->>>>>>> origin/backend-merge
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
@@ -399,42 +335,35 @@ export default function ExpensesPage() {
 
 
       {/* ── Summary Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Total Expenses */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-2xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-2">
-            <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">
-              <TrendingDown className="w-5 h-5 text-rose-600" />
-            </div>
-            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">All Time</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-extrabold text-rose-700">{fmtAmt(totalAll)}</p>
-          <p className="text-[11px] text-gray-500 font-semibold mt-0.5">Total Expenses</p>
-        </div>
-
-        {/* This Month */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-2xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">
-              <Calendar className="w-5 h-5 text-amber-600" />
-            </div>
-            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Aug 2026</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-extrabold text-amber-700">{fmtAmt(thisMonth)}</p>
-          <p className="text-[11px] text-gray-500 font-semibold mt-0.5">This Month&apos;s Expenses</p>
-        </div>
-
-        {/* Highest Category */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-2xs hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-2">
-            <div className="w-8 h-8 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">
-              <Tag className="w-5 h-5 text-violet-600" />
-            </div>
-            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-800">Top Category</span>
-          </div>
-          <p className="text-xl sm:text-2xl font-extrabold text-violet-700">{fmtAmt(highestCat.sum)}</p>
-          <p className="text-[11px] text-gray-500 font-semibold mt-0.5">{highestCat.cat || '—'}</p>
-        </div>
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Total Expenses"
+          value={fmtAmt(totalAll)}
+          sub="Operational expenses"
+          icon={TrendingDown}
+          variant="rose"
+        />
+        <StatCard
+          label="This Month"
+          value={fmtAmt(thisMonth)}
+          sub="Monthly outflow"
+          icon={Calendar}
+          variant="amber"
+        />
+        <StatCard
+          label="Top Expense Category"
+          value={highestCat.cat || 'General'}
+          sub={highestCat.sum > 0 ? fmtAmt(highestCat.sum) : 'No entries'}
+          icon={Tag}
+          variant="violet"
+        />
+        <StatCard
+          label="Expense Records"
+          value={expenses.length}
+          sub="Logged vouchers"
+          icon={Receipt}
+          variant="blue"
+        />
       </div>
 
       {/* ── Filters Row ── */}

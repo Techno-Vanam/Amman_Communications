@@ -1,6 +1,6 @@
 import type { NextConfig } from 'next';
 import path from 'node:path';
-<<<<<<< HEAD
+
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(process.cwd(), '../..'),
   eslint: {
@@ -14,11 +14,6 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '15mb',
     },
   },
-=======
-
-const nextConfig: NextConfig = {
-  outputFileTracingRoot: path.join(process.cwd(), '../..'),
->>>>>>> origin/backend-merge
 };
-export default nextConfig;
 
+export default nextConfig;

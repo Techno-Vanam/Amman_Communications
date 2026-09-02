@@ -155,7 +155,6 @@ export class ApplicationsService {
     });
   }
 
-<<<<<<< HEAD
   async adminGetApplications(search?: string, status?: string, page: number = 1, limit: number = 10) {
     const skip = (page - 1) * limit;
 
@@ -182,10 +181,13 @@ export class ApplicationsService {
         orderBy: { createdAt: 'desc' },
         include: {
           customer: {
-            select: { name: true, email: true },
+            select: { id: true, name: true, email: true, phone: true },
           },
           service: {
-            select: { name: true },
+            select: { id: true, name: true, totalFee: true },
+          },
+          documents: {
+            orderBy: { uploadedAt: 'asc' },
           },
           _count: {
             select: { documents: true },
@@ -201,97 +203,6 @@ export class ApplicationsService {
     };
   }
 
-  async adminUpdateApplicationStatus(applicationId: string, status: any, notes?: string) {
-    const existing = await this.prisma.application.findUnique({
-      where: { id: applicationId },
-    });
-
-    if (!existing) {
-      throw new NotFoundException('Application not found');
-    }
-
-    return this.prisma.application.update({
-      where: { id: applicationId },
-      data: { status, ...(notes !== undefined ? { notes } : {}) },
-      include: { customer: true },
-    });
-  }
-
-  async adminUpdateApplication(id: string, dto: UpdateApplicationDto) {
-    const existing = await this.prisma.application.findUnique({
-      where: { id },
-    });
-    if (!existing) {
-      throw new NotFoundException('Application not found');
-    }
-    return this.prisma.application.update({
-      where: { id },
-      data: {
-        title: dto.title,
-        serviceType: dto.serviceType,
-        fullName: dto.fullName,
-        email: dto.email,
-        phone: dto.phone,
-        dateOfBirth: dto.dateOfBirth,
-        nationality: dto.nationality,
-        address: dto.address,
-        notes: dto.notes,
-        status: dto.status,
-      },
-    });
-  }
-
-  async adminCreateApplication(dto: { customerId: string; serviceType: string; title?: string; fullName?: string; email?: string; phone?: string; address?: string; notes?: string }) {
-    const applicationNumber = this.generateApplicationNumber();
-
-    // Fetch customer info for defaults
-    const customer = await this.prisma.customer.findUnique({
-      where: { id: dto.customerId },
-    });
-
-    if (!customer) {
-      throw new NotFoundException(`Customer ${dto.customerId} not found`);
-    }
-
-    const emailToCheck = dto.email && dto.email !== customer.email ? dto.email : null;
-    const nameToCheck = dto.fullName && dto.fullName !== customer.name ? dto.fullName : null;
-
-    if (emailToCheck || nameToCheck) {
-      const existingOtherCustomer = await this.prisma.customer.findFirst({
-        where: {
-          id: { not: dto.customerId },
-          OR: [
-            ...(emailToCheck ? [{ email: { equals: emailToCheck.toLowerCase().trim(), mode: 'insensitive' as any } }] : []),
-            ...(nameToCheck ? [{ name: { equals: nameToCheck.trim(), mode: 'insensitive' as any } }] : []),
-          ]
-        }
-      });
-
-      if (existingOtherCustomer) {
-        throw new BadRequestException('A different customer with this email or name already exists.');
-      }
-    }
-
-    const matchedService = await this.prisma.service.findFirst({
-      where: { name: { equals: dto.serviceType, mode: 'insensitive' as any } }
-    });
-
-    return this.prisma.application.create({
-      data: {
-        applicationNumber,
-        customerId: dto.customerId,
-        serviceId: matchedService?.id || null,
-        serviceType: dto.serviceType,
-        title: dto.title || dto.serviceType,
-        fullName: dto.fullName || customer.name,
-        email: dto.email || customer.email,
-        phone: dto.phone || customer.phone || '',
-        address: dto.address || '',
-        notes: dto.notes || '',
-        status: 'SUBMITTED', // Admin-created apps start as SUBMITTED, not DRAFT
-      },
-      include: { customer: true, documents: true },
-=======
   async adminListApplications(filters: { search?: string; status?: any }) {
     const where: any = {};
     if (filters.status && filters.status !== 'ALL') {
@@ -322,7 +233,108 @@ export class ApplicationsService {
         },
       },
       orderBy: { createdAt: 'desc' },
->>>>>>> origin/backend-merge
+    });
+  }
+
+  async adminUpdateApplicationStatus(applicationId: string, status: any, notes?: string) {
+    const existing = await this.prisma.application.findUnique({
+      where: { id: applicationId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Application not found');
+    }
+
+    return this.prisma.application.update({
+      where: { id: applicationId },
+      data: { status, ...(notes !== undefined ? { notes } : {}) },
+      include: {
+        customer: true,
+        service: true,
+        documents: true,
+      },
+    });
+  }
+
+  async adminUpdateApplication(id: string, dto: UpdateApplicationDto) {
+    const existing = await this.prisma.application.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException('Application not found');
+    }
+    return this.prisma.application.update({
+      where: { id },
+      data: {
+        title: dto.title,
+        serviceType: dto.serviceType,
+        fullName: dto.fullName,
+        email: dto.email,
+        phone: dto.phone,
+        dateOfBirth: dto.dateOfBirth,
+        nationality: dto.nationality,
+        address: dto.address,
+        notes: dto.notes,
+        status: dto.status,
+      },
+      include: {
+        customer: true,
+        service: true,
+        documents: true,
+      },
+    });
+  }
+
+  async adminCreateApplication(dto: { customerId: string; serviceType: string; title?: string; fullName?: string; email?: string; phone?: string; address?: string; notes?: string }) {
+    const applicationNumber = this.generateApplicationNumber();
+
+    // Fetch customer info for defaults
+    const customer = await this.prisma.customer.findUnique({
+      where: { id: dto.customerId },
+    });
+
+    if (!customer) {
+      throw new NotFoundException(`Customer ${dto.customerId} not found`);
+    }
+
+    const emailToCheck = dto.email && dto.email !== customer.email ? dto.email : null;
+    const nameToCheck = dto.fullName && dto.fullName !== customer.name ? dto.fullName : null;
+
+    if (emailToCheck || nameToCheck) {
+      const existingOtherCustomer = await this.prisma.customer.findFirst({
+        where: {
+          id: { not: dto.customerId },
+          OR: [
+            ...(emailToCheck ? [{ email: { equals: emailToCheck.toLowerCase().trim(), mode: 'insensitive' as any } }] : []),
+            ...(nameToCheck ? [{ name: { equals: nameToCheck.trim(), mode: 'insensitive' as any } }] : []),
+          ],
+        },
+      });
+
+      if (existingOtherCustomer) {
+        throw new BadRequestException('A different customer with this email or name already exists.');
+      }
+    }
+
+    const matchedService = await this.prisma.service.findFirst({
+      where: { name: { equals: dto.serviceType, mode: 'insensitive' as any } },
+    });
+
+    return this.prisma.application.create({
+      data: {
+        applicationNumber,
+        customerId: dto.customerId,
+        serviceId: matchedService?.id || null,
+        serviceType: dto.serviceType,
+        title: dto.title || dto.serviceType,
+        fullName: dto.fullName || customer.name,
+        email: dto.email || customer.email,
+        phone: dto.phone || customer.phone || '',
+        address: dto.address || '',
+        notes: dto.notes || '',
+        status: 'SUBMITTED',
+      },
+      include: { customer: true, documents: true },
     });
   }
 
@@ -330,12 +342,8 @@ export class ApplicationsService {
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
       include: {
-<<<<<<< HEAD
         customer: { select: { id: true, name: true, email: true, phone: true } },
-=======
-        customer: true,
         service: true,
->>>>>>> origin/backend-merge
         documents: true,
       },
     });
@@ -347,11 +355,7 @@ export class ApplicationsService {
     return application;
   }
 
-<<<<<<< HEAD
   async getApplicationDocuments(applicationId: string) {
-=======
-  async adminUpdateApplicationStatus(applicationId: string, status: any) {
->>>>>>> origin/backend-merge
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
     });
@@ -360,21 +364,9 @@ export class ApplicationsService {
       throw new NotFoundException('Application not found');
     }
 
-<<<<<<< HEAD
     return this.prisma.document.findMany({
       where: { applicationId },
       orderBy: { uploadedAt: 'desc' },
-=======
-    return this.prisma.application.update({
-      where: { id: applicationId },
-      data: { status },
-      include: {
-        customer: true,
-        service: true,
-        documents: true,
-      },
->>>>>>> origin/backend-merge
     });
   }
 }
-

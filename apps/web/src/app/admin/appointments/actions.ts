@@ -1,29 +1,16 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { getAccessToken } from '@/lib/server-auth';
 
-<<<<<<< HEAD
 const API_BASE_URL =
   process.env.API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   'http://localhost:3003';
 
 async function getAuthHeader(): Promise<Record<string, string>> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
+  const token = (await getAccessToken()) || (await cookies()).get('access_token')?.value;
   return token ? { Authorization: `Bearer ${token}` } : {};
-=======
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003')
-  .replace(/\/api\/v1\/?$/, '')
-  .replace(/\/api\/?$/, '');
-
-async function getAuthHeader() {
-  const token = await getAccessToken();
-  return {
-    Authorization: token ? `Bearer ${token}` : '',
-    'Content-Type': 'application/json',
-  };
->>>>>>> origin/backend-merge
 }
 
 // Find a matching service ID by name
