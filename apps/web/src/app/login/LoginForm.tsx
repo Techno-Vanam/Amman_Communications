@@ -2,12 +2,14 @@
 
 import { useState, useTransition } from 'react';
 import { loginAction } from './actions';
+import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 
 export default function LoginForm() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const { setSession } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

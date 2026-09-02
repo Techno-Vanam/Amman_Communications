@@ -92,8 +92,6 @@ function ExpenseModal({
     paymentMethod: expense?.paymentMethod ?? 'CASH',
     notes: expense?.notes ?? '',
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  
   const [categoryInput, setCategoryInput] = useState(expense?.category ?? 'Operations');
   const [showCatDropdown, setShowCatDropdown] = useState(false);
   const catRef = useRef<HTMLDivElement>(null);

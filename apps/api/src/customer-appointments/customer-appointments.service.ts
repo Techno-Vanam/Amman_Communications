@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AppointmentNumberService } from './appointment-number.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { GetAppointmentsDto } from './dto/get-appointments.dto';
+import { CustomerRescheduleAppointmentDto } from './dto/reschedule-appointment.dto';
 import { CompleteDocumentUploadDto, CreateUploadUrlDto } from './dto/upload-document.dto';
 
 @Injectable()
@@ -107,15 +108,11 @@ export class CustomerAppointmentsService {
         customerId,
         serviceId: dto.serviceId,
         appointmentType: dto.appointmentType,
+        mode: dto.appointmentType === AppointmentType.ONLINE_CONSULTATION ? 'ONLINE' : 'OFFLINE',
         officeId: targetOfficeId,
-        consultationMode: dto.appointmentType === AppointmentType.ONLINE_CONSULTATION ? dto.consultationMode : null,
-        preferredDate,
+        onlineType: dto.appointmentType === AppointmentType.ONLINE_CONSULTATION ? dto.consultationMode : null,
         appointmentDate: preferredDate,
-        preferredTime: dto.preferredTime,
-        customerPhone: dto.contactNumber || customer.contactNumber || '',
-        customerName: customer.name,
-        customerEmail: customer.email || '',
-        email: customer.email,
+        timeSlot: dto.preferredTime,
         notes: dto.notes?.trim() || null,
         status: AppointmentStatus.PENDING,
       },
@@ -170,8 +167,11 @@ export class CustomerAppointmentsService {
       if (query.status === 'UPCOMING') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        whereClause.status = { in: ['PENDING', 'CONFIRMED'] };
-        whereClause.preferredDate = { gte: today };
+        whereClause.status = { in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED, AppointmentStatus.RESCHEDULED] };
+        whereClause.OR = [
+          { appointmentDate: { gte: today } },
+          { preferredDate: { gte: today } },
+        ];
       } else {
         whereClause.status = query.status;
       }
@@ -225,5 +225,39 @@ export class CustomerAppointmentsService {
       ...updated,
       message: 'Appointment cancelled successfully',
     };
+  }
+
+  async rescheduleAppointment(customerId: string, appointmentId: string, dto: CustomerRescheduleAppointmentDto) {
+    const appointment = await this.prisma.appointment.findFirst({
+      where: { id: appointmentId, customerId },
+    });
+
+    if (!appointment) {
+      throw new NotFoundException('Appointment not found');
+    }
+
+    if (appointment.status === AppointmentStatus.CANCELLED || appointment.status === AppointmentStatus.COMPLETED) {
+      throw new BadRequestException(`Cannot reschedule an appointment with status ${appointment.status}`);
+    }
+
+    const newDate = new Date(dto.preferredDate);
+    if (isNaN(newDate.getTime())) {
+      throw new BadRequestException('Invalid date format for rescheduling');
+    }
+
+    return this.prisma.appointment.update({
+      where: { id: appointmentId },
+      data: {
+        appointmentDate: newDate,
+        ...(dto.preferredTime && { timeSlot: dto.preferredTime }),
+        ...(dto.reason && { notes: dto.reason.trim() }),
+        status: AppointmentStatus.RESCHEDULED,
+      },
+      include: {
+        service: true,
+        office: true,
+        documents: true,
+      },
+    });
   }
 }

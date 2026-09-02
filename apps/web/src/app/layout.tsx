@@ -23,13 +23,15 @@ export const metadata: Metadata = {
   },
 };
 
+import Providers from './providers';
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={poppins.variable} suppressHydrationWarning>
       <body className="font-poppins" suppressHydrationWarning>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

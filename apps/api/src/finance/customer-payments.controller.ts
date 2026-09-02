@@ -77,7 +77,7 @@ export class CustomerPaymentsController {
       orderBy: { createdAt: 'desc' },
       include: {
         application: {
-          select: { id: true, applicationNumber: true, serviceType: true },
+          select: { id: true, applicationNumber: true, service: { select: { name: true } } },
         },
         service: {
           select: { id: true, name: true },
@@ -90,9 +90,9 @@ export class CustomerPaymentsController {
       },
     });
 
-    return invoices.map((inv) => {
+    return invoices.map((inv: any) => {
       const totalPaid = inv.payments.reduce(
-        (acc, p) => acc.add(p.amount),
+        (acc: any, p: any) => acc.add(p.amount),
         new Prisma.Decimal(0),
       );
       const outstanding = Prisma.Decimal.max(
@@ -120,7 +120,7 @@ export class CustomerPaymentsController {
         id: inv.invoiceNumber,
         invoiceId: inv.id,
         appId: inv.application?.applicationNumber || inv.applicationId || '',
-        service: inv.application?.serviceType || inv.service?.name || 'Service',
+        service: inv.application?.service?.name || inv.service?.name || 'Service',
         totalAmount: inv.totalAmount.toNumber(),
         paidAmount: totalPaid.toNumber(),
         pendingAmount: outstanding.toNumber(),

@@ -1,4 +1,5 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { ApiOperation, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { IsEmail, IsString, MinLength, Length, Matches } from 'class-validator';
 import { AuthService } from './auth.service';
@@ -78,12 +79,35 @@ export class AuthController {
     private readonly passwordReset: PasswordResetService,
   ) {}
 
+  private setRefreshCookie(response: Response, token: string) {
+    response.cookie('refresh_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+  }
+
+  private clearRefreshCookie(response: Response) {
+    response.clearCookie('refresh_token', { httpOnly: true, sameSite: 'lax', path: '/' });
+  }
+
+  private getRefreshToken(request: Request) {
+    const cookieHeader = request.headers.cookie ?? '';
+    return cookieHeader
+      .split(';')
+      .map((part) => part.trim().split('='))
+      .find(([name]) => name === 'refresh_token')?.[1];
+  }
+
   @Post('login')
   @ApiOperation({ summary: 'User Login', description: 'Authenticates admin or customer and returns JWT access token.' })
   @ApiResponse({ status: 201, description: 'Authentication successful. Returns access token and user role.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
-  async login(@Body() dto: LoginDto) {
-    const { accessToken, user } = await this.auth.login(dto.email, dto.password);
+  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: Response) {
+    const { accessToken, refreshToken, user } = await this.auth.login(dto.email, dto.password);
+    this.setRefreshCookie(response, refreshToken);
     return { accessToken, user };
   }
 
@@ -91,8 +115,9 @@ export class AuthController {
   @ApiOperation({ summary: 'Customer Registration', description: 'Registers a new customer account.' })
   @ApiResponse({ status: 201, description: 'Registration successful. Returns access token and user info.' })
   @ApiResponse({ status: 400, description: 'Bad Request - Validation error or duplicate email.' })
-  async register(@Body() dto: RegisterDto) {
-    const { accessToken, user } = await this.auth.register(dto.name, dto.email, dto.password);
+  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) response: Response) {
+    const { accessToken, refreshToken, user } = await this.auth.register(dto.name, dto.email, dto.password);
+    this.setRefreshCookie(response, refreshToken);
     return { accessToken, user };
   }
 

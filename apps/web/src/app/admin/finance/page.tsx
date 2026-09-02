@@ -3,6 +3,8 @@ import FinanceClient, { FinanceRecord } from './FinanceClient';
 import { fetchInvoicesAction } from './actions';
 import { Wallet } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function FinancePage() {
   const res = await fetchInvoicesAction();
 

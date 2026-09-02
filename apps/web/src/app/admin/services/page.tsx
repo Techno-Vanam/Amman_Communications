@@ -468,21 +468,9 @@ export default function ServicesPage() {
   const [editService, setEditService] = useState<Service | null>(null);
   const [deleteService, setDeleteService] = useState<Service | null>(null);
 
-  const loadServices = async () => {
-    setLoading(true);
-    const raw = await fetchAdminServicesAction();
-    const mapped = (raw || []).map(mapBackendService);
-    setServices(mapped);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    loadServices();
-  }, []);
-
   const filtered = useMemo(() => services.filter(s => {
     const q = search.toLowerCase();
-    const matchSearch = s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || s.id.toLowerCase().includes(q);
+    const matchSearch = s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || s.id.toLowerCase().includes(q) || (s.description && s.description.toLowerCase().includes(q));
     const matchStatus = filterStatus === 'All' || s.status === filterStatus;
     const matchCat = filterCategory === 'All' || s.category === filterCategory;
     return matchSearch && matchStatus && matchCat;

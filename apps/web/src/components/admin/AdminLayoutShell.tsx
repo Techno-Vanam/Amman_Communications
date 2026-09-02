@@ -46,7 +46,6 @@ function AdminSidebarNavContent({
   setMobileMenuOpen: (v: boolean) => void;
 }) {
   const pathname = usePathname();
-  const isProfileActive = pathname === '/admin/profile';
   const isSettingsActive = pathname === '/admin/settings';
 
   return (

@@ -1,16 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_DATABASE_URL")
 }
 
 model HealthCheck {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
+  id        String   @id @default(uuid())
+  status    String   @default("ok")
+  timestamp DateTime @default(now())
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  ACTION_REQUIRED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  RESCHEDULED
+}
+
+enum AppointmentType {
+  OFFICE_VISIT
+  ONLINE_CONSULTATION
 }
 
 enum DocumentStatus {
@@ -19,22 +51,6 @@ enum DocumentStatus {
   VERIFIED
   REJECTED
   ACTION_REQUIRED
-}
-
-enum ApplicationStatus {
-  DRAFT
-  SUBMITTED
-  UNDER_REVIEW
-  DOCUMENTS_RECEIVED
-  APPROVED
-  REJECTED
-  PENDING_PAYMENT
-  COMPLETED
-}
-
-enum CustomerStatus {
-  ACTIVE
-  INACTIVE
 }
 
 enum InvoiceStatus {
@@ -60,6 +76,16 @@ enum PaymentStatus {
   PAID
   FAILED
   CANCELLED
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  role      String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
 }
 
 model Customer {
@@ -92,79 +118,99 @@ model Admin {
   email          String         @unique
   passwordHash   String
   name           String
-  expenses       Expense[]
-  adminSettings  AdminSettings?
+  role           String         @default("ADMIN")
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+  expenses       Expense[]
+  settings       AdminSettings?
 }
 
 model Application {
   id                String            @id @default(cuid())
-  applicationNumber String?           @unique
+  applicationNumber String            @unique
   customer          Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
   customerId        String
-  service           Service?          @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  serviceId         String?
-  title             String?
-  serviceType       String?
-  fullName          String?
+  service           Service           @relation(fields: [serviceId], references: [id])
+  serviceId         String
+  status            ApplicationStatus @default(SUBMITTED)
+  
+  fullName          String
+  mobileNumber      String
   email             String?
-  phone             String?
   dateOfBirth       String?
-  nationality       String?
+  gender            String?
   address           String?
   notes             String?
-  status            ApplicationStatus @default(DRAFT)
+  rejectionReason   String?
+  
+  formData          Json?
+  metadata          Json?
+  
   documents         Document[]
   invoices          Invoice[]
+  
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
+
+  @@index([customerId])
+  @@index([serviceId])
+  @@index([status])
 }
 
 model Document {
-  id                  String                    @id @default(cuid())
-  customer            Customer                  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  customerId          String
-  application         Application               @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-  applicationId       String
-  documentType        String
-  storagePath         String
-  fileName            String
-  mimeType            String
-  fileSize            Int
-  originalFileName    String?
-  version             Int                        @default(1)
-  isEncrypted         Boolean                    @default(false)
-  status              DocumentStatus             @default(UPLOADED)
-  rejectionReason     String?
-  verificationStatus  DocumentVerificationStatus @default(PENDING)
-  verificationRemarks String?
-  uploadedAt          DateTime                  @default(now())
-  updatedAt           DateTime                  @updatedAt
-  fileUrl             String?
-  verifiedAt          DateTime?
-  verifiedBy          String?
+  id              String         @id @default(cuid())
+  application     Application    @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId   String
+  customer        Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId      String
+  
+  documentType    String
+  fileName        String
+  fileSize        Int
+  mimeType        String
+  storagePath     String
+  status          DocumentStatus @default(UPLOADED)
+  version         Int            @default(1)
+  rejectionReason String?
+  
+  uploadedAt      DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
-  @@unique([applicationId, documentType])
+  @@index([applicationId])
+  @@index([customerId])
+  @@index([status])
 }
 
-enum AppointmentType {
-  OFFICE_VISIT
-  ONLINE_CONSULTATION
-}
+model Appointment {
+  id                String                @id @default(cuid())
+  appointmentNumber String?               @unique
+  customer          Customer              @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId        String
+  service           Service?              @relation(fields: [serviceId], references: [id])
+  serviceId         String?
+  
+  appointmentDate   DateTime
+  timeSlot          String
+  status            AppointmentStatus     @default(PENDING)
+  appointmentType   AppointmentType       @default(OFFICE_VISIT)
+  mode              AppointmentMode       @default(OFFLINE)
+  onlineType        OnlineMeetingType?
+  meetingLink       String?
+  
+  office            Office?               @relation(fields: [officeId], references: [id])
+  officeId          String?
+  
+  notes             String?
+  cancellationReason String?
+  rescheduledCount  Int                   @default(0)
+  documents         AppointmentDocument[]
+  
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 
-enum ConsultationMode {
-  PHONE
-  VIDEO
-  WHATSAPP
-}
-
-enum AppointmentStatus {
-  PENDING
-  CONFIRMED
-  RESCHEDULED
-  COMPLETED
-  CANCELLED
+  @@index([customerId])
+  @@index([appointmentDate])
+  @@index([status])
 }
 
 enum ServiceStatus {
@@ -174,22 +220,22 @@ enum ServiceStatus {
 }
 
 model Service {
-  id                String             @id @default(cuid())
-  name              String
-  description       String?
-  governmentFee     Decimal            @db.Decimal(10, 2)
-  serviceFee        Decimal            @db.Decimal(10, 2)
-  totalFee          Decimal            @db.Decimal(10, 2)
-  estimatedTime     String?
-  isPartialPaymentAllowed Boolean @default(false)
-  minimumPartialFee Decimal?      @db.Decimal(10, 2)
-  status            ServiceStatus @default(DRAFT)
-  requiredDocuments RequiredDocument[]
-  applications      Application[]
-  appointments      Appointment[]
-  invoices          Invoice[]
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  id                      String             @id @default(cuid())
+  name                    String
+  description             String?
+  governmentFee           Decimal            @db.Decimal(10, 2)
+  serviceFee              Decimal            @db.Decimal(10, 2)
+  totalFee                Decimal            @db.Decimal(10, 2)
+  estimatedTime           String?
+  isPartialPaymentAllowed Boolean            @default(false)
+  minimumPartialFee       Decimal?           @db.Decimal(10, 2)
+  status                  ServiceStatus      @default(DRAFT)
+  requiredDocuments       RequiredDocument[]
+  applications            Application[]
+  appointments            Appointment[]
+  invoices                Invoice[]
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
 }
 
 model Office {
@@ -211,49 +257,6 @@ enum OnlineMeetingType {
   MEETING
 }
 
-model Appointment {
-  id               String            @id @default(cuid())
-  appointmentNumber String?          @unique
-  customer         Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  customerId       String?
-  customerName     String
-  customerEmail    String
-  email            String?
-  customerPhone    String
-  service          Service?          @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  serviceId        String?
-  office           Office?           @relation(fields: [officeId], references: [id])
-  officeId         String?
-  appointmentDate  DateTime
-  preferredDate    DateTime?
-  preferredTime    String?
-  durationMinutes  Int               @default(30)
-  mode             AppointmentMode   @default(OFFLINE)
-  appointmentType  AppointmentType   @default(OFFICE_VISIT)
-  onlineType       OnlineMeetingType?
-  consultationMode ConsultationMode?
-  meetingLink      String?
-  status           AppointmentStatus @default(CONFIRMED)
-  documents        AppointmentDocument[]
-  notes            String?
-  rescheduledFrom  DateTime?
-  rescheduleReason String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-}
-
-model BusinessProfile {
-  id                 String   @id @default(cuid())
-  businessName       String
-  registrationNumber String?
-  officeAddress      String
-  primaryPhone       String
-  supportEmail       String
-  logoUrl            String?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-}
-
 enum DocumentVerificationStatus {
   PENDING
   VERIFIED
@@ -271,31 +274,40 @@ model RequiredDocument {
   updatedAt    DateTime @updatedAt
 }
 
-
+enum ExpenseCategory {
+  OFFICE
+  TRAVEL
+  EMPLOYEE
+  PROPERTY
+  UTILITIES
+  MARKETING
+  EQUIPMENT
+  OTHER
+}
 
 model Expense {
-  id             String          @id @default(cuid())
-  title          String
-  description    String?
-  category       String
-  amount         Decimal         @db.Decimal(10, 2)
-  expenseDate    DateTime
-  paymentMethod  PaymentMethod?
-  isVoided       Boolean         @default(false)
-  notes          String?
+  id            String         @id @default(cuid())
+  title         String
+  description   String?
+  category      String
+  amount        Decimal        @db.Decimal(10, 2)
+  expenseDate   DateTime
+  paymentMethod PaymentMethod?
+  isVoided      Boolean        @default(false)
+  notes         String?
   
-  createdById    String
-  createdBy      Admin           @relation(fields: [createdById], references: [id])
+  createdById   String
+  createdBy     Admin          @relation(fields: [createdById], references: [id])
   
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
   @@index([expenseDate])
   @@index([category])
 }
 
 model AppointmentCounter {
-  year Int @id
+  year       Int @id
   lastNumber Int @default(0)
 }
 
@@ -321,7 +333,6 @@ model Invoice {
   service       Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
   serviceId     String?
   
-  // Authoritative monetary values
   governmentFee Decimal       @db.Decimal(10, 2)
   serviceFee    Decimal       @db.Decimal(10, 2)
   totalAmount   Decimal       @db.Decimal(10, 2)
@@ -362,7 +373,6 @@ model Payment {
   @@index([paidAt])
 }
 
-
 enum SaleCategory {
   APPLICATION
   XEROX
@@ -386,7 +396,6 @@ model ManualSale {
   @@index([createdAt])
 }
 
-
 model PasswordResetToken {
   id        String   @id @default(cuid())
   email     String
@@ -399,7 +408,6 @@ model PasswordResetToken {
 
   @@index([email])
   @@index([token])
-
 }
 
 model AdminSettings {
@@ -415,4 +423,16 @@ model AdminSettings {
   autoLogout     String   @default("30 minutes")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model BusinessProfile {
+  id                 String   @id @default(cuid())
+  businessName       String   @default("")
+  registrationNumber String?
+  officeAddress      String?
+  primaryPhone       String?
+  supportEmail       String?
+  logoUrl            String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }

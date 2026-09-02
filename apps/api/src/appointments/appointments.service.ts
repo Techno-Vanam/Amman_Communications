@@ -24,7 +24,7 @@ export class AppointmentsService {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
     const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
-    const [todayCount, upcomingCount, confirmedCount, completedCount, cancelledCount, totalCount] =
+    const [todayCount, upcomingCount, confirmedCount, completedCount, cancelledCount, pendingCount, totalCount] =
       await Promise.all([
         this.prisma.appointment.count({
           where: {
@@ -53,6 +53,9 @@ export class AppointmentsService {
         this.prisma.appointment.count({
           where: { status: AppointmentStatus.CANCELLED },
         }),
+        this.prisma.appointment.count({
+          where: { status: AppointmentStatus.PENDING },
+        }),
         this.prisma.appointment.count(),
       ]);
 
@@ -62,6 +65,7 @@ export class AppointmentsService {
       confirmed: confirmedCount,
       completed: completedCount,
       cancelled: cancelledCount,
+      pending: pendingCount,
       total: totalCount,
     };
   }
@@ -123,9 +127,9 @@ export class AppointmentsService {
     if (search && search.trim() !== '') {
       const q = search.trim();
       where.OR = [
-        { customerName: { contains: q, mode: 'insensitive' } },
-        { customerEmail: { contains: q, mode: 'insensitive' } },
-        { customerPhone: { contains: q, mode: 'insensitive' } },
+        { customer: { name: { contains: q, mode: 'insensitive' } } },
+        { customer: { email: { contains: q, mode: 'insensitive' } } },
+        { customer: { phone: { contains: q, mode: 'insensitive' } } },
         { notes: { contains: q, mode: 'insensitive' } },
         { service: { name: { contains: q, mode: 'insensitive' } } },
       ];
@@ -150,9 +154,10 @@ export class AppointmentsService {
           },
         },
       },
-      orderBy: {
-        appointmentDate: 'asc',
-      },
+      orderBy: [
+        { appointmentDate: 'desc' },
+        { createdAt: 'desc' },
+      ],
     });
 
     return appointments;
@@ -211,15 +216,11 @@ export class AppointmentsService {
     const appointment = await this.prisma.appointment.create({
       data: {
         appointmentNumber,
-        customerName: dto.customerName.trim(),
-        customerEmail: dto.customerEmail.toLowerCase().trim(),
-        email: dto.customerEmail.toLowerCase().trim(),
-        customerPhone: dto.customerPhone.trim(),
-        customerId: dto.customerId,
+        customerId: dto.customerId!,
         serviceId: dto.serviceId,
         officeId: defaultOffice?.id,
         appointmentDate,
-        durationMinutes: dto.durationMinutes ?? 30,
+        timeSlot: (dto as any).timeSlot || (dto as any).preferredTime || '09:00',
         mode: dto.mode,
         appointmentType: dto.appointmentType ?? (dto.mode === AppointmentMode.ONLINE ? AppointmentType.ONLINE_CONSULTATION : AppointmentType.OFFICE_VISIT),
         onlineType: dto.onlineType,
@@ -244,13 +245,9 @@ export class AppointmentsService {
     }
 
     const data: Prisma.AppointmentUpdateInput = {
-      ...(dto.customerName !== undefined && { customerName: dto.customerName.trim() }),
-      ...(dto.customerEmail !== undefined && { customerEmail: dto.customerEmail.toLowerCase().trim() }),
-      ...(dto.customerPhone !== undefined && { customerPhone: dto.customerPhone.trim() }),
-      ...(dto.customerId !== undefined && { customer: dto.customerId ? { connect: { id: dto.customerId } } : { disconnect: true } }),
-      ...(dto.serviceId !== undefined && { service: dto.serviceId ? { connect: { id: dto.serviceId } } : { disconnect: true } }),
+      ...(dto.customerId !== undefined && { customer: { connect: { id: dto.customerId } } }),
+      ...(dto.serviceId !== undefined ? (dto.serviceId ? { service: { connect: { id: dto.serviceId } } } : { service: { disconnect: true } }) : {}),
       ...(dto.appointmentDate !== undefined && { appointmentDate: new Date(dto.appointmentDate) }),
-      ...(dto.durationMinutes !== undefined && { durationMinutes: dto.durationMinutes }),
       ...(dto.mode !== undefined && { mode: dto.mode }),
       ...(dto.appointmentType !== undefined
         ? { appointmentType: dto.appointmentType }
@@ -261,8 +258,6 @@ export class AppointmentsService {
       ...(dto.meetingLink !== undefined && { meetingLink: dto.meetingLink }),
       ...(dto.status !== undefined && { status: dto.status }),
       ...(dto.notes !== undefined && { notes: dto.notes }),
-      ...(dto.rescheduledFrom !== undefined && { rescheduledFrom: dto.rescheduledFrom ? new Date(dto.rescheduledFrom) : null }),
-      ...(dto.rescheduleReason !== undefined && { rescheduleReason: dto.rescheduleReason }),
     };
 
     return this.prisma.appointment.update({
@@ -290,8 +285,7 @@ export class AppointmentsService {
       where: { id },
       data: {
         appointmentDate: newDate,
-        rescheduledFrom: existing.appointmentDate,
-        rescheduleReason: dto.reason?.trim() || 'Rescheduled by administrator',
+        notes: dto.reason?.trim() ? `Rescheduled: ${dto.reason.trim()}` : existing.notes,
         status: AppointmentStatus.RESCHEDULED,
         ...(dto.mode !== undefined && { mode: dto.mode }),
         ...(dto.onlineType !== undefined && { onlineType: dto.onlineType }),

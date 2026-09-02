@@ -93,9 +93,9 @@ export class NotificationsService {
         return false;
       }
 
-      const recipient = appointment.email || 'customer@amman.com';
+      const recipient = (appointment as any).email || 'customer@amman.com';
       this.logger.log(
-        `[EMAIL NOTIFICATION SENT] To: ${recipient} | Subject: Appointment Confirmation - ${appointment.appointmentNumber} | Service: ${appointment.service?.name} | Date: ${appointment.preferredDate?.toISOString().substring(0, 10)} ${appointment.preferredTime}`
+        `[EMAIL NOTIFICATION SENT] To: ${recipient} | Subject: Appointment Confirmation - ${appointment.appointmentNumber} | Service: ${appointment.service?.name} | Date: ${appointment.appointmentDate?.toISOString().substring(0, 10)} ${appointment.timeSlot}`
       );
 
       return true;

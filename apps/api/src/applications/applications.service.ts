@@ -27,10 +27,8 @@ export class ApplicationsService {
             id: true,
             documentType: true,
             fileName: true,
-            originalFileName: true,
             mimeType: true,
             fileSize: true,
-            isEncrypted: true,
             status: true,
             version: true,
             uploadedAt: true,
@@ -54,10 +52,8 @@ export class ApplicationsService {
             id: true,
             documentType: true,
             fileName: true,
-            originalFileName: true,
             mimeType: true,
             fileSize: true,
-            isEncrypted: true,
             status: true,
             version: true,
             uploadedAt: true,
@@ -95,17 +91,21 @@ export class ApplicationsService {
       }).catch(() => {});
     }
 
+    const matchedService = await this.prisma.service.findFirst({
+      where: { name: { equals: dto.serviceType || 'General Service', mode: 'insensitive' as any } }
+    });
+    const defaultService = matchedService || (await this.prisma.service.findFirst());
+    if (!defaultService) throw new BadRequestException('No service available');
+
     const application = await this.prisma.application.create({
       data: {
         applicationNumber,
         customerId,
-        serviceType: dto.serviceType,
-        title: dto.title || dto.serviceType,
-        fullName: dto.fullName,
+        serviceId: defaultService.id,
+        fullName: dto.fullName || 'Applicant',
         email: dto.email,
-        phone: dto.phone,
+        mobileNumber: dto.phone || '',
         dateOfBirth: dto.dateOfBirth,
-        nationality: dto.nationality,
         address: dto.address,
         notes: dto.notes,
       },
@@ -226,16 +226,13 @@ export class ApplicationsService {
     return this.prisma.application.update({
       where: { id },
       data: {
-        title: dto.title,
-        serviceType: dto.serviceType,
-        fullName: dto.fullName,
-        email: dto.email,
-        phone: dto.phone,
-        dateOfBirth: dto.dateOfBirth,
-        nationality: dto.nationality,
-        address: dto.address,
-        notes: dto.notes,
-        status: dto.status,
+        ...(dto.fullName && { fullName: dto.fullName }),
+        ...(dto.email && { email: dto.email }),
+        ...(dto.phone && { mobileNumber: dto.phone }),
+        ...(dto.dateOfBirth && { dateOfBirth: dto.dateOfBirth }),
+        ...(dto.address && { address: dto.address }),
+        ...(dto.notes && { notes: dto.notes }),
+        ...(dto.status && { status: dto.status }),
       },
     });
   }
@@ -274,20 +271,20 @@ export class ApplicationsService {
     const matchedService = await this.prisma.service.findFirst({
       where: { name: { equals: dto.serviceType, mode: 'insensitive' as any } }
     });
+    const defaultService = matchedService || (await this.prisma.service.findFirst());
+    if (!defaultService) throw new BadRequestException('No service available');
 
     return this.prisma.application.create({
       data: {
         applicationNumber,
         customerId: dto.customerId,
-        serviceId: matchedService?.id || null,
-        serviceType: dto.serviceType,
-        title: dto.title || dto.serviceType,
+        serviceId: defaultService.id,
         fullName: dto.fullName || customer.name,
         email: dto.email || customer.email,
-        phone: dto.phone || customer.phone || '',
+        mobileNumber: dto.phone || customer.phone || '',
         address: dto.address || '',
         notes: dto.notes || '',
-        status: 'SUBMITTED', // Admin-created apps start as SUBMITTED, not DRAFT
+        status: 'SUBMITTED',
       },
       include: { customer: true, documents: true },
     });

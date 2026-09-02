@@ -256,12 +256,10 @@ export class DocumentsService {
       throw new BadRequestException('Invalid storage path for this customer application');
     }
 
-    const existing = await this.prisma.document.findUnique({
+    const existing = await this.prisma.document.findFirst({
       where: {
-        applicationId_documentType: {
-          applicationId,
-          documentType: dto.documentType,
-        },
+        applicationId,
+        documentType: dto.documentType,
       },
     });
 
@@ -273,18 +271,13 @@ export class DocumentsService {
       const updated = await this.prisma.document.update({
         where: { id: existing.id },
         data: {
-          originalFileName: dto.originalFileName || dto.fileName,
           fileName: dto.fileName,
           storagePath: dto.storagePath,
-          fileUrl: dto.fileUrl || null,
           mimeType: dto.mimeType,
           fileSize: dto.fileSize,
-          isEncrypted: true,
           status: 'UPLOADED',
           version: existing.version + 1,
           rejectionReason: null,
-          verifiedAt: null,
-          verifiedBy: null,
         },
       });
 
@@ -300,13 +293,10 @@ export class DocumentsService {
         customerId: application.customerId,
         applicationId,
         documentType: dto.documentType,
-        originalFileName: dto.originalFileName || dto.fileName,
         fileName: dto.fileName,
         storagePath: dto.storagePath,
-        fileUrl: dto.fileUrl || null,
         mimeType: dto.mimeType,
         fileSize: dto.fileSize,
-        isEncrypted: true,
         status: 'UPLOADED',
         version: 1,
       },
@@ -361,8 +351,8 @@ export class DocumentsService {
       applications.map(async (app) => ({
         applicationId: app.id,
         applicationNumber: app.applicationNumber,
-        title: app.title,
-        serviceType: app.serviceType,
+        title: (app as any).title || app.fullName || 'Application',
+        serviceType: (app as any).serviceType || app.serviceId,
         status: app.status,
         documents: await Promise.all(
           app.documents.map(async (doc) => ({
@@ -370,10 +360,10 @@ export class DocumentsService {
             id: doc.id,
             documentType: doc.documentType,
             fileName: doc.fileName,
-            originalFileName: doc.originalFileName,
+            originalFileName: doc.fileName,
             mimeType: doc.mimeType,
             fileSize: doc.fileSize,
-            isEncrypted: doc.isEncrypted,
+            isEncrypted: true,
             status: doc.status,
             version: doc.version,
             uploadedAt: doc.uploadedAt,
@@ -509,8 +499,6 @@ export class DocumentsService {
       data: {
         status: dto.status as any,
         rejectionReason: isRejected ? dto.rejectionReason || 'Document requires re-upload' : null,
-        verifiedAt: isVerified ? new Date() : null,
-        verifiedBy: isVerified ? adminId : null,
       },
     });
 
@@ -546,7 +534,7 @@ export class DocumentsService {
     });
 
     const mimeType = document?.mimeType || 'application/octet-stream';
-    const fileName = document?.originalFileName || document?.fileName || 'document';
+    const fileName = document?.fileName || 'document';
 
     const buffer = await this.storage.readDecryptedFile(storagePath);
     return { buffer, mimeType, fileName };
@@ -579,8 +567,8 @@ export class DocumentsService {
     await this.storage.saveEncryptedFile(storagePath, buffer);
 
     // Upsert the document record
-    const existing = await this.prisma.document.findUnique({
-      where: { applicationId_documentType: { applicationId, documentType: dto.documentType } },
+    const existing = await this.prisma.document.findFirst({
+      where: { applicationId, documentType: dto.documentType },
     });
 
     if (existing) {
@@ -590,17 +578,13 @@ export class DocumentsService {
       const updated = await this.prisma.document.update({
         where: { id: existing.id },
         data: {
-          originalFileName: dto.fileName,
           fileName: dto.fileName,
           storagePath,
           mimeType: dto.mimeType,
           fileSize: dto.fileSize,
-          isEncrypted: true,
           status: 'UPLOADED',
           version: existing.version + 1,
           rejectionReason: null,
-          verifiedAt: null,
-          verifiedBy: null,
         },
       });
       return { ...updated, documentId: updated.id };
@@ -611,12 +595,10 @@ export class DocumentsService {
         customerId,
         applicationId,
         documentType: dto.documentType,
-        originalFileName: dto.fileName,
         fileName: dto.fileName,
         storagePath,
         mimeType: dto.mimeType,
         fileSize: dto.fileSize,
-        isEncrypted: true,
         status: 'UPLOADED',
         version: 1,
       },

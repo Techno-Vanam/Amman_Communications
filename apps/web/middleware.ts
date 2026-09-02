@@ -81,6 +81,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin/dashboard', request.url));
   }
 
+export async function middleware() {
   return NextResponse.next();
 }
 

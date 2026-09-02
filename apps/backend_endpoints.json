@@ -624,45 +624,6 @@
         ]
       }
     },
-    "/api/v1/admin/applications/{applicationId}/documents/upload": {
-      "post": {
-        "operationId": "AdminDocumentsController_adminUploadDocument",
-        "parameters": [
-          {
-            "name": "applicationId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DirectUploadDocumentDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Admin uploads a document on behalf of a customer (base64)",
-        "tags": [
-          "Admin - Documents"
-        ]
-      }
-    },
     "/api/v1/admin/applications/{applicationId}/documents/{documentId}/status": {
       "put": {
         "operationId": "AdminDocumentsController_updateDocumentStatus",
@@ -783,14 +744,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -810,14 +764,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -857,7 +804,7 @@
         "parameters": [
           {
             "name": "search",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -865,7 +812,7 @@
           },
           {
             "name": "status",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {}
           }
@@ -1367,14 +1314,7 @@
         },
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1394,32 +1334,13 @@
             "required": false,
             "in": "query",
             "schema": {
-              "type": "string",
-              "enum": [
-                "ALL",
-                "UPCOMING",
-                "PENDING",
-                "CONFIRMED",
-                "RESCHEDULED",
-                "COMPLETED",
-                "CANCELLED"
-              ]
+              "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1523,14 +1444,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1554,6 +1468,44 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Appointments"
+        ]
+      }
+    },
+    "/api/v1/customer/appointments/{id}/reschedule": {
+      "patch": {
+        "operationId": "CustomerAppointmentsController_rescheduleAppointment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerRescheduleAppointmentDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -1773,7 +1725,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
                 }
               }
             }
@@ -1803,14 +1758,7 @@
         },
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1838,14 +1786,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1881,14 +1822,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1907,7 +1841,7 @@
         "parameters": [
           {
             "name": "search",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -1915,7 +1849,7 @@
           },
           {
             "name": "status",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -1923,7 +1857,7 @@
           },
           {
             "name": "page",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -1931,7 +1865,7 @@
           },
           {
             "name": "limit",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2003,14 +1937,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2083,14 +2010,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2153,14 +2073,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2200,7 +2113,7 @@
         "parameters": [
           {
             "name": "search",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2208,6 +2121,14 @@
           },
           {
             "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "mode",
             "required": false,
             "in": "query",
             "schema": {
@@ -2242,14 +2163,6 @@
             "name": "timeframe",
             "required": false,
             "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "mode",
-            "required": false,
-            "in": "query",
             "schema": {}
           }
         ],
@@ -2259,7 +2172,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
                 }
               }
             }
@@ -2290,14 +2206,7 @@
         },
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2326,14 +2235,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2370,14 +2272,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2443,14 +2338,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2489,14 +2377,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2550,7 +2431,7 @@
         "parameters": [
           {
             "name": "skip",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "number"
@@ -2558,7 +2439,7 @@
           },
           {
             "name": "take",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "number"
@@ -2566,7 +2447,7 @@
           },
           {
             "name": "category",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2574,7 +2455,7 @@
           },
           {
             "name": "startDate",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2582,7 +2463,7 @@
           },
           {
             "name": "endDate",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2590,7 +2471,7 @@
           },
           {
             "name": "search",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2618,7 +2499,7 @@
         "parameters": [
           {
             "name": "category",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2655,14 +2536,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2941,24 +2815,7 @@
     "/api/v1/admin/finance/summary": {
       "get": {
         "operationId": "FinanceController_getSummary",
-        "parameters": [
-          {
-            "name": "from",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "to",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
@@ -3007,7 +2864,14 @@
             "required": false,
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/Object"
+              "type": "string",
+              "enum": [
+                "CANCELLED",
+                "UNPAID",
+                "PARTIALLY_PAID",
+                "PAID",
+                "OVERDUE"
+              ]
             }
           },
           {
@@ -3261,7 +3125,16 @@
             "required": false,
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/Object"
+              "type": "string",
+              "enum": [
+                "OTHER",
+                "CASH",
+                "BANK_TRANSFER",
+                "CREDIT_CARD",
+                "DEBIT_CARD",
+                "UPI",
+                "CHEQUE"
+              ]
             }
           },
           {
@@ -3269,7 +3142,13 @@
             "required": false,
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/Object"
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "CANCELLED",
+                "PAID",
+                "FAILED"
+              ]
             }
           },
           {
@@ -3434,6 +3313,110 @@
         },
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer Payments"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{applicationId}/documents/upload": {
+      "post": {
+        "operationId": "AdminDocumentsController_adminUploadDocument",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectUploadDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Admin uploads a document on behalf of a customer (base64)",
+        "tags": [
+          "Admin - Documents"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{id}": {
+      "put": {
+        "operationId": "AdminApplicationsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an application fully",
+        "tags": [
+          "Admin - Applications"
+        ]
+      },
+      "get": {
+        "operationId": "AdminApplicationsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
@@ -3449,8 +3432,38 @@
             "bearer": []
           }
         ],
+        "summary": "Get single application by ID",
         "tags": [
-          "Customer Payments"
+          "Admin - Applications"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{id}/documents": {
+      "get": {
+        "operationId": "AdminApplicationsController_getDocuments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get documents for application",
+        "tags": [
+          "Admin - Applications"
         ]
       }
     }
@@ -3677,14 +3690,14 @@
         "type": "object",
         "properties": {
           "status": {
+            "type": "string",
             "enum": [
               "UPLOADED",
               "UNDER_REVIEW",
               "VERIFIED",
               "REJECTED",
               "ACTION_REQUIRED"
-            ],
-            "type": "string"
+            ]
           },
           "rejectionReason": {
             "type": "string"
@@ -3704,7 +3717,6 @@
           },
           "name": {
             "type": "string",
-            "minLength": 1,
             "description": "Document name",
             "example": "Commercial License Copy"
           },
@@ -3728,7 +3740,6 @@
         "properties": {
           "name": {
             "type": "string",
-            "minLength": 2,
             "description": "Service title",
             "example": "Commercial Fiber Connectivity"
           },
@@ -3739,13 +3750,11 @@
           },
           "governmentFee": {
             "type": "number",
-            "minimum": 0,
             "description": "Government processing fee",
             "example": 250
           },
           "serviceFee": {
             "type": "number",
-            "minimum": 0,
             "description": "Service provider fee",
             "example": 750
           },
@@ -3793,30 +3802,32 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string",
-            "minLength": 2
+            "type": "string"
           },
           "description": {
             "type": "string"
           },
           "governmentFee": {
-            "type": "number",
-            "minimum": 0
+            "type": "number"
           },
           "serviceFee": {
-            "type": "number",
-            "minimum": 0
+            "type": "number"
           },
           "estimatedTime": {
             "type": "string"
           },
           "status": {
-            "type": "object"
+            "enum": [
+              "ACTIVE",
+              "INACTIVE",
+              "DRAFT"
+            ],
+            "type": "string"
           },
           "requiredDocuments": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RequiredDocumentDto"
+              "type": "string"
             }
           },
           "isPartialPaymentAllowed": {
@@ -3855,7 +3866,6 @@
           },
           "email": {
             "type": "string",
-            "format": "email",
             "description": "Email address (must be unique)"
           },
           "phone": {
@@ -3864,8 +3874,8 @@
           },
           "password": {
             "type": "string",
-            "minLength": 6,
-            "description": "Raw password (will be hashed)"
+            "description": "Raw password (will be hashed)",
+            "minLength": 6
           },
           "status": {
             "type": "string",
@@ -3888,8 +3898,7 @@
             "type": "string"
           },
           "email": {
-            "type": "string",
-            "format": "email"
+            "type": "string"
           },
           "phone": {
             "type": "string",
@@ -3899,7 +3908,11 @@
             ]
           },
           "status": {
-            "type": "object"
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ]
           }
         }
       },
@@ -3953,8 +3966,6 @@
           },
           "durationMinutes": {
             "type": "number",
-            "minimum": 5,
-            "maximum": 480,
             "description": "Duration in minutes",
             "example": 30
           },
@@ -4029,9 +4040,7 @@
             "type": "string"
           },
           "fileSize": {
-            "type": "number",
-            "maximum": 10485760,
-            "minimum": 1
+            "type": "number"
           }
         },
         "required": [
@@ -4054,8 +4063,7 @@
             "type": "string"
           },
           "fileSize": {
-            "type": "number",
-            "minimum": 1
+            "type": "number"
           }
         },
         "required": [
@@ -4065,16 +4073,37 @@
           "fileSize"
         ]
       },
+      "CustomerRescheduleAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "preferredDate": {
+            "type": "string",
+            "description": "New preferred date (YYYY-MM-DD or ISO string)",
+            "example": "2026-09-10"
+          },
+          "preferredTime": {
+            "type": "string",
+            "description": "New preferred time slot",
+            "example": "10:30 AM"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason for rescheduling",
+            "example": "Schedule conflict"
+          }
+        },
+        "required": [
+          "preferredDate"
+        ]
+      },
       "UpdateProfileDto": {
         "type": "object",
         "properties": {
           "name": {
-            "type": "string",
-            "minLength": 2
+            "type": "string"
           },
           "email": {
-            "type": "string",
-            "format": "email"
+            "type": "string"
           },
           "contactNumber": {
             "type": "string"
@@ -4112,8 +4141,7 @@
             "type": "string"
           },
           "newPassword": {
-            "type": "string",
-            "minLength": 8
+            "type": "string"
           },
           "confirmNewPassword": {
             "type": "string"
@@ -4229,41 +4257,6 @@
           }
         }
       },
-      "AdminCreateApplicationDto": {
-        "type": "object",
-        "properties": {
-          "customerId": {
-            "type": "string",
-            "description": "Customer ID to create the application for"
-          },
-          "serviceType": {
-            "type": "string",
-            "description": "Service type for the application"
-          },
-          "title": {
-            "type": "string"
-          },
-          "fullName": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string"
-          },
-          "address": {
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "customerId",
-          "serviceType"
-        ]
-      },
       "UpdateAppointmentDto": {
         "type": "object",
         "properties": {
@@ -4286,24 +4279,35 @@
             "type": "string"
           },
           "durationMinutes": {
-            "type": "number",
-            "minimum": 5,
-            "maximum": 480
+            "type": "number"
           },
           "mode": {
-            "type": "object"
-          },
-          "appointmentType": {
-            "type": "object"
+            "enum": [
+              "OFFLINE",
+              "ONLINE"
+            ],
+            "type": "string"
           },
           "onlineType": {
-            "type": "object"
+            "enum": [
+              "PHONE",
+              "VIDEO",
+              "MEETING"
+            ],
+            "type": "string"
           },
           "meetingLink": {
             "type": "string"
           },
           "status": {
-            "type": "object"
+            "enum": [
+              "PENDING",
+              "COMPLETED",
+              "CONFIRMED",
+              "RESCHEDULED",
+              "CANCELLED"
+            ],
+            "type": "string"
           },
           "notes": {
             "type": "string"
@@ -4395,12 +4399,21 @@
             "example": "Pens, paper, and staplers"
           },
           "category": {
+            "enum": [
+              "OFFICE",
+              "TRAVEL",
+              "EMPLOYEE",
+              "PROPERTY",
+              "UTILITIES",
+              "MARKETING",
+              "EQUIPMENT",
+              "OTHER"
+            ],
             "type": "string",
-            "example": "Operations"
+            "example": "OFFICE"
           },
           "amount": {
             "type": "number",
-            "minimum": 1,
             "example": 250.5
           },
           "expenseDate": {
@@ -4448,12 +4461,21 @@
             "example": "Updated description"
           },
           "category": {
+            "enum": [
+              "OFFICE",
+              "TRAVEL",
+              "EMPLOYEE",
+              "PROPERTY",
+              "UTILITIES",
+              "MARKETING",
+              "EQUIPMENT",
+              "OTHER"
+            ],
             "type": "string",
-            "example": "Operations"
+            "example": "OFFICE"
           },
           "amount": {
             "type": "number",
-            "minimum": 1,
             "example": 300
           },
           "expenseDate": {
@@ -4488,7 +4510,6 @@
         "properties": {
           "businessName": {
             "type": "string",
-            "minLength": 2,
             "description": "Name of the business organization",
             "example": "Amman Communications"
           },
@@ -4499,19 +4520,16 @@
           },
           "officeAddress": {
             "type": "string",
-            "minLength": 5,
             "description": "Physical office address of the business",
             "example": "124 Main Street, Business District"
           },
           "primaryPhone": {
             "type": "string",
-            "pattern": "^[+]?[\\d\\s\\-()]{7,20}$",
             "description": "Primary contact phone number",
             "example": "+91 9876543210"
           },
           "supportEmail": {
             "type": "string",
-            "format": "email",
             "description": "Support email address",
             "example": "support@example.com"
           }
@@ -4555,37 +4573,7 @@
       },
       "CreateInvoiceDto": {
         "type": "object",
-        "properties": {
-          "customerId": {
-            "type": "string",
-            "minLength": 1
-          },
-          "serviceId": {
-            "type": "string"
-          },
-          "applicationId": {
-            "type": "string"
-          },
-          "governmentFee": {
-            "type": "number",
-            "minimum": 0
-          },
-          "serviceFee": {
-            "type": "number",
-            "minimum": 0
-          },
-          "dueDate": {
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "customerId",
-          "governmentFee",
-          "serviceFee"
-        ]
+        "properties": {}
       },
       "UpdateInvoiceDto": {
         "type": "object",
@@ -4605,15 +4593,29 @@
             "type": "string"
           },
           "status": {
-            "type": "object"
+            "type": "string",
+            "enum": [
+              "CANCELLED",
+              "UNPAID",
+              "PARTIALLY_PAID",
+              "PAID",
+              "OVERDUE"
+            ]
           }
         }
       },
-      "UpdateInvoiceStatusDto": {
+      "AdminCreateApplicationDto": {
         "type": "object",
         "properties": {
           "status": {
-            "type": "object"
+            "type": "string",
+            "enum": [
+              "CANCELLED",
+              "UNPAID",
+              "PARTIALLY_PAID",
+              "PAID",
+              "OVERDUE"
+            ]
           }
         },
         "required": [
@@ -4628,81 +4630,39 @@
             "minimum": 0.01
           },
           "paymentMethod": {
-            "type": "object"
-          },
-          "status": {
-            "type": "object"
-          },
-          "reference": {
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          },
-          "paidAt": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "amount",
-          "paymentMethod"
-        ]
-      },
-      "CreateManualSaleDto": {
-        "type": "object",
-        "properties": {
-          "customerName": {
-            "type": "string",
-            "minLength": 1,
-            "description": "The name of the walk-in customer",
-            "example": "John Doe"
-          },
-          "phoneNumber": {
-            "type": "string",
-            "description": "Optional phone number",
-            "example": "+919876543210"
-          },
-          "category": {
             "type": "string",
             "enum": [
-              "APPLICATION",
-              "XEROX",
-              "STATIONARY",
-              "OTHER"
-            ],
-            "description": "Category of the sale",
-            "example": "XEROX"
-          },
-          "amount": {
-            "type": "number",
-            "minimum": 0,
-            "description": "Amount for the sale",
-            "example": 10.5
-          },
-          "paymentMethod": {
-            "type": "string",
-            "enum": [
+              "OTHER",
               "CASH",
               "BANK_TRANSFER",
               "CREDIT_CARD",
               "DEBIT_CARD",
               "UPI",
-              "CHEQUE",
-              "OTHER"
-            ],
-            "description": "Payment Method",
-            "example": "CASH"
+              "CHEQUE"
+            ]
           },
-          "details": {
+          "status": {
             "type": "string",
-            "description": "Optional details about the sale",
-            "example": "2 copies of A4"
+            "enum": [
+              "PENDING",
+              "CANCELLED",
+              "PAID",
+              "FAILED"
+            ]
+          },
+          "phone": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
           }
         },
         "required": [
-          "customerName",
-          "category",
-          "amount"
+          "customerId",
+          "serviceType"
         ]
       },
       "CreateCustomerPaymentDto": {
