@@ -1,5 +1,6 @@
 'use client';
 
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
@@ -26,6 +27,12 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import { fetchAdminDashboardStatsAction } from './actions';
+=======
+import { useCallback, useEffect, useState } from 'react';
+import { fetchAdminDashboardSummary, fetchAdminVerificationQueue, verifyDocumentStatus } from './actions';
+import { AlertCircle, CheckCircle2, Clock, FileText, RefreshCw, X } from 'lucide-react';
+>>>>>>> origin/backend-merge
 
 interface RecentItem {
   id: string;
@@ -126,43 +133,16 @@ export default function AdminDashboardPage() {
   };
 
   useEffect(() => {
-    // Live stats from database / localStorage
-    try {
-      const keys = Object.keys(localStorage);
-      let clientCount = 0;
-      let appCount = 0;
-      let aptCount = 0;
-
-      for (const k of keys) {
-        if (k.includes('amman_user_applications')) {
-          const raw = localStorage.getItem(k);
-          if (raw) {
-            const arr = JSON.parse(raw);
-            appCount += Array.isArray(arr) ? arr.length : 0;
-          }
-        }
-        if (k.includes('amman_user_appointments')) {
-          const raw = localStorage.getItem(k);
-          if (raw) {
-            const arr = JSON.parse(raw);
-            aptCount += Array.isArray(arr) ? arr.length : 0;
-          }
-        }
+    const loadDashboardStats = async () => {
+      const res = await fetchAdminDashboardStatsAction();
+      if (res.success && res.data) {
+        setStats(res.data.stats);
+        if (res.data.recentAppointments) setRecentAppointments(res.data.recentAppointments);
+        if (res.data.recentApplications) setRecentApplications(res.data.recentApplications);
+        if (res.data.servicesPieData) setServicesPieData(res.data.servicesPieData);
       }
-
-      setStats({
-        totalClients: clientCount,
-        totalIncome: 0,
-        totalExpense: 0,
-        totalProfit: 0,
-        totalAppointments: aptCount,
-        pendingVerifications: 0,
-        totalApplications: appCount,
-        pendingPayment: 0,
-      });
-    } catch {
-      // Graceful fallback
-    }
+    };
+    loadDashboardStats();
   }, []);
 
   const kpiCards = [
@@ -350,7 +330,7 @@ export default function AdminDashboardPage() {
               <BarChart data={currentData} barSize={28} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} />
+                <YAxis tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `₹${(v / 1000).toFixed(0)}k`} />
                 <Tooltip content={<CustomBarTooltip />} cursor={{ fill: '#f0f7f2', radius: 8 }} />
                 <Bar dataKey="value" fill="#12372A" radius={[6, 6, 0, 0]} />
               </BarChart>

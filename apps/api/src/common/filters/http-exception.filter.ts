@@ -9,6 +9,7 @@ import {
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
+    console.error('[HttpExceptionFilter Caught Error]:', exception);
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<{
       status: (code: number) => { json: (data: any) => void };

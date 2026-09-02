@@ -11,10 +11,15 @@ import { Roles } from '../auth/decorators/roles.decorator';
 
 
 @ApiBearerAuth()
+<<<<<<< HEAD
 @ApiTags('Admin - Expenses')
 @Controller('admin/expenses')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
+=======
+@Controller(['v1/admin/expenses', 'api/v1/admin/expenses', 'admin/expenses'])
+@UseGuards(AdminAuthGuard)
+>>>>>>> origin/backend-merge
 export class ExpensesController {
   constructor(private readonly expensesService: ExpensesService) {}
 

@@ -118,7 +118,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onCl
                   <span className="bg-brand-100 text-brand-800 px-2 py-0.5 rounded text-[11px]">Confirmed</span>
                 </div>
                 <div className="text-xs text-brand-800 space-y-1">
-                  <p>• Contact Desk: +91 98765 43210</p>
+                  <p>• Contact Desk: +91 90805 10279</p>
                   <p>• A confirmation summary has been sent to {formData.email}</p>
                 </div>
               </div>
@@ -167,7 +167,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onCl
                       </span>
                       <input
                         type="tel"
-                        placeholder="98765 43210"
+                        placeholder="90805 10279"
                         value={formData.phone}
                         onChange={(e) => {
                           setFormData({ ...formData, phone: e.target.value });
