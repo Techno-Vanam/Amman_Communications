@@ -40,7 +40,7 @@ export const ContactSection: React.FC = () => {
             <span>Direct Desk & Support</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-600 tracking-tight">
-            Get in Touch with Amman Communications
+            Get in Touch with TechnoVanam Communications
           </h2>
           <p className="text-base sm:text-lg text-slate-600">
             Have questions about property documentation or a pending application? Reach out to our advisory desk.
@@ -57,7 +57,7 @@ export const ContactSection: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <h4 className="font-bold text-slate-900 text-base">Phone & Helpline</h4>
-                <p className="text-sm font-semibold text-brand-700">+91 98765 43210 / +91 44 2345 6789</p>
+                <p className="text-sm font-semibold text-brand-700">+91 90805 10279</p>
                 <p className="text-xs text-slate-500">Mon - Sat: 9:30 AM – 6:30 PM IST</p>
               </div>
             </div>
@@ -69,7 +69,7 @@ export const ContactSection: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <h4 className="font-bold text-slate-900 text-base">Email Consultation Desk</h4>
-                <p className="text-sm font-semibold text-brand-700">support@ammancommunications.com</p>
+                <p className="text-sm font-semibold text-brand-700">contact@technovanam.in</p>
                 <p className="text-xs text-slate-500">Response within 4 business hours</p>
               </div>
             </div>
@@ -82,9 +82,8 @@ export const ContactSection: React.FC = () => {
               <div className="space-y-1">
                 <h4 className="font-bold text-slate-900 text-base">Consultation Hub</h4>
                 <p className="text-xs sm:text-sm text-slate-700">
-                  Amman Communications Hub,<br />
-                  Main Commercial Road, Prime Business District,<br />
-                  Chennai, Tamil Nadu - 600001
+                  TechnoVanam Communications Hub,<br />
+                  Coimbatore, Tamil Nadu
                 </p>
               </div>
             </div>
@@ -115,7 +114,7 @@ export const ContactSection: React.FC = () => {
                 <CheckCircle2 className="w-12 h-12 text-brand-600 mx-auto" />
                 <h4 className="text-xl font-bold text-slate-900">Message Delivered!</h4>
                 <p className="text-sm text-slate-600 max-w-sm mx-auto">
-                  Thank you for contacting Amman Communications regarding <strong className="text-brand-700">{form.serviceNeeded}</strong>. A consultant will reach out to you shortly.
+                  Thank you for contacting TechnoVanam Communications regarding <strong className="text-brand-700">{form.serviceNeeded}</strong>. A consultant will reach out to you shortly.
                 </p>
                 <button
                   onClick={() => {
@@ -164,7 +163,7 @@ export const ContactSection: React.FC = () => {
                         </span>
                         <input
                           type="tel"
-                          placeholder="98765 43210"
+                          placeholder="90805 10279"
                           value={form.phone}
                           onChange={(e) => {
                             setForm({ ...form, phone: e.target.value });

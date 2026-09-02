@@ -8,23 +8,23 @@ export default {
     extend: {
       colors: {
         brand: {
-          50: '#e8f5f0',
-          100: '#d1eae0',
-          200: '#a3d5c3',
-          300: '#75bfa6',
-          400: '#47aa89',
-          500: '#1d825e',
-          600: '#176b4d', // Soft professional medium green
-          700: '#11523b',
-          800: '#0c3a29',
-          900: '#062117',
+          50: '#f1fbdc',
+          100: '#e2f7b8',
+          200: '#c5ef71',
+          300: '#a8e638',
+          400: '#8cdb0d',
+          500: '#71d300',
+          600: '#71d300',
+          700: '#71d300',
+          800: '#4d9200',
+          900: '#2f5b00',
         },
         emerald: {
-          DEFAULT: '#176b4d',
-          dark: '#11523b',
-          light: '#1d825e',
-          soft: '#e8f5f0',
-          tint: '#f2f9f6',
+          DEFAULT: '#71d300',
+          dark: '#4d9200',
+          light: '#8cdb0d',
+          soft: '#f1fbdc',
+          tint: '#f7fde9',
         },
         accent: {
           amber: '#f59e0b',
@@ -44,7 +44,7 @@ export default {
       boxShadow: {
         'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.04)',
         'soft-lg': '0 10px 30px -4px rgba(0, 0, 0, 0.06)',
-        'brand-glow': '0 10px 25px -5px rgba(23, 107, 77, 0.2)',
+        'brand-glow': '0 10px 25px -5px rgba(113, 211, 0, 0.2)',
       },
       animation: {
         'float': 'float 4s ease-in-out infinite',

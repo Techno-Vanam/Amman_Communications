@@ -1,5 +1,6 @@
 packages:
   - apps/*
+  - client/landing_page
   - packages/*
 allowBuilds:
   '@prisma/client': true
@@ -10,6 +11,4 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
   '@scarf/scarf': true
-  '@firebase/util': true
-minimumReleaseAgeExclude:
-  - nodemailer@9.1.1
+  '@firebase/util': false

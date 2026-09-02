@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, X } from 'lucide-react';
+import { Check, X, MessageSquare } from 'lucide-react';
 
 export interface NotificationItem {
   id: string;
@@ -66,6 +66,7 @@ interface ToastMessage {
   title: string;
   message?: string;
   type?: 'success' | 'info' | 'warning';
+  shareUrl?: string;
 }
 
 const INITIAL_NOTIFICATIONS: NotificationItem[] = [];
@@ -82,7 +83,8 @@ interface NotificationContextType {
     type?: 'success' | 'info' | 'warning',
     actionText?: string,
     actionUrl?: string,
-    shouldCreateNotification?: boolean
+    shouldCreateNotification?: boolean,
+    shareUrl?: string
   ) => void;
 }
 
@@ -130,10 +132,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     type: 'success' | 'info' | 'warning' = 'success',
     actionText: string = 'View Details',
     actionUrl: string = '/portal/dashboard',
-    shouldCreateNotification: boolean = false
+    shouldCreateNotification: boolean = false,
+    shareUrl?: string
   ) => {
     const id = Date.now().toString();
-    setToast({ id, title, message, type });
+    setToast({ id, title, message, type, shareUrl });
 
     if (shouldCreateNotification) {
       // Automatically push a real notification item into user's notification list with actual timestamp & formatted time
@@ -228,11 +231,30 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
               )}
             </div>
 
-            {/* Action Continue Button */}
-            <div className="relative z-10 pt-2">
+            {/* Action Buttons: Share to Admin & Continue */}
+            <div className="relative z-10 pt-2 space-y-2.5">
+              {(toast.shareUrl || toast.title.toLowerCase().includes('appointment') || (toast.message && (toast.message.includes('APT-') || toast.message.includes('scheduled')))) && (
+                <a
+                  href={
+                    toast.shareUrl ||
+                    `https://wa.me/919360645466?text=${encodeURIComponent(
+                      `*New Appointment Booked - Amman Communications*\n\n📌 *Details:* ${toast.message || toast.title}\n\nPlease review and confirm this booking. Thank you!`
+                    )}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 px-4 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs rounded-2xl shadow-md shadow-[#25D366]/20 transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <MessageSquare className="w-4 h-4 fill-white" />
+                  <span>Share Details to Admin on WhatsApp</span>
+                </a>
+              )}
+
               <button
+                type="button"
                 onClick={() => setToast(null)}
                 className="w-full py-3 px-6 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-2xl shadow-md shadow-[#12372A]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                suppressHydrationWarning
               >
                 Continue
               </button>
