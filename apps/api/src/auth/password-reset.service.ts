@@ -1,6 +1,7 @@
-import { Injectable, Logger, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { hash, compare } from 'bcryptjs';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
@@ -302,10 +303,6 @@ export class PasswordResetService {
    * Generates a cryptographically random 6-digit OTP.
    */
   private generateOTP(): string {
-    // Use crypto for better randomness
-    const array = new Uint32Array(1);
-    // Node.js crypto
-    const crypto = require('crypto');
     const randomValue = crypto.randomInt(0, 1000000);
     return randomValue.toString().padStart(6, '0');
   }
@@ -326,7 +323,7 @@ export class PasswordResetService {
     if (!/\d/.test(password)) {
       return { valid: false, error: 'Password must contain at least one number.' };
     }
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
       return { valid: false, error: 'Password must contain at least one special character.' };
     }
     return { valid: true };

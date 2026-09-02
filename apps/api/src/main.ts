@@ -1,12 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { json, urlencoded } from 'express';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
-import { ResponseInterceptor } from './common/interceptors/response.interceptor';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -14,10 +13,8 @@ async function bootstrap() {
   });
 
   // Increase JSON body limit to 15 MB for base64 document uploads
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const bodyParser = require('body-parser');
-  app.use(bodyParser.json({ limit: '15mb' }));
-  app.use(bodyParser.urlencoded({ limit: '15mb', extended: true }));
+  app.use(json({ limit: '15mb' }));
+  app.use(urlencoded({ limit: '15mb', extended: true }));
   const jwtSecret = process.env.JWT_ACCESS_SECRET;
   if (!jwtSecret || jwtSecret.length < 32 || jwtSecret === 'replace-with-a-long-random-secret') {
     throw new Error('JWT_ACCESS_SECRET must be configured with at least 32 random characters');

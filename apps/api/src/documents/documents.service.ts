@@ -12,7 +12,6 @@ import {
   UploadOrReplaceDocumentDto,
 } from './dto/upload-document.dto';
 import { UpdateDocumentStatusDto } from './dto/update-document-status.dto';
-import { SERVICES_CATALOG } from '@repo/shared-types';
 
 @Injectable()
 export class DocumentsService {

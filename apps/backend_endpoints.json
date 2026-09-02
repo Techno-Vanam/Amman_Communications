@@ -736,7 +736,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -860,14 +867,19 @@
             "name": "status",
             "required": false,
             "in": "query",
-            "schema": {
-              "type": "string"
-            }
+            "schema": {}
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -924,7 +936,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -961,7 +980,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1027,7 +1053,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1740,10 +1773,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
+                  "type": "object"
                 }
               }
             }
@@ -2053,7 +2083,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2116,7 +2153,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2171,14 +2215,6 @@
             }
           },
           {
-            "name": "mode",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "date",
             "required": false,
             "in": "query",
@@ -2209,6 +2245,12 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "mode",
+            "required": false,
+            "in": "query",
+            "schema": {}
           }
         ],
         "responses": {
@@ -2217,10 +2259,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
+                  "type": "object"
                 }
               }
             }
@@ -2487,7 +2526,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2652,7 +2698,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2678,7 +2731,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2834,7 +2894,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -2856,7 +2923,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -2933,14 +3007,7 @@
             "required": false,
             "in": "query",
             "schema": {
-              "type": "string",
-              "enum": [
-                "CANCELLED",
-                "UNPAID",
-                "PARTIALLY_PAID",
-                "PAID",
-                "OVERDUE"
-              ]
+              "$ref": "#/components/schemas/Object"
             }
           },
           {
@@ -3000,7 +3067,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -3054,7 +3128,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -3087,7 +3168,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -3120,7 +3208,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -3166,16 +3261,7 @@
             "required": false,
             "in": "query",
             "schema": {
-              "type": "string",
-              "enum": [
-                "OTHER",
-                "CASH",
-                "BANK_TRANSFER",
-                "CREDIT_CARD",
-                "DEBIT_CARD",
-                "UPI",
-                "CHEQUE"
-              ]
+              "$ref": "#/components/schemas/Object"
             }
           },
           {
@@ -3183,13 +3269,7 @@
             "required": false,
             "in": "query",
             "schema": {
-              "type": "string",
-              "enum": [
-                "PENDING",
-                "CANCELLED",
-                "PAID",
-                "FAILED"
-              ]
+              "$ref": "#/components/schemas/Object"
             }
           },
           {
@@ -3258,7 +3338,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3286,7 +3373,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3306,7 +3400,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3654,13 +3755,13 @@
             "example": "2-3 Working Days"
           },
           "status": {
+            "type": "string",
+            "description": "Service publishing status",
             "enum": [
               "DRAFT",
               "ACTIVE",
               "INACTIVE"
             ],
-            "type": "string",
-            "description": "Service publishing status",
             "example": "ACTIVE"
           },
           "requiredDocuments": {
@@ -3710,12 +3811,7 @@
             "type": "string"
           },
           "status": {
-            "enum": [
-              "ACTIVE",
-              "INACTIVE",
-              "DRAFT"
-            ],
-            "type": "string"
+            "type": "object"
           },
           "requiredDocuments": {
             "type": "array",
@@ -3736,13 +3832,13 @@
         "type": "object",
         "properties": {
           "status": {
+            "type": "string",
+            "description": "New status for the service",
             "enum": [
               "DRAFT",
               "ACTIVE",
               "INACTIVE"
             ],
-            "type": "string",
-            "description": "New status for the service",
             "example": "ACTIVE"
           }
         },
@@ -3772,11 +3868,11 @@
             "description": "Raw password (will be hashed)"
           },
           "status": {
+            "type": "string",
             "enum": [
               "ACTIVE",
               "INACTIVE"
             ],
-            "type": "string",
             "description": "Initial status of the customer"
           }
         },
@@ -3803,11 +3899,7 @@
             ]
           },
           "status": {
-            "type": "string",
-            "enum": [
-              "ACTIVE",
-              "INACTIVE"
-            ]
+            "type": "object"
           }
         }
       },
@@ -3815,11 +3907,11 @@
         "type": "object",
         "properties": {
           "status": {
+            "type": "string",
             "enum": [
               "ACTIVE",
               "INACTIVE"
-            ],
-            "type": "string"
+            ]
           }
         },
         "required": [
@@ -3867,22 +3959,22 @@
             "example": 30
           },
           "mode": {
+            "type": "string",
+            "description": "Appointment mode",
             "enum": [
               "OFFLINE",
               "ONLINE"
             ],
-            "type": "string",
-            "description": "Appointment mode",
             "example": "OFFLINE"
           },
           "onlineType": {
+            "type": "string",
+            "description": "Online meeting channel type",
             "enum": [
               "PHONE",
               "VIDEO",
               "MEETING"
             ],
-            "type": "string",
-            "description": "Online meeting channel type",
             "example": "PHONE"
           },
           "meetingLink": {
@@ -3891,14 +3983,16 @@
             "example": "https://meet.google.com/abc-defg-hij"
           },
           "appointmentType": {
+            "type": "string",
+            "description": "Appointment type",
             "enum": [
               "OFFICE_VISIT",
               "ONLINE_CONSULTATION"
-            ],
-            "type": "string",
-            "description": "Appointment type"
+            ]
           },
           "status": {
+            "type": "string",
+            "description": "Initial appointment status",
             "enum": [
               "PENDING",
               "CONFIRMED",
@@ -3906,8 +4000,6 @@
               "COMPLETED",
               "CANCELLED"
             ],
-            "type": "string",
-            "description": "Initial appointment status",
             "example": "CONFIRMED"
           },
           "notes": {
@@ -4199,39 +4291,19 @@
             "maximum": 480
           },
           "mode": {
-            "enum": [
-              "OFFLINE",
-              "ONLINE"
-            ],
-            "type": "string"
+            "type": "object"
           },
           "appointmentType": {
-            "enum": [
-              "OFFICE_VISIT",
-              "ONLINE_CONSULTATION"
-            ],
-            "type": "string"
+            "type": "object"
           },
           "onlineType": {
-            "enum": [
-              "PHONE",
-              "VIDEO",
-              "MEETING"
-            ],
-            "type": "string"
+            "type": "object"
           },
           "meetingLink": {
             "type": "string"
           },
           "status": {
-            "enum": [
-              "PENDING",
-              "COMPLETED",
-              "CONFIRMED",
-              "RESCHEDULED",
-              "CANCELLED"
-            ],
-            "type": "string"
+            "type": "object"
           },
           "notes": {
             "type": "string"
@@ -4258,22 +4330,22 @@
             "example": "Customer requested afternoon slot."
           },
           "mode": {
+            "type": "string",
+            "description": "Updated appointment mode",
             "enum": [
               "OFFLINE",
               "ONLINE"
             ],
-            "type": "string",
-            "description": "Updated appointment mode",
             "example": "ONLINE"
           },
           "onlineType": {
+            "type": "string",
+            "description": "Online meeting channel type",
             "enum": [
               "PHONE",
               "VIDEO",
               "MEETING"
             ],
-            "type": "string",
-            "description": "Online meeting channel type",
             "example": "VIDEO"
           },
           "meetingLink": {
@@ -4295,6 +4367,8 @@
         "type": "object",
         "properties": {
           "status": {
+            "type": "string",
+            "description": "New appointment status",
             "enum": [
               "PENDING",
               "CONFIRMED",
@@ -4302,8 +4376,6 @@
               "COMPLETED",
               "CANCELLED"
             ],
-            "type": "string",
-            "description": "New appointment status",
             "example": "CONFIRMED"
           }
         },
@@ -4336,6 +4408,7 @@
             "example": "2026-08-25T10:00:00Z"
           },
           "paymentMethod": {
+            "type": "string",
             "enum": [
               "CASH",
               "BANK_TRANSFER",
@@ -4345,7 +4418,6 @@
               "CHEQUE",
               "OTHER"
             ],
-            "type": "string",
             "example": "CREDIT_CARD"
           },
           "notes": {
@@ -4389,6 +4461,7 @@
             "example": "2026-08-26T10:00:00Z"
           },
           "paymentMethod": {
+            "type": "string",
             "enum": [
               "CASH",
               "BANK_TRANSFER",
@@ -4398,7 +4471,6 @@
               "CHEQUE",
               "OTHER"
             ],
-            "type": "string",
             "example": "CASH"
           },
           "notes": {
@@ -4477,6 +4549,10 @@
           }
         }
       },
+      "Object": {
+        "type": "object",
+        "properties": {}
+      },
       "CreateInvoiceDto": {
         "type": "object",
         "properties": {
@@ -4529,14 +4605,7 @@
             "type": "string"
           },
           "status": {
-            "type": "string",
-            "enum": [
-              "CANCELLED",
-              "UNPAID",
-              "PARTIALLY_PAID",
-              "PAID",
-              "OVERDUE"
-            ]
+            "type": "object"
           }
         }
       },
@@ -4544,14 +4613,7 @@
         "type": "object",
         "properties": {
           "status": {
-            "type": "string",
-            "enum": [
-              "CANCELLED",
-              "UNPAID",
-              "PARTIALLY_PAID",
-              "PAID",
-              "OVERDUE"
-            ]
+            "type": "object"
           }
         },
         "required": [
@@ -4566,25 +4628,10 @@
             "minimum": 0.01
           },
           "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "OTHER",
-              "CASH",
-              "BANK_TRANSFER",
-              "CREDIT_CARD",
-              "DEBIT_CARD",
-              "UPI",
-              "CHEQUE"
-            ]
+            "type": "object"
           },
           "status": {
-            "type": "string",
-            "enum": [
-              "PENDING",
-              "CANCELLED",
-              "PAID",
-              "FAILED"
-            ]
+            "type": "object"
           },
           "reference": {
             "type": "string"
@@ -4616,13 +4663,13 @@
             "example": "+919876543210"
           },
           "category": {
+            "type": "string",
             "enum": [
               "APPLICATION",
               "XEROX",
               "STATIONARY",
               "OTHER"
             ],
-            "type": "string",
             "description": "Category of the sale",
             "example": "XEROX"
           },
@@ -4633,6 +4680,7 @@
             "example": 10.5
           },
           "paymentMethod": {
+            "type": "string",
             "enum": [
               "CASH",
               "BANK_TRANSFER",
@@ -4642,7 +4690,6 @@
               "CHEQUE",
               "OTHER"
             ],
-            "type": "string",
             "description": "Payment Method",
             "example": "CASH"
           },

@@ -28,7 +28,7 @@ export class CustomerAppointmentsService {
   }
 
   async getOffices() {
-    let offices = await this.prisma.office.findMany({
+    const offices = await this.prisma.office.findMany({
       where: { isActive: true },
     });
 

@@ -132,6 +132,7 @@ function StatusBadge({ status }: { status: AppStatus }) {
 const DEFAULT_SAMPLE_APPS: Application[] = [
   {
     id: 'APP-2026-001',
+    applicationNumber: 'APP-2026-001',
     customer: 'Acme Telecom Ltd',
     email: 'contact@acme.com',
     phone: '+91 98765 43210',
@@ -159,6 +160,7 @@ const DEFAULT_SAMPLE_APPS: Application[] = [
   },
   {
     id: 'APP-2026-002',
+    applicationNumber: 'APP-2026-002',
     customer: 'Vanam Software Solutions',
     email: 'admin@vanam.io',
     phone: '+91 98123 45678',
@@ -184,6 +186,7 @@ const DEFAULT_SAMPLE_APPS: Application[] = [
   },
   {
     id: 'APP-2026-003',
+    applicationNumber: 'APP-2026-003',
     customer: 'Amman Retail Outlets',
     email: 'info@ammanretail.com',
     phone: '+91 99887 76655',
@@ -414,8 +417,7 @@ function AppModal({
                 const c = customers.find(x => x.id === val);
                 setForm({ ...form, customerId: val, customer: c?.name || '' });
               }}
-              options={customers.map(c => c.id)}
-              getLabel={(id) => customers.find(c => c.id === id)?.name || id}
+              options={customers.map(c => ({ value: c.id, label: c.name }))}
             />
             {errors.customerId && <p className="text-[10px] text-rose-600 font-bold">{errors.customerId}</p>}
           </div>
