@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 
 import { CustomerAppointmentsService } from './customer-appointments.service';
-import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import { CreateCustomerAppointmentDto } from './dto/create-appointment.dto';
 import { GetAppointmentsDto } from './dto/get-appointments.dto';
 import { CompleteDocumentUploadDto, CreateUploadUrlDto } from './dto/upload-document.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -49,7 +49,7 @@ export class CustomerAppointmentsController {
 @Roles('CUSTOMER')
   async createAppointment(
     @Req() req: RequestWithUser,
-    @Body() dto: CreateAppointmentDto,
+    @Body() dto: CreateCustomerAppointmentDto,
   ) {
     const customerId = req.user.customerId || req.user.sub;
     if (!customerId) throw new Error('Customer ID missing from session');

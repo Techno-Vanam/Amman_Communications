@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AppointmentType, ConsultationMode } from '@prisma/client';
 import { IsEnum, IsISO8601, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
 
-export class CreateAppointmentDto {
+export class CreateCustomerAppointmentDto {
   @ApiProperty()
   @IsString()
   @ApiProperty()

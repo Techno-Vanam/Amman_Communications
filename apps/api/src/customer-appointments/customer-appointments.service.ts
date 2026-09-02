@@ -6,7 +6,7 @@ import {
 import { AppointmentStatus, AppointmentType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppointmentNumberService } from './appointment-number.service';
-import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import { CreateCustomerAppointmentDto } from './dto/create-appointment.dto';
 import { GetAppointmentsDto } from './dto/get-appointments.dto';
 import { CompleteDocumentUploadDto, CreateUploadUrlDto } from './dto/upload-document.dto';
 
@@ -49,7 +49,7 @@ export class CustomerAppointmentsService {
     return offices;
   }
 
-  async createAppointment(customerId: string, dto: CreateAppointmentDto) {
+  async createAppointment(customerId: string, dto: CreateCustomerAppointmentDto) {
     const customer = await this.prisma.customer.findUnique({
       where: { id: customerId },
     });
