@@ -1,6 +1,5 @@
 packages:
   - apps/*
-  - client/landing_page
   - packages/*
 allowBuilds:
   '@prisma/client': true
