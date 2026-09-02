@@ -203,7 +203,7 @@ export default function ProfilePage() {
 
       {/* Full-Height Personal Information Form Card that occupies the bottom space */}
       <div className="w-full flex-1 flex flex-col min-h-0">
-        <form onSubmit={handleSave} className="bg-white rounded-3xl border border-gray-200/80 p-6 sm:p-7 md:p-8 shadow-2xs flex-1 flex flex-col justify-between space-y-4">
+        <form onSubmit={handleSave} suppressHydrationWarning className="bg-white rounded-3xl border border-gray-200/80 p-6 sm:p-7 md:p-8 shadow-2xs flex-1 flex flex-col justify-between space-y-4">
           {/* Top Header Bar */}
           <div className="space-y-3 shrink-0">
             <div className="flex items-center gap-3">
