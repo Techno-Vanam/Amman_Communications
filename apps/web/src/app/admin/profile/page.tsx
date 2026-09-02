@@ -92,7 +92,7 @@ function Field({
       ) : (
         <div className="flex items-center gap-3.5 py-2 px-1">
           <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0 shadow-2xs">
-            {React.cloneElement(icon as React.ReactElement, { className: 'w-4 h-4 text-gray-500' })}
+            {React.cloneElement(icon as React.ReactElement, { className: 'w-4 h-4 text-gray-500' } as any)}
           </div>
           <span className="text-sm font-extrabold text-gray-900 break-words mt-0.5">{value || '—'}</span>
         </div>
@@ -215,10 +215,7 @@ export default function AdminProfilePage() {
     <div className="max-w-6xl mx-auto pb-12 font-sans space-y-6">
       
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-900">Admin Profile</h1>
-          <p className="text-sm text-gray-500 font-medium">Manage company identity and contact information</p>
-        </div>
+        <div className="flex-1"></div>
         {saved && (
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-sm animate-in fade-in slide-in-from-top-4">
             <CheckCircle className="w-4 h-4 text-emerald-600" />

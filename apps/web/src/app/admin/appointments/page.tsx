@@ -628,15 +628,15 @@ export default function AppointmentsPage() {
 
 
       {/* ── Status Summary Cards ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {statusList.filter(s => s !== 'All').map(s => {
           return (
             <div
               key={s}
-              className="rounded-2xl border p-3 text-left bg-white border-gray-100"
+              className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-2xs hover:shadow-md transition-shadow"
             >
-              <p className="text-xl font-extrabold text-[#0e2a47]">{counts[s]}</p>
-              <p className="text-[10px] font-semibold mt-0.5 text-gray-500 leading-tight truncate">{s}</p>
+              <p className="text-2xl sm:text-3xl font-extrabold text-[#0e2a47]">{counts[s]}</p>
+              <p className="text-xs font-semibold mt-1 text-gray-500 leading-tight truncate">{s}</p>
             </div>
           );
         })}
