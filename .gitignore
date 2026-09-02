@@ -11,5 +11,5 @@ coverage/
 prisma/*.db
 apps/api/uploads/
 *.tsbuildinfo
-
+backend_endpoints.json
 apps/api/prisma/migrations_backup/
