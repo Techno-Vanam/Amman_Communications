@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Receipt,
   Plus,
@@ -14,7 +14,7 @@ import {
   Tag,
   Calendar,
   FileText,
-  DollarSign,
+  IndianRupee,
   ArrowUpRight,
   ShoppingCart,
   Wrench,
@@ -30,23 +30,18 @@ import {
 } from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
-type Category =
-  | 'Infrastructure'
-  | 'Operations'
-  | 'Salaries'
-  | 'Marketing'
-  | 'Utilities'
-  | 'Equipment'
-  | 'Maintenance'
-  | 'Miscellaneous';
+type Category = string;
 
 interface Expense {
   id: string;
-  category: Category;
+  category: string;
   amount: number;
+  title: string;
   description: string;
   date: string;
   addedBy: string;
+  paymentMethod: string;
+  notes: string;
 }
 
 // ── Live Dataset ─────────────────────────────────────────────────
@@ -57,7 +52,7 @@ const CATEGORIES: Category[] = [
   'Utilities', 'Equipment', 'Maintenance', 'Miscellaneous',
 ];
 
-const CATEGORY_CFG: Record<Category, { color: string; icon: React.ReactNode }> = {
+const CATEGORY_CFG: Record<string, { color: string; icon: React.ReactNode }> = {
   Infrastructure: { color: 'bg-blue-100 text-blue-800 border-blue-200',    icon: <Building2 className="w-3 h-3" /> },
   Operations:     { color: 'bg-purple-100 text-purple-800 border-purple-200', icon: <Wrench className="w-3 h-3" /> },
   Salaries:       { color: 'bg-green-100 text-green-800 border-green-200',  icon: <Users className="w-3 h-3" /> },
@@ -68,11 +63,10 @@ const CATEGORY_CFG: Record<Category, { color: string; icon: React.ReactNode }> =
   Miscellaneous:  { color: 'bg-gray-100 text-gray-700 border-gray-200',     icon: <Tag className="w-3 h-3" /> },
 };
 
-function CategoryBadge({ category }: { category: Category }) {
-  const { color, icon } = CATEGORY_CFG[category];
+function CategoryBadge({ category }: { category: string }) {
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${color}`}>
-      {icon}{category}
+    <span className="text-xs font-bold text-gray-800">
+      {category}
     </span>
   );
 }
@@ -90,17 +84,68 @@ function ExpenseModal({
   onSave: (data: Partial<Expense>) => void;
 }) {
   const [form, setForm] = useState({
-    category: expense?.category ?? 'Operations' as Category,
+    title: expense?.title ?? '',
+    category: expense?.category ?? 'Operations',
     amount: expense?.amount?.toString() ?? '',
     description: expense?.description ?? '',
     date: expense?.date ?? new Date().toISOString().split('T')[0],
+    paymentMethod: expense?.paymentMethod ?? 'CASH',
+    notes: expense?.notes ?? '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const [categoryInput, setCategoryInput] = useState(expense?.category ?? 'Operations');
+  const [showCatDropdown, setShowCatDropdown] = useState(false);
+  const catRef = useRef<HTMLDivElement>(null);
+
+  const [customCategories, setCustomCategories] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('expense_custom_categories') || '[]'); } catch { return []; }
+  });
+  const allCategories = [...new Set([...CATEGORIES, ...customCategories])];
+  const filteredCategories = categoryInput.trim() === '' || categoryInput === form.category
+    ? allCategories
+    : allCategories.filter(c => c.toLowerCase().includes(categoryInput.toLowerCase()));
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (catRef.current && !catRef.current.contains(e.target as Node)) setShowCatDropdown(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  function selectCategory(val: string) {
+    setForm(p => ({ ...p, category: val }));
+    setCategoryInput(val);
+    setShowCatDropdown(false);
+  }
+
+  function handleCategoryFocus() {
+    setCategoryInput('');
+    setShowCatDropdown(true);
+  }
+
+  function handleCategoryBlur() {
+    const trimmed = categoryInput.trim();
+    if (!trimmed) {
+      setCategoryInput(form.category);
+      setShowCatDropdown(false);
+      return;
+    }
+    setForm(p => ({ ...p, category: trimmed }));
+    setCategoryInput(trimmed);
+    if (!allCategories.includes(trimmed)) {
+      const updated = [...customCategories, trimmed];
+      setCustomCategories(updated);
+      try { localStorage.setItem('expense_custom_categories', JSON.stringify(updated)); } catch {}
+    }
+    setShowCatDropdown(false);
+  }
 
   function validate() {
     const e: Record<string, string> = {};
+    if (!form.title.trim()) e.title = 'Title is required';
     if (!form.amount || isNaN(Number(form.amount)) || Number(form.amount) <= 0) e.amount = 'Valid amount required';
-    if (!form.description.trim()) e.description = 'Description is required';
     if (!form.date) e.date = 'Date is required';
     return e;
   }
@@ -132,19 +177,60 @@ function ExpenseModal({
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-          {/* Category */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5">Category</label>
-            <div className="relative">
-              <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <select
-                value={form.category}
-                onChange={e => setForm(p => ({ ...p, category: e.target.value as Category }))}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all appearance-none"
-              >
-                {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-              </select>
-              <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          {/* Title & Category */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">Title</label>
+              <input
+                type="text"
+                placeholder="e.g. Office Supplies"
+                value={form.title}
+                onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all"
+              />
+              {errors.title && <p className="text-[10px] text-rose-600 mt-1">{errors.title}</p>}
+            </div>
+
+            <div ref={catRef} className="relative z-50">
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">Category</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={categoryInput}
+                  onChange={e => { setCategoryInput(e.target.value); setShowCatDropdown(true); }}
+                  onFocus={handleCategoryFocus}
+                  onBlur={handleCategoryBlur}
+                  placeholder="Select or type..."
+                  className="w-full px-4 py-2.5 pr-10 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all"
+                />
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+
+              {showCatDropdown && filteredCategories.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl z-30 overflow-hidden">
+                  {filteredCategories.map(cat => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onMouseDown={() => selectCategory(cat)}
+                      className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 text-gray-900 ${
+                        cat === form.category ? 'bg-gray-100 font-bold' : ''
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                  {categoryInput.trim() && !allCategories.includes(categoryInput.trim()) && (
+                    <button
+                      type="button"
+                      onMouseDown={() => selectCategory(categoryInput.trim())}
+                      className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 border-t border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
+                      + Add &ldquo;{categoryInput.trim()}&rdquo;
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -153,7 +239,7 @@ function ExpenseModal({
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5">Amount (₹)</label>
               <div className="relative">
-                <DollarSign className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <IndianRupee className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="number"
                   min="0"
@@ -180,20 +266,50 @@ function ExpenseModal({
             </div>
           </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5">Description</label>
-            <div className="relative">
-              <FileText className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
-              <textarea
+          {/* Description & Payment */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">Payment Method</label>
+              <div className="relative">
+                <select
+                  value={form.paymentMethod}
+                  onChange={e => setForm(p => ({ ...p, paymentMethod: e.target.value }))}
+                  className="w-full px-4 py-2.5 appearance-none rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all"
+                >
+                  <option value="CASH">Cash</option>
+                  <option value="BANK_TRANSFER">Bank Transfer</option>
+                  <option value="CREDIT_CARD">Credit Card</option>
+                  <option value="DEBIT_CARD">Debit Card</option>
+                  <option value="UPI">UPI</option>
+                  <option value="CHEQUE">Cheque</option>
+                  <option value="OTHER">Other</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">Description</label>
+              <input
+                type="text"
                 value={form.description}
                 onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-                placeholder="Describe the expense..."
-                rows={3}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all resize-none"
+                placeholder="Brief description..."
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all"
               />
             </div>
-            {errors.description && <p className="text-[10px] text-rose-600 mt-1">{errors.description}</p>}
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">Notes (Optional)</label>
+            <textarea
+              rows={2}
+              value={form.notes}
+              onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
+              placeholder="Additional notes..."
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all resize-none"
+            />
           </div>
 
           <div className="flex gap-3 pt-2">
@@ -273,26 +389,28 @@ export default function ExpensesPage() {
   }), [expenses, search, filterCategory, filterMonth]);
 
   // Stats
-  const totalAll    = expenses.reduce((s, e) => s + e.amount, 0);
-  const totalFiltered = filtered.reduce((s, e) => s + e.amount, 0);
-  const thisMonth   = expenses.filter(e => e.date.startsWith('2026-08')).reduce((s, e) => s + e.amount, 0);
-  const highestCat  = CATEGORIES.reduce((best, cat) => {
-    const sum = expenses.filter(e => e.category === cat).reduce((s, e) => s + e.amount, 0);
+  const totalFilteredAmt = filtered.reduce((s, e) => s + e.amount, 0);
+  const uniqueCats = Array.from(new Set(filtered.map(e => e.category)));
+  const highestCat = uniqueCats.reduce((best, cat) => {
+    const sum = filtered.filter(e => e.category === cat).reduce((s, e) => s + e.amount, 0);
     return sum > best.sum ? { cat, sum } : best;
-  }, { cat: '' as Category, sum: 0 });
+  }, { cat: '', sum: 0 });
+  const isFiltered = filterCategory !== 'All' || filterMonth !== '' || search !== '';
 
-  async function handleAdd(data: Partial<Expense>) {
-    setErrorMsg(null);
+  async function handleAdd(data: any) {
     const res = await createExpenseAction({
-      category: data.category ?? 'Miscellaneous',
-      amount: data.amount ?? 0,
-      description: data.description ?? '',
-      date: data.date ?? new Date().toISOString().split('T')[0],
+      title: data.title,
+      category: data.category,
+      amount: data.amount,
+      description: data.description,
+      date: data.date,
+      paymentMethod: data.paymentMethod,
+      notes: data.notes,
     });
-    if (res.error) {
-      setErrorMsg(res.error);
-    } else {
+    if (res.success) {
       loadExpenses();
+    } else {
+      setErrorMsg(res.error || 'Failed to add expense');
     }
   }
 
@@ -329,7 +447,7 @@ export default function ExpensesPage() {
   const months = [...new Set(expenses.map(e => e.date.slice(0, 7)))].filter(Boolean).sort().reverse();
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
+    <div className="max-w-7xl mx-auto space-y-4 font-sans" suppressHydrationWarning>
 
 
 
@@ -341,22 +459,26 @@ export default function ExpensesPage() {
             <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">
               <TrendingDown className="w-5 h-5 text-rose-600" />
             </div>
-            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">All Time</span>
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
+              {isFiltered ? 'Filtered' : 'All Time'}
+            </span>
           </div>
-          <p className="text-xl sm:text-2xl font-extrabold text-rose-700">{fmtAmt(totalAll)}</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-rose-700">{fmtAmt(totalFilteredAmt)}</p>
           <p className="text-[11px] text-gray-500 font-semibold mt-0.5">Total Expenses</p>
         </div>
 
-        {/* This Month */}
+        {/* Transactions */}
         <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-2xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-2">
             <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">
-              <Calendar className="w-5 h-5 text-amber-600" />
+              <Receipt className="w-5 h-5 text-amber-600" />
             </div>
-            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Aug 2026</span>
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+              Count
+            </span>
           </div>
-          <p className="text-xl sm:text-2xl font-extrabold text-amber-700">{fmtAmt(thisMonth)}</p>
-          <p className="text-[11px] text-gray-500 font-semibold mt-0.5">This Month&apos;s Expenses</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-amber-700">{filtered.length}</p>
+          <p className="text-[11px] text-gray-500 font-semibold mt-0.5">Transactions</p>
         </div>
 
         {/* Highest Category */}
@@ -441,69 +563,79 @@ export default function ExpensesPage() {
       </div>
 
       {/* ── Table ── */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
-        <div className="overflow-x-auto w-full">
-          <div className="min-w-[620px]">
-            {/* Header */}
-            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-              <div className="col-span-3">Description</div>
-              <div className="col-span-2">Category</div>
-              <div className="col-span-2 text-right pr-6">Amount</div>
-              <div className="col-span-3 pl-4">Date</div>
-              <div className="col-span-2 text-center">Actions</div>
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 320px)', minHeight: '300px' }}>
+        <div className="overflow-x-auto w-full flex flex-col flex-1 min-h-0">
+          <div className="min-w-[620px] flex flex-col flex-1 min-h-0">
+            {/* Header — sticky */}
+            <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1.5fr_100px] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest shrink-0 sticky top-0 z-10">
+              <div className="min-w-0">Title / Desc</div>
+              <div className="min-w-0">Category</div>
+              <div className="min-w-0">Amount</div>
+              <div className="min-w-0 pl-4">Date</div>
+              <div className="min-w-0">Payment Method</div>
+              <div className="text-center">Actions</div>
             </div>
 
-            {/* Rows */}
-            {filtered.length === 0 ? (
-              <div className="py-16 text-center">
-                <Receipt className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                <p className="text-sm font-bold text-gray-400">No expenses found</p>
-                <p className="text-xs text-gray-300 mt-1">Try adjusting your search or filters</p>
-              </div>
-            ) : filtered.map((e, idx) => (
-              <div key={e.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                {/* Description */}
-                <div className="col-span-3 min-w-0 pr-3">
-                  <p className="text-xs font-bold text-gray-900 truncate">{e.description}</p>
+            {/* Rows — scrollable */}
+            <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
+              {filtered.length === 0 ? (
+                <div className="py-16 text-center">
+                  <Receipt className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                  <p className="text-sm font-bold text-gray-400">No expenses found</p>
+                  <p className="text-xs text-gray-300 mt-1">Try adjusting your search or filters</p>
                 </div>
-                {/* Category */}
-                <div className="col-span-2">
-                  <CategoryBadge category={e.category} />
-                </div>
-                {/* Amount */}
-                <div className="col-span-2 text-right pr-6">
-                  <span className="text-sm font-extrabold text-rose-700">{fmtAmt(e.amount)}</span>
-                </div>
-                {/* Date */}
-                <div className="col-span-3 pl-4">
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="w-3 h-3 text-gray-400" />
-                    <span className="text-[11px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(e.date)}</span>
+              ) : filtered.map((e, idx) => (
+                <div key={e.id} className={`grid grid-cols-[1.5fr_1fr_1fr_1fr_1.5fr_100px] gap-4 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  {/* Title + Description */}
+                  <div className="min-w-0 pr-3">
+                    <p className="text-sm font-bold text-gray-900 truncate">{e.title || e.description}</p>
+                    {e.description && e.title && (
+                      <p className="text-[11px] text-gray-400 truncate mt-0.5">{e.description}</p>
+                    )}
+                  </div>
+                  {/* Category */}
+                  <div className="min-w-0">
+                    <CategoryBadge category={e.category} />
+                  </div>
+                  {/* Amount */}
+                  <div className="min-w-0">
+                    <span className="text-sm font-extrabold text-rose-700">{fmtAmt(e.amount)}</span>
+                  </div>
+                  {/* Date */}
+                  <div className="min-w-0 pl-4">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-3 h-3 text-gray-400" />
+                      <span className="text-[11px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(e.date)}</span>
+                    </div>
+                  </div>
+                  {/* Payment Method */}
+                  <div className="min-w-0">
+                    {e.paymentMethod && e.paymentMethod !== 'OTHER' ? (
+                      <span className="text-[11px] font-semibold px-2 py-1 bg-gray-100 text-gray-600 rounded-md">
+                        {e.paymentMethod.replace(/_/g, ' ')}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-gray-400">—</span>
+                    )}
+                  </div>
+                  {/* Actions */}
+                  <div className="flex items-center justify-center gap-1.5">
+                    <button onClick={() => setEditExpense(e)}
+                      className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all" title="Edit">
+                      <Edit2 className="w-3 h-3" />
+                    </button>
+                    <button onClick={() => setDeleteExpense(e)}
+                      className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all" title="Delete">
+                      <Trash2 className="w-3 h-3" />
+                    </button>
                   </div>
                 </div>
-                {/* Actions */}
-                <div className="col-span-2 flex items-center justify-center gap-1.5">
-                  <button onClick={() => setEditExpense(e)}
-                    className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all" title="Edit">
-                    <Edit2 className="w-3 h-3" />
-                  </button>
-                  <button onClick={() => setDeleteExpense(e)}
-                    className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all" title="Delete">
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-[11px] text-gray-400">Showing {filtered.length} of {expenses.length} expenses</p>
-          <p className="text-xs font-extrabold text-rose-700">
-            Filtered Total: {fmtAmt(totalFiltered)}
-          </p>
-        </div>
+
       </div>
 
       {/* ── Modals ── */}

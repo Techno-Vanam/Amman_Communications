@@ -64,7 +64,7 @@ enum PaymentStatus {
 
 model Customer {
   id                 String         @id @default(cuid())
-  email              String         @unique
+  email              String?        @unique
   phone              String?
   passwordHash       String
   name               String
@@ -88,13 +88,14 @@ model Customer {
 }
 
 model Admin {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  expenses     Expense[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String         @id @default(cuid())
+  email          String         @unique
+  passwordHash   String
+  name           String
+  expenses       Expense[]
+  adminSettings  AdminSettings?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 model Application {
@@ -180,7 +181,9 @@ model Service {
   serviceFee        Decimal            @db.Decimal(10, 2)
   totalFee          Decimal            @db.Decimal(10, 2)
   estimatedTime     String?
-  status            ServiceStatus      @default(DRAFT)
+  isPartialPaymentAllowed Boolean @default(false)
+  minimumPartialFee Decimal?      @db.Decimal(10, 2)
+  status            ServiceStatus @default(DRAFT)
   requiredDocuments RequiredDocument[]
   applications      Application[]
   appointments      Appointment[]
@@ -268,22 +271,13 @@ model RequiredDocument {
   updatedAt    DateTime @updatedAt
 }
 
-enum ExpenseCategory {
-  OFFICE
-  TRAVEL
-  EMPLOYEE
-  PROPERTY
-  UTILITIES
-  MARKETING
-  EQUIPMENT
-  OTHER
-}
+
 
 model Expense {
   id             String          @id @default(cuid())
   title          String
   description    String?
-  category       ExpenseCategory
+  category       String
   amount         Decimal         @db.Decimal(10, 2)
   expenseDate    DateTime
   paymentMethod  PaymentMethod?
@@ -380,6 +374,7 @@ model ManualSale {
   id            String        @id @default(cuid())
   saleNumber    String        @unique
   customerName  String
+  customerPhone String?
   category      SaleCategory  @default(OTHER)
   amount        Decimal       @db.Decimal(10, 2)
   details       String?
@@ -405,4 +400,19 @@ model PasswordResetToken {
   @@index([email])
   @@index([token])
 
+}
+
+model AdminSettings {
+  id             String   @id @default(cuid())
+  adminId        String   @unique
+  admin          Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  emailAlerts    Boolean  @default(true)
+  smsAlerts      Boolean  @default(true)
+  whatsappAlerts Boolean  @default(true)
+  weeklyDigest   Boolean  @default(false)
+  language       String   @default("English")
+  timezone       String   @default("Asia/Kolkata (IST +5:30)")
+  autoLogout     String   @default("30 minutes")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

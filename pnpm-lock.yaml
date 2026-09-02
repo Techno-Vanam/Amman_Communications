@@ -71,6 +71,9 @@ importers:
       firebase-admin:
         specifier: ^13.4.0
         version: 13.10.0
+      nodemailer:
+        specifier: ^9.1.1
+        version: 9.1.1
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -102,6 +105,9 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.13.3
+      '@types/nodemailer':
+        specifier: ^8.0.1
+        version: 8.0.1
       eslint:
         specifier: ^9.25.0
         version: 9.39.5(jiti@2.7.0)
@@ -1420,6 +1426,9 @@ packages:
 
   '@types/node@24.13.3':
     resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
+
+  '@types/nodemailer@8.0.1':
+    resolution: {integrity: sha512-PxpaInm8V1JQDd4j0ds5HfvWQk8JupS1C0Picb96QJsrrRDjBH+DlK7L4ZdNSqNULhiZRQHc40nLVShaGxXAMw==}
 
   '@types/qs@6.15.1':
     resolution: {integrity: sha512-GZHUBZR9hckSUhrxmp1nG6NwdpM9fCunJwyThLW1X3AyHgd9IlHb6VANpQQqDr2o/qQp6McZ3y/IA2rVzKzSbw==}
@@ -3444,6 +3453,10 @@ packages:
   node-releases@2.0.53:
     resolution: {integrity: sha512-D9UOmYG3UH1V+ENW56t5QXBwJw1YEY18ruVeus89Rw+SyIgjPkCO84bRzO3uNIYosJbNwiabWVn48o3uJLjxFQ==}
     engines: {node: '>=18'}
+
+  nodemailer@9.1.1:
+    resolution: {integrity: sha512-izw9mVKFix6YSnC9eLgV6g1opl9DUlRio9ZNcq+Wu9Ujn2UwF+8Nl0B8nz22kEC+CTZCvinkxwJ0DeFbb6NwcQ==}
+    engines: {node: '>=6.0.0'}
 
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
@@ -5603,6 +5616,10 @@ snapshots:
   '@types/node@24.13.3':
     dependencies:
       undici-types: 7.18.2
+
+  '@types/nodemailer@8.0.1':
+    dependencies:
+      '@types/node': 24.13.3
 
   '@types/qs@6.15.1': {}
 
@@ -7952,6 +7969,8 @@ snapshots:
       formdata-polyfill: 4.0.10
 
   node-releases@2.0.53: {}
+
+  nodemailer@9.1.1: {}
 
   normalize-path@3.0.0: {}
 

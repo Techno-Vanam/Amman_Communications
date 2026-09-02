@@ -63,4 +63,15 @@ export class CreateServiceDto {
   @ApiProperty()
   @Type(() => RequiredDocumentDto)
   requiredDocuments?: RequiredDocumentDto[];
+
+  @ApiPropertyOptional({ description: 'Is partial payment allowed', example: true })
+  @IsOptional()
+  @IsBoolean()
+  isPartialPaymentAllowed?: boolean;
+
+  @ApiPropertyOptional({ description: 'Minimum partial payment fee', example: 500 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  minimumPartialFee?: number;
 }

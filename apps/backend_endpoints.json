@@ -2828,6 +2828,42 @@
         ]
       }
     },
+    "/api/v1/admin/settings/preferences": {
+      "get": {
+        "operationId": "AdminPreferencesController_getPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AdminPreferences"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminPreferencesController_updatePreferences",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAdminPreferencesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "AdminPreferences"
+        ]
+      }
+    },
     "/api/v1/admin/finance/summary": {
       "get": {
         "operationId": "FinanceController_getSummary",
@@ -3633,6 +3669,17 @@
             "items": {
               "$ref": "#/components/schemas/RequiredDocumentDto"
             }
+          },
+          "isPartialPaymentAllowed": {
+            "type": "boolean",
+            "description": "Is partial payment allowed",
+            "example": true
+          },
+          "minimumPartialFee": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Minimum partial payment fee",
+            "example": 500
           }
         },
         "required": [
@@ -3675,6 +3722,13 @@
             "items": {
               "$ref": "#/components/schemas/RequiredDocumentDto"
             }
+          },
+          "isPartialPaymentAllowed": {
+            "type": "boolean"
+          },
+          "minimumPartialFee": {
+            "type": "number",
+            "minimum": 0
           }
         }
       },
@@ -3728,7 +3782,6 @@
         },
         "required": [
           "name",
-          "email",
           "password"
         ]
       },
@@ -3836,6 +3889,14 @@
             "type": "string",
             "description": "Meeting URL for online appointments",
             "example": "https://meet.google.com/abc-defg-hij"
+          },
+          "appointmentType": {
+            "enum": [
+              "OFFICE_VISIT",
+              "ONLINE_CONSULTATION"
+            ],
+            "type": "string",
+            "description": "Appointment type"
           },
           "status": {
             "enum": [
@@ -4144,6 +4205,13 @@
             ],
             "type": "string"
           },
+          "appointmentType": {
+            "enum": [
+              "OFFICE_VISIT",
+              "ONLINE_CONSULTATION"
+            ],
+            "type": "string"
+          },
           "onlineType": {
             "enum": [
               "PHONE",
@@ -4255,18 +4323,8 @@
             "example": "Pens, paper, and staplers"
           },
           "category": {
-            "enum": [
-              "OFFICE",
-              "TRAVEL",
-              "EMPLOYEE",
-              "PROPERTY",
-              "UTILITIES",
-              "MARKETING",
-              "EQUIPMENT",
-              "OTHER"
-            ],
             "type": "string",
-            "example": "OFFICE"
+            "example": "Operations"
           },
           "amount": {
             "type": "number",
@@ -4318,18 +4376,8 @@
             "example": "Updated description"
           },
           "category": {
-            "enum": [
-              "OFFICE",
-              "TRAVEL",
-              "EMPLOYEE",
-              "PROPERTY",
-              "UTILITIES",
-              "MARKETING",
-              "EQUIPMENT",
-              "OTHER"
-            ],
             "type": "string",
-            "example": "OFFICE"
+            "example": "Operations"
           },
           "amount": {
             "type": "number",
@@ -4402,6 +4450,32 @@
           "primaryPhone",
           "supportEmail"
         ]
+      },
+      "UpdateAdminPreferencesDto": {
+        "type": "object",
+        "properties": {
+          "emailAlerts": {
+            "type": "boolean"
+          },
+          "smsAlerts": {
+            "type": "boolean"
+          },
+          "whatsappAlerts": {
+            "type": "boolean"
+          },
+          "weeklyDigest": {
+            "type": "boolean"
+          },
+          "language": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "autoLogout": {
+            "type": "string"
+          }
+        }
       },
       "CreateInvoiceDto": {
         "type": "object",
@@ -4535,6 +4609,11 @@
             "minLength": 1,
             "description": "The name of the walk-in customer",
             "example": "John Doe"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Optional phone number",
+            "example": "+919876543210"
           },
           "category": {
             "enum": [

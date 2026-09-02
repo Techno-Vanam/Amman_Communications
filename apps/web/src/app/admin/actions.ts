@@ -177,6 +177,8 @@ export async function createAdminServiceAction(dto: {
   governmentFee: number;
   serviceFee: number;
   estimatedTime?: string;
+  isPartialPaymentAllowed?: boolean;
+  minimumPartialFee?: number | null;
   status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
   requiredDocuments?: Array<{ name: string; isRequired?: boolean; displayOrder?: number }>;
 }) {
@@ -206,6 +208,8 @@ export async function updateAdminServiceAction(id: string, dto: {
   governmentFee?: number;
   serviceFee?: number;
   estimatedTime?: string;
+  isPartialPaymentAllowed?: boolean;
+  minimumPartialFee?: number | null;
   status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
   requiredDocuments?: Array<{ id?: string; name: string; isRequired?: boolean; displayOrder?: number }>;
 }) {

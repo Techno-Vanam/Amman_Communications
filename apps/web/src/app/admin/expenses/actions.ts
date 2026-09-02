@@ -41,8 +41,7 @@ export async function fetchExpensesAction(search?: string, category?: string) {
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (category && category !== 'All') {
-      const dbCat = UI_TO_DB_CATEGORY[category];
-      if (dbCat) params.append('category', dbCat);
+      params.append('category', category);
     }
     params.append('take', '100'); // limit to 100 entries
 
@@ -70,11 +69,14 @@ export async function fetchExpensesAction(search?: string, category?: string) {
     const result = await res.json();
     const mapped = (result.data || []).map((e: any) => ({
       id: e.id,
-      category: DB_TO_UI_CATEGORY[e.category] || 'Miscellaneous',
+      category: e.category || 'Miscellaneous',
       amount: Number(e.amount),
-      description: e.title || e.description || '',
+      title: e.title || '',
+      description: e.description || '',
       date: e.expenseDate ? e.expenseDate.split('T')[0] : '',
       addedBy: e.createdBy?.name || 'Admin',
+      paymentMethod: e.paymentMethod || 'OTHER',
+      notes: e.notes || '',
     }));
 
     return { success: true, data: mapped };
@@ -118,19 +120,24 @@ export async function fetchExpenseStatsAction() {
 }
 
 export async function createExpenseAction(formData: {
+  title: string;
   category: string;
   amount: number;
   description: string;
   date: string;
+  paymentMethod: string;
+  notes?: string;
 }) {
   try {
     const authHeader = await getAuthHeader();
     const payload = {
-      title: formData.description.slice(0, 100), // title is required by backend
+      title: formData.title,
       description: formData.description,
-      category: UI_TO_DB_CATEGORY[formData.category] || 'OTHER',
+      category: formData.category || 'Miscellaneous',
       amount: formData.amount,
       expenseDate: new Date(formData.date).toISOString(),
+      paymentMethod: formData.paymentMethod,
+      notes: formData.notes || '',
     };
 
     let res = await fetch(`${API_BASE_URL}/v1/admin/expenses`, {
@@ -183,7 +190,7 @@ export async function updateExpenseAction(
       payload.description = formData.description;
     }
     if (formData.category) {
-      payload.category = UI_TO_DB_CATEGORY[formData.category] || 'OTHER';
+      payload.category = formData.category;
     }
     if (formData.amount !== undefined) payload.amount = formData.amount;
     if (formData.date) payload.expenseDate = new Date(formData.date).toISOString();

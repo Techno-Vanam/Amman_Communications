@@ -287,6 +287,7 @@ export class ApplicationsService {
         phone: dto.phone || customer.phone || '',
         address: dto.address || '',
         notes: dto.notes || '',
+        status: 'SUBMITTED', // Admin-created apps start as SUBMITTED, not DRAFT
       },
       include: { customer: true, documents: true },
     });

@@ -8,10 +8,10 @@ export class CreateCustomerDto {
   @IsNotEmpty()
   name!: string;
 
-  @ApiProperty({ description: 'Email address (must be unique)' })
+  @ApiPropertyOptional({ description: 'Email address (must be unique)' })
+  @IsOptional()
   @IsEmail()
-  @IsNotEmpty()
-  email!: string;
+  email?: string;
 
   @ApiPropertyOptional({ description: 'Phone number of the customer' })
   @IsOptional()

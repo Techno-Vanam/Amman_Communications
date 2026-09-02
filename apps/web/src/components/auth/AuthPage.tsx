@@ -83,7 +83,7 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
 
     const emailOrUser = loginEmail.trim();
     if (!emailOrUser) {
-      setError('Email address is required');
+      setError('Email or Phone Number is required');
       return;
     }
     if (!loginPassword) {
@@ -413,15 +413,15 @@ export default function AuthPage({ initialMode }: AuthPageProps) {
                 {/* Email Address */}
                 <div className="space-y-1.5">
                   <label htmlFor="login-email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Email Address <span className="text-red-500">*</span>
+                    Email Address or Phone Number <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="login-email"
                     name="email"
-                    type="email"
-                    autoComplete="email"
+                    type="text"
+                    autoComplete="username"
                     required
-                    placeholder="name@example.com"
+                    placeholder="email@example.com or +91..."
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50/60 border border-slate-300 rounded-xl focus:bg-white focus:border-brand-600 focus:outline-none focus:ring-0 text-slate-900 text-sm font-medium transition-colors"

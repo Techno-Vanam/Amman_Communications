@@ -339,7 +339,7 @@ export default function VerificationPage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
+    <div className="max-w-7xl mx-auto space-y-4 font-sans" suppressHydrationWarning>
       {/* ── Summary Cards ── */}
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {summaryCards.map(card => (
@@ -406,11 +406,11 @@ export default function VerificationPage() {
       </div>
 
       {/* ── Verification Table ── */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
-        <div className="overflow-x-auto w-full">
-          <div className="min-w-[700px]">
-            {/* Table Header */}
-            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden flex flex-col" style={{ maxHeight: 'calc(100vh - 320px)', minHeight: '300px' }}>
+        <div className="overflow-x-auto w-full flex flex-col flex-1 min-h-0">
+          <div className="min-w-[700px] flex flex-col flex-1 min-h-0">
+            {/* Table Header — sticky */}
+            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest shrink-0 sticky top-0 z-10">
               <div className="col-span-4">Customer</div>
               <div className="col-span-3">Document Type</div>
               <div className="col-span-2">Uploaded</div>
@@ -418,79 +418,77 @@ export default function VerificationPage() {
               <div className="col-span-1 text-center">Action</div>
             </div>
 
-            {/* Rows */}
-            {filtered.length === 0 ? (
-              <div className="py-16 text-center">
-                <ShieldCheck className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                <p className="text-sm font-bold text-gray-400">No verification records found</p>
-                <p className="text-xs text-gray-300 mt-1">Try adjusting your search or filter</p>
-              </div>
-            ) : filtered.map((r, idx) => (
-              <div key={r.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                {/* Customer */}
-                <div className="col-span-4 min-w-0 pr-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">
-                      {r.customer.charAt(0)}
+            {/* Rows — scrollable */}
+            <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
+              {filtered.length === 0 ? (
+                <div className="py-16 text-center">
+                  <ShieldCheck className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                  <p className="text-sm font-bold text-gray-400">No verification records found</p>
+                  <p className="text-xs text-gray-300 mt-1">Try adjusting your search or filter</p>
+                </div>
+              ) : filtered.map((r, idx) => (
+                <div key={r.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                  {/* Customer */}
+                  <div className="col-span-4 min-w-0 pr-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">
+                        {r.customer.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-gray-900 truncate">{r.customer}</p>
+                        <p className="text-[10px] text-gray-400 truncate">{r.appId}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-gray-900 truncate">{r.customer}</p>
-                      <p className="text-[10px] text-gray-400 truncate">{r.appId}</p>
+                  </div>
+                  {/* Doc Type */}
+                  <div className="col-span-3 min-w-0 pr-2">
+                    <div className="flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                      <span className="text-xs font-semibold text-gray-700 truncate">{r.docType}</span>
                     </div>
                   </div>
-                </div>
-                {/* Doc Type */}
-                <div className="col-span-3 min-w-0 pr-2">
-                  <div className="flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                    <span className="text-xs font-semibold text-gray-700 truncate">{r.docType}</span>
+                  {/* Uploaded Date */}
+                  <div className="col-span-2">
+                    <div className="flex items-center gap-1">
+                      <CalendarDays className="w-3 h-3 text-gray-400" />
+                      <span className="text-[11px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(r.uploadedDate)}</span>
+                    </div>
+                  </div>
+                  {/* Status */}
+                  <div className="col-span-2 flex justify-center">
+                    <div title={r.remarks || undefined}>
+                      <VerifBadge status={r.status} />
+                      {r.remarks && (
+                        <p className="text-[9px] text-gray-400 text-center mt-0.5 truncate max-w-[90px]">{r.remarks}</p>
+                      )}
+                    </div>
+                  </div>
+                  {/* Actions */}
+                  <div className="col-span-1 flex items-center justify-center gap-1.5">
+                    <button
+                      onClick={() => setViewRecord(r)}
+                      suppressHydrationWarning
+                      className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all"
+                      title="View details"
+                    >
+                      <Eye className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => setReviewRecord(r)}
+                      suppressHydrationWarning
+                      className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all"
+                      title="Review"
+                    >
+                      <ShieldCheck className="w-3 h-3" />
+                    </button>
                   </div>
                 </div>
-                {/* Uploaded Date */}
-                <div className="col-span-2">
-                  <div className="flex items-center gap-1">
-                    <CalendarDays className="w-3 h-3 text-gray-400" />
-                    <span className="text-[11px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(r.uploadedDate)}</span>
-                  </div>
-                </div>
-                {/* Status */}
-                <div className="col-span-2 flex justify-center">
-                  <div title={r.remarks || undefined}>
-                    <VerifBadge status={r.status} />
-                    {r.remarks && (
-                      <p className="text-[9px] text-gray-400 text-center mt-0.5 truncate max-w-[90px]">{r.remarks}</p>
-                    )}
-                  </div>
-                </div>
-                {/* Actions */}
-                <div className="col-span-1 flex items-center justify-center gap-1.5">
-                  <button
-                    onClick={() => setViewRecord(r)}
-                    suppressHydrationWarning
-                    className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all"
-                    title="View details"
-                  >
-                    <Eye className="w-3 h-3" />
-                  </button>
-                  <button
-                    onClick={() => setReviewRecord(r)}
-                    suppressHydrationWarning
-                    className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all"
-                    title="Review"
-                  >
-                    <ShieldCheck className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-[11px] text-gray-400 font-medium">Showing {filtered.length} of {records.length} documents</p>
-          <p className="text-[11px] text-gray-400">{pendingCount} pending officer action</p>
-        </div>
+
       </div>
 
       {/* ── Modals ── */}

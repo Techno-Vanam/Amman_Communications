@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AppointmentMode, AppointmentStatus, OnlineMeetingType } from '@prisma/client';
+import { AppointmentMode, AppointmentStatus, AppointmentType, OnlineMeetingType } from '@prisma/client';
 import { IsDateString, IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class UpdateAppointmentDto {
@@ -54,6 +54,11 @@ export class UpdateAppointmentDto {
   @ApiProperty()
   @IsEnum(AppointmentMode)
   mode?: AppointmentMode;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsEnum(AppointmentType)
+  appointmentType?: AppointmentType;
 
   @ApiPropertyOptional()
   @IsOptional()

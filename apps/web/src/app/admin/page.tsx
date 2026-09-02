@@ -228,16 +228,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12" suppressHydrationWarning>
 
-      {/* ── Welcome Header ── */}
-      <div className="flex justify-end">
-        <Link
-          href="/admin/services"
-          className="bg-[#12372A] hover:bg-[#1a4a38] text-white px-6 py-2.5 rounded-full font-bold text-xs transition-all shadow-md flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4 text-[#a8d5b9]" />
-          <span>Manage Services</span>
-        </Link>
-      </div>
+
 
       {/* ── KPI Cards — Row 1 (4 cards) ── */}
       <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

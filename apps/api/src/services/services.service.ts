@@ -53,6 +53,7 @@ export class ServicesService {
       governmentFee: Number(s.governmentFee),
       serviceFee: Number(s.serviceFee),
       totalFee: Number(s.totalFee),
+      minimumPartialFee: s.minimumPartialFee ? Number(s.minimumPartialFee) : null,
       applicationsCount: s._count.applications,
     }));
   }
@@ -79,6 +80,7 @@ export class ServicesService {
       governmentFee: Number(service.governmentFee),
       serviceFee: Number(service.serviceFee),
       totalFee: Number(service.totalFee),
+      minimumPartialFee: service.minimumPartialFee ? Number(service.minimumPartialFee) : null,
       applicationsCount: service._count.applications,
     };
   }
@@ -102,6 +104,8 @@ export class ServicesService {
         serviceFee: svcFee,
         totalFee: totalFee,
         estimatedTime: dto.estimatedTime?.trim() || null,
+        isPartialPaymentAllowed: dto.isPartialPaymentAllowed ?? false,
+        minimumPartialFee: dto.minimumPartialFee ?? null,
         status: dto.status || ServiceStatus.DRAFT,
         requiredDocuments: {
           create: requiredDocsData,
@@ -122,6 +126,7 @@ export class ServicesService {
       governmentFee: Number(service.governmentFee),
       serviceFee: Number(service.serviceFee),
       totalFee: Number(service.totalFee),
+      minimumPartialFee: service.minimumPartialFee ? Number(service.minimumPartialFee) : null,
       applicationsCount: service._count.applications,
     };
   }
@@ -158,7 +163,9 @@ export class ServicesService {
           governmentFee: govFee,
           serviceFee: svcFee,
           totalFee: totalFee,
-          ...(dto.estimatedTime !== undefined && { estimatedTime: dto.estimatedTime.trim() || null }),
+          ...(dto.estimatedTime !== undefined && { estimatedTime: dto.estimatedTime?.trim() || null }),
+          ...(dto.isPartialPaymentAllowed !== undefined && { isPartialPaymentAllowed: dto.isPartialPaymentAllowed }),
+          ...(dto.minimumPartialFee !== undefined && { minimumPartialFee: dto.minimumPartialFee }),
           ...(dto.status !== undefined && { status: dto.status }),
         },
         include: {

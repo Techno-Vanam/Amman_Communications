@@ -122,3 +122,34 @@ export async function deleteBusinessLogoAction() {
     return { error: error.message || 'Network error' };
   }
 }
+
+export async function uploadBusinessLogoAction(formData: FormData) {
+  try {
+    const authHeader = await getAuthHeader();
+
+    let res = await fetch(`${API_BASE_URL}/v1/admin/settings/business-profile/logo`, {
+      method: 'POST',
+      headers: { ...authHeader },
+      body: formData,
+    });
+
+    if (res.status === 404) {
+      res = await fetch(`${API_BASE_URL}/api/v1/admin/settings/business-profile/logo`, {
+        method: 'POST',
+        headers: { ...authHeader },
+        body: formData,
+      });
+    }
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      return { error: errData.message || 'Failed to upload business logo' };
+    }
+
+    const data = await res.json();
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('uploadBusinessLogoAction error:', error);
+    return { error: error.message || 'Network error' };
+  }
+}

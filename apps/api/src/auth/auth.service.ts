@@ -11,7 +11,14 @@ export class AuthService {
     const normalizedEmail = email.toLowerCase().trim();
     const [admin, customer] = await Promise.all([
       this.prisma.admin.findUnique({ where: { email: normalizedEmail } }),
-      this.prisma.customer.findUnique({ where: { email: normalizedEmail } }),
+      this.prisma.customer.findFirst({ 
+        where: { 
+          OR: [
+            { email: normalizedEmail },
+            { phone: normalizedEmail }
+          ]
+        } 
+      }),
     ]);
 
     if (admin && customer) {

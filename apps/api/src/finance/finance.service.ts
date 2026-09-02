@@ -489,6 +489,7 @@ export class FinanceService {
             where: { status: PaymentStatus.PAID },
             select: { amount: true },
           },
+          application: { select: { id: true, status: true } },
         },
       });
 
@@ -539,6 +540,15 @@ export class FinanceService {
           where: { id: invoice.id },
           data: { status: newStatus },
         });
+
+        // Automatically advance application if paid
+        if (invoice.applicationId && (newStatus === InvoiceStatus.PAID || newStatus === InvoiceStatus.PARTIALLY_PAID)) {
+          // You could also check if it's currently in PENDING_PAYMENT or DRAFT
+          await tx.application.update({
+            where: { id: invoice.applicationId },
+            data: { status: 'UNDER_REVIEW' },
+          });
+        }
       }
 
       return {

@@ -85,8 +85,8 @@ export async function fetchInvoicesAction(search?: string, status?: string) {
         customerId: 'manual',
         customer: ms.customerName,
         email: '—',
-        phone: '—',
-        serviceType: ms.category, // using category here
+        phone: ms.customerPhone || '—',
+        serviceType: ms.category,
         governmentFee: 0,
         serviceFee: 0,
         totalCost: ms.amount,
@@ -285,7 +285,7 @@ export async function recordInvoicePaymentAction(
 }
 
 // ── Create Manual Sale ──────────────────────────────────────────────────
-export async function createManualSaleAction(data: { customerName: string; category: string; amount: number; paymentMethod?: string; details?: string }) {
+export async function createManualSaleAction(data: { customerName: string; phoneNumber?: string; category: string; amount: number; paymentMethod?: string; details?: string }) {
   try {
     const res = await apiFetch(`/admin/finance/manual-sales`, {
       method: 'POST',

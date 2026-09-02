@@ -22,9 +22,14 @@ const safeCustomerSelect = {
   },
 } as const;
 
+import { EventEmitter2 } from '@nestjs/event-emitter';
+
 @Injectable()
 export class CustomersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async getStats() {
     const [total, active, inactive, withApplications] = await Promise.all([
@@ -120,20 +125,22 @@ export class CustomersService {
   }
 
   async create(dto: CreateCustomerDto) {
-    const normalizedEmail = dto.email.toLowerCase().trim();
+    const normalizedEmail = dto.email ? dto.email.toLowerCase().trim() : null;
 
-    const [existingAdmin, existingCustomer] = await Promise.all([
-      this.prisma.admin.findUnique({ where: { email: normalizedEmail } }),
-      this.prisma.customer.findUnique({ where: { email: normalizedEmail } }),
-    ]);
+    if (normalizedEmail) {
+      const [existingAdmin, existingCustomer] = await Promise.all([
+        this.prisma.admin.findUnique({ where: { email: normalizedEmail } }),
+        this.prisma.customer.findUnique({ where: { email: normalizedEmail } }),
+      ]);
 
-    if (existingAdmin || existingCustomer) {
-      throw new BadRequestException('Email is already in use by another account.');
+      if (existingAdmin || existingCustomer) {
+        throw new BadRequestException('Email is already in use by another account.');
+      }
     }
 
     const passwordHash = await hash(dto.password, 10);
 
-    return this.prisma.customer.create({
+    const customer = await this.prisma.customer.create({
       data: {
         name: dto.name.trim(),
         email: normalizedEmail,
@@ -143,6 +150,17 @@ export class CustomersService {
       },
       select: safeCustomerSelect,
     });
+
+    if (normalizedEmail) {
+      this.eventEmitter.emit('customer.created', {
+        customerId: customer.id,
+        name: customer.name,
+        email: customer.email,
+        passwordRaw: dto.password,
+      });
+    }
+
+    return customer;
   }
 
   async update(id: string, dto: UpdateCustomerDto) {
@@ -161,24 +179,28 @@ export class CustomersService {
       dataToUpdate.phone = dto.phone ? dto.phone.trim() : null;
     }
 
-    if (dto.email && dto.email.toLowerCase().trim() !== existing.email) {
-      const normalizedEmail = dto.email.toLowerCase().trim();
+    if (dto.email !== undefined) {
+      const normalizedEmail = dto.email ? dto.email.toLowerCase().trim() : null;
+      
+      if (normalizedEmail !== existing.email) {
+        if (normalizedEmail) {
+        const [existingAdmin, otherCustomer] = await Promise.all([
+          this.prisma.admin.findUnique({ where: { email: normalizedEmail } }),
+          this.prisma.customer.findFirst({
+            where: {
+              email: normalizedEmail,
+              id: { not: id },
+            },
+          }),
+        ]);
 
-      const [existingAdmin, otherCustomer] = await Promise.all([
-        this.prisma.admin.findUnique({ where: { email: normalizedEmail } }),
-        this.prisma.customer.findFirst({
-          where: {
-            email: normalizedEmail,
-            id: { not: id },
-          },
-        }),
-      ]);
+          if (existingAdmin || otherCustomer) {
+            throw new BadRequestException('Email is already in use by another account.');
+          }
+        }
 
-      if (existingAdmin || otherCustomer) {
-        throw new BadRequestException('Email is already in use by another account.');
+        dataToUpdate.email = normalizedEmail as string | null;
       }
-
-      dataToUpdate.email = normalizedEmail;
     }
 
     if (dto.status) {

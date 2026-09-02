@@ -34,6 +34,7 @@ export class ManualSalesService {
       data: {
         saleNumber,
         customerName: dto.customerName,
+        customerPhone: dto.phoneNumber || null,
         category: dto.category,
         amount: new Prisma.Decimal(dto.amount),
         details: dto.details || null,

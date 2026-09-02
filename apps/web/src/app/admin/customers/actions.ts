@@ -115,7 +115,7 @@ export async function updateCustomerAction(
     const authHeader = await getAuthHeader();
     const payload: any = {};
     if (formData.name) payload.name = formData.name;
-    if (formData.email) payload.email = formData.email;
+    if (formData.email !== undefined) payload.email = formData.email;
     if (formData.phone !== undefined) payload.phone = formData.phone;
     if (formData.status) {
       payload.status = formData.status === 'Active' ? 'ACTIVE' : 'INACTIVE';
