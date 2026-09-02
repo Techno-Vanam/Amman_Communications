@@ -114,7 +114,7 @@ export class CustomerAppointmentsService {
         preferredTime: dto.preferredTime,
         customerPhone: dto.contactNumber || customer.contactNumber || '',
         customerName: customer.name,
-        customerEmail: customer.email,
+        customerEmail: customer.email || '',
         email: customer.email,
         notes: dto.notes?.trim() || null,
         status: AppointmentStatus.PENDING,

@@ -25,6 +25,7 @@ import {
   Check,
   ChevronRight,
   ArrowUpRight,
+  ArrowLeft,
   FileCheck,
   LayoutGrid,
   List,
@@ -33,6 +34,9 @@ import {
 } from 'lucide-react';
 import CustomSelect from '@/components/ui/CustomSelect';
 import CustomTabDropdown from '@/components/ui/CustomTabDropdown';
+import { fetchApplicationsAction, updateApplicationStatusAction, createApplicationAction } from './actions';
+import { fetchCustomersAction } from '../customers/actions';
+import { fetchServicesAction } from '../services/actions';
 
 // ── Types & Phase Config ─────────────────────────────────────────
 type AppStatus =
@@ -65,7 +69,8 @@ interface AppDocument {
 }
 
 interface Application {
-  id: string;
+  id: string; // Real DB CUID
+  applicationNumber: string; // Display ID (e.g. APP-2026-001)
   customer: string;
   email: string;
   phone: string;
@@ -333,11 +338,32 @@ function AppModal({
   onClose: () => void;
   onSave: (data: Partial<Application>) => void;
 }) {
+  // Fetch customers and services for dropdowns
+  const [customers, setCustomers] = useState<{ id: string; name: string }[]>([]);
+  const [services, setServices] = useState<{ id: string; name: string }[]>([]);
+  
+  useEffect(() => {
+    fetchCustomersAction().then((res) => {
+      if (res.success && res.data) {
+        setCustomers(res.data.map((c: any) => ({ id: c.id, name: c.name })));
+      }
+    });
+    fetchServicesAction().then((res) => {
+      if (res.success && res.data?.items) {
+        setServices(res.data.items.map((s: any) => ({ id: s.id, name: s.name })));
+      } else if (res.success && res.data) {
+        const arr = Array.isArray(res.data) ? res.data : res.data.items || [];
+        setServices(arr.map((s: any) => ({ id: s.id, name: s.name })));
+      }
+    });
+  }, []);
+
   const [form, setForm] = useState({
+    customerId: mode === 'add' ? (customers[0]?.id ?? '') : '',
     customer: app?.customer ?? '',
     email: app?.email ?? '',
     phone: app?.phone ?? '',
-    serviceType: app?.serviceType ?? SERVICE_TYPES[0],
+    serviceType: app?.serviceType ?? (services[0]?.name ?? 'Commercial Fiber Broadband'),
     status: app?.status ?? ('Submitted' as AppStatus),
     stepPhase: app?.stepPhase ?? 1,
     paidAmount: app?.paidAmount ?? 2000,
@@ -347,7 +373,7 @@ function AppModal({
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!form.customer.trim()) e.customer = 'Customer name is required';
+    if (mode === 'add' && !form.customerId) e.customerId = 'Customer is required';
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Valid email required';
     if (!form.phone.trim()) e.phone = 'Phone is required';
     return e;
@@ -381,15 +407,17 @@ function AppModal({
 
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
           <div className="space-y-1">
-            <label className="block text-[11px] font-extrabold text-gray-700 uppercase tracking-wide">Customer Name *</label>
-            <input
-              type="text"
-              value={form.customer}
-              onChange={e => setForm({ ...form, customer: e.target.value })}
-              placeholder="e.g. Acme Corporation"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A]"
+            <label className="block text-[11px] font-extrabold text-gray-700 uppercase tracking-wide">Customer *</label>
+            <CustomSelect
+              value={form.customerId}
+              onChange={(val) => {
+                const c = customers.find(x => x.id === val);
+                setForm({ ...form, customerId: val, customer: c?.name || '' });
+              }}
+              options={customers.map(c => c.id)}
+              getLabel={(id) => customers.find(c => c.id === id)?.name || id}
             />
-            {errors.customer && <p className="text-[10px] text-rose-600 font-bold">{errors.customer}</p>}
+            {errors.customerId && <p className="text-[10px] text-rose-600 font-bold">{errors.customerId}</p>}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -419,11 +447,19 @@ function AppModal({
 
           <div className="space-y-1">
             <label className="block text-[11px] font-extrabold text-gray-700 uppercase tracking-wide">Service Type</label>
-            <CustomSelect
-              value={form.serviceType}
-              onChange={val => setForm({ ...form, serviceType: val })}
-              options={SERVICE_TYPES}
-            />
+            {services.length > 0 ? (
+              <CustomSelect
+                value={form.serviceType}
+                onChange={val => setForm({ ...form, serviceType: val })}
+                options={services.map(s => s.name)}
+              />
+            ) : (
+              <CustomSelect
+                value={form.serviceType}
+                onChange={val => setForm({ ...form, serviceType: val })}
+                options={SERVICE_TYPES}
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -528,29 +564,63 @@ export default function ApplicationsPage() {
   const [editApp, setEditApp] = useState<Application | null>(null);
   const [deleteApp, setDeleteApp] = useState<Application | null>(null);
 
-  // Load applications from localStorage or initialize with default dataset
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('amman_admin_applications');
-      if (saved) {
-        setApps(JSON.parse(saved));
-      } else {
-        setApps(DEFAULT_SAMPLE_APPS);
-        localStorage.setItem('amman_admin_applications', JSON.stringify(DEFAULT_SAMPLE_APPS));
-      }
-    } catch (e) {
-      console.error('Error loading admin applications:', e);
+  // ── Database to UI Mapper ──
+  function dbToUI(dbApp: any): Application {
+    const UI_STATUS: Record<string, AppStatus> = {
+      'SUBMITTED': 'Submitted',
+      'UNDER_REVIEW': 'Under Verification',
+      'DOCUMENTS_RECEIVED': 'Documents Received',
+      'APPROVED': 'Approved',
+      'REJECTED': 'Rejected',
+      'PENDING_PAYMENT': 'Pending Payment',
+      'COMPLETED': 'Completed'
+    };
+
+    const STEP_MAP: Record<string, number> = {
+      'SUBMITTED': 1,
+      'DOCUMENTS_RECEIVED': 2,
+      'UNDER_REVIEW': 3,
+      'PENDING_PAYMENT': 4,
+      'APPROVED': 6,
+      'COMPLETED': 8,
+      'REJECTED': 7
+    };
+
+    return {
+      id: dbApp.id, // REAL DB CUID!
+      applicationNumber: dbApp.applicationNumber || dbApp.id, // Display ID
+      customer: dbApp.customer?.name || dbApp.fullName || 'Unknown',
+      email: dbApp.customer?.email || dbApp.email || '',
+      phone: dbApp.phone || '',
+      serviceType: dbApp.serviceType || dbApp.service?.name || '',
+      createdDate: dbApp.createdAt,
+      status: UI_STATUS[dbApp.status] || 'Submitted',
+      stepPhase: STEP_MAP[dbApp.status] || 1,
+      paidAmount: 2000,
+      paymentStatus: 'Paid',
+      paymentMode: 'UPI',
+      txnRef: 'TXN-000000',
+      assignedOfficer: 'Officer Rajesh Kumar',
+      notes: dbApp.notes || '',
+      documents: [],
+    };
+  }
+
+  const loadApplications = async () => {
+    const res = await fetchApplicationsAction();
+    if (res.success && res.data) {
+      setApps(res.data.map(dbToUI));
+    } else {
       setApps(DEFAULT_SAMPLE_APPS);
     }
+  };
+
+  useEffect(() => {
+    loadApplications();
   }, []);
 
   const saveApps = (updated: Application[]) => {
     setApps(updated);
-    try {
-      localStorage.setItem('amman_admin_applications', JSON.stringify(updated));
-    } catch (e) {
-      console.error('Error saving admin applications:', e);
-    }
   };
 
   const filteredApps = useMemo(() => {
@@ -572,31 +642,19 @@ export default function ApplicationsPage() {
     });
   }, [apps, searchQuery, activeTabFilter]);
 
-  function handleAdd(data: Partial<Application>) {
-    const newApp: Application = {
-      id: `APP-2026-${String(apps.length + 1).padStart(3, '0')}`,
-      customer: data.customer ?? '',
-      email: data.email ?? '',
-      phone: data.phone ?? '',
-      serviceType: data.serviceType ?? '',
-      createdDate: new Date().toISOString().split('T')[0],
-      status: data.status ?? 'Submitted',
-      stepPhase: data.stepPhase ?? 1,
-      paidAmount: data.paidAmount ?? 2000,
-      paymentStatus: 'Paid',
-      paymentMode: 'UPI / NetBanking',
-      txnRef: `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
-      assignedOfficer: 'Officer Rajesh Kumar',
+  async function handleAdd(data: any) {
+    const res = await createApplicationAction({
+      customerId: data.customerId,
+      serviceType: data.serviceType,
+      email: data.email,
+      phone: data.phone,
       notes: data.notes,
-      phaseDates: {
-        1: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-      },
-      documents: [
-        { id: 'doc-1', name: 'Identity Proof (Aadhaar / Voter ID)', required: 'Required', uploaded: 'Yes', status: 'Approved', uploadedFile: 'aadhaar_copy.pdf' },
-        { id: 'doc-2', name: 'Service Application Form', required: 'Required', uploaded: 'Yes', status: 'Approved', uploadedFile: 'app_form.pdf' }
-      ]
-    };
-    saveApps([newApp, ...apps]);
+    });
+    if (res.success) {
+      loadApplications();
+    } else {
+      alert(res.error || 'Failed to create application');
+    }
   }
 
   function handleEdit(data: Partial<Application>) {
@@ -608,23 +666,25 @@ export default function ApplicationsPage() {
     }
   }
 
-  function handleUpdatePhase(id: string, newStep: number) {
-    const todayStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-    const updated = apps.map(a => {
-      if (a.id === id) {
-        let newStatus = a.status;
-        if (newStep >= 7) newStatus = 'Completed';
-        if (newStep === 1) newStatus = 'Submitted';
-        if (newStep === 3) newStatus = 'Under Verification';
-        const newPhaseDates = { ...(a.phaseDates || {}), [newStep]: todayStr };
-        return { ...a, stepPhase: newStep, status: newStatus, phaseDates: newPhaseDates };
+  async function handleUpdatePhase(id: string, newStep: number) {
+    let newStatus: AppStatus = 'Submitted';
+    if (newStep >= 8) newStatus = 'Completed';
+    else if (newStep === 7) newStatus = 'Completed';
+    else if (newStep === 6) newStatus = 'Approved';
+    else if (newStep === 4) newStatus = 'Pending Payment';
+    else if (newStep === 3) newStatus = 'Under Verification';
+    else if (newStep === 2) newStatus = 'Documents Received';
+    else newStatus = 'Submitted';
+
+    // Pass the UI status directly — the action handles UI→DB conversion
+    const res = await updateApplicationStatusAction(id, newStatus);
+    if (res.success) {
+      loadApplications();
+      if (selectedApp && selectedApp.id === id) {
+        setSelectedApp({ ...selectedApp, stepPhase: newStep, status: newStatus });
       }
-      return a;
-    });
-    saveApps(updated);
-    if (selectedApp && selectedApp.id === id) {
-      const updatedSelected = updated.find(a => a.id === id);
-      if (updatedSelected) setSelectedApp(updatedSelected);
+    } else {
+      alert(res.error || 'Failed to update phase');
     }
   }
 
@@ -1026,7 +1086,7 @@ Remarks          : ${selectedApp.notes || 'None'}
                 <span>Applications Manager</span>
               </button>
               <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
-              <span className="text-gray-900 font-bold">{selectedApp.id}</span>
+              <span className="text-gray-900 font-bold">{selectedApp.applicationNumber || selectedApp.id}</span>
             </div>
 
             <div className="flex items-center gap-3 self-start sm:self-auto">
@@ -1039,9 +1099,10 @@ Remarks          : ${selectedApp.notes || 'None'}
               </button>
               <button
                 onClick={() => setMode('list')}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-xl transition-all"
+                className="px-4 py-2 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl transition-all shadow-2xs flex items-center gap-2"
               >
-                Back to List
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to List</span>
               </button>
             </div>
           </div>
@@ -1057,7 +1118,7 @@ Remarks          : ${selectedApp.notes || 'None'}
               <div className="grid grid-cols-1 gap-2.5 text-xs">
                 <div className="flex items-center">
                   <span className="w-32 text-gray-500 font-medium">Application ID</span>
-                  <span className="font-bold text-gray-900">: {selectedApp.id}</span>
+                  <span className="font-bold text-gray-900">: {selectedApp.applicationNumber || selectedApp.id}</span>
                 </div>
                 <div className="flex items-center">
                   <span className="w-32 text-gray-500 font-medium">Customer Name</span>
@@ -1128,10 +1189,20 @@ Remarks          : ${selectedApp.notes || 'None'}
                 <label className="block text-[10px] font-bold text-gray-500 uppercase">Change Status</label>
                 <CustomSelect
                   value={selectedApp.status}
-                  onChange={(val) => {
-                    const updated = { ...selectedApp, status: val as AppStatus };
-                    setSelectedApp(updated);
-                    saveApps(apps.map(a => a.id === selectedApp.id ? updated : a));
+                  onChange={async (val) => {
+                    const newStatus = val as AppStatus;
+                    // Pass the UI status directly — the action handles UI→DB conversion
+                    const res = await updateApplicationStatusAction(selectedApp.id, newStatus);
+                    if (res.success) {
+                      loadApplications();
+                      const stepMap: Record<string, number> = {
+                        'Submitted': 1, 'Documents Received': 2, 'Under Verification': 3,
+                        'Pending Payment': 4, 'Approved': 6, 'Completed': 8, 'Rejected': 7
+                      };
+                      setSelectedApp({ ...selectedApp, status: newStatus, stepPhase: stepMap[newStatus] || 1 });
+                    } else {
+                      alert(res.error || 'Failed to update status');
+                    }
                   }}
                   options={ALL_STATUSES}
                 />

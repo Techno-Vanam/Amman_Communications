@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsEnum, IsNumber, IsOptional, IsString, Min, MinLength, ValidateNested } from 'class-validator';
+import { IsArray, IsEnum, IsNumber, IsOptional, IsString, Min, MinLength, ValidateNested, IsBoolean } from 'class-validator';
 import { ServiceStatus } from '@prisma/client';
 import { RequiredDocumentDto } from './create-service.dto';
 
@@ -55,4 +55,15 @@ export class UpdateServiceDto {
   @ApiProperty()
   @Type(() => RequiredDocumentDto)
   requiredDocuments?: RequiredDocumentDto[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  isPartialPaymentAllowed?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  minimumPartialFee?: number;
 }

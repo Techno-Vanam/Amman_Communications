@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Wallet, Search, X, Eye, Edit2, ChevronDown, Filter,
   CheckCircle, Clock, XCircle, AlertCircle, TrendingUp, Hourglass,
@@ -453,25 +453,76 @@ function AddManualSaleModal({
   onSuccess: () => void;
 }) {
   const [customerName, setCustomerName] = useState('');
-  const [category, setCategory] = useState('XEROX');
+  const [phoneNumber, setPhoneNumber] = useState('+91 ');
+  const [category, setCategory] = useState('Xerox');
+  const [categoryInput, setCategoryInput] = useState('Xerox');
+  const [showCatDropdown, setShowCatDropdown] = useState(false);
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
   const [details, setDetails] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const catRef = useRef<HTMLDivElement>(null);
+
+  const DEFAULT_CATEGORIES = ['Xerox', 'Stationary', 'Application', 'Other'];
+  const [customCategories, setCustomCategories] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('finance_custom_categories') || '[]'); } catch { return []; }
+  });
+  const allCategories = [...new Set([...DEFAULT_CATEGORIES, ...customCategories])];
+  const filteredCategories = categoryInput.trim() === '' || categoryInput === category
+    ? allCategories
+    : allCategories.filter(c => c.toLowerCase().includes(categoryInput.toLowerCase()));
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (catRef.current && !catRef.current.contains(e.target as Node)) setShowCatDropdown(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  function selectCategory(val: string) {
+    setCategory(val);
+    setCategoryInput(val);
+    setShowCatDropdown(false);
+  }
+
+  function handleCategoryFocus() {
+    setCategoryInput('');
+    setShowCatDropdown(true);
+  }
+
+  function handleCategoryBlur() {
+    const trimmed = categoryInput.trim();
+    if (!trimmed) {
+      // restore previous selection
+      setCategoryInput(category);
+      setShowCatDropdown(false);
+      return;
+    }
+    setCategory(trimmed);
+    setCategoryInput(trimmed);
+    if (!allCategories.includes(trimmed)) {
+      const updated = [...customCategories, trimmed];
+      setCustomCategories(updated);
+      try { localStorage.setItem('finance_custom_categories', JSON.stringify(updated)); } catch {}
+    }
+    setShowCatDropdown(false);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!customerName || !amount) {
-      setError('Name and Amount are required.');
+    if (!customerName) {
+      setError('Name is required.');
       return;
     }
     setSaving(true);
     setError(null);
     const res = await createManualSaleAction({
       customerName,
+      phoneNumber: phoneNumber.replace(/^\+91\s*$/, '').trim() || undefined,
       category,
-      amount: Number(amount),
+      amount: amount ? Number(amount) : 0,
       paymentMethod,
       details,
     });
@@ -510,19 +561,56 @@ function AddManualSaleModal({
           </div>
 
           <div>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">Phone Number <span className="text-gray-400 font-normal">(Optional)</span></label>
+            <input type="tel" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)}
+              placeholder="+91 XXXXX XXXXX"
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all" />
+          </div>
+
+          <div ref={catRef} className="relative">
             <label className="block text-xs font-bold text-gray-700 mb-1.5">Category</label>
-            <select value={category} onChange={e => setCategory(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all">
-              <option value="XEROX">Xerox</option>
-              <option value="STATIONARY">Stationary</option>
-              <option value="APPLICATION">Application</option>
-              <option value="OTHER">Other</option>
-            </select>
+            <div className="relative">
+              <input
+                type="text"
+                value={categoryInput}
+                onChange={e => { setCategoryInput(e.target.value); setShowCatDropdown(true); }}
+                onFocus={handleCategoryFocus}
+                onBlur={handleCategoryBlur}
+                placeholder="Select or type a category..."
+                className="w-full px-4 py-2.5 pr-10 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
+              />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+            {showCatDropdown && filteredCategories.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl z-30 overflow-hidden">
+                {filteredCategories.map(cat => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onMouseDown={() => selectCategory(cat)}
+                    className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 text-gray-900 ${
+                      cat === category ? 'bg-gray-100 font-bold' : ''
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+                {categoryInput.trim() && !allCategories.includes(categoryInput.trim()) && (
+                  <button
+                    type="button"
+                    onMouseDown={() => selectCategory(categoryInput.trim())}
+                    className="w-full text-left px-4 py-2.5 text-sm font-medium text-gray-900 border-t border-gray-100 hover:bg-gray-50 transition-colors"
+                  >
+                    + Add &ldquo;{categoryInput.trim()}&rdquo;
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5">Amount (₹)</label>
-            <input type="number" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">Amount (₹) <span className="text-gray-400 font-normal">(Optional)</span></label>
+            <input type="number" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all" />
           </div>
 
@@ -562,18 +650,39 @@ function AddManualSaleModal({
 
 // ── Main Page ─────────────────────────────────────────────────
 type FilterType = 'All' | PaymentStatus;
+type FilterSourceType = 'All Types' | 'Application' | 'Manual Sale';
 
 export default function FinanceClient({ initialRecords }: { initialRecords: FinanceRecord[] }) {
   const [records, setRecords] = useState<FinanceRecord[]>(initialRecords);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterType>('All');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [activeTab, setActiveTab] = useState<'All' | 'Invoice' | 'Manual Sale'>('All');
+  const [showTypeMenu, setShowTypeMenu] = useState(false);
   const [showManualSaleModal, setShowManualSaleModal] = useState(false);
   const [viewRecord, setViewRecord] = useState<FinanceRecord | null>(null);
   const [editRecord, setEditRecord] = useState<FinanceRecord | null>(null);
   const [payRecord, setPayRecord] = useState<FinanceRecord | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const typeMenuRef = useRef<HTMLDivElement>(null);
+  const statusMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (typeMenuRef.current && !typeMenuRef.current.contains(event.target as Node)) {
+        setShowTypeMenu(false);
+      }
+      if (statusMenuRef.current && !statusMenuRef.current.contains(event.target as Node)) {
+        setShowFilterMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const loadInvoices = async () => {
     setIsLoading(true);
@@ -598,8 +707,9 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
     const matchSearch = r.appId.toLowerCase().includes(q) || r.customer.toLowerCase().includes(q) ||
       r.invoiceNumber.toLowerCase().includes(q) || r.serviceType.toLowerCase().includes(q);
     const matchFilter = filterStatus === 'All' || r.status === filterStatus;
-    return matchSearch && matchFilter;
-  }), [records, search, filterStatus]);
+    const matchTab = activeTab === 'All' || (activeTab === 'Manual Sale' ? r.isManualSale : !r.isManualSale);
+    return matchSearch && matchFilter && matchTab;
+  }), [records, search, filterStatus, activeTab]);
 
   async function handleSave(id: string, data: Partial<FinanceRecord>) {
     setErrorMsg(null);
@@ -613,9 +723,9 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
   }
 
   // Aggregates
-  const totalBilled    = records.reduce((s, r) => s + r.totalCost, 0);
-  const totalCollected = records.reduce((s, r) => s + r.paidAmount, 0);
-  const totalPending   = records.reduce((s, r) => s + r.outstandingAmount, 0);
+  const totalBilled    = filtered.reduce((s, r) => s + r.totalCost, 0);
+  const totalCollected = filtered.reduce((s, r) => s + r.paidAmount, 0);
+  const totalPending   = filtered.reduce((s, r) => s + r.outstandingAmount, 0);
 
   const counts = Object.fromEntries(
     (['All', ...ALL_STATUSES] as FilterType[]).map(s => [s, s === 'All' ? records.length : records.filter(r => r.status === s).length])
@@ -631,7 +741,7 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
             <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center">
               <IndianRupee className="w-4 h-4 text-blue-600" />
             </div>
-            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">{records.length} invoices</span>
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">{filtered.length} invoices</span>
           </div>
           <p className="text-xl sm:text-2xl font-extrabold text-blue-700">{fmtAmt(totalBilled)}</p>
           <p className="text-[11px] text-gray-500 font-semibold mt-0.5">Total Amount Billed</p>
@@ -655,59 +765,90 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
             <div className="w-8 h-8 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center">
               <Hourglass className="w-4 h-4 text-rose-600" />
             </div>
-            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">{counts['Overdue']} overdue</span>
+            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">{filtered.filter(r => r.status === 'Overdue').length} overdue</span>
           </div>
           <p className="text-xl sm:text-2xl font-extrabold text-rose-700">{fmtAmt(totalPending)}</p>
           <p className="text-[11px] text-gray-500 font-semibold mt-0.5">Total Outstanding</p>
         </div>
       </div>
 
-      {/* ── Search + Filter ── */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by App ID, customer, invoice, or service..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-2.5 rounded-full border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] shadow-xs transition-all"
-          />
-          {search && (
-            <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-        <div className="relative">
-          <button
-            onClick={() => setShowFilterMenu(s => !s)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs transition-all"
-          >
-            <Filter className="w-4 h-4 text-gray-500" />
-            {filterStatus === 'All' ? 'All Status' : filterStatus}
-            <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showFilterMenu ? 'rotate-180' : ''}`} />
-          </button>
-          {showFilterMenu && (
-            <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl border border-gray-100 shadow-xl z-20 py-1.5">
-              {(['All', ...ALL_STATUSES] as FilterType[]).map(s => (
-                <button key={s} onClick={() => { setFilterStatus(s); setShowFilterMenu(false); }}
-                  className={`w-full text-left px-4 py-2 text-xs font-semibold transition-colors flex items-center justify-between ${filterStatus === s ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold' : 'text-gray-700 hover:bg-gray-50'}`}>
-                  <span>{s}</span>
-                  <span className="text-gray-400">{counts[s]}</span>
-                </button>
-              ))}
+      {/* ── Tabs + Search + Filter Bar ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-2xs">
+        {/* Tab bar */}
+        <div className="flex items-center gap-0 border-b border-gray-100 px-4 pt-3">
+          {(['All', 'Invoice', 'Manual Sale'] as const).map(tab => {
+            const count = tab === 'All' ? records.length
+              : tab === 'Invoice' ? records.filter(r => !r.isManualSale).length
+              : records.filter(r => r.isManualSale).length;
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`relative px-5 py-2.5 text-xs font-bold transition-colors border-b-2 -mb-px ${
+                  activeTab === tab
+                    ? 'border-[#12372A] text-[#12372A]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {tab}
+                <span className={`ml-1.5 text-[9px] px-1.5 py-0.5 rounded-full font-extrabold ${
+                  activeTab === tab ? 'bg-[#12372A] text-white' : 'bg-gray-100 text-gray-500'
+                }`}>{count}</span>
+              </button>
+            );
+          })}
+
+          {/* Push filters to right */}
+          <div className="flex items-center gap-2 ml-auto pb-2">
+            <div className="relative" ref={statusMenuRef}>
+              <button
+                onClick={() => setShowFilterMenu(s => !s)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-[11px] font-bold text-gray-700 hover:bg-gray-100 transition-all"
+              >
+                <Filter className="w-3 h-3 text-gray-500" />
+                {filterStatus === 'All' ? 'All Status' : filterStatus}
+                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${showFilterMenu ? 'rotate-180' : ''}`} />
+              </button>
+              {showFilterMenu && (
+                <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl border border-gray-100 shadow-xl z-20 py-1.5">
+                  {(['All', ...ALL_STATUSES] as FilterType[]).map(s => (
+                    <button key={s} onClick={() => { setFilterStatus(s); setShowFilterMenu(false); }}
+                      className={`w-full text-left px-4 py-2 text-xs font-semibold transition-colors flex items-center justify-between ${filterStatus === s ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold' : 'text-gray-700 hover:bg-gray-50'}`}>
+                      <span>{s}</span>
+                      <span className="text-gray-400">{counts[s]}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+            <button
+              onClick={() => setShowManualSaleModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#12372A] text-white text-[11px] font-bold hover:bg-[#1a4a38] transition-all"
+            >
+              <Plus className="w-3 h-3" />
+              Add Manual Sale
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => setShowManualSaleModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#12372A] text-white text-xs font-bold hover:bg-[#1a4a38] shadow-xs transition-all"
-        >
-          <Plus className="w-4 h-4" />
-          Add Manual Sale
-        </button>
-      </div>
+
+        {/* Search bar */}
+        <div className="px-4 py-3 border-b border-gray-50">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by customer, invoice no., app ID or service..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
 
       {errorMsg && (
         <div className="bg-rose-50 border border-rose-100 text-rose-700 text-xs font-semibold px-4 py-3 rounded-2xl">
@@ -715,26 +856,27 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
         </div>
       )}
 
-      {/* ── Table ── */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
+        {/* ── Table ── */}
         <div className="overflow-x-auto w-full">
-          <div className="min-w-[780px]">
+          <div className="min-w-[900px]">
             {/* Header */}
-            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-              <div className="col-span-3">Customer</div>
-              <div className="col-span-3">Category</div>
-              <div className="col-span-1 text-right pr-2">Total</div>
-              <div className="col-span-2 text-right pr-3">Paid</div>
-              <div className="col-span-1 text-right pr-2">Balance</div>
-              <div className="col-span-1 text-center">Status</div>
-              <div className="col-span-1 text-center">Actions</div>
+            <div className="grid grid-cols-[2fr_1fr_1.5fr_1.5fr_1fr_1fr_1fr_1fr_100px] px-5 py-3 bg-gray-50 border-t border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
+              <div>Customer</div>
+              <div>Phone No</div>
+              <div>Invoice / Sale No</div>
+              <div>Category / Service</div>
+              <div className="text-right pr-2">Total</div>
+              <div className="text-right pr-2">Paid</div>
+              <div className="text-right pr-2">Balance</div>
+              <div className="text-center">Status</div>
+              <div className="text-center">Actions</div>
             </div>
 
             {/* Rows */}
             {isLoading ? (
               <div className="py-16 text-center">
                 <div className="w-6 h-6 border-2 border-[#12372A] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-xs text-gray-400">Loading invoices…</p>
+                <p className="text-xs text-gray-400">Loading records…</p>
               </div>
             ) : filtered.length === 0 ? (
               <div className="py-16 text-center">
@@ -743,62 +885,84 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
                 <p className="text-xs text-gray-300 mt-1">Try adjusting your search or filter</p>
               </div>
             ) : filtered.map((r, idx) => (
-              <div key={r.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
+              <div key={r.id} className={`grid grid-cols-[2fr_1fr_1.5fr_1.5fr_1fr_1fr_1fr_1fr_100px] px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
                 {/* Customer */}
-                <div className="col-span-3 flex items-center gap-2 min-w-0 pr-2">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">
+                <div className="flex items-center gap-2 min-w-0 pr-2">
+                  <div className={`w-8 h-8 rounded-full text-white text-[10px] font-extrabold flex items-center justify-center shrink-0 ${
+                    r.isManualSale ? 'bg-gradient-to-br from-blue-500 to-blue-700' : 'bg-gradient-to-br from-[#12372A] to-[#2e8a60]'
+                  }`}>
                     {r.customer.charAt(0)}
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-gray-900 truncate">{r.customer}</p>
-                    <p className="text-[9px] text-gray-400 truncate">{r.invoiceNumber}</p>
+                    <p className="text-[9px] text-gray-400 truncate">{fmtDate(r.createdAt)}</p>
                   </div>
                 </div>
 
-                {/* Category */}
-                <div className="col-span-3 min-w-0 pr-2">
-                  <p className="text-xs font-bold text-[#12372A] truncate">
-                    {r.isManualSale ? r.serviceType : r.appId}
+                {/* Phone */}
+                <div className="min-w-0 pr-2">
+                  <p className="text-xs text-gray-600 truncate">
+                    {r.phone && r.phone !== '—'
+                      ? (r.phone.startsWith('+') ? r.phone : `+91 ${r.phone}`)
+                      : '—'}
                   </p>
-                  <p className="text-[9px] text-gray-400 truncate">
-                    {r.isManualSale ? 'Manual Sale' : r.serviceType}
-                  </p>
+                </div>
+
+                {/* Invoice / Sale No */}
+                <div className="min-w-0 pr-2">
+                  <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                    r.isManualSale ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-[#f0f7f2] text-[#12372A] border border-[#a8d5b9]/50'
+                  }`}>
+                    <Receipt className="w-2.5 h-2.5" />
+                    {r.invoiceNumber}
+                  </div>
+                  <p className="text-[9px] text-gray-400 mt-0.5">{r.isManualSale ? 'Manual Sale' : 'Invoice'}</p>
+                </div>
+
+                {/* Category / Service */}
+                <div className="min-w-0 pr-2">
+                  <p className="text-xs font-semibold text-gray-800 truncate">{r.serviceType}</p>
+                  {!r.isManualSale && r.appId !== '—' && (
+                    <p className="text-[9px] text-gray-400 truncate">{r.appId}</p>
+                  )}
                 </div>
 
                 {/* Total */}
-                <div className="col-span-1 text-right pr-2">
-                  <span className="text-xs font-extrabold text-gray-900">{fmtAmt(r.totalCost)}</span>
+                <div className="text-right pr-2">
+                  <span className="text-xs font-extrabold text-gray-900">
+                    {r.isManualSale && r.totalCost === 0 ? '—' : fmtAmt(r.totalCost)}
+                  </span>
                 </div>
 
                 {/* Paid */}
-                <div className="col-span-2 text-right pr-3">
-                  <span className="text-xs font-bold text-emerald-700">{fmtAmt(r.paidAmount)}</span>
-                  {r.paymentsCount > 0 ? (
+                <div className="text-right pr-2">
+                  <span className="text-xs font-bold text-emerald-700">
+                    {r.isManualSale && r.paidAmount === 0 ? '—' : fmtAmt(r.paidAmount)}
+                  </span>
+                  {r.paymentsCount > 0 && r.paidAmount > 0 && (
                     <p className="text-[9px] text-gray-400 uppercase">
                       {r.paymentsCount} txn{r.paymentsCount > 1 ? 's' : ''}
                       {r.paymentMethod && r.paymentMethod !== '—' && ` • ${r.paymentMethod.replace(/_/g, ' ')}`}
                     </p>
-                  ) : (
-                    r.paymentMethod && r.paymentMethod !== '—' && (
-                      <p className="text-[9px] text-gray-400 uppercase">{r.paymentMethod.replace(/_/g, ' ')}</p>
-                    )
                   )}
                 </div>
 
                 {/* Balance */}
-                <div className="col-span-1 text-right pr-2">
-                  <span className={`text-xs font-extrabold ${r.outstandingAmount > 0 ? 'text-rose-700' : 'text-emerald-600'}`}>
-                    {r.outstandingAmount === 0 ? '✓' : fmtAmt(r.outstandingAmount)}
+                <div className="text-right pr-2">
+                  <span className={`text-xs font-extrabold ${
+                    r.outstandingAmount > 0 ? 'text-rose-700' : 'text-emerald-600'
+                  }`}>
+                    {r.isManualSale && r.totalCost === 0 ? '—' : r.outstandingAmount === 0 ? '✓' : fmtAmt(r.outstandingAmount)}
                   </span>
                 </div>
 
                 {/* Status */}
-                <div className="col-span-1 flex justify-center">
+                <div className="flex justify-center">
                   <StatusBadge status={r.status} />
                 </div>
 
                 {/* Actions */}
-                <div className="col-span-1 flex items-center justify-center gap-1.5">
+                <div className="flex items-center justify-center gap-1.5">
                   <button onClick={() => setViewRecord(r)}
                     className="w-7 h-7 rounded-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white flex items-center justify-center transition-all" title="View details">
                     <Eye className="w-3 h-3" />
@@ -810,21 +974,12 @@ export default function FinanceClient({ initialRecords }: { initialRecords: Fina
                     </button>
                   )}
                   <button onClick={() => setEditRecord(r)}
-                    className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all" title="Edit invoice">
+                    className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all" title="Edit">
                     <Edit2 className="w-3 h-3" />
                   </button>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between flex-wrap gap-2">
-          <p className="text-[11px] text-gray-400">Showing {filtered.length} of {records.length} records</p>
-          <div className="flex items-center gap-4 text-[11px] font-bold">
-            <span className="text-gray-700">Collected: <span className="text-emerald-700">{fmtAmt(filtered.reduce((s, r) => s + r.paidAmount, 0))}</span></span>
-            <span className="text-gray-700">Outstanding: <span className="text-rose-700">{fmtAmt(filtered.reduce((s, r) => s + r.outstandingAmount, 0))}</span></span>
           </div>
         </div>
       </div>

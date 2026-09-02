@@ -8,6 +8,11 @@ export class CreateManualSaleDto {
   @MinLength(1)
   customerName!: string;
 
+  @ApiPropertyOptional({ description: 'Optional phone number', example: '+919876543210' })
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
   @ApiProperty({ enum: SaleCategory, description: 'Category of the sale', example: SaleCategory.XEROX })
   @IsEnum(SaleCategory)
   category!: SaleCategory;

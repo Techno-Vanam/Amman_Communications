@@ -30,6 +30,8 @@ interface TransactionItem {
   paymentMode: 'Credit Card' | 'Bank Transfer' | 'Wire Transfer' | 'Pending' | 'UPI / NetBanking';
   status: 'Paid' | 'Partial' | 'Pending';
   date: string; // YYYY-MM-DD
+  isPartialPaymentAllowed?: boolean;
+  minimumPartialFee?: number | null;
 }
 
 const INITIAL_TRANSACTIONS: TransactionItem[] = [
@@ -126,6 +128,8 @@ export default function PaymentsPage() {
             paymentMode: p.paymentMode || 'Pending',
             status: p.status || 'Pending',
             date: p.date || new Date().toISOString().split('T')[0],
+            isPartialPaymentAllowed: p.isPartialPaymentAllowed,
+            minimumPartialFee: p.minimumPartialFee,
           })));
           return;
         }
@@ -163,6 +167,7 @@ export default function PaymentsPage() {
 
   // Modals state
   const [selectedTxnForPayNow, setSelectedTxnForPayNow] = useState<TransactionItem | null>(null);
+  const [paymentType, setPaymentType] = useState<'FULL' | 'PARTIAL'>('FULL');
   const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   const [mounted, setMounted] = useState(false);
@@ -278,19 +283,26 @@ export default function PaymentsPage() {
     }
   };
 
-  const handlePayNowSubmit = (txn: TransactionItem) => {
+  const handlePayNowSubmit = (txn: TransactionItem & { amountToPay?: number }) => {
+    const amountPaid = txn.amountToPay || txn.pendingAmount || txn.totalAmount;
+    
     setTransactions(
-      transactions.map((t) =>
-        t.id === txn.id
-          ? {
-              ...t,
-              paidAmount: t.totalAmount,
-              pendingAmount: 0,
-              status: 'Paid',
-              paymentMode: t.paymentMode === 'Pending' ? 'Credit Card' : t.paymentMode
-            }
-          : t
-      )
+      transactions.map((t) => {
+        if (t.id === txn.id) {
+          const newPaidAmount = t.paidAmount + amountPaid;
+          const newPendingAmount = Math.max(0, t.totalAmount - newPaidAmount);
+          const newStatus = newPendingAmount === 0 ? 'Paid' : newPendingAmount < t.totalAmount ? 'Partial' : 'Pending';
+          
+          return {
+            ...t,
+            paidAmount: newPaidAmount,
+            pendingAmount: newPendingAmount,
+            status: newStatus,
+            paymentMode: t.paymentMode === 'Pending' ? 'Credit Card' : t.paymentMode
+          };
+        }
+        return t;
+      })
     );
     setSelectedTxnForPayNow(null);
     showToast('Payment Completed Successfully!', `Payment for ${txn.service} received.`, 'success', 'View Details', '/portal/payments', true);
@@ -882,6 +894,30 @@ export default function PaymentsPage() {
               </div>
             </div>
 
+            {selectedTxnForPayNow.isPartialPaymentAllowed && selectedTxnForPayNow.minimumPartialFee && selectedTxnForPayNow.pendingAmount > 0 && (
+              <div className="space-y-2 text-xs">
+                <label className="block font-bold text-gray-700 uppercase tracking-wider text-[10px]">
+                  Payment Option
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div 
+                    onClick={() => setPaymentType('FULL')}
+                    className={`p-3 border-2 rounded-xl flex flex-col gap-1 cursor-pointer transition-colors ${paymentType === 'FULL' ? 'border-[#0e2a47] bg-[#f0f7ff]' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                  >
+                    <span className={`font-bold ${paymentType === 'FULL' ? 'text-[#0e2a47]' : 'text-gray-700'}`}>Pay Full Amount</span>
+                    <span className="text-[11px] text-gray-500 font-medium">{formatCurrency(selectedTxnForPayNow.pendingAmount || selectedTxnForPayNow.totalAmount)}</span>
+                  </div>
+                  <div 
+                    onClick={() => setPaymentType('PARTIAL')}
+                    className={`p-3 border-2 rounded-xl flex flex-col gap-1 cursor-pointer transition-colors ${paymentType === 'PARTIAL' ? 'border-[#0e2a47] bg-[#f0f7ff]' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                  >
+                    <span className={`font-bold ${paymentType === 'PARTIAL' ? 'text-[#0e2a47]' : 'text-gray-700'}`}>Pay Advance Only</span>
+                    <span className="text-[11px] text-gray-500 font-medium">{formatCurrency(selectedTxnForPayNow.minimumPartialFee)} min.</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2 text-xs">
               <label className="block font-bold text-gray-700 uppercase tracking-wider text-[10px]">
                 Choose Payment Gateway
@@ -907,10 +943,20 @@ export default function PaymentsPage() {
                 Cancel
               </button>
               <button
-                onClick={() => handlePayNowSubmit(selectedTxnForPayNow)}
+                onClick={() => {
+                  const amt = paymentType === 'PARTIAL' && selectedTxnForPayNow.minimumPartialFee ? selectedTxnForPayNow.minimumPartialFee : selectedTxnForPayNow.pendingAmount || selectedTxnForPayNow.totalAmount;
+                  if (confirm(`Proceed to pay ${formatCurrency(amt)} via secure gateway?`)) {
+                    // Update paid amount in the mock handlePayNowSubmit or we pass it
+                    const txnToSubmit = {
+                      ...selectedTxnForPayNow,
+                      amountToPay: amt,
+                    };
+                    handlePayNowSubmit(txnToSubmit);
+                  }
+                }}
                 className="px-6 py-2.5 bg-[#0e2a47] hover:bg-[#153e68] text-white font-bold text-xs rounded-xl transition-all shadow-sm"
               >
-                Pay {formatCurrency(selectedTxnForPayNow.pendingAmount || selectedTxnForPayNow.totalAmount)} Now
+                Pay {paymentType === 'PARTIAL' && selectedTxnForPayNow.minimumPartialFee ? formatCurrency(selectedTxnForPayNow.minimumPartialFee) : formatCurrency(selectedTxnForPayNow.pendingAmount || selectedTxnForPayNow.totalAmount)} Now
               </button>
             </div>
           </div>

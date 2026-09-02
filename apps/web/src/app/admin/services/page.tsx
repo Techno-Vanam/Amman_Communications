@@ -18,6 +18,7 @@ import {
   Tag,
   FileText,
   DollarSign,
+  IndianRupee,
   ToggleLeft,
   ToggleRight,
   AlertCircle,
@@ -32,16 +33,27 @@ import {
 } from '@/app/admin/actions';
 
 function mapBackendService(s: any): Service {
+  // Category is encoded into description as "[Category] actual description"
+  let category = 'Broadband';
+  let description = s.description || '';
+  const catMatch = description.match(/^\[([^\]]+)\]\s*(.*)$/);
+  if (catMatch) {
+    category = catMatch[1];
+    description = catMatch[2];
+  }
+
   return {
     id: s.id,
     name: s.name,
-    category: s.category || 'Broadband',
+    category,
     requiredDocs: (s.requiredDocuments || []).map((d: any) => ({ name: d.name })),
     govtFee: Number(s.governmentFee || 0),
     officeCharge: Number(s.serviceFee || 0),
     estDays: parseInt(s.estimatedTime || '7', 10) || 7,
     status: s.status === 'ACTIVE' ? 'Active' : s.status === 'INACTIVE' ? 'Inactive' : 'Draft',
-    description: s.description || ''
+    description,
+    isPartialPaymentAllowed: !!s.isPartialPaymentAllowed,
+    minimumPartialFee: s.minimumPartialFee ? Number(s.minimumPartialFee) : null,
   };
 }
 
@@ -62,6 +74,8 @@ interface Service {
   estDays: number;
   status: ServiceStatus;
   description: string;
+  isPartialPaymentAllowed?: boolean;
+  minimumPartialFee?: number | null;
 }
 
 // ── Mock Data ─────────────────────────────────────────────────
@@ -80,7 +94,7 @@ const DEFAULT_DOCS = [
 // ── Status config ─────────────────────────────────────────────
 const STATUS_CFG: Record<ServiceStatus, { badge: string; icon: React.ReactNode; dot: string }> = {
   Active:   { badge: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: <CheckCircle className="w-3 h-3" />, dot: 'bg-emerald-500' },
-  Inactive: { badge: 'bg-gray-100 text-gray-600 border-gray-200',         icon: <XCircle className="w-3 h-3" />,    dot: 'bg-gray-400' },
+  Inactive: { badge: 'bg-rose-100 text-rose-700 border-rose-200',         icon: <XCircle className="w-3 h-3" />,    dot: 'bg-rose-400' },
   Draft:    { badge: 'bg-amber-100 text-amber-800 border-amber-200',      icon: <FileEdit className="w-3 h-3" />,   dot: 'bg-amber-500' },
 };
 
@@ -112,6 +126,8 @@ function ServiceModal({
     govtFee: service?.govtFee?.toString() ?? '0',
     officeCharge: service?.officeCharge?.toString() ?? '0',
     estDays: service?.estDays?.toString() ?? '7',
+    isPartialPaymentAllowed: service?.isPartialPaymentAllowed ?? false,
+    minimumPartialFee: service?.minimumPartialFee?.toString() ?? '',
     status: service?.status ?? 'Active' as ServiceStatus,
     selectedDocs: service?.requiredDocs.map(d => d.name) ?? [] as string[],
     customDoc: '',
@@ -124,6 +140,12 @@ function ServiceModal({
     if (isNaN(Number(form.govtFee)) || Number(form.govtFee) < 0) e.govtFee = 'Valid amount required';
     if (isNaN(Number(form.officeCharge)) || Number(form.officeCharge) < 0) e.officeCharge = 'Valid amount required';
     if (isNaN(Number(form.estDays)) || Number(form.estDays) < 1) e.estDays = 'Minimum 1 day';
+    if (form.isPartialPaymentAllowed) {
+      const minFee = Number(form.minimumPartialFee);
+      if (isNaN(minFee) || minFee <= 0) {
+        e.minimumPartialFee = 'Valid positive amount required';
+      }
+    }
     return e;
   }
 
@@ -154,6 +176,8 @@ function ServiceModal({
       govtFee: Number(form.govtFee),
       officeCharge: Number(form.officeCharge),
       estDays: Number(form.estDays),
+      isPartialPaymentAllowed: form.isPartialPaymentAllowed,
+      minimumPartialFee: form.isPartialPaymentAllowed ? Number(form.minimumPartialFee) : null,
       status: form.status,
       requiredDocs: form.selectedDocs.map(n => ({ name: n })),
     });
@@ -222,7 +246,7 @@ function ServiceModal({
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5">Govt. Fee (₹)</label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                 <input type="number" min="0" value={form.govtFee} onChange={e => setForm(p => ({ ...p, govtFee: e.target.value }))}
                   className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all" />
               </div>
@@ -231,7 +255,7 @@ function ServiceModal({
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5">Office Charge (₹)</label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                 <input type="number" min="0" value={form.officeCharge} onChange={e => setForm(p => ({ ...p, officeCharge: e.target.value }))}
                   className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all" />
               </div>
@@ -253,6 +277,36 @@ function ServiceModal({
             <span className="text-xs font-bold text-[#12372A]">Total Fee</span>
             <span className="text-base font-extrabold text-[#12372A]">₹{totalFee.toLocaleString('en-IN')}</span>
           </div>
+
+          {/* Payment Configuration */}
+          <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-bold text-gray-900">Allow Partial Payment</h4>
+                <p className="text-[10px] text-gray-500 mt-0.5">Let customers pay an advance amount instead of full fee upfront.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setForm(p => ({ ...p, isPartialPaymentAllowed: !p.isPartialPaymentAllowed }))}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${form.isPartialPaymentAllowed ? 'bg-[#12372A]' : 'bg-gray-300'}`}
+              >
+                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${form.isPartialPaymentAllowed ? 'translate-x-4' : 'translate-x-0'}`} />
+              </button>
+            </div>
+            
+            {form.isPartialPaymentAllowed && (
+              <div className="pt-2 border-t border-gray-200">
+                <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Minimum Advance Amount (₹)</label>
+                <div className="relative">
+                  <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
+                  <input type="number" min="1" value={form.minimumPartialFee} onChange={e => setForm(p => ({ ...p, minimumPartialFee: e.target.value }))}
+                    className="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-200 bg-white text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all" />
+                </div>
+                {errors.minimumPartialFee && <p className="text-[10px] text-rose-600 mt-1">{errors.minimumPartialFee}</p>}
+              </div>
+            )}
+          </div>
+
 
           {/* Required Docs */}
           <div>
@@ -435,14 +489,20 @@ export default function ServicesPage() {
   }), [services, search, filterStatus, filterCategory]);
 
   async function handleAdd(data: Partial<Service>) {
-    const statusMap = { 'Active': 'ACTIVE', 'Inactive': 'INACTIVE', 'Draft': 'DRAFT' };
+    const statusMap: Record<string, 'ACTIVE' | 'INACTIVE' | 'DRAFT'> = {
+      'Active': 'ACTIVE', 'Inactive': 'INACTIVE', 'Draft': 'DRAFT'
+    };
+    // Encode category into description since DB has no category column
+    const encodedDescription = `[${data.category || 'Broadband'}] ${data.description || ''}`;
     const res = await createAdminServiceAction({
       name: data.name ?? '',
-      description: data.description ?? '',
+      description: encodedDescription,
       governmentFee: Number(data.govtFee || 0),
       serviceFee: Number(data.officeCharge || 0),
       estimatedTime: `${data.estDays || 7} Days`,
-      status: statusMap[data.status || 'Active'] as any,
+      status: statusMap[data.status || 'Active'],
+      isPartialPaymentAllowed: data.isPartialPaymentAllowed ?? false,
+      minimumPartialFee: data.isPartialPaymentAllowed ? (data.minimumPartialFee ?? null) : null,
       requiredDocuments: (data.requiredDocs || []).map((d, i) => ({ name: d.name, displayOrder: i + 1, isRequired: true }))
     });
     if (res.error) {
@@ -454,14 +514,19 @@ export default function ServicesPage() {
 
   async function handleEdit(data: Partial<Service>) {
     if (!editService) return;
-    const statusMap = { 'Active': 'ACTIVE', 'Inactive': 'INACTIVE', 'Draft': 'DRAFT' };
+    const statusMap: Record<string, 'ACTIVE' | 'INACTIVE' | 'DRAFT'> = {
+      'Active': 'ACTIVE', 'Inactive': 'INACTIVE', 'Draft': 'DRAFT'
+    };
+    const encodedDescription = `[${data.category || editService.category}] ${data.description ?? editService.description}`;
     const res = await updateAdminServiceAction(editService.id, {
       name: data.name,
-      description: data.description,
+      description: encodedDescription,
       governmentFee: data.govtFee !== undefined ? Number(data.govtFee) : undefined,
       serviceFee: data.officeCharge !== undefined ? Number(data.officeCharge) : undefined,
       estimatedTime: data.estDays ? `${data.estDays} Days` : undefined,
-      status: data.status ? (statusMap[data.status] as any) : undefined,
+      status: data.status ? statusMap[data.status] : undefined,
+      isPartialPaymentAllowed: data.isPartialPaymentAllowed,
+      minimumPartialFee: data.isPartialPaymentAllowed ? (data.minimumPartialFee ?? null) : null,
       requiredDocuments: data.requiredDocs ? data.requiredDocs.map((d, i) => ({ name: d.name, displayOrder: i + 1, isRequired: true })) : undefined
     });
     if (res.error) {
@@ -502,10 +567,12 @@ export default function ServicesPage() {
   const fmtAmt = (n: number) => n === 0 ? '—' : `₹${n.toLocaleString('en-IN')}`;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
+    <div className="max-w-7xl mx-auto h-full flex flex-col pb-6 font-sans" suppressHydrationWarning>
 
-      {/* ── Page Header ── */}
-      <div className="flex justify-end">
+      {/* Top Section (Fixed) */}
+      <div className="shrink-0 space-y-4 lg:space-y-6">
+        {/* ── Page Header ── */}
+        <div className="flex justify-end">
         <button
           onClick={() => setShowAddModal(true)}
           className="flex items-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md self-start sm:self-auto"
@@ -580,11 +647,14 @@ export default function ServicesPage() {
           )}
         </div>
       </div>
+      </div>
 
-      {/* ── Services Table ── */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
-        {/* Header */}
-        <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
+      {/* ── Services Table (Scrollable) ── */}
+      <div className="mt-4 lg:mt-6 bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden flex flex-col flex-1 min-h-0">
+        <div className="overflow-x-auto w-full flex flex-col flex-1 min-h-0">
+          <div className="min-w-[900px] flex flex-col flex-1 min-h-0">
+            {/* Header */}
+            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest shrink-0 sticky top-0 z-10">
           <div className="col-span-3">Service Name</div>
           <div className="col-span-2">Required Docs</div>
           <div className="col-span-1 text-right">Govt. Fee</div>
@@ -596,7 +666,8 @@ export default function ServicesPage() {
         </div>
 
         {/* Rows */}
-        {filtered.length === 0 ? (
+        <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
+          {filtered.length === 0 ? (
           <div className="py-16 text-center">
             <Building2 className="w-10 h-10 text-gray-200 mx-auto mb-3" />
             <p className="text-sm font-bold text-gray-400">No services found</p>
@@ -683,13 +754,10 @@ export default function ServicesPage() {
             </div>
           </div>
         ))}
-
-        {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
-          <p className="text-[11px] text-gray-400">Showing {filtered.length} of {services.length} services</p>
-          <p className="text-[11px] text-gray-400">{counts.active} active · {counts.draft} drafts</p>
-        </div>
       </div>
+    </div>
+  </div>
+</div>
 
       {/* ── Modals ── */}
       {showAddModal && <ServiceModal mode="add" onClose={() => setShowAddModal(false)} onSave={handleAdd} />}

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AppointmentMode, AppointmentStatus, OnlineMeetingType } from '@prisma/client';
+import { AppointmentMode, AppointmentStatus, AppointmentType, OnlineMeetingType } from '@prisma/client';
 import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class CreateAppointmentDto {
@@ -54,6 +54,11 @@ export class CreateAppointmentDto {
   @IsOptional()
   @IsString()
   meetingLink?: string;
+
+  @ApiPropertyOptional({ description: 'Appointment type', enum: AppointmentType })
+  @IsOptional()
+  @IsEnum(AppointmentType)
+  appointmentType?: AppointmentType;
 
   @ApiPropertyOptional({ description: 'Initial appointment status', enum: AppointmentStatus, example: AppointmentStatus.CONFIRMED })
   @IsOptional()

@@ -4,7 +4,6 @@ import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto, UpdateExpenseDto } from './dto/expense.dto';
 
 
-import { ExpenseCategory } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -28,7 +27,7 @@ export class ExpensesController {
   findAll(
     @Query('skip') skip?: number,
     @Query('take') take?: number,
-    @Query('category') category?: ExpenseCategory,
+    @Query('category') category?: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('search') search?: string,
@@ -37,7 +36,7 @@ export class ExpensesController {
   }
 
   @Get('stats')
-  getStats(@Query('category') category?: ExpenseCategory) {
+  getStats(@Query('category') category?: string) {
     return this.expensesService.getStats(category);
   }
 

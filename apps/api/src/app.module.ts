@@ -15,18 +15,27 @@ import { CustomerProfileModule } from './customer-profile/customer-profile.modul
 import { ApplicationsModule } from './applications/applications.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { ExpensesModule } from './expenses/expenses.module';
+// Need to handle business profile and admin preferences which seem to be inside settings/
 import { BusinessProfileModule } from './settings/business-profile/business-profile.module';
+import { AdminPreferencesModule } from './settings/admin-preferences/admin-preferences.module';
 import { StorageModule } from './storage/storage.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { FinanceModule } from './finance/finance.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [
-        path.resolve(process.cwd(), '.env'),
-        path.resolve(process.cwd(), '../../.env'),
+        path.resolve(__dirname, '../.env.local'),
         path.resolve(__dirname, '../.env'),
       ],
     }),
@@ -43,9 +52,11 @@ import { FinanceModule } from './finance/finance.module';
     AppointmentsModule,
     ExpensesModule,
     BusinessProfileModule,
+    AdminPreferencesModule,
     StorageModule,
     NotificationsModule,
     FinanceModule,
+    MailModule,
   ],
 })
 export class AppModule {}

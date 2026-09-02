@@ -35,7 +35,8 @@ async function resolveServiceId(name: string): Promise<string | undefined> {
 
     if (res.ok) {
       const data = await res.json();
-      const list = Array.isArray(data) ? data : data.items || [];
+      // API wraps in { success, data } envelope
+      const list = Array.isArray(data) ? data : (data.data ?? data.items ?? []);
       const match = list.find((s: any) => s.name.toLowerCase() === name.toLowerCase());
       if (match) return match.id;
     }
@@ -89,30 +90,36 @@ export async function createAppointmentAction(formData: {
   email: string;
   phone: string;
   service: string;
+  serviceId?: string;
   date: string;
   time: string;
   mode: string;
+  onlineType?: string;
   notes?: string;
   status: string;
 }) {
   try {
     const authHeader = await getAuthHeader();
-    const serviceId = await resolveServiceId(formData.service);
+    // Use directly provided serviceId, or resolve by name as fallback
+    const resolvedServiceId = formData.serviceId || await resolveServiceId(formData.service);
 
     // Combine date and time to ISO Date string
     const dateTimeStr = `${formData.date}T${formData.time}:00`;
     const appointmentDate = new Date(dateTimeStr).toISOString();
 
+    const isOnline = formData.mode.toLowerCase() === 'online';
     const payload = {
       customerId: formData.customerId || undefined,
       customerName: formData.customer,
       customerEmail: formData.email,
       customerPhone: formData.phone,
-      serviceId: serviceId || undefined,
+      serviceId: resolvedServiceId || undefined,
       appointmentDate,
-      mode: formData.mode.toUpperCase(), // ONLINE, OFFLINE
+      mode: isOnline ? 'ONLINE' : 'OFFLINE',
+      appointmentType: isOnline ? 'ONLINE_CONSULTATION' : 'OFFICE_VISIT',
+      onlineType: isOnline ? formData.onlineType : undefined,
       notes: formData.notes || undefined,
-      status: formData.status.toUpperCase(), // CONFIRMED, PENDING, etc.
+      status: formData.status.toUpperCase(),
     };
 
     let res = await fetch(`${API_BASE_URL}/v1/admin/appointments`, {
@@ -174,6 +181,35 @@ export async function fetchCustomersForSelectAction() {
   }
 }
 
+export async function fetchServicesForSelectAction() {
+  try {
+    const authHeader = await getAuthHeader();
+
+    let res = await fetch(`${API_BASE_URL}/v1/admin/services`, {
+      headers: { ...authHeader },
+      cache: 'no-store',
+    });
+
+    if (res.status === 404) {
+      res = await fetch(`${API_BASE_URL}/api/v1/admin/services`, {
+        headers: { ...authHeader },
+        cache: 'no-store',
+      });
+    }
+
+    if (!res.ok) {
+      return { error: 'Failed to fetch services' };
+    }
+
+    const data = await res.json();
+    // API wraps responses in { success, data } envelope
+    const arr = Array.isArray(data) ? data : (data.data ?? data.items ?? []);
+    return { success: true, data: arr.map((s: any) => ({ id: s.id, name: s.name })) };
+  } catch (error: any) {
+    return { error: error.message || 'Network error' };
+  }
+}
+
 export async function updateAppointmentAction(
   id: string,
   formData: {
@@ -181,9 +217,11 @@ export async function updateAppointmentAction(
     email?: string;
     phone?: string;
     service?: string;
+    serviceId?: string;
     date?: string;
     time?: string;
     mode?: string;
+    onlineType?: string;
     notes?: string;
     status?: string;
   }
@@ -196,10 +234,15 @@ export async function updateAppointmentAction(
     if (formData.email) payload.customerEmail = formData.email;
     if (formData.phone) payload.customerPhone = formData.phone;
     if (formData.notes !== undefined) payload.notes = formData.notes;
-    if (formData.mode) payload.mode = formData.mode.toUpperCase();
+    if (formData.mode) {
+      const isOnline = formData.mode.toLowerCase() === 'online';
+      payload.mode = isOnline ? 'ONLINE' : 'OFFLINE';
+      payload.appointmentType = isOnline ? 'ONLINE_CONSULTATION' : 'OFFICE_VISIT';
+      payload.onlineType = isOnline && formData.onlineType ? formData.onlineType : null;
+    }
     if (formData.status) payload.status = formData.status.toUpperCase();
     if (formData.service) {
-      const serviceId = await resolveServiceId(formData.service);
+      const serviceId = formData.serviceId || await resolveServiceId(formData.service);
       if (serviceId) payload.serviceId = serviceId;
     }
     if (formData.date && formData.time) {

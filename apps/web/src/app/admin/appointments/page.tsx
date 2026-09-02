@@ -31,6 +31,7 @@ import {
   updateAppointmentStatusAction,
   deleteAppointmentAction,
   fetchCustomersForSelectAction,
+  fetchServicesForSelectAction,
 } from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -45,10 +46,12 @@ interface Appointment {
   email: string;
   phone: string;
   service: string;
+  serviceId?: string;
   date: string;
   time: string;
   mode: AppointmentMode;
   status: AppointmentStatus;
+  onlineType?: string;
   notes?: string;
 }
 
@@ -147,7 +150,9 @@ function ViewModal({ apt, onClose, onAdvance }: { apt: Appointment; onClose: () 
               { label: 'Service', value: apt.service, icon: <CalendarClock className="w-4 h-4 text-gray-400" /> },
               { label: 'Date', value: fmtDate(apt.date), icon: <Calendar className="w-4 h-4 text-gray-400" /> },
               { label: 'Time', value: fmtTime(apt.time), icon: <Clock className="w-4 h-4 text-gray-400" /> },
-              { label: 'Mode', value: apt.mode, icon: apt.mode === 'Online' ? <Video className="w-4 h-4 text-gray-400" /> : <MapPin className="w-4 h-4 text-gray-400" /> },
+              { label: 'Mode', value: apt.mode === 'Online' && apt.onlineType
+                ? `Online · ${{ MEETING: 'GMeet', VIDEO: 'Video Call', PHONE: 'Audio Call' }[apt.onlineType] ?? apt.onlineType}`
+                : apt.mode, icon: apt.mode === 'Online' ? <Video className="w-4 h-4 text-gray-400" /> : <MapPin className="w-4 h-4 text-gray-400" /> },
             ].map(row => (
               <div key={row.label} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
                 <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center shrink-0">{row.icon}</div>
@@ -194,24 +199,30 @@ function AppointmentModal({
   mode,
   appointment,
   customers,
+  services,
   onClose,
   onSave,
 }: {
   mode: 'add' | 'edit' | 'reschedule';
   appointment?: Appointment;
   customers: { id: string; name: string; email: string; phone: string }[];
+  services: { id: string; name: string }[];
   onClose: () => void;
   onSave: (data: Partial<Appointment> & { customerId?: string }) => void;
 }) {
+  const defaultServiceId = services.length > 0 ? services[0].id : '';
+  const defaultService = services.length > 0 ? services[0].name : '';
   const [form, setForm] = useState({
     customerId: mode === 'add' ? (customers[0]?.id ?? '') : '',
     customer: appointment?.customer ?? '',
     email: appointment?.email ?? '',
     phone: appointment?.phone ?? '',
-    service: appointment?.service ?? SERVICES[0],
+    serviceId: defaultServiceId,
+    service: appointment?.service ?? defaultService,
     date: appointment?.date ?? '',
     time: appointment?.time ?? TIME_SLOTS[0],
     mode: appointment?.mode ?? 'Online',
+    onlineType: appointment?.onlineType ?? 'MEETING',
     notes: appointment?.notes ?? '',
     status: appointment?.status ?? 'Confirmed',
   });
@@ -344,10 +355,13 @@ function AppointmentModal({
                 <div className="relative">
                   <select
                     value={form.service}
-                    onChange={e => setForm(p => ({ ...p, service: e.target.value }))}
+                    onChange={e => {
+                      const sel = services.find(s => s.name === e.target.value);
+                      setForm(p => ({ ...p, service: e.target.value, serviceId: sel?.id ?? '' }));
+                    }}
                     className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all appearance-none"
                   >
-                    {SERVICES.map(s => <option key={s}>{s}</option>)}
+                    {services.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
                   </select>
                   <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
@@ -369,6 +383,29 @@ function AppointmentModal({
                     </button>
                   ))}
                 </div>
+                {form.mode === 'Online' && (
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {[
+                      { value: 'MEETING', label: 'GMeet', icon: <Video className="w-3.5 h-3.5" /> },
+                      { value: 'VIDEO', label: 'Video Call', icon: <Video className="w-3.5 h-3.5" /> },
+                      { value: 'PHONE', label: 'Audio Call', icon: <Phone className="w-3.5 h-3.5" /> },
+                    ].map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setForm(p => ({ ...p, onlineType: opt.value }))}
+                        className={`flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl border text-[10px] font-bold transition-all ${
+                          form.onlineType === opt.value
+                            ? 'bg-blue-600 border-blue-600 text-white'
+                            : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        {opt.icon}
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -482,6 +519,7 @@ export default function AppointmentsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [customers, setCustomers] = useState<{ id: string; name: string; email: string; phone: string }[]>([]);
+  const [services, setServices] = useState<{ id: string; name: string }[]>([]);
 
   const loadAppointments = async () => {
     setIsLoading(true);
@@ -512,6 +550,7 @@ export default function AppointmentsPage() {
           date,
           time,
           mode: a.mode === 'ONLINE' ? 'Online' : 'Offline',
+          onlineType: a.onlineType ?? undefined,
           status: DB_TO_UI_STATUS[a.status] || 'Confirmed',
           notes: a.notes || '',
         };
@@ -528,6 +567,9 @@ export default function AppointmentsPage() {
   useEffect(() => {
     fetchCustomersForSelectAction().then(res => {
       if (res.success && res.data) setCustomers(res.data);
+    });
+    fetchServicesForSelectAction().then(res => {
+      if (res.success && res.data) setServices(res.data);
     });
   }, []);
 
@@ -551,10 +593,12 @@ export default function AppointmentsPage() {
       customer: data.customer ?? '',
       email: data.email ?? '',
       phone: data.phone ?? '',
-      service: data.service ?? 'Technical Onsite Survey',
+      service: data.service ?? (services.length > 0 ? services[0].name : ''),
+      serviceId: data.serviceId || undefined,
       date: data.date ?? '',
       time: data.time ?? '09:00',
       mode: data.mode ?? 'Online',
+      onlineType: data.mode === 'Online' ? data.onlineType : undefined,
       notes: data.notes,
       status: data.status ?? 'Confirmed',
     });
@@ -574,9 +618,11 @@ export default function AppointmentsPage() {
       email: data.email,
       phone: data.phone,
       service: data.service,
+      serviceId: data.serviceId,
       date: data.date,
       time: data.time,
       mode: data.mode,
+      onlineType: data.onlineType,
       notes: data.notes,
       status: data.status,
     });
@@ -745,7 +791,9 @@ export default function AppointmentsPage() {
                   <div className="col-span-1 flex justify-center">
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border ${a.mode === 'Online' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-orange-50 text-orange-700 border-orange-100'}`}>
                       {a.mode === 'Online' ? <Video className="w-2.5 h-2.5" /> : <MapPin className="w-2.5 h-2.5" />}
-                      {a.mode}
+                      {a.mode === 'Online' && a.onlineType
+                        ? ({ MEETING: 'GMeet', VIDEO: 'Video Call', PHONE: 'Audio Call' } as Record<string,string>)[a.onlineType] ?? a.mode
+                        : a.mode}
                     </span>
                   </div>
 
@@ -821,16 +869,16 @@ export default function AppointmentsPage() {
 
       {/* ── Modals ── */}
       {showAddModal && (
-        <AppointmentModal mode="add" customers={customers} onClose={() => setShowAddModal(false)} onSave={handleAdd} />
+        <AppointmentModal mode="add" customers={customers} services={services} onClose={() => setShowAddModal(false)} onSave={handleAdd} />
       )}
       {viewApt && (
         <ViewModal apt={viewApt} onClose={() => setViewApt(null)} onAdvance={() => handleAdvance(viewApt)} />
       )}
       {editApt && (
-        <AppointmentModal mode="edit" appointment={editApt} customers={customers} onClose={() => setEditApt(null)} onSave={handleEdit} />
+        <AppointmentModal mode="edit" appointment={editApt} customers={customers} services={services} onClose={() => setEditApt(null)} onSave={handleEdit} />
       )}
       {rescheduleApt && (
-        <AppointmentModal mode="reschedule" appointment={rescheduleApt} customers={customers} onClose={() => setRescheduleApt(null)} onSave={handleReschedule} />
+        <AppointmentModal mode="reschedule" appointment={rescheduleApt} customers={customers} services={services} onClose={() => setRescheduleApt(null)} onSave={handleReschedule} />
       )}
     </div>
   );

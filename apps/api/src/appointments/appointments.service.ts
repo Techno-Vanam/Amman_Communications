@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { AppointmentMode, AppointmentStatus, Prisma } from '@prisma/client';
+import { AppointmentMode, AppointmentStatus, AppointmentType, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { RescheduleAppointmentDto } from './dto/reschedule-appointment.dto';
@@ -194,16 +194,34 @@ export class AppointmentsService {
       }
     }
 
+    // Generate appointment number
+    const year = new Date().getFullYear();
+    const counter = await this.prisma.appointmentCounter.upsert({
+      where: { year },
+      update: { lastNumber: { increment: 1 } },
+      create: { year, lastNumber: 1 },
+    });
+    const appointmentNumber = `APT-${year}-${String(counter.lastNumber).padStart(6, '0')}`;
+
+    // Get default office
+    const defaultOffice = await this.prisma.office.findFirst({
+      where: { isActive: true },
+    });
+
     const appointment = await this.prisma.appointment.create({
       data: {
+        appointmentNumber,
         customerName: dto.customerName.trim(),
         customerEmail: dto.customerEmail.toLowerCase().trim(),
+        email: dto.customerEmail.toLowerCase().trim(),
         customerPhone: dto.customerPhone.trim(),
         customerId: dto.customerId,
         serviceId: dto.serviceId,
+        officeId: defaultOffice?.id,
         appointmentDate,
         durationMinutes: dto.durationMinutes ?? 30,
         mode: dto.mode,
+        appointmentType: dto.appointmentType ?? (dto.mode === AppointmentMode.ONLINE ? AppointmentType.ONLINE_CONSULTATION : AppointmentType.OFFICE_VISIT),
         onlineType: dto.onlineType,
         meetingLink: dto.meetingLink?.trim(),
         status: dto.status ?? AppointmentStatus.CONFIRMED,
@@ -234,6 +252,11 @@ export class AppointmentsService {
       ...(dto.appointmentDate !== undefined && { appointmentDate: new Date(dto.appointmentDate) }),
       ...(dto.durationMinutes !== undefined && { durationMinutes: dto.durationMinutes }),
       ...(dto.mode !== undefined && { mode: dto.mode }),
+      ...(dto.appointmentType !== undefined
+        ? { appointmentType: dto.appointmentType }
+        : dto.mode !== undefined
+          ? { appointmentType: dto.mode === AppointmentMode.ONLINE ? AppointmentType.ONLINE_CONSULTATION : AppointmentType.OFFICE_VISIT }
+          : {}),
       ...(dto.onlineType !== undefined && { onlineType: dto.onlineType }),
       ...(dto.meetingLink !== undefined && { meetingLink: dto.meetingLink }),
       ...(dto.status !== undefined && { status: dto.status }),

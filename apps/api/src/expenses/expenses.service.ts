@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExpenseDto, UpdateExpenseDto } from './dto/expense.dto';
-import { ExpenseCategory } from '@prisma/client';
+
 
 @Injectable()
 export class ExpensesService {
@@ -20,7 +20,7 @@ export class ExpensesService {
   async findAll(params: {
     skip?: number;
     take?: number;
-    category?: ExpenseCategory;
+    category?: string;
     startDate?: string;
     endDate?: string;
     search?: string;
@@ -56,7 +56,7 @@ export class ExpensesService {
     return { data: expenses, total, page: skip / take + 1, limit: take };
   }
 
-  async getStats(category?: ExpenseCategory) {
+  async getStats(category?: string) {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);

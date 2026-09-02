@@ -19,6 +19,7 @@ import {
   CheckCircle,
   Clock,
   UserCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import {
   fetchCustomersAction,
@@ -47,7 +48,7 @@ type FilterStatus = 'All' | 'Active' | 'Inactive' | 'Pending';
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     Active: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    Inactive: 'bg-gray-100 text-gray-600 border-gray-200',
+    Inactive: 'bg-rose-100 text-rose-700 border-rose-200',
     Pending: 'bg-amber-100 text-amber-800 border-amber-200',
   };
   const icons: Record<string, React.ReactNode> = {
@@ -73,12 +74,12 @@ function CustomerModal({
   mode: 'add' | 'edit';
   customer?: Customer;
   onClose: () => void;
-  onSave: (data: Partial<Customer>) => void;
+  onSave: (data: Partial<Customer>) => Promise<{ success: boolean; error?: string }> | void;
 }) {
   const [form, setForm] = useState({
     name: customer?.name ?? '',
     email: customer?.email ?? '',
-    phone: customer?.phone ?? '',
+    phone: customer?.phone ?? '+91 ',
     password: '',
     status: customer?.status ?? 'Active',
   });
@@ -88,18 +89,30 @@ function CustomerModal({
   function validate() {
     const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = 'Name is required';
-    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Valid email is required';
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Valid email is required';
     if (!form.phone.trim()) e.phone = 'Phone is required';
     if (mode === 'add' && form.password.length < 6) e.password = 'Password must be at least 6 characters';
     return e;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
-    onSave(form);
-    onClose();
+    
+    setIsSubmitting(true);
+    setSubmitError(null);
+    const res = await onSave(form);
+    setIsSubmitting(false);
+    
+    if (res && res.success === false) {
+      setSubmitError(res.error || 'Failed to save changes.');
+    } else {
+      onClose();
+    }
   }
 
   return (
@@ -125,9 +138,18 @@ function CustomerModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          {submitError && (
+            <div className="bg-rose-50 text-rose-600 px-4 py-3 rounded-xl text-xs font-bold flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {submitError}
+            </div>
+          )}
+
           {/* Name */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5">Full Name</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">
+              Full Name <span className="text-rose-500">*</span>
+            </label>
             <input
               type="text"
               placeholder="e.g. Ahmad Hassan"
@@ -140,13 +162,16 @@ function CustomerModal({
 
           {/* Email */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5">Email Address</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">
+              Email Address <span className="text-gray-400 font-normal">(Optional)</span>
+            </label>
             <div className="relative">
               <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="email"
                 placeholder="email@example.com"
                 value={form.email}
+                autoComplete="off"
                 onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all"
               />
@@ -156,7 +181,9 @@ function CustomerModal({
 
           {/* Phone */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5">Phone Number</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">
+              Phone Number <span className="text-rose-500">*</span>
+            </label>
             <div className="relative">
               <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -173,12 +200,15 @@ function CustomerModal({
           {/* Password (only on add) */}
           {mode === 'add' && (
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Password</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                Password <span className="text-rose-500">*</span>
+              </label>
               <div className="relative">
                 <input
                   type={showPass ? 'text' : 'password'}
                   placeholder="Min. 6 characters"
                   value={form.password}
+                  autoComplete="new-password"
                   onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
                   className="w-full px-4 pr-11 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all"
                 />
@@ -201,7 +231,6 @@ function CustomerModal({
               >
                 <option>Active</option>
                 <option>Inactive</option>
-                <option>Pending</option>
               </select>
               <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
@@ -218,9 +247,10 @@ function CustomerModal({
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 rounded-full bg-[#12372A] text-white text-xs font-bold hover:bg-[#1a4a38] transition-colors shadow-md"
+              disabled={isSubmitting}
+              className="flex-1 py-2.5 rounded-full bg-[#12372A] text-white text-xs font-bold hover:bg-[#1a4a38] transition-colors shadow-md disabled:opacity-50"
             >
-              {mode === 'add' ? 'Add Customer' : 'Save Changes'}
+              {isSubmitting ? 'Saving...' : (mode === 'add' ? 'Add Customer' : 'Save Changes')}
             </button>
           </div>
         </form>
@@ -271,7 +301,7 @@ export default function CustomersPage() {
   const loadCustomers = async () => {
     setIsLoading(true);
     setErrorMsg(null);
-    const res = await fetchCustomersAction(search, filterStatus);
+    const res = await fetchCustomersAction();
     if (res.error) {
       setErrorMsg(res.error);
       setCustomers([]);
@@ -281,7 +311,7 @@ export default function CustomersPage() {
         id: c.id,
         name: c.name,
         email: c.email,
-        phone: c.phone || '—',
+        phone: c.phone || null,
         applications: c._count?.applications ?? 0,
         pending: c._count?.documents ?? 0,
         balance: '₹0',
@@ -299,36 +329,43 @@ export default function CustomersPage() {
 
   useEffect(() => {
     loadCustomers();
-  }, [search, filterStatus]);
+  }, []);
 
   async function handleAdd(data: Partial<Customer>) {
     setErrorMsg(null);
+    const rawPhone = data.phone?.trim().replace(/^\+91\s*$/, '') ?? '';
+    const finalEmail = data.email?.trim() || undefined;
     const res = await createCustomerAction({
       name: data.name ?? '',
-      email: data.email ?? '',
-      phone: data.phone ?? '',
+      email: finalEmail as any,
+      phone: rawPhone || undefined,
+      password: data.password ?? '',
       status: data.status ?? 'Active',
     });
     if (res.error) {
-      setErrorMsg(res.error);
+      return { success: false, error: res.error };
     } else {
       loadCustomers();
+      return { success: true };
     }
   }
 
   async function handleEdit(data: Partial<Customer>) {
     if (!editCustomer) return;
     setErrorMsg(null);
+    const rawPhone = data.phone?.trim().replace(/^\+91\s*$/, '') ?? '';
+    const finalEmail = data.email?.trim() || undefined;
     const res = await updateCustomerAction(editCustomer.id, {
       name: data.name,
-      email: data.email,
-      phone: data.phone,
+      email: finalEmail as any,
+      phone: rawPhone || undefined,
       status: data.status,
     });
     if (res.error) {
-      setErrorMsg(res.error);
+      return { success: false, error: res.error };
     } else {
       loadCustomers();
+      return { success: true };
     }
   }
 
@@ -342,6 +379,16 @@ export default function CustomersPage() {
     }
   }
 
+  const filtered = useMemo(() => customers.filter(c => {
+    const q = search.toLowerCase();
+    const matchSearch = (c.name || '').toLowerCase().includes(q) || 
+                        (c.email || '').toLowerCase().includes(q) || 
+                        (c.phone || '').toLowerCase().includes(q) || 
+                        (c.id || '').toLowerCase().includes(q);
+    const matchFilter = filterStatus === 'All' || c.status === filterStatus;
+    return matchSearch && matchFilter;
+  }), [customers, search, filterStatus]);
+
   const statusCounts = {
     All: customers.length,
     Active: customers.filter(c => c.status === 'Active').length,
@@ -350,11 +397,24 @@ export default function CustomersPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
+    <div className="max-w-7xl mx-auto h-full flex flex-col pb-6 font-sans" suppressHydrationWarning>
 
+      {/* Top Section (Fixed) */}
+      <div className="shrink-0 space-y-4 lg:space-y-6">
+        
+        {/* ── Page Header ── */}
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowAddModal(true)}
+            suppressHydrationWarning
+            className="flex items-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md"
+          >
+            <Plus className="w-4 h-4 text-[#a8d5b9]" />
+            <span>Add New Customer</span>
+          </button>
+        </div>
 
-
-      {/* ── Stats Summary Row ── */}
+        {/* ── Stats Summary Row ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {(['All', 'Active', 'Inactive', 'Pending'] as FilterStatus[]).map(s => (
           <div
@@ -417,24 +477,15 @@ export default function CustomersPage() {
             </div>
           )}
         </div>
-
-        {/* New Customer Button */}
-        <button
-          onClick={() => setShowAddModal(true)}
-          suppressHydrationWarning
-          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md shrink-0"
-        >
-          <Plus className="w-4 h-4 text-[#a8d5b9]" />
-          New Customer
-        </button>
+      </div>
       </div>
 
       {/* ── Customers Table ── */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
-        <div className="overflow-x-auto w-full">
-          <div className="min-w-[680px]">
-            {/* Table Header */}
-            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
+      <div className="mt-4 lg:mt-6 bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden flex flex-col flex-1 min-h-0">
+        <div className="overflow-x-auto w-full flex flex-col flex-1 min-h-0">
+          <div className="min-w-[680px] flex flex-col flex-1 min-h-0">
+            {/* Table Header — sticky */}
+            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest shrink-0 sticky top-0 z-10">
               <div className="col-span-3">Customer</div>
               <div className="col-span-2">Phone</div>
               <div className="col-span-2 text-center">Applications</div>
@@ -443,88 +494,86 @@ export default function CustomersPage() {
               <div className="col-span-2 text-center">Actions</div>
             </div>
 
-            {/* Rows */}
-            {customers.length === 0 ? (
-              <div className="py-16 text-center">
-                <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                <p className="text-sm font-bold text-gray-400">No customers found</p>
-                <p className="text-xs text-gray-300 mt-1">Try changing your search or filter</p>
-              </div>
-            ) : (
-              customers.map((c, idx) => (
-                <div
-                  key={c.id}
-                  className={`grid grid-cols-12 px-5 py-3.5 items-center transition-colors hover:bg-gray-50/80 ${idx !== customers.length - 1 ? 'border-b border-gray-100' : ''}`}
-                >
-                  {/* Name + Email */}
-                  <div className="col-span-3 flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
-                      {c.name.charAt(0)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-gray-900 truncate">{c.name}</p>
-                      <p className="text-[10px] text-gray-400 truncate">{c.email}</p>
-                    </div>
-                  </div>
-
-                  {/* Phone */}
-                  <div className="col-span-2">
-                    <p className="text-xs text-gray-600 font-medium truncate">{c.phone}</p>
-                  </div>
-
-                  {/* Applications */}
-                  <div className="col-span-2 text-center">
-                    <div className="inline-flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-[#12372A]" />
-                      <span className="text-xs font-bold text-gray-800">{c.applications}</span>
-                    </div>
-                  </div>
-
-                  {/* Pending Balance */}
-                  <div className="col-span-2 text-center">
-                    <div className="inline-flex items-center gap-1.5">
-                      <Wallet className="w-3.5 h-3.5 text-amber-600" />
-                      <span className={`text-xs font-bold ${c.balance === '₹0' ? 'text-gray-400' : 'text-amber-700'}`}>{c.balance}</span>
-                    </div>
-                  </div>
-
-                  {/* Status */}
-                  <div className="col-span-1 flex justify-center">
-                    <StatusBadge status={c.status} />
-                  </div>
-
-                  {/* Actions */}
-                  <div className="col-span-2 flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => setEditCustomer(c)}
-                      suppressHydrationWarning
-                      className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all group"
-                      title="Edit"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setDeleteCustomer(c)}
-                      suppressHydrationWarning
-                      className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+            {/* Rows — scrollable */}
+            <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
+              {filtered.length === 0 ? (
+                <div className="py-16 text-center">
+                  <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                  <p className="text-sm font-bold text-gray-400">No customers found</p>
+                  <p className="text-xs text-gray-300 mt-1">Try changing your search or filter</p>
                 </div>
-              ))
-            )}
+              ) : (
+                filtered.map((c, idx) => (
+                  <div
+                    key={c.id}
+                    className={`grid grid-cols-12 px-5 py-3.5 items-center transition-colors hover:bg-gray-50/80 ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}
+                  >
+                    {/* Name + Email */}
+                    <div className="col-span-3 flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
+                        {c.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-gray-900 truncate">{c.name}</p>
+                        <p className="text-[10px] text-gray-400 truncate">{c.email}</p>
+                      </div>
+                    </div>
+
+                    {/* Phone */}
+                    <div className="col-span-2">
+                      <p className="text-xs text-gray-600 font-medium truncate">
+                        {(() => { const p = (c.phone || '').replace(/^\+91\s*$/, '').trim(); return p ? (p.startsWith('+') ? p : `+91 ${p}`) : '-'; })()}
+                      </p>
+                    </div>
+
+                    {/* Applications */}
+                    <div className="col-span-2 text-center">
+                      <div className="inline-flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5 text-[#12372A]" />
+                        <span className="text-xs font-bold text-gray-800">{c.applications}</span>
+                      </div>
+                    </div>
+
+                    {/* Pending Balance */}
+                    <div className="col-span-2 text-center">
+                      <div className="inline-flex items-center gap-1.5">
+                        <Wallet className="w-3.5 h-3.5 text-amber-600" />
+                        <span className={`text-xs font-bold ${c.balance === '₹0' ? 'text-gray-400' : 'text-amber-700'}`}>{c.balance}</span>
+                      </div>
+                    </div>
+
+                    {/* Status */}
+                    <div className="col-span-1 flex justify-center">
+                      <StatusBadge status={c.status} />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="col-span-2 flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => setEditCustomer(c)}
+                        suppressHydrationWarning
+                        className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all group"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteCustomer(c)}
+                        suppressHydrationWarning
+                        className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-[11px] text-gray-400 font-medium">
-            Showing {customers.length} of {customers.length} customers
-          </p>
-          <p className="text-[11px] text-gray-400">Last updated · Just now</p>
-        </div>
+
       </div>
 
       {/* ── Modals ── */}

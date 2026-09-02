@@ -1,5 +1,5 @@
 import { IsString, IsEnum, IsNumber, IsOptional, IsDateString, IsPositive } from 'class-validator';
-import { ExpenseCategory, PaymentMethod } from '@prisma/client';
+import { PaymentMethod } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -13,9 +13,9 @@ export class CreateExpenseDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ enum: ExpenseCategory, example: ExpenseCategory.OFFICE })
-  @IsEnum(ExpenseCategory)
-  category!: ExpenseCategory;
+  @ApiProperty({ example: 'Operations' })
+  @IsString()
+  category!: string;
 
   @ApiProperty({ example: 250.50 })
   @IsNumber()
@@ -53,10 +53,10 @@ export class UpdateExpenseDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ enum: ExpenseCategory, example: ExpenseCategory.OFFICE, required: false })
+  @ApiProperty({ example: 'Operations', required: false })
   @IsOptional()
-  @IsEnum(ExpenseCategory)
-  category?: ExpenseCategory;
+  @IsString()
+  category?: string;
 
   @ApiProperty({ example: 300.00, required: false })
   @IsOptional()
