@@ -524,7 +524,7 @@ export default function AppointmentsPage() {
   const loadAppointments = async () => {
     setIsLoading(true);
     setErrorMsg(null);
-    const res = await fetchAppointmentsAction(search, filterStatus);
+    const res = await fetchAppointmentsAction(search, 'All');
     if (res.error) {
       setErrorMsg(res.error);
       setAppointments([]);
@@ -562,7 +562,7 @@ export default function AppointmentsPage() {
 
   useEffect(() => {
     loadAppointments();
-  }, [search, filterStatus]);
+  }, [search]);
 
   useEffect(() => {
     fetchCustomersForSelectAction().then(res => {
@@ -674,15 +674,15 @@ export default function AppointmentsPage() {
 
 
       {/* ── Status Summary Cards ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {statusList.filter(s => s !== 'All').map(s => {
           return (
             <div
               key={s}
-              className="rounded-2xl border p-3 text-left bg-white border-gray-100"
+              className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-2xs hover:shadow-md transition-shadow"
             >
-              <p className="text-xl font-extrabold text-[#0e2a47]">{counts[s]}</p>
-              <p className="text-[10px] font-semibold mt-0.5 text-gray-500 leading-tight truncate">{s}</p>
+              <p className="text-2xl sm:text-3xl font-extrabold text-[#0e2a47]">{counts[s]}</p>
+              <p className="text-xs font-semibold mt-1 text-gray-500 leading-tight truncate">{s}</p>
             </div>
           );
         })}
@@ -690,7 +690,7 @@ export default function AppointmentsPage() {
 
       {/* ── Search & Filter ── */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
-        <div className="relative w-full sm:max-w-sm mr-auto">
+        <div className="relative w-full flex-1 mr-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -858,13 +858,7 @@ export default function AppointmentsPage() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
-          <p className="text-[11px] text-gray-400 font-medium">
-            Showing {filtered.length} of {appointments.length} appointments
-          </p>
-          <p className="text-[11px] text-gray-400">Reschedule only available for Confirmed &amp; Pending</p>
-        </div>
+
       </div>
 
       {/* ── Modals ── */}

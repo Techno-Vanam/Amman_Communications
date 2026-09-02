@@ -11,28 +11,11 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   'http://localhost:3003';
 
+
 async function getAuthHeader(): Promise<Record<string, string>> {
   const cookieStore = await cookies();
   const token = cookieStore.get('access_token')?.value;
   return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-async function authenticatedFetch(endpoint: string, options: RequestInit = {}) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
-
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
-  };
-
-  const res = await fetch(`${API_BASE_URL}/api/v1${endpoint}`, {
-    ...options,
-    headers,
-  });
-
-  return res;
 }
 
 export async function fetchAdminDashboardStatsAction() {
@@ -159,6 +142,24 @@ export async function fetchAdminDashboardStatsAction() {
   }
 }
 
+async function authenticatedFetch(endpoint: string, options: RequestInit = {}) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('access_token')?.value;
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
+  };
+
+  const res = await fetch(`${API_BASE_URL}/api/v1${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  return res;
+}
+
 export async function fetchAdminServicesAction() {
   try {
     const res = await authenticatedFetch('/admin/services');
@@ -177,8 +178,6 @@ export async function createAdminServiceAction(dto: {
   governmentFee: number;
   serviceFee: number;
   estimatedTime?: string;
-  isPartialPaymentAllowed?: boolean;
-  minimumPartialFee?: number | null;
   status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
   requiredDocuments?: Array<{ name: string; isRequired?: boolean; displayOrder?: number }>;
 }) {
@@ -208,8 +207,6 @@ export async function updateAdminServiceAction(id: string, dto: {
   governmentFee?: number;
   serviceFee?: number;
   estimatedTime?: string;
-  isPartialPaymentAllowed?: boolean;
-  minimumPartialFee?: number | null;
   status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE';
   requiredDocuments?: Array<{ id?: string; name: string; isRequired?: boolean; displayOrder?: number }>;
 }) {
