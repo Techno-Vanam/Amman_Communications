@@ -1,82 +1,66 @@
 import { Body, Controller, Get, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 import type { Request, Response } from 'express';
-import { ApiOperation, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength, Length, Matches } from 'class-validator';
 import { AuthService } from './auth.service';
 import { PasswordResetService } from './password-reset.service';
 
-class LoginDto {
-  @ApiProperty({ description: 'Account email address', example: 'admin@test.com' })
+export class LoginDto {
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ description: 'Account password', example: 'password123' })
   @IsString()
-  @MinLength(1)
+  @IsNotEmpty()
   password!: string;
 }
 
-class RegisterDto {
-  @ApiProperty({ description: 'Full name of the user', example: 'Test Customer' })
+export class RegisterDto {
   @IsString()
-  @MinLength(2)
+  @IsNotEmpty()
   name!: string;
 
-  @ApiProperty({ description: 'Account email address', example: 'customer@test.com' })
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ description: 'Account password', example: 'password123' })
   @IsString()
-  @MinLength(8)
+  @MinLength(6)
   password!: string;
 }
 
-class ForgotPasswordDto {
-  @ApiProperty({ description: 'Email address to send reset code to', example: 'user@example.com' })
+export class ForgotPasswordDto {
   @IsEmail()
   email!: string;
 }
 
-class VerifyResetOtpDto {
-  @ApiProperty({ description: 'Email address associated with the reset request', example: 'user@example.com' })
+export class VerifyResetOtpDto {
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ description: '6-digit verification code', example: '123456' })
   @IsString()
-  @Length(6, 6, { message: 'OTP must be exactly 6 digits' })
-  @Matches(/^\d{6}$/, { message: 'OTP must contain only digits' })
+  @IsNotEmpty()
   otp!: string;
 }
 
-class ResetPasswordDto {
-  @ApiProperty({ description: 'Email address associated with the reset request', example: 'user@example.com' })
+export class ResetPasswordDto {
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ description: 'Reset token received after OTP verification' })
   @IsString()
+  @IsNotEmpty()
   token!: string;
 
-  @ApiProperty({ description: 'New password (min 8 chars, uppercase, lowercase, number, special char)', example: 'NewPass@123' })
   @IsString()
   @MinLength(8)
   newPassword!: string;
 }
 
-class ResendOtpDto {
-  @ApiProperty({ description: 'Email address to resend the reset code to', example: 'user@example.com' })
+export class ResendOtpDto {
   @IsEmail()
   email!: string;
 }
 
 @ApiTags('Auth')
-<<<<<<< HEAD
-@Controller('auth')
-=======
-@Controller(['v1/auth', 'api/v1/auth', 'auth'])
->>>>>>> origin/backend-merge
+@Controller(['auth', 'v1/auth', 'api/v1/auth'])
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
@@ -125,7 +109,6 @@ export class AuthController {
     return { accessToken, user };
   }
 
-<<<<<<< HEAD
   // ─── Password Reset Endpoints ───────────────────────────────────
 
   @Post('forgot-password')
@@ -178,7 +161,8 @@ export class AuthController {
   async resendResetOtp(@Body() dto: ResendOtpDto) {
     const result = await this.passwordReset.resendOTP(dto.email);
     return { success: result.success, message: result.message };
-=======
+  }
+
   @Get('me')
   @ApiOperation({ summary: 'Get Current Authenticated User' })
   async me(@Req() request: Request) {
@@ -212,7 +196,5 @@ export class AuthController {
     await this.auth.logout(this.getRefreshToken(request));
     this.clearRefreshCookie(response);
     return { success: true };
->>>>>>> origin/backend-merge
   }
 }
-

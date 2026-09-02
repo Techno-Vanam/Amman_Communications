@@ -56,6 +56,7 @@ export async function loginAction(formData: FormData) {
     return {
       success: true,
       user,
+      accessToken,
       redirectTo: user.role === 'ADMIN' ? '/admin' : '/portal/dashboard',
     };
   } catch (error) {

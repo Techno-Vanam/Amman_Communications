@@ -120,23 +120,23 @@ export async function fetchExpenseStatsAction() {
 }
 
 export async function createExpenseAction(formData: {
-  title: string;
-  category: string;
+  title?: string;
+  category?: string;
   amount: number;
   description: string;
   date: string;
-  paymentMethod: string;
+  paymentMethod?: string;
   notes?: string;
 }) {
   try {
     const authHeader = await getAuthHeader();
     const payload = {
-      title: formData.title,
+      title: formData.title || formData.description || 'Expense',
       description: formData.description,
       category: formData.category || 'Miscellaneous',
       amount: formData.amount,
       expenseDate: new Date(formData.date).toISOString(),
-      paymentMethod: formData.paymentMethod,
+      paymentMethod: formData.paymentMethod || 'OTHER',
       notes: formData.notes || '',
     };
 

@@ -2,10 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { loginAction } from './actions';
-<<<<<<< HEAD
-=======
 import { useAuth } from '@/lib/auth-context';
->>>>>>> origin/backend-merge
 import Link from 'next/link';
 
 export default function LoginForm() {
@@ -26,7 +23,7 @@ export default function LoginForm() {
       if (result?.error) {
         setError(result.error);
       } else if (result?.success && result.redirectTo) {
-<<<<<<< HEAD
+        if (result.accessToken && result.user) setSession(result.accessToken, result.user);
         if (emailVal) {
           try {
             localStorage.setItem('user_email', emailVal);
@@ -44,9 +41,6 @@ export default function LoginForm() {
             console.error('LocalStorage save error:', e);
           }
         }
-=======
-        if (result.accessToken && result.user) setSession(result.accessToken, result.user);
->>>>>>> origin/backend-merge
         window.location.href = result.redirectTo;
       }
     });

@@ -30,6 +30,7 @@ import {
   updateServiceStatusAction,
   deleteServiceAction,
 } from './actions';
+import StatCard from '@/components/ui/StatCard';
 
 // ── Types ─────────────────────────────────────────────────────
 type ServiceStatus = 'Active' | 'Inactive' | 'Draft';
@@ -528,22 +529,35 @@ export default function ServicesPage() {
 
 
       {/* ── Summary Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Services', value: counts.total, icon: <Building2 className="w-5 h-5 text-[#12372A]" />, bg: 'bg-[#f0f7f2] border-[#a8d5b9]/50', text: 'text-[#12372A]', sub: 'In catalog' },
-          { label: 'Active Services', value: counts.active, icon: <CheckCircle className="w-5 h-5 text-emerald-600" />, bg: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700', sub: 'Published & live' },
-          { label: 'Inactive Services', value: counts.inactive, icon: <XCircle className="w-5 h-5 text-gray-500" />, bg: 'bg-gray-50 border-gray-200', text: 'text-gray-700', sub: 'Disabled' },
-          { label: 'Draft Services', value: counts.draft, icon: <FileEdit className="w-5 h-5 text-amber-600" />, bg: 'bg-amber-50 border-amber-200', text: 'text-amber-700', sub: 'Unpublished' },
-        ].map(card => (
-          <div key={card.label} className={`rounded-2xl border p-3 sm:p-4 ${card.bg} hover:shadow-md transition-shadow`}>
-            <div className="flex items-center justify-between mb-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/60 flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4">{card.icon}</div>
-            </div>
-            <p className={`text-xl sm:text-2xl font-extrabold ${card.text}`}>{card.value}</p>
-            <p className="text-[11px] text-gray-500 font-semibold mt-0.5">{card.label}</p>
-            <p className="text-[9px] text-gray-400">{card.sub}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Total Services"
+          value={counts.total}
+          sub="Catalog offerings"
+          icon={Building2}
+          variant="teal"
+        />
+        <StatCard
+          label="Active Services"
+          value={counts.active}
+          sub="Published & live"
+          icon={CheckCircle}
+          variant="emerald"
+        />
+        <StatCard
+          label="Draft Services"
+          value={counts.draft}
+          sub="Work in progress"
+          icon={FileEdit}
+          variant="amber"
+        />
+        <StatCard
+          label="Inactive Services"
+          value={counts.inactive}
+          sub="Disabled offerings"
+          icon={XCircle}
+          variant="rose"
+        />
       </div>
 
       {/* ── Search + Filters ── */}

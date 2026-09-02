@@ -2,10 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { registerAction } from './actions';
-<<<<<<< HEAD
-=======
 import { useAuth } from '@/lib/auth-context';
->>>>>>> origin/backend-merge
 import Link from 'next/link';
 
 export default function RegisterForm() {
@@ -27,7 +24,7 @@ export default function RegisterForm() {
       if (result?.error) {
         setError(result.error);
       } else if (result?.success && result.redirectTo) {
-<<<<<<< HEAD
+        if (result.accessToken && result.user) setSession(result.accessToken, result.user);
         if (emailVal) {
           try {
             localStorage.setItem('user_email', emailVal);
@@ -45,9 +42,6 @@ export default function RegisterForm() {
             console.error('LocalStorage save error:', e);
           }
         }
-=======
-        if (result.accessToken && result.user) setSession(result.accessToken, result.user);
->>>>>>> origin/backend-merge
         window.location.href = result.redirectTo;
       }
     });

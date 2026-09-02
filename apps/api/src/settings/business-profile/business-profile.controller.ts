@@ -15,17 +15,11 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
 
-
 @ApiTags('Admin - Business Profile Settings')
 @ApiBearerAuth()
-<<<<<<< HEAD
-@Controller('admin/settings/business-profile')
+@Controller(['admin/settings/business-profile', 'v1/admin/settings/business-profile', 'api/v1/admin/settings/business-profile'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
-=======
-@Controller(['v1/admin/settings/business-profile', 'api/v1/admin/settings/business-profile', 'admin/settings/business-profile', 'admin/settings'])
-@UseGuards(AdminAuthGuard)
->>>>>>> origin/backend-merge
 export class BusinessProfileController {
   constructor(private readonly businessProfileService: BusinessProfileService) {}
 

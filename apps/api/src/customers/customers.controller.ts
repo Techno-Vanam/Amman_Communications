@@ -20,17 +20,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
-<<<<<<< HEAD
-
 @ApiTags('Admin - Customers')
 @ApiBearerAuth()
-@Controller('admin/customers')
+@Controller(['admin/customers', 'v1/admin/customers', 'api/v1/admin/customers'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
-=======
-@Controller(['v1/admin/customers', 'api/v1/admin/customers', 'admin/customers'])
-@UseGuards(AdminAuthGuard)
->>>>>>> origin/backend-merge
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 

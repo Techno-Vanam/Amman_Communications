@@ -6,17 +6,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
-
 @ApiTags('Customer Profile')
 @ApiBearerAuth()
-<<<<<<< HEAD
-@Controller('customer/me')
+@Controller(['customer/me', 'v1/customer/me', 'api/v1/customer/me'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('CUSTOMER')
-=======
-@Controller(['customer/me', 'v1/customer/me', 'api/v1/customer/me'])
-@UseGuards(CustomerAuthGuard)
->>>>>>> origin/backend-merge
 export class CustomerMeController {
   constructor(private readonly prisma: PrismaService) {}
 
@@ -24,15 +18,15 @@ export class CustomerMeController {
   @ApiOperation({ summary: 'Get authenticated customer profile' })
   @ApiResponse({ status: 200, description: 'Returns authenticated customer profile details' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getProfile(@Req() req: { user: { customerId: string } }) {
+  async getProfile(@Req() req: { user: { customerId?: string; id?: string; sub?: string } }) {
+    const customerId = req.user.customerId || req.user.id || req.user.sub;
     const customer = await this.prisma.customer.findUnique({
-      where: { id: req.user.customerId },
+      where: { id: customerId },
       select: {
         id: true,
         name: true,
         email: true,
-        address: true,
-        contactNumber: true,
+        phone: true,
         createdAt: true,
       },
     });

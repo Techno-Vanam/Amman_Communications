@@ -24,6 +24,18 @@ import {
   FileText,
   MapPin,
 } from 'lucide-react';
+import CustomDatePicker from '@/components/ui/CustomDatePicker';
+import CustomTimePicker from '@/components/ui/CustomTimePicker';
+import CustomSelect from '@/components/ui/CustomSelect';
+import StatCard from '@/components/ui/StatCard';
+import {
+  fetchAppointmentsAction,
+  createAppointmentAction,
+  fetchCustomersForSelectAction,
+  updateAppointmentAction,
+  updateAppointmentStatusAction,
+  deleteAppointmentAction,
+} from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
 type AppointmentMode = 'Online' | 'Offline';
@@ -175,11 +187,6 @@ function ViewModal({ apt, onClose, onAdvance }: { apt: Appointment; onClose: () 
               Advance to {nextStage} <ChevronRight className="w-4 h-4" />
             </button>
           )}
-        </div>
-      </div>
-    </div>
-  );
-}
         </div>
       </div>
     </div>
@@ -586,8 +593,7 @@ export default function AppointmentsPage() {
     if (!editApt) return;
     setErrorMsg(null);
     if (data.status) {
-      const st = data.status.toUpperCase() as any;
-      await updateAdminAppointmentStatusAction(editApt.id, st);
+      await updateAppointmentStatusAction(editApt.id, data.status);
     }
     setEditApt(null);
     loadAppointments();
@@ -597,9 +603,11 @@ export default function AppointmentsPage() {
     if (!rescheduleApt) return;
     setErrorMsg(null);
     if (data.date) {
-      await rescheduleAdminAppointmentAction(rescheduleApt.id, {
-        newDate: data.date,
-        reason: data.notes || 'Rescheduled by Administrator',
+      await updateAppointmentAction(rescheduleApt.id, {
+        date: data.date,
+        time: data.time,
+        notes: data.notes,
+        status: 'RESCHEDULED',
       });
       setRescheduleApt(null);
       loadAppointments();
@@ -610,17 +618,9 @@ export default function AppointmentsPage() {
     const idx = APT_PIPELINE.indexOf(apt.status);
     if (idx !== -1 && idx < APT_PIPELINE.length - 1) {
       const nextStatus = APT_PIPELINE[idx + 1];
-      }
-    }
-=======
-    if (data.date) {
-      await rescheduleAdminAppointmentAction(rescheduleApt.id, {
-        newDate: data.date,
-        reason: data.notes || 'Rescheduled by Administrator',
-      });
+      await updateAppointmentStatusAction(apt.id, nextStatus);
       loadAppointments();
     }
->>>>>>> origin/ui-combined
   }
 
   const statusList: FilterType[] = ['All', 'Confirmed', 'Pending', 'Completed', 'Cancelled', 'Rescheduled'];
@@ -634,18 +634,35 @@ export default function AppointmentsPage() {
 
 
       {/* ── Status Summary Cards ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
-        {statusList.filter(s => s !== 'All').map(s => {
-          return (
-            <div
-              key={s}
-              className="rounded-2xl border p-3 text-left bg-white border-gray-100"
-            >
-              <p className="text-xl font-extrabold text-[#0e2a47]">{counts[s]}</p>
-              <p className="text-[10px] font-semibold mt-0.5 text-gray-500 leading-tight truncate">{s}</p>
-            </div>
-          );
-        })}
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Total Appointments"
+          value={appointments.length}
+          sub="Booked sessions"
+          icon={Calendar}
+          variant="indigo"
+        />
+        <StatCard
+          label="Confirmed Slots"
+          value={counts.Confirmed || 0}
+          sub="Scheduled & verified"
+          icon={CheckCircle}
+          variant="emerald"
+        />
+        <StatCard
+          label="Pending Review"
+          value={counts.Pending || 0}
+          sub="Requires review"
+          icon={Clock}
+          variant="amber"
+        />
+        <StatCard
+          label="Completed Sessions"
+          value={counts.Completed || 0}
+          sub="Concluded appointments"
+          icon={CalendarClock}
+          variant="blue"
+        />
       </div>
 
       {/* ── Search & Filter ── */}

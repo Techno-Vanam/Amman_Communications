@@ -18,7 +18,10 @@ import {
   RotateCcw,
   Search,
   Filter,
-  ChevronDown
+  ChevronDown,
+  CheckCircle,
+  CalendarClock,
+  Clock,
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser } from '@/context/UserContext';
@@ -26,6 +29,7 @@ import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import CustomTimePicker from '@/components/ui/CustomTimePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
 import CustomTabDropdown from '@/components/ui/CustomTabDropdown';
+import StatCard from '@/components/ui/StatCard';
 import { fetchAppointmentsAction, cancelAppointmentAction, rescheduleAppointmentAction } from '@/app/portal/actions';
 
 interface AppointmentItem {
@@ -51,7 +55,6 @@ function mapBackendAppointment(apt: any): AppointmentItem {
     : origDateObj.toISOString().split('T')[0];
   const timeStr = apt.preferredTime || '10:30 AM';
 
-<<<<<<< HEAD
   let newDateStr = '-';
   if (hasBeenRescheduled) {
     const newDateObj = new Date(apt.appointmentDate || apt.preferredDate);
@@ -144,18 +147,6 @@ function getTodayISOString(): string {
     const mapped = (raw || []).map(mapBackendAppointment);
     setAppointments(mapped);
     setLoading(false);
-=======
-  const counts: Partial<Record<TabKey, number>> = {
-    ALL: allAppointments.length,
-    UPCOMING: allAppointments.filter(
-      (a) =>
-        (a.status === 'PENDING' || a.status === 'CONFIRMED') &&
-        new Date(a.preferredDate || a.appointmentDate || Date.now()) >= new Date()
-    ).length,
-    RESCHEDULED: allAppointments.filter((a) => a.status === 'RESCHEDULED').length,
-    COMPLETED: allAppointments.filter((a) => a.status === 'COMPLETED').length,
-    CANCELLED: allAppointments.filter((a) => a.status === 'CANCELLED').length,
->>>>>>> origin/backend-merge
   };
 
   useEffect(() => {
@@ -266,6 +257,38 @@ function getTodayISOString(): string {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12">
+      {/* ── KPI Summary Cards ── */}
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Total Appointments"
+          value={appointments.length}
+          sub="Booked sessions"
+          icon={CalendarIcon}
+          variant="indigo"
+        />
+        <StatCard
+          label="Confirmed Slots"
+          value={appointments.filter(a => a.status === 'Confirmed' || a.status === 'Pending').length}
+          sub="Active bookings"
+          icon={CheckCircle}
+          variant="emerald"
+        />
+        <StatCard
+          label="Completed Sessions"
+          value={appointments.filter(a => a.status === 'Completed').length}
+          sub="Concluded"
+          icon={CalendarClock}
+          variant="blue"
+        />
+        <StatCard
+          label="Rescheduled / Cancelled"
+          value={appointments.filter(a => a.status === 'Rescheduled' || a.status === 'Cancelled').length}
+          sub="Modified slots"
+          icon={Clock}
+          variant="amber"
+        />
+      </div>
+
       {/* Filter Tabs & Search Bar & Book Appointment Bar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         {/* Mobile Custom Tab Dropdown (Animated Custom Menu - No "Filter:" text) */}
