@@ -696,11 +696,7 @@ Remarks          : ${selectedApp.notes || 'None'}
       {mode === 'list' && (
         <>
           {/* Top Title & Header Actions */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Applications &amp; Process Manager</h1>
-              <p className="text-xs text-gray-500 mt-0.5">Manage customer service requests and track 8-phase progress in real-time.</p>
-            </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
 
             <div className="flex items-center gap-3 self-start sm:self-auto">
               <button

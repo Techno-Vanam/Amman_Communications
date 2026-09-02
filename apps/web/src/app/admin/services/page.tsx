@@ -516,7 +516,7 @@ export default function ServicesPage() {
       </div>
 
       {/* ── Summary Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total Services', value: counts.total, icon: <Building2 className="w-5 h-5 text-[#12372A]" />, bg: 'bg-[#f0f7f2] border-[#a8d5b9]/50', text: 'text-[#12372A]', sub: 'In catalog' },
           { label: 'Active Services', value: counts.active, icon: <CheckCircle className="w-5 h-5 text-emerald-600" />, bg: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700', sub: 'Published & live' },
@@ -684,11 +684,7 @@ export default function ServicesPage() {
           </div>
         ))}
 
-        {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
-          <p className="text-[11px] text-gray-400">Showing {filtered.length} of {services.length} services</p>
-          <p className="text-[11px] text-gray-400">{counts.active} active · {counts.draft} drafts</p>
-        </div>
+
       </div>
 
       {/* ── Modals ── */}

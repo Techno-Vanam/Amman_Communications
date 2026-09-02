@@ -74,12 +74,9 @@ function AdminSidebarNavContent({
       </div>
 
       {/* Scrollable Navigation */}
-      <div className="p-5 pt-4 space-y-1 overflow-y-auto flex-1 admin-scrollbar">
+      <div className="p-5 pt-4 space-y-1 flex-1 admin-scrollbar">
         {/* Main Nav Section */}
         <div className="space-y-1">
-          <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
-            Main Menu
-          </p>
           <nav aria-label="Admin portal main navigation" className="space-y-1.5">
             {ADMIN_NAV_ITEMS.map((item) => {
               const Icon = item.icon;
@@ -238,7 +235,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="h-screen overflow-hidden bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full" suppressHydrationWarning>
+    <div className="h-screen overflow-hidden overscroll-none bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full" suppressHydrationWarning>
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c]">
         <div className="flex items-center space-x-3">
@@ -270,7 +267,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
       </Suspense>
 
       {/* Main Content Area */}
-      <main className="min-w-0 flex-1 p-3.5 sm:p-4 md:p-5 lg:p-8 h-full overflow-y-auto max-w-full overflow-x-hidden">
+      <main className="min-w-0 flex-1 p-3.5 sm:p-4 md:p-5 lg:p-8 h-full overflow-y-auto overscroll-contain max-w-full overflow-x-hidden">
         <AdminTopHeader />
         {children}
       </main>
