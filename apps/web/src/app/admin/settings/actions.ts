@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
 
-async function getAuthHeader() {
+async function getAuthHeader(): Promise<Record<string, string>> {
   const cookieStore = await cookies();
   const token = cookieStore.get('access_token')?.value;
   return token ? { Authorization: `Bearer ${token}` } : {};

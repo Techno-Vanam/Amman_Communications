@@ -40,6 +40,14 @@ export interface Customer {
   joinedDate: string;
 }
 
+export interface CustomerFormData {
+  name?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+  status?: string;
+}
+
 // ── Live Dataset ────────────────────────────────────────────────
 const INITIAL_CUSTOMERS: Customer[] = [];
 type FilterStatus = 'All' | 'Active' | 'Inactive' | 'Pending';
@@ -74,7 +82,7 @@ function CustomerModal({
   mode: 'add' | 'edit';
   customer?: Customer;
   onClose: () => void;
-  onSave: (data: Partial<Customer>) => Promise<{ success: boolean; error?: string }> | void;
+  onSave: (data: CustomerFormData) => Promise<{ success: boolean; error?: string }> | void;
 }) {
   const [form, setForm] = useState({
     name: customer?.name ?? '',
@@ -331,14 +339,14 @@ export default function CustomersPage() {
     loadCustomers();
   }, []);
 
-  async function handleAdd(data: Partial<Customer>) {
+  async function handleAdd(data: CustomerFormData): Promise<{ success: boolean; error?: string }> {
     setErrorMsg(null);
     const rawPhone = data.phone?.trim().replace(/^\+91\s*$/, '') ?? '';
     const finalEmail = data.email?.trim() || undefined;
     const res = await createCustomerAction({
       name: data.name ?? '',
-      email: finalEmail as any,
-      phone: rawPhone || undefined,
+      email: finalEmail ?? '',
+      phone: rawPhone || '',
       password: data.password ?? '',
       status: data.status ?? 'Active',
     });
@@ -350,14 +358,14 @@ export default function CustomersPage() {
     }
   }
 
-  async function handleEdit(data: Partial<Customer>) {
-    if (!editCustomer) return;
+  async function handleEdit(data: CustomerFormData): Promise<{ success: boolean; error?: string }> {
+    if (!editCustomer) return { success: false, error: 'No customer selected' };
     setErrorMsg(null);
     const rawPhone = data.phone?.trim().replace(/^\+91\s*$/, '') ?? '';
     const finalEmail = data.email?.trim() || undefined;
     const res = await updateCustomerAction(editCustomer.id, {
       name: data.name,
-      email: finalEmail as any,
+      email: finalEmail,
       phone: rawPhone || undefined,
       status: data.status,
     });

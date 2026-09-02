@@ -51,7 +51,7 @@ export class CustomerProfileController {
 
   @Get('contact-info')
   @ApiOperation({ summary: 'Get secondary contact information' })
-  async getContactInfo(@Req() req: RequestWithUser) {
+  async getContactInfo(@Req() _req: RequestWithUser) {
     return {
       altContactName: null,
       altPhoneNumber: null,
@@ -67,7 +67,7 @@ export class CustomerProfileController {
 
   @Get('preferences')
   @ApiOperation({ summary: 'Get notification and app preferences' })
-  async getPreferences(@Req() req: RequestWithUser) {
+  async getPreferences(@Req() _req: RequestWithUser) {
     return {
       emailNotifications: true,
       smsAlerts: true,

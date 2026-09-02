@@ -27,6 +27,12 @@ class MockPrismaService {
       this.customers.push(customer);
       return customer;
     },
+    update: async ({ where, data }: any) => {
+      const index = this.customers.findIndex((c) => (where.id ? c.id === where.id : c.email === where.email));
+      if (index === -1) throw new Error('Customer not found');
+      this.customers[index] = { ...this.customers[index], ...data, updatedAt: new Date() };
+      return this.customers[index];
+    },
   };
 
   application = {

@@ -6,6 +6,7 @@ import {
   Search,
   X,
   Eye,
+  Edit2,
   CheckCircle,
   XCircle,
   AlertTriangle,

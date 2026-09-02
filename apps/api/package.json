@@ -13,7 +13,7 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"src/**/*.ts\" --max-warnings=0",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/auth/authorization.spec.ts src/settings/business-profile/business-profile.spec.ts"
+    "test": "vitest run"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -42,7 +42,9 @@
     "@nestjs/testing": "^11.2.1",
     "@repo/eslint-config": "workspace:*",
     "@repo/tsconfig": "workspace:*",
+    "@types/body-parser": "^1.19.6",
     "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.0",
     "@types/nodemailer": "^8.0.1",
