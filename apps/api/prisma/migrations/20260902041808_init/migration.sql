@@ -1,16 +1,8 @@
-/*
-  Warnings:
-
-  - A unique constraint covering the columns `[applicationNumber]` on the table `Application` will be added. If there are existing duplicate values, this will fail.
-  - A unique constraint covering the columns `[applicationId,documentType]` on the table `Document` will be added. If there are existing duplicate values, this will fail.
-  - Added the required column `updatedAt` to the `Document` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- CreateEnum
 CREATE TYPE "DocumentStatus" AS ENUM ('UPLOADED', 'UNDER_REVIEW', 'VERIFIED', 'REJECTED', 'ACTION_REQUIRED');
 
 -- CreateEnum
-CREATE TYPE "ApplicationStatus" AS ENUM ('DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'APPROVED', 'REJECTED');
+CREATE TYPE "ApplicationStatus" AS ENUM ('DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'DOCUMENTS_RECEIVED', 'APPROVED', 'REJECTED', 'PENDING_PAYMENT', 'COMPLETED');
 
 -- CreateEnum
 CREATE TYPE "CustomerStatus" AS ENUM ('ACTIVE', 'INACTIVE');
@@ -43,38 +35,101 @@ CREATE TYPE "AppointmentMode" AS ENUM ('OFFLINE', 'ONLINE');
 CREATE TYPE "OnlineMeetingType" AS ENUM ('PHONE', 'VIDEO', 'MEETING');
 
 -- CreateEnum
-CREATE TYPE "ExpenseCategory" AS ENUM ('OFFICE', 'TRAVEL', 'EMPLOYEE', 'PROPERTY', 'UTILITIES', 'MARKETING', 'EQUIPMENT', 'OTHER');
+CREATE TYPE "DocumentVerificationStatus" AS ENUM ('PENDING', 'VERIFIED', 'REJECTED');
 
--- AlterTable
-ALTER TABLE "Application" ADD COLUMN     "address" TEXT,
-ADD COLUMN     "applicationNumber" TEXT,
-ADD COLUMN     "dateOfBirth" TEXT,
-ADD COLUMN     "email" TEXT,
-ADD COLUMN     "fullName" TEXT,
-ADD COLUMN     "nationality" TEXT,
-ADD COLUMN     "notes" TEXT,
-ADD COLUMN     "phone" TEXT,
-ADD COLUMN     "serviceId" TEXT,
-ADD COLUMN     "serviceType" TEXT,
-ADD COLUMN     "status" "ApplicationStatus" NOT NULL DEFAULT 'DRAFT',
-ADD COLUMN     "title" TEXT;
+-- CreateEnum
+CREATE TYPE "SaleCategory" AS ENUM ('APPLICATION', 'XEROX', 'STATIONARY', 'OTHER');
 
--- AlterTable
-ALTER TABLE "Customer" ADD COLUMN     "address" TEXT,
-ADD COLUMN     "contactNumber" TEXT,
-ADD COLUMN     "phone" TEXT,
-ADD COLUMN     "status" "CustomerStatus" NOT NULL DEFAULT 'ACTIVE';
+-- CreateTable
+CREATE TABLE "HealthCheck" (
+    "id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
--- AlterTable
-ALTER TABLE "Document" ADD COLUMN     "fileUrl" TEXT,
-ADD COLUMN     "isEncrypted" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "originalFileName" TEXT,
-ADD COLUMN     "rejectionReason" TEXT,
-ADD COLUMN     "status" "DocumentStatus" NOT NULL DEFAULT 'UPLOADED',
-ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL,
-ADD COLUMN     "verifiedAt" TIMESTAMP(3),
-ADD COLUMN     "verifiedBy" TEXT,
-ADD COLUMN     "version" INTEGER NOT NULL DEFAULT 1;
+    CONSTRAINT "HealthCheck_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Customer" (
+    "id" TEXT NOT NULL,
+    "email" TEXT,
+    "phone" TEXT,
+    "passwordHash" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "address" TEXT,
+    "contactNumber" TEXT,
+    "dob" TEXT,
+    "aadhaarNumber" TEXT,
+    "panNumber" TEXT,
+    "occupation" TEXT,
+    "altPhone" TEXT,
+    "emergencyContact" TEXT,
+    "isProfileCompleted" BOOLEAN NOT NULL DEFAULT false,
+    "status" "CustomerStatus" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Customer_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Admin" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "passwordHash" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Admin_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Application" (
+    "id" TEXT NOT NULL,
+    "applicationNumber" TEXT,
+    "customerId" TEXT NOT NULL,
+    "serviceId" TEXT,
+    "title" TEXT,
+    "serviceType" TEXT,
+    "fullName" TEXT,
+    "email" TEXT,
+    "phone" TEXT,
+    "dateOfBirth" TEXT,
+    "nationality" TEXT,
+    "address" TEXT,
+    "notes" TEXT,
+    "status" "ApplicationStatus" NOT NULL DEFAULT 'DRAFT',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Application_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Document" (
+    "id" TEXT NOT NULL,
+    "customerId" TEXT NOT NULL,
+    "applicationId" TEXT NOT NULL,
+    "documentType" TEXT NOT NULL,
+    "storagePath" TEXT NOT NULL,
+    "fileName" TEXT NOT NULL,
+    "mimeType" TEXT NOT NULL,
+    "fileSize" INTEGER NOT NULL,
+    "originalFileName" TEXT,
+    "version" INTEGER NOT NULL DEFAULT 1,
+    "isEncrypted" BOOLEAN NOT NULL DEFAULT false,
+    "status" "DocumentStatus" NOT NULL DEFAULT 'UPLOADED',
+    "rejectionReason" TEXT,
+    "verificationStatus" "DocumentVerificationStatus" NOT NULL DEFAULT 'PENDING',
+    "verificationRemarks" TEXT,
+    "uploadedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "fileUrl" TEXT,
+    "verifiedAt" TIMESTAMP(3),
+    "verifiedBy" TEXT,
+
+    CONSTRAINT "Document_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "Service" (
@@ -85,6 +140,8 @@ CREATE TABLE "Service" (
     "serviceFee" DECIMAL(10,2) NOT NULL,
     "totalFee" DECIMAL(10,2) NOT NULL,
     "estimatedTime" TEXT,
+    "isPartialPaymentAllowed" BOOLEAN NOT NULL DEFAULT false,
+    "minimumPartialFee" DECIMAL(10,2),
     "status" "ServiceStatus" NOT NULL DEFAULT 'DRAFT',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -165,7 +222,7 @@ CREATE TABLE "Expense" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
-    "category" "ExpenseCategory" NOT NULL,
+    "category" TEXT NOT NULL,
     "amount" DECIMAL(10,2) NOT NULL,
     "expenseDate" TIMESTAMP(3) NOT NULL,
     "paymentMethod" "PaymentMethod",
@@ -237,6 +294,66 @@ CREATE TABLE "Payment" (
     CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "ManualSale" (
+    "id" TEXT NOT NULL,
+    "saleNumber" TEXT NOT NULL,
+    "customerName" TEXT NOT NULL,
+    "customerPhone" TEXT,
+    "category" "SaleCategory" NOT NULL DEFAULT 'OTHER',
+    "amount" DECIMAL(10,2) NOT NULL,
+    "details" TEXT,
+    "status" "PaymentStatus" NOT NULL DEFAULT 'PAID',
+    "paymentMethod" "PaymentMethod" NOT NULL DEFAULT 'CASH',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ManualSale_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PasswordResetToken" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "otpHash" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "used" BOOLEAN NOT NULL DEFAULT false,
+    "attempts" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PasswordResetToken_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AdminSettings" (
+    "id" TEXT NOT NULL,
+    "adminId" TEXT NOT NULL,
+    "emailAlerts" BOOLEAN NOT NULL DEFAULT true,
+    "smsAlerts" BOOLEAN NOT NULL DEFAULT true,
+    "whatsappAlerts" BOOLEAN NOT NULL DEFAULT true,
+    "weeklyDigest" BOOLEAN NOT NULL DEFAULT false,
+    "language" TEXT NOT NULL DEFAULT 'English',
+    "timezone" TEXT NOT NULL DEFAULT 'Asia/Kolkata (IST +5:30)',
+    "autoLogout" TEXT NOT NULL DEFAULT '30 minutes',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "AdminSettings_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Customer_email_key" ON "Customer"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Admin_email_key" ON "Admin"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Application_applicationNumber_key" ON "Application"("applicationNumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Document_applicationId_documentType_key" ON "Document"("applicationId", "documentType");
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Appointment_appointmentNumber_key" ON "Appointment"("appointmentNumber");
 
@@ -274,13 +391,34 @@ CREATE INDEX "Payment_status_idx" ON "Payment"("status");
 CREATE INDEX "Payment_paidAt_idx" ON "Payment"("paidAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Application_applicationNumber_key" ON "Application"("applicationNumber");
+CREATE UNIQUE INDEX "ManualSale_saleNumber_key" ON "ManualSale"("saleNumber");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Document_applicationId_documentType_key" ON "Document"("applicationId", "documentType");
+CREATE INDEX "ManualSale_createdAt_idx" ON "ManualSale"("createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PasswordResetToken_token_key" ON "PasswordResetToken"("token");
+
+-- CreateIndex
+CREATE INDEX "PasswordResetToken_email_idx" ON "PasswordResetToken"("email");
+
+-- CreateIndex
+CREATE INDEX "PasswordResetToken_token_idx" ON "PasswordResetToken"("token");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "AdminSettings_adminId_key" ON "AdminSettings"("adminId");
+
+-- AddForeignKey
+ALTER TABLE "Application" ADD CONSTRAINT "Application_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Application" ADD CONSTRAINT "Application_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Document" ADD CONSTRAINT "Document_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Document" ADD CONSTRAINT "Document_applicationId_fkey" FOREIGN KEY ("applicationId") REFERENCES "Application"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Appointment" ADD CONSTRAINT "Appointment_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -314,3 +452,6 @@ ALTER TABLE "Payment" ADD CONSTRAINT "Payment_invoiceId_fkey" FOREIGN KEY ("invo
 
 -- AddForeignKey
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AdminSettings" ADD CONSTRAINT "AdminSettings_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "Admin"("id") ON DELETE CASCADE ON UPDATE CASCADE;
