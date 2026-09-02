@@ -26,6 +26,7 @@ import {
   MapPin,
   Filter,
 } from 'lucide-react';
+import CustomTimePicker from '@/components/ui/CustomTimePicker';
 
 // ── Types ─────────────────────────────────────────────────────
 type AppointmentMode = 'Online' | 'Offline';
@@ -276,16 +277,10 @@ function AppointmentModal({
               <label className="block text-xs font-bold text-gray-700 mb-1.5">
                 {mode === 'reschedule' ? 'New Time Slot' : 'Time Slot'}
               </label>
-              <div className="relative">
-                <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <select
-                  value={form.time}
-                  onChange={e => setForm(p => ({ ...p, time: e.target.value }))}
-                  className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all appearance-none"
-                >
-                  {TIME_SLOTS.map(t => <option key={t} value={t}>{fmtTime(t)}</option>)}
-                </select>
-              </div>
+              <CustomTimePicker
+                value={form.time || '10:30 AM'}
+                onChange={val => setForm(p => ({ ...p, time: val }))}
+              />
             </div>
           </div>
 

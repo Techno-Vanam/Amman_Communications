@@ -29,6 +29,7 @@ import {
   X
 } from 'lucide-react';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
+import CustomTimePicker from '@/components/ui/CustomTimePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
 
 import { useNotifications } from '@/context/NotificationContext';
@@ -62,6 +63,14 @@ function convertTimeTo24h(time12h: string): string {
   return `${hours.padStart(2, '0')}:${minutes}`;
 }
 
+function getTodayISOString(): string {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export default function BookAppointmentPage() {
   const { showToast } = useNotifications();
   const { user } = useUser();
@@ -92,7 +101,7 @@ export default function BookAppointmentPage() {
     whatsappNumber: user.phone || '+91 ',
     phoneCallNumber: user.phone || '+91 ',
     whatsappOption: 'WhatsApp Voice Call' as 'WhatsApp Voice Call' | 'WhatsApp Video Call' | 'WhatsApp Text Chat',
-    date: '2026-08-28',
+    date: getTodayISOString(),
     timeSlot: '10:30 AM',
     location: '',
     applicantName: user.name,
@@ -124,6 +133,7 @@ export default function BookAppointmentPage() {
   React.useEffect(() => {
     setDetails((prev) => ({
       ...prev,
+      date: prev.date || getTodayISOString(),
       applicantName: user.name,
       applicantEmail: user.email,
       applicantPhone: user.phone || '+91 ',
@@ -149,6 +159,23 @@ export default function BookAppointmentPage() {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
 
   const serviceObj = services.find((s) => s.id === selectedService) || { name: 'Broadband Setup', id: '' };
+
+  const getWhatsAppShareUrl = (aptId?: string) => {
+    const reference = aptId || createdAptId;
+    const message =
+      `*New Appointment Booked - Amman Communications*\n\n` +
+      `📌 *Reference ID:* ${reference}\n` +
+      `🛠️ *Service:* ${serviceObj.name}\n` +
+      `👤 *Applicant Name:* ${details.applicantName}\n` +
+      `📞 *Contact Phone:* ${details.applicantPhone}\n` +
+      `📍 *Consultation Mode:* ${getFormattedConsultationType()}\n` +
+      `📅 *Scheduled Date & Time:* ${details.date} at ${details.timeSlot}\n` +
+      (details.address ? `🏠 *Address:* ${details.address}\n` : '') +
+      (details.description ? `📝 *Notes:* ${details.description}\n` : '') +
+      `\nPlease review and confirm this booking. Thank you!`;
+
+    return `https://wa.me/919360645466?text=${encodeURIComponent(message)}`;
+  };
 
   const handleNext = async () => {
     if (currentStep === 4) {
@@ -179,7 +206,15 @@ export default function BookAppointmentPage() {
 
       const returnedId = res.appointment?.appointmentNumber || res.appointment?.id || `APT-2026-${Math.floor(100 + Math.random() * 900)}`;
       setCreatedAptId(returnedId);
-      showToast('Appointment Booked Successfully!', `Reference ID: ${returnedId} has been scheduled.`, 'success', 'View Details', '/portal/appointments', true);
+      showToast(
+        'Appointment Booked Successfully!',
+        `Reference ID: ${returnedId} has been scheduled.`,
+        'success',
+        'View Details',
+        '/portal/appointments',
+        true,
+        getWhatsAppShareUrl(returnedId)
+      );
     }
     if (currentStep < 5) setCurrentStep(currentStep + 1);
   };
@@ -204,14 +239,12 @@ export default function BookAppointmentPage() {
     return FileText;
   };
 
-
   return (
     <div className="max-w-7xl w-full mx-auto space-y-8 font-sans pb-12">
       {/* 5-Step Stepper Progress Bar */}
       <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm p-4 sm:p-6 overflow-hidden">
         <div className="relative w-full max-w-5xl mx-auto">
           <div className="relative w-full grid grid-cols-5 py-1">
-            {/* Continuous Connecting Line (100% Equal Center-to-Center Spacing) */}
             <div className="absolute top-[12px] sm:top-[18px] left-[10%] right-[10%] h-1 bg-gray-200 z-0 overflow-hidden rounded-full">
               <div
                 className="h-full bg-gradient-to-r from-[#12372A] to-[#2d6a4f] rounded-full transition-all duration-500 ease-in-out"
@@ -280,7 +313,6 @@ export default function BookAppointmentPage() {
                 </p>
               </div>
 
-              {/* Service Search Bar */}
               <div className="relative w-full sm:w-72">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
@@ -289,12 +321,14 @@ export default function BookAppointmentPage() {
                   onChange={(e) => setServiceSearchQuery(e.target.value)}
                   placeholder="Search service by name..."
                   className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-full text-xs font-medium text-gray-900 focus:outline-none focus:border-[#12372A] focus:ring-2 focus:ring-[#12372A]/10 shadow-2xs transition-all"
+                  suppressHydrationWarning
                 />
                 {serviceSearchQuery && (
                   <button
                     type="button"
                     onClick={() => setServiceSearchQuery('')}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full"
+                    suppressHydrationWarning
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -302,7 +336,6 @@ export default function BookAppointmentPage() {
               </div>
             </div>
 
-            {/* Grid Service Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredServices.length === 0 ? (
                 <div className="col-span-full py-10 text-center text-xs font-semibold text-gray-400 bg-gray-50/80 rounded-2xl border border-gray-200/80">
@@ -325,6 +358,7 @@ export default function BookAppointmentPage() {
                           : 'border-gray-200 hover:border-[#12372A]/50 bg-white hover:bg-gray-50/50'
                         }
                       `}
+                      suppressHydrationWarning
                     >
                       {isSelected && (
                         <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[#12372A] text-white flex items-center justify-center">
@@ -363,13 +397,11 @@ export default function BookAppointmentPage() {
               </p>
             </div>
 
-            {/* Top Level: Main Consultation Type Options (Office Visit vs Online Consultation) */}
             <div className="space-y-3">
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
                 Select Consultation Category
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Option 1: Office Visit */}
                 <button
                   type="button"
                   onClick={() => setDetails({ ...details, mainMode: 'Office Visit' })}
@@ -378,6 +410,7 @@ export default function BookAppointmentPage() {
                       ? 'border-[#12372A] bg-[#f0f7f2] ring-2 ring-[#12372A]/20 shadow-sm'
                       : 'border-gray-300 hover:border-[#12372A] bg-white shadow-2xs'
                   }`}
+                  suppressHydrationWarning
                 >
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
                     details.mainMode === 'Office Visit' ? 'bg-[#12372A] text-white' : 'bg-emerald-50 text-emerald-700'
@@ -397,7 +430,6 @@ export default function BookAppointmentPage() {
                   </div>
                 </button>
 
-                {/* Option 2: Online Consultation */}
                 <button
                   type="button"
                   onClick={() => setDetails({ ...details, mainMode: 'Online Consultation' })}
@@ -406,6 +438,7 @@ export default function BookAppointmentPage() {
                       ? 'border-[#12372A] bg-[#f0f7f2] ring-2 ring-[#12372A]/20 shadow-sm'
                       : 'border-gray-300 hover:border-[#12372A] bg-white shadow-2xs'
                   }`}
+                  suppressHydrationWarning
                 >
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
                     details.mainMode === 'Online Consultation' ? 'bg-[#12372A] text-white' : 'bg-blue-50 text-blue-600'
@@ -427,7 +460,6 @@ export default function BookAppointmentPage() {
               </div>
             </div>
 
-            {/* Sub Options when Online Consultation is selected */}
             {details.mainMode === 'Online Consultation' && (
               <div className="p-5 bg-[#f8faf9] border-2 border-emerald-200 rounded-2xl space-y-4 animate-in fade-in duration-300">
                 <div className="flex items-center justify-between">
@@ -440,7 +472,6 @@ export default function BookAppointmentPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Phone Option */}
                   <button
                     type="button"
                     onClick={() => setDetails({ ...details, onlineSubMode: 'Phone Call' })}
@@ -449,6 +480,7 @@ export default function BookAppointmentPage() {
                         ? 'border-[#12372A] bg-white ring-2 ring-[#12372A]/30 shadow-sm'
                         : 'border-gray-300 hover:border-[#12372A] bg-white'
                     }`}
+                    suppressHydrationWarning
                   >
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
                       details.onlineSubMode === 'Phone Call' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600'
@@ -461,7 +493,6 @@ export default function BookAppointmentPage() {
                     </div>
                   </button>
 
-                  {/* WhatsApp Option */}
                   <button
                     type="button"
                     onClick={() => setDetails({ ...details, onlineSubMode: 'WhatsApp' })}
@@ -470,6 +501,7 @@ export default function BookAppointmentPage() {
                         ? 'border-[#12372A] bg-white ring-2 ring-[#12372A]/30 shadow-sm'
                         : 'border-gray-300 hover:border-[#12372A] bg-white'
                     }`}
+                    suppressHydrationWarning
                   >
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
                       details.onlineSubMode === 'WhatsApp' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600'
@@ -482,7 +514,6 @@ export default function BookAppointmentPage() {
                     </div>
                   </button>
 
-                  {/* Video Call Option */}
                   <button
                     type="button"
                     onClick={() => setDetails({ ...details, onlineSubMode: 'Video Call' })}
@@ -491,6 +522,7 @@ export default function BookAppointmentPage() {
                         ? 'border-[#12372A] bg-white ring-2 ring-[#12372A]/30 shadow-sm'
                         : 'border-gray-300 hover:border-[#12372A] bg-white'
                     }`}
+                    suppressHydrationWarning
                   >
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
                       details.onlineSubMode === 'Video Call' ? 'bg-purple-600 text-white' : 'bg-purple-50 text-purple-600'
@@ -506,9 +538,7 @@ export default function BookAppointmentPage() {
               </div>
             )}
 
-            {/* DYNAMIC FIELDS based on mainMode & onlineSubMode */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Preferred Date */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Preferred Date</label>
                 <CustomDatePicker
@@ -518,22 +548,14 @@ export default function BookAppointmentPage() {
                 />
               </div>
 
-              {/* Time Slot */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Time Slot</label>
-                <CustomSelect
+                <CustomTimePicker
                   value={details.timeSlot}
                   onChange={(val) => setDetails({ ...details, timeSlot: val })}
-                  options={[
-                    { value: '09:30 AM', label: '09:30 AM - 10:15 AM' },
-                    { value: '10:30 AM', label: '10:30 AM - 11:15 AM' },
-                    { value: '02:00 PM', label: '02:00 PM - 02:45 PM' },
-                    { value: '04:00 PM', label: '04:00 PM - 04:45 PM' }
-                  ]}
                 />
               </div>
 
-              {/* DYNAMIC CASE 1: Office Visit Location Selector */}
               {details.mainMode === 'Office Visit' && (
                 <div className="md:col-span-2 space-y-2">
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Select Branch Office</label>
@@ -562,7 +584,6 @@ export default function BookAppointmentPage() {
                 </div>
               )}
 
-              {/* DYNAMIC CASE 2: Online Consultation -> Phone Call Fields */}
               {details.mainMode === 'Online Consultation' && details.onlineSubMode === 'Phone Call' && (
                 <div className="md:col-span-2 space-y-4 p-4 bg-blue-50/60 border border-blue-200/80 rounded-xl">
                   <div className="flex items-center gap-2 text-blue-900">
@@ -578,6 +599,7 @@ export default function BookAppointmentPage() {
                         onChange={(e) => setDetails({ ...details, phoneCallNumber: e.target.value })}
                         placeholder="+91 98765 43210"
                         className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-blue-500 bg-white"
+                        suppressHydrationWarning
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -596,7 +618,6 @@ export default function BookAppointmentPage() {
                 </div>
               )}
 
-              {/* DYNAMIC CASE 3: Online Consultation -> WhatsApp Fields */}
               {details.mainMode === 'Online Consultation' && details.onlineSubMode === 'WhatsApp' && (
                 <div className="md:col-span-2 space-y-4 p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-xl">
                   <div className="flex items-center gap-2 text-emerald-900">
@@ -612,6 +633,7 @@ export default function BookAppointmentPage() {
                         onChange={(e) => setDetails({ ...details, whatsappNumber: e.target.value })}
                         placeholder="+91 98765 43210"
                         className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-emerald-500 bg-white"
+                        suppressHydrationWarning
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -630,7 +652,6 @@ export default function BookAppointmentPage() {
                 </div>
               )}
 
-              {/* DYNAMIC CASE 4: Online Consultation -> Video Call Fields */}
               {details.mainMode === 'Online Consultation' && details.onlineSubMode === 'Video Call' && (
                 <div className="md:col-span-2 space-y-4 p-4 bg-purple-50/60 border border-purple-200/80 rounded-xl">
                   <div className="flex items-center gap-2 text-purple-900">
@@ -658,6 +679,7 @@ export default function BookAppointmentPage() {
                         onChange={(e) => setDetails({ ...details, applicantEmail: e.target.value })}
                         placeholder="john@example.com"
                         className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-xs focus:ring-2 focus:ring-purple-500 bg-white"
+                        suppressHydrationWarning
                       />
                     </div>
                   </div>
@@ -668,7 +690,6 @@ export default function BookAppointmentPage() {
                 </div>
               )}
 
-              {/* Applicant Full Name */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Applicant Full Name</label>
                 <input
@@ -676,10 +697,10 @@ export default function BookAppointmentPage() {
                   value={details.applicantName}
                   onChange={(e) => setDetails({ ...details, applicantName: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800"
+                  suppressHydrationWarning
                 />
               </div>
 
-              {/* Contact Phone */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Primary Mobile Phone</label>
                 <input
@@ -687,10 +708,10 @@ export default function BookAppointmentPage() {
                   value={details.applicantPhone}
                   onChange={(e) => setDetails({ ...details, applicantPhone: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800"
+                  suppressHydrationWarning
                 />
               </div>
 
-              {/* Full Address */}
               <div className="md:col-span-2 space-y-2">
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">Residential / Contact Address</label>
                 <input
@@ -699,10 +720,10 @@ export default function BookAppointmentPage() {
                   onChange={(e) => setDetails({ ...details, address: e.target.value })}
                   placeholder="Enter full street address, city & pincode"
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800"
+                  suppressHydrationWarning
                 />
               </div>
 
-              {/* Description / Additional Notes (Optional) */}
               <div className="md:col-span-2 space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
@@ -718,6 +739,7 @@ export default function BookAppointmentPage() {
                   onChange={(e) => setDetails({ ...details, description: e.target.value })}
                   placeholder="Add any specific requests, details, or context for your officer..."
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#12372A] text-sm text-gray-800 resize-none"
+                  suppressHydrationWarning
                 />
               </div>
             </div>
@@ -755,7 +777,7 @@ export default function BookAppointmentPage() {
               <p className="text-[11px] text-gray-500 mt-1">Accepted formats: PDF, PNG, JPG up to 10MB</p>
               <label className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-[#12372A] text-white text-xs font-bold rounded-xl cursor-pointer hover:bg-[#1a4a38] transition-colors">
                 <span>Select Files</span>
-                <input type="file" onChange={handleSimulateFileUpload} className="hidden" />
+                <input type="file" onChange={handleSimulateFileUpload} className="hidden" suppressHydrationWarning />
               </label>
             </div>
 
@@ -790,6 +812,7 @@ export default function BookAppointmentPage() {
                           onClick={() => handleRemoveFile(idx)}
                           className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                           title="Remove file"
+                          suppressHydrationWarning
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -871,7 +894,7 @@ export default function BookAppointmentPage() {
 
         {/* STEP 5: Success */}
         {currentStep === 5 && (
-          <div className="text-center py-8 space-y-5">
+          <div className="text-center py-6 space-y-5">
             <div className="w-16 h-16 bg-[#f0f7f2] border border-[#a8d5b9] text-[#12372A] rounded-full flex items-center justify-center mx-auto shadow-inner">
               <CheckCircle2 className="w-8 h-8" />
             </div>
@@ -880,61 +903,94 @@ export default function BookAppointmentPage() {
               Your reference ID is <strong className="text-[#12372A] font-mono">{createdAptId}</strong>. A confirmation email and SMS notification have been sent to <strong className="text-gray-900">{details.applicantEmail}</strong>.
             </p>
 
-            <div className="pt-6 flex flex-wrap justify-center gap-4">
-              <Link
-                href="/portal/appointments"
-                className="px-6 py-3 bg-[#12372A] hover:bg-[#1a4a38] text-white text-xs font-bold rounded-xl transition-colors shadow-md"
-              >
-                View My Appointments
-              </Link>
-              <button
-                onClick={() => {
-                  setCurrentStep(1);
-                  setSelectedService(services[0]?.id || '');
-                }}
-                className="px-6 py-3 border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition-colors"
-              >
-                Book Another Appointment
-              </button>
+            {/* WhatsApp Info Banner */}
+            <div className="max-w-md mx-auto bg-emerald-50 border border-emerald-200 p-4 rounded-2xl text-left space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-emerald-900">
+                <span>📲 Priority Admin Desk Confirmation</span>
+                <span className="bg-emerald-200/80 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-mono">+91 9360645466</span>
+              </div>
+              <p className="text-[11px] text-emerald-800">
+                You can share your appointment details directly to our admin desk on WhatsApp for instant booking review and verification.
+              </p>
             </div>
           </div>
         )}
 
-        {/* Bottom Action Controls */}
-        {currentStep < 5 && (
-          <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-            {currentStep > 1 ? (
-              <button
-                onClick={handleBack}
-                className="px-6 py-2.5 border border-gray-300 text-gray-700 font-semibold text-xs rounded-full hover:bg-gray-50 transition-colors flex items-center gap-1"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span>Back</span>
-              </button>
-            ) : (
-              <Link
-                href="/portal/dashboard"
-                className="px-6 py-2.5 border border-gray-300 text-gray-700 font-semibold text-xs rounded-full hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </Link>
-            )}
+        {/* Bottom Action Controls / Continue Box */}
+        <div className="pt-6 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+          {currentStep === 5 ? (
+            <>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/portal/appointments"
+                  className="px-5 py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white text-xs font-bold rounded-full transition-colors shadow-sm"
+                >
+                  View My Appointments
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentStep(1);
+                    setSelectedService(services[0]?.id || '');
+                  }}
+                  className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-full transition-colors"
+                  suppressHydrationWarning
+                >
+                  Book Another
+                </button>
+              </div>
 
-            <button
-              onClick={handleNext}
-              className="px-8 py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-sm flex items-center gap-2"
-            >
-              <span>
-                {currentStep === 4
-                  ? 'Confirm Appointment'
-                  : currentStep === 3 && uploadedFiles.length === 0
-                  ? 'Skip / Next'
-                  : 'Next'}
-              </span>
-              <ChevronRight className="w-4 h-4 text-[#a8d5b9]" />
-            </button>
-          </div>
-        )}
+              {/* Share option inside the continue / action box */}
+              <a
+                href={getWhatsAppShareUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs rounded-full transition-all shadow-md flex items-center gap-2"
+              >
+                <MessageSquare className="w-4 h-4 fill-white" />
+                <span>Share Details to Admin on WhatsApp (+91 9360645466)</span>
+                <ChevronRight className="w-4 h-4 text-white" />
+              </a>
+            </>
+          ) : (
+            <>
+              {currentStep > 1 ? (
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="px-6 py-2.5 border border-gray-300 text-gray-700 font-semibold text-xs rounded-full hover:bg-gray-50 transition-colors flex items-center gap-1"
+                  suppressHydrationWarning
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Back</span>
+                </button>
+              ) : (
+                <Link
+                  href="/portal/dashboard"
+                  className="px-6 py-2.5 border border-gray-300 text-gray-700 font-semibold text-xs rounded-full hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </Link>
+              )}
+
+              <button
+                type="button"
+                onClick={handleNext}
+                className="px-8 py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-sm flex items-center gap-2"
+                suppressHydrationWarning
+              >
+                <span>
+                  {currentStep === 4
+                    ? 'Confirm Appointment'
+                    : currentStep === 3 && uploadedFiles.length === 0
+                    ? 'Skip / Next'
+                    : 'Next'}
+                </span>
+                <ChevronRight className="w-4 h-4 text-[#a8d5b9]" />
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
