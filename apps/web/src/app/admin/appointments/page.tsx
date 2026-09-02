@@ -32,6 +32,7 @@ import {
   deleteAppointmentAction,
   fetchCustomersForSelectAction,
   fetchServicesForSelectAction,
+  rescheduleAdminAppointmentAction,
 } from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
@@ -433,16 +434,10 @@ function AppointmentModal({
               <label className="block text-xs font-bold text-gray-700 mb-1.5">
                 {mode === 'reschedule' ? 'New Time Slot' : 'Time Slot'}
               </label>
-              <div className="relative">
-                <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <select
-                  value={form.time}
-                  onChange={e => setForm(p => ({ ...p, time: e.target.value }))}
-                  className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all appearance-none"
-                >
-                  {TIME_SLOTS.map(t => <option key={t} value={t}>{fmtTime(t)}</option>)}
-                </select>
-              </div>
+              <CustomTimePicker
+                value={form.time || '10:30 AM'}
+                onChange={val => setForm(p => ({ ...p, time: val }))}
+              />
             </div>
           </div>
 
@@ -638,38 +633,22 @@ export default function AppointmentsPage() {
   async function handleEdit(data: Partial<Appointment>) {
     if (!editApt) return;
     setErrorMsg(null);
-    const res = await updateAppointmentAction(editApt.id, {
-      customer: data.customer,
-      email: data.email,
-      phone: data.phone,
-      service: data.service,
-      serviceId: data.serviceId,
-      date: data.date,
-      time: data.time,
-      mode: data.mode,
-      onlineType: data.onlineType,
-      notes: data.notes,
-      status: data.status,
-    });
-    if (res.error) {
-      setErrorMsg(res.error);
-    } else {
-      setEditApt(null);
-      loadAppointments();
+    if (data.status) {
+      const st = data.status.toUpperCase() as any;
+      await updateAdminAppointmentStatusAction(editApt.id, st);
     }
+    setEditApt(null);
+    loadAppointments();
   }
 
   async function handleReschedule(data: Partial<Appointment>) {
     if (!rescheduleApt) return;
     setErrorMsg(null);
-    const res = await updateAppointmentAction(rescheduleApt.id, {
-      date: data.date,
-      time: data.time,
-      status: 'Rescheduled',
-    });
-    if (res.error) {
-      setErrorMsg(res.error);
-    } else {
+    if (data.date) {
+      await rescheduleAdminAppointmentAction(rescheduleApt.id, {
+        newDate: data.date,
+        reason: data.notes || 'Rescheduled by Administrator',
+      });
       setRescheduleApt(null);
       loadAppointments();
     }
@@ -679,12 +658,9 @@ export default function AppointmentsPage() {
     const idx = APT_PIPELINE.indexOf(apt.status);
     if (idx !== -1 && idx < APT_PIPELINE.length - 1) {
       const nextStatus = APT_PIPELINE[idx + 1];
-      const res = await updateAppointmentStatusAction(apt.id, nextStatus);
-      if (res.error) {
-        setErrorMsg(res.error);
-      } else {
-        loadAppointments();
-      }
+      const st = nextStatus.toUpperCase();
+      await updateAppointmentStatusAction(apt.id, st);
+      loadAppointments();
     }
   }
 

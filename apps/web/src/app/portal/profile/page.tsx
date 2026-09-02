@@ -175,18 +175,18 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-7xl w-full mx-auto space-y-6 font-sans pb-12">
+    <div className="w-full h-[calc(100vh-140px)] min-h-[560px] flex flex-col space-y-4 font-sans pb-2">
       {/* First-time Profile Setup Onboarding Banner */}
       {!user.isProfileCompleted && (
-        <div className="max-w-4xl mx-auto w-full bg-gradient-to-r from-[#12372A] to-[#1f5c46] text-white p-5 md:p-6 rounded-3xl shadow-md flex items-start gap-4">
-          <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5 text-[#a8d5b9]" />
+        <div className="w-full bg-gradient-to-r from-[#12372A] to-[#1f5c46] text-white p-4 rounded-2xl shadow-md flex items-start gap-3.5 shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+            <Sparkles className="w-4 h-4 text-[#a8d5b9]" />
           </div>
           <div>
-            <h3 className="font-extrabold text-base md:text-lg tracking-tight">
+            <h3 className="font-extrabold text-xs md:text-sm tracking-tight">
               Welcome to Amman Communications! Complete Your Profile Setup
             </h3>
-            <p className="mt-1 text-xs md:text-sm text-[#d1e7dd] leading-relaxed">
+            <p className="mt-0.5 text-[11px] text-[#d1e7dd] leading-normal">
               Please enter and save your official contact information, address, Aadhaar number, and emergency contact details below to complete registration and unlock all portal services.
             </p>
           </div>
@@ -195,32 +195,35 @@ export default function ProfilePage() {
 
       {/* Save Toast Notification */}
       {saved && (
-        <div className="max-w-4xl mx-auto w-full bg-[#e6f4ea] border border-[#a8d5b9] text-[#137333] p-4 rounded-xl flex items-center gap-3 text-xs font-bold animate-in fade-in duration-200">
-          <CheckCircle2 className="w-5 h-5 text-[#137333]" />
+        <div className="w-full bg-[#e6f4ea] border border-[#a8d5b9] text-[#137333] p-3 rounded-xl flex items-center gap-2.5 text-xs font-bold animate-in fade-in duration-200 shrink-0">
+          <CheckCircle2 className="w-4 h-4 text-[#137333]" />
           <span>Profile changes saved to database successfully!</span>
         </div>
       )}
 
-      {/* Centered Personal Information Form Card */}
-      <div className="max-w-4xl mx-auto w-full">
-        <form onSubmit={handleSave} className="bg-white rounded-3xl border border-gray-200/80 p-6 sm:p-8 md:p-10 shadow-2xs space-y-6">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#1c3a63] flex items-center justify-center border border-blue-100 shadow-xs">
+      {/* Full-Height Personal Information Form Card that occupies the bottom space */}
+      <div className="w-full flex-1 flex flex-col min-h-0">
+        <form onSubmit={handleSave} className="bg-white rounded-3xl border border-gray-200/80 p-6 sm:p-7 md:p-8 shadow-2xs flex-1 flex flex-col justify-between space-y-4">
+          {/* Top Header Bar */}
+          <div className="space-y-3 shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#1c3a63] flex items-center justify-center border border-blue-100 shadow-xs shrink-0">
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Personal Information</h2>
+                <h2 className="text-lg font-bold text-gray-900 leading-tight">Personal Information</h2>
                 <p className="text-xs text-gray-500 mt-0.5">
                   Enter and update your official personal information and contact credentials.
                 </p>
               </div>
             </div>
-            <div className="mt-5 border-b border-gray-100" />
+            <div className="border-b border-gray-100" />
           </div>
 
-          <div className="space-y-5 text-xs">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Flexible Middle Form Section spreading naturally */}
+          <div className="flex-1 flex flex-col justify-evenly py-1 text-xs gap-3.5">
+            {/* ROW 1: Name, Number and Email in the SAME LINE (3 columns) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {/* Full Name */}
               <div className="space-y-1.5">
                 <label className="block font-bold text-gray-700">Full Name *</label>
@@ -237,7 +240,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Mobile Number */}
+              {/* Mobile Phone Number */}
               <div className="space-y-1.5">
                 <label className="block font-bold text-gray-700">Mobile Phone Number *</label>
                 <div className="relative">
@@ -252,9 +255,7 @@ export default function ProfilePage() {
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Email Address */}
               <div className="space-y-1.5">
                 <label className="block font-bold text-gray-700">Email Address *</label>
@@ -270,9 +271,12 @@ export default function ProfilePage() {
                   />
                 </div>
               </div>
+            </div>
 
+            {/* ROW 2: Date of Birth and Residential Address side-by-side */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {/* Date of Birth */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 md:col-span-1">
                 <label className="block font-bold text-gray-700">Date of Birth</label>
                 <CustomDatePicker
                   value={profileData.dob}
@@ -280,27 +284,27 @@ export default function ProfilePage() {
                   disableFuture
                 />
               </div>
-            </div>
 
-            {/* Residential Address */}
-            <div className="space-y-1.5">
-              <label className="block font-bold text-gray-700">Residential Address *</label>
-              <div className="relative">
-                <MapPin className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />
-                <input
-                  type="text"
-                  value={profileData.residentialAddress}
-                  onChange={(e) => setProfileData({ ...profileData, residentialAddress: e.target.value })}
-                  placeholder="Enter house no, street, city & pincode"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
-                  required
-                />
+              {/* Residential Address */}
+              <div className="space-y-1.5 md:col-span-2">
+                <label className="block font-bold text-gray-700">Residential Address *</label>
+                <div className="relative">
+                  <MapPin className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={profileData.residentialAddress}
+                    onChange={(e) => setProfileData({ ...profileData, residentialAddress: e.target.value })}
+                    placeholder="Enter house no, street, city & pincode"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
+                    required
+                  />
+                </div>
               </div>
             </div>
 
             {/* Government ID References */}
-            <div className="pt-4 border-t border-gray-100">
-              <h3 className="text-xs font-bold text-gray-900 mb-3">Government Identity References</h3>
+            <div className="pt-2.5 border-t border-gray-100">
+              <h3 className="text-xs font-bold text-gray-900 mb-2">Government Identity References</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Aadhaar Number - Mandatory */}
                 <div className="space-y-1.5">
@@ -331,11 +335,11 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Emergency Contact Details: Left side = Person Name, Right side = Phone Number */}
-            <div className="pt-4 border-t border-gray-100">
-              <h3 className="text-xs font-bold text-gray-900 mb-3">Emergency Contact Details</h3>
+            {/* Emergency Contact Details */}
+            <div className="pt-2.5 border-t border-gray-100">
+              <h3 className="text-xs font-bold text-gray-900 mb-2">Emergency Contact Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Left side: Emergency Contact Person Name (Mandatory) */}
+                {/* Emergency Contact Person Name */}
                 <div className="space-y-1.5">
                   <label className="block font-bold text-gray-700">Emergency Contact Person *</label>
                   <input
@@ -348,7 +352,7 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                {/* Right side: Alternate Phone Number (Mandatory) */}
+                {/* Alternate Phone Number */}
                 <div className="space-y-1.5">
                   <label className="block font-bold text-gray-700">Alternate Phone Number *</label>
                   <input
@@ -364,12 +368,12 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Form Action Buttons */}
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-gray-100">
+          {/* Bottom Action Bar with Save Profile Details Button */}
+          <div className="pt-3 flex items-center justify-end border-t border-gray-100 shrink-0">
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2.5 bg-[#0e2a47] hover:bg-[#153e68] text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 bg-[#0e2a47] hover:bg-[#153e68] text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Save className="w-4 h-4" />
               <span>{saving ? 'Saving to Database...' : 'Save Profile Details'}</span>

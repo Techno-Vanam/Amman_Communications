@@ -23,6 +23,7 @@ import {
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser } from '@/context/UserContext';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
+import CustomTimePicker from '@/components/ui/CustomTimePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
 import CustomTabDropdown from '@/components/ui/CustomTabDropdown';
 import { fetchAppointmentsAction, cancelAppointmentAction, rescheduleAppointmentAction } from '@/app/portal/actions';
@@ -120,8 +121,16 @@ export default function AppointmentsPage() {
     };
   }, [pathname]);
 
+function getTodayISOString(): string {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
   // Form state for Reschedule Modal
-  const [rescheduleDate, setRescheduleDate] = useState('2026-09-01');
+  const [rescheduleDate, setRescheduleDate] = useState(getTodayISOString());
   const [rescheduleTime, setRescheduleTime] = useState('10:30 AM');
   const [rescheduleReason, setRescheduleReason] = useState('');
 
@@ -690,10 +699,9 @@ export default function AppointmentsPage() {
 
                 <div className="space-y-1.5">
                   <label className="block font-bold text-gray-700">New Time Slot *</label>
-                  <CustomSelect
+                  <CustomTimePicker
                     value={rescheduleTime}
                     onChange={setRescheduleTime}
-                    options={['09:30 AM', '10:30 AM', '11:30 AM', '02:00 PM', '03:30 PM', '04:30 PM']}
                   />
                 </div>
               </div>

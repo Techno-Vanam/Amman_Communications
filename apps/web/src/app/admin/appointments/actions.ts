@@ -352,3 +352,39 @@ export async function deleteAppointmentAction(id: string) {
     return { error: error.message || 'Network error' };
   }
 }
+
+export async function rescheduleAdminAppointmentAction(id: string, dto: { newDate: string; reason?: string }) {
+  try {
+    const authHeader = await getAuthHeader();
+    let res = await fetch(`${API_BASE_URL}/v1/admin/appointments/${id}/reschedule`, {
+      method: 'PATCH',
+      headers: {
+        ...authHeader,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dto),
+    });
+
+    if (res.status === 404) {
+      res = await fetch(`${API_BASE_URL}/api/v1/admin/appointments/${id}/reschedule`, {
+        method: 'PATCH',
+        headers: {
+          ...authHeader,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dto),
+      });
+    }
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      return { error: errData.message || 'Failed to reschedule appointment' };
+    }
+
+    const data = await res.json();
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('rescheduleAdminAppointmentAction error:', error);
+    return { error: error.message || 'Network error' };
+  }
+}
