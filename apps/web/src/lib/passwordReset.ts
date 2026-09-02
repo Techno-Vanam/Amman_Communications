@@ -1,7 +1,7 @@
 const API_BASE_URL =
   process.env.API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3003';
+  'http://127.0.0.1:3003';
 
 export interface PasswordResetResponse {
   success: boolean;

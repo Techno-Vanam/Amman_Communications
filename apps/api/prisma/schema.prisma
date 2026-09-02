@@ -85,13 +85,14 @@ model Customer {
 }
 
 model Admin {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  expenses     Expense[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String         @id @default(cuid())
+  email          String         @unique
+  passwordHash   String
+  name           String
+  expenses       Expense[]
+  adminSettings  AdminSettings?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 model Application {
@@ -177,6 +178,8 @@ model Service {
   serviceFee        Decimal            @db.Decimal(10, 2)
   totalFee          Decimal            @db.Decimal(10, 2)
   estimatedTime     String?
+  isPartialPaymentAllowed Boolean @default(false)
+  minimumPartialFee Decimal?      @db.Decimal(10, 2)
   status            ServiceStatus      @default(DRAFT)
   requiredDocuments RequiredDocument[]
   applications      Application[]
@@ -377,4 +380,73 @@ model PasswordResetToken {
 
   @@index([email])
   @@index([token])
+}
+
+enum SaleCategory {
+  APPLICATION
+  XEROX
+  STATIONARY
+  OTHER
+}
+
+model ManualSale {
+  id            String        @id @default(cuid())
+  saleNumber    String        @unique
+  customerName  String
+  customerPhone String?
+  category      SaleCategory  @default(OTHER)
+  amount        Decimal       @db.Decimal(10, 2)
+  details       String?
+  status        PaymentStatus @default(PAID)
+  paymentMethod PaymentMethod @default(CASH)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([createdAt])
+}
+
+model AdminSettings {
+  id             String   @id @default(cuid())
+  adminId        String   @unique
+  admin          Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  emailAlerts    Boolean  @default(true)
+  smsAlerts      Boolean  @default(true)
+  whatsappAlerts Boolean  @default(true)
+  weeklyDigest   Boolean  @default(false)
+  language       String   @default("English")
+  timezone       String   @default("Asia/Kolkata (IST +5:30)")
+  autoLogout     String   @default("30 minutes")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+enum NotificationUserType {
+  ADMIN
+  CUSTOMER
+}
+
+model Notification {
+  id        String               @id @default(cuid())
+  title     String
+  message   String
+  type      NotificationType     @default(INFO)
+  isRead    Boolean              @default(false)
+  href      String?
+
+  // Target User
+  userId    String?
+  userType  NotificationUserType @default(ADMIN)
+
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@index([userId, userType, isRead])
+  @@index([createdAt])
 }
