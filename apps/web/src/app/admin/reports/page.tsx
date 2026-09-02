@@ -15,6 +15,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, AreaChart, Area,
 } from 'recharts';
+import { fetchReportsDataAction } from './actions';
 
 // ── Custom Tooltips ───────────────────────────────────────────
 function RevenueTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number; name: string }[]; label?: string }) {
@@ -85,6 +86,28 @@ export default function ReportsPage() {
   const [topServices, setTopServices] = useState<{ name: string; applications: number; revenue: number }[]>([]);
   const [appointmentsTrend, setAppointmentsTrend] = useState<{ week: string; confirmed: number; pending: number; cancelled: number }[]>([]);
   const [expenseBreakdown, setExpenseBreakdown] = useState<{ name: string; value: number; color: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const loadReportsData = async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+    const res = await fetchReportsDataAction();
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else if (res.success && res.data) {
+      if (res.data.revenueMonthly?.length) setRevenueMonthly(res.data.revenueMonthly);
+      if (res.data.applicationStatus) setApplicationStatus(res.data.applicationStatus);
+      if (res.data.topServices) setTopServices(res.data.topServices);
+      if (res.data.appointmentsTrend) setAppointmentsTrend(res.data.appointmentsTrend);
+      if (res.data.expenseBreakdown) setExpenseBreakdown(res.data.expenseBreakdown);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadReportsData();
+  }, []);
 
   const totalRevenue = revenueMonthly.reduce((s, r) => s + r.revenue, 0);
   const totalExpenses = revenueMonthly.reduce((s, r) => s + r.expenses, 0);
@@ -170,7 +193,7 @@ export default function ReportsPage() {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 600 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${(v / 1000).toFixed(0)}k`} />
+              <YAxis tick={{ fontSize: 11, fill: '#9ca3af', fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `₹${(v / 1000).toFixed(0)}k`} />
               <Tooltip content={<RevenueTooltip />} />
               <Area type="monotone" dataKey="revenue" stroke="#12372A" strokeWidth={2.5} fill="url(#revGrad)" />
               <Area type="monotone" dataKey="expenses" stroke="#f43f5e" strokeWidth={2} fill="url(#expGrad)" />

@@ -9,9 +9,14 @@ import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('Customer Profile')
 @ApiBearerAuth()
+<<<<<<< HEAD
 @Controller('customer/me')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('CUSTOMER')
+=======
+@Controller(['customer/me', 'v1/customer/me', 'api/v1/customer/me'])
+@UseGuards(CustomerAuthGuard)
+>>>>>>> origin/backend-merge
 export class CustomerMeController {
   constructor(private readonly prisma: PrismaService) {}
 

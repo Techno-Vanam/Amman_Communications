@@ -11,7 +11,82 @@ type JwtPayload = {
 };
 
 export async function getAccessToken() {
-  return (await cookies()).get('access_token')?.value ?? null;
+  const cookieStore = await cookies();
+  const cachedAccessToken = cookieStore.get('access_token')?.value;
+
+  if (cachedAccessToken) {
+    try {
+      const parts = cachedAccessToken.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(decodePart(parts[1])) as JwtPayload;
+        const now = Math.floor(Date.now() / 1000);
+        if (typeof payload.exp === 'number' && payload.exp > now + 10) {
+          return cachedAccessToken;
+        }
+      }
+    } catch {
+      // Fall through to refresh
+    }
+  }
+
+  const refreshToken = cookieStore.get('refresh_token')?.value;
+  if (!refreshToken) return null;
+
+  const primaryApiBase = (process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003')
+    .replace(/\/api\/v1\/?$/, '')
+    .replace(/\/api\/?$/, '');
+
+  let response: Response;
+  try {
+    response = await fetch(`${primaryApiBase}/v1/auth/refresh`, {
+      method: 'POST',
+      headers: { Cookie: `refresh_token=${refreshToken}` },
+      cache: 'no-store',
+    });
+  } catch {
+    try {
+      response = await fetch('http://127.0.0.1:3003/v1/auth/refresh', {
+        method: 'POST',
+        headers: { Cookie: `refresh_token=${refreshToken}` },
+        cache: 'no-store',
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  if (!response.ok) return null;
+  const session = (await response.json()) as { accessToken?: string };
+  const rotatedRefreshToken = response.headers.get('set-cookie')?.match(/refresh_token=([^;]+)/)?.[1];
+
+  if (session.accessToken) {
+    try {
+      cookieStore.set('access_token', session.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 15 * 60,
+      });
+    } catch {
+      // Read-only server components can still use the transient access token.
+    }
+  }
+
+  if (rotatedRefreshToken) {
+    try {
+      cookieStore.set('refresh_token', rotatedRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60,
+      });
+    } catch {
+      // Read-only server components can still use the transient access token.
+    }
+  }
+  return session.accessToken ?? null;
 }
 
 function decodePart(value: string) {
@@ -19,7 +94,7 @@ function decodePart(value: string) {
 }
 
 export async function getAuthenticatedRole(): Promise<UserRole | null> {
-  const token = (await cookies()).get('access_token')?.value;
+  const token = await getAccessToken();
   const secret = process.env.JWT_ACCESS_SECRET;
   if (!token || !secret) return null;
 

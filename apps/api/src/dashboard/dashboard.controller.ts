@@ -10,9 +10,14 @@ import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('Admin - Dashboard')
 @ApiBearerAuth()
+<<<<<<< HEAD
 @Controller('admin/dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
+=======
+@Controller(['v1/admin/dashboard', 'api/v1/admin/dashboard', 'admin/dashboard'])
+@UseGuards(AdminAuthGuard)
+>>>>>>> origin/backend-merge
 export class AdminDashboardController {
   constructor(private readonly prisma: PrismaService) {}
 
@@ -64,9 +69,14 @@ export class AdminDashboardController {
 
 @ApiTags('Customer - Dashboard')
 @ApiBearerAuth()
+<<<<<<< HEAD
 @Controller('customer/dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('CUSTOMER')
+=======
+@Controller(['customer/dashboard', 'v1/customer/dashboard', 'api/v1/customer/dashboard'])
+@UseGuards(CustomerAuthGuard)
+>>>>>>> origin/backend-merge
 export class CustomerDashboardController {
   constructor(private readonly prisma: PrismaService) {}
 

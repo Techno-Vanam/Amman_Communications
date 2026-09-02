@@ -598,6 +598,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "download",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1834,6 +1842,41 @@
         "tags": [
           "Admin - Applications"
         ]
+      },
+      "post": {
+        "operationId": "AdminApplicationsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminCreateApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Admin creates an application for a customer",
+        "tags": [
+          "Admin - Applications"
+        ]
       }
     },
     "/api/v1/admin/applications/{id}/status": {
@@ -1859,6 +1902,41 @@
             "bearer": []
           }
         ],
+        "summary": "Update application status",
+        "tags": [
+          "Admin - Applications"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminApplicationsController_patchStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Patch application status (alias for PUT)",
         "tags": [
           "Admin - Applications"
         ]
@@ -2760,6 +2838,147 @@
         ],
         "tags": [
           "Customer Payments"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{applicationId}/documents/upload": {
+      "post": {
+        "operationId": "AdminDocumentsController_adminUploadDocument",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectUploadDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Admin uploads a document on behalf of a customer (base64)",
+        "tags": [
+          "Admin - Documents"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{id}": {
+      "put": {
+        "operationId": "AdminApplicationsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an application fully",
+        "tags": [
+          "Admin - Applications"
+        ]
+      },
+      "get": {
+        "operationId": "AdminApplicationsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get single application by ID",
+        "tags": [
+          "Admin - Applications"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{id}/documents": {
+      "get": {
+        "operationId": "AdminApplicationsController_getDocuments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get documents for application",
+        "tags": [
+          "Admin - Applications"
         ]
       }
     }
@@ -3803,6 +4022,41 @@
       "CreateCustomerPaymentDto": {
         "type": "object",
         "properties": {}
+      },
+      "AdminCreateApplicationDto": {
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "description": "Customer ID to create the application for"
+          },
+          "serviceType": {
+            "type": "string",
+            "description": "Service type for the application"
+          },
+          "title": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "customerId",
+          "serviceType"
+        ]
       }
     }
   }

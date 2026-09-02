@@ -36,7 +36,7 @@ pnpm db:migrate -- --name init
 pnpm dev
 ```
 
-The web app runs at `http://localhost:3000`; the API runs at `http://localhost:3003`. Never use `NEXT_PUBLIC_*` for database or Prisma secrets.
+The landing page runs at `http://localhost:3000`, the web app runs at `http://localhost:3001`, and the API runs at `http://localhost:3003`. Never use `NEXT_PUBLIC_*` for database or Prisma secrets.
 
 Run repository checks with:
 

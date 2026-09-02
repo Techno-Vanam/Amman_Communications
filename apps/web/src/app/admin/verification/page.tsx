@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   ShieldCheck,
   Search,
@@ -14,10 +14,12 @@ import {
   Filter,
   FileText,
   CalendarDays,
-  MessageSquare,
-  Edit2,
   Hourglass,
 } from 'lucide-react';
+import {
+  fetchVerificationRecordsAction,
+  updateVerificationStatusAction,
+} from './actions';
 
 // ── Types ─────────────────────────────────────────────────────
 type VerifStatus = 'Pending Review' | 'Verified' | 'Needs Correction' | 'Rejected';
@@ -231,12 +233,31 @@ function DetailModal({ record, onClose }: { record: VerifRecord; onClose: () => 
 type FilterType = 'All' | VerifStatus;
 
 export default function VerificationPage() {
-  const [records, setRecords] = useState<VerifRecord[]>(INITIAL_RECORDS);
+  const [records, setRecords] = useState<VerifRecord[]>([]);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterType>('All');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [reviewRecord, setReviewRecord] = useState<VerifRecord | null>(null);
   const [viewRecord, setViewRecord] = useState<VerifRecord | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const loadRecords = async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+    const res = await fetchVerificationRecordsAction();
+    if (res.error) {
+      setErrorMsg(res.error);
+      setRecords([]);
+    } else if (res.success && res.data) {
+      setRecords(res.data);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadRecords();
+  }, []);
 
   const filtered = useMemo(() => records.filter(r => {
     const q = search.toLowerCase();
@@ -246,8 +267,16 @@ export default function VerificationPage() {
     return matchSearch && matchFilter;
   }), [records, search, filterStatus]);
 
-  function handleSaveReview(id: string, status: VerifStatus, remarks: string) {
-    setRecords(prev => prev.map(r => r.id === id ? { ...r, status, remarks, reviewedBy: 'Admin' } : r));
+  async function handleSaveReview(id: string, status: VerifStatus, remarks: string) {
+    const record = records.find(r => r.id === id);
+    if (!record) return;
+    setErrorMsg(null);
+    const res = await updateVerificationStatusAction(record.appId, id, status, remarks);
+    if (res.error) {
+      setErrorMsg(res.error);
+    } else {
+      loadRecords();
+    }
   }
 
   const ALL_STATUS_LIST: VerifStatus[] = ['Pending Review', 'Verified', 'Needs Correction', 'Rejected'];
@@ -314,17 +343,17 @@ export default function VerificationPage() {
       {/* ── Summary Cards ── */}
       <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {summaryCards.map(card => (
-          <div key={card.label} className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-2xs hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center ${card.iconBg}`}>
+          <div key={card.label} className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-2xs hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-2">
+              <div className={`w-8 h-8 rounded-xl border flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4 ${card.iconBg}`}>
                 {card.icon}
               </div>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${card.badge} truncate max-w-[140px]`}>
                 {card.desc}
               </span>
             </div>
-            <p className={`text-2xl sm:text-3xl font-extrabold ${card.text}`}>{card.value}</p>
-            <p className="text-xs text-gray-500 font-semibold mt-1 truncate">{card.label}</p>
+            <p className={`text-xl sm:text-2xl font-extrabold ${card.text}`}>{card.value}</p>
+            <p className="text-[11px] text-gray-500 font-semibold mt-0.5 truncate">{card.label}</p>
           </div>
         ))}
       </div>
@@ -382,13 +411,10 @@ export default function VerificationPage() {
           <div className="min-w-[700px]">
             {/* Table Header */}
             <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-              <div className="col-span-1">ID</div>
-              <div className="col-span-2">App. ID</div>
-              <div className="col-span-2">Document Type</div>
-              <div className="col-span-2">Customer</div>
-              <div className="col-span-1">Uploaded</div>
-              <div className="col-span-2 text-center">Verif. Status</div>
-              <div className="col-span-1">Remarks</div>
+              <div className="col-span-4">Customer</div>
+              <div className="col-span-3">Document Type</div>
+              <div className="col-span-2">Uploaded</div>
+              <div className="col-span-2 text-center">Status</div>
               <div className="col-span-1 text-center">Action</div>
             </div>
 
@@ -401,51 +427,40 @@ export default function VerificationPage() {
               </div>
             ) : filtered.map((r, idx) => (
               <div key={r.id} className={`grid grid-cols-12 px-5 py-3.5 items-center hover:bg-gray-50/80 transition-colors ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                {/* ID */}
-                <div className="col-span-1">
-                  <span className="text-[11px] font-bold text-gray-500">{r.id}</span>
-                </div>
-                {/* App ID */}
-                <div className="col-span-2">
-                  <span className="text-xs font-bold text-[#12372A]">{r.appId}</span>
+                {/* Customer */}
+                <div className="col-span-4 min-w-0 pr-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">
+                      {r.customer.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-gray-900 truncate">{r.customer}</p>
+                      <p className="text-[10px] text-gray-400 truncate">{r.appId}</p>
+                    </div>
+                  </div>
                 </div>
                 {/* Doc Type */}
-                <div className="col-span-2 min-w-0 pr-2">
+                <div className="col-span-3 min-w-0 pr-2">
                   <div className="flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                     <span className="text-xs font-semibold text-gray-700 truncate">{r.docType}</span>
                   </div>
                 </div>
-                {/* Customer */}
-                <div className="col-span-2 min-w-0 pr-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-[9px] font-extrabold flex items-center justify-center shrink-0">
-                      {r.customer.charAt(0)}
-                    </div>
-                    <span className="text-xs font-semibold text-gray-800 truncate">{r.customer}</span>
-                  </div>
-                </div>
                 {/* Uploaded Date */}
-                <div className="col-span-1">
+                <div className="col-span-2">
                   <div className="flex items-center gap-1">
                     <CalendarDays className="w-3 h-3 text-gray-400" />
-                    <span className="text-[10px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(r.uploadedDate)}</span>
+                    <span className="text-[11px] text-gray-600 font-medium whitespace-nowrap">{fmtDate(r.uploadedDate)}</span>
                   </div>
                 </div>
                 {/* Status */}
                 <div className="col-span-2 flex justify-center">
-                  <VerifBadge status={r.status} />
-                </div>
-                {/* Remarks preview */}
-                <div className="col-span-1 min-w-0">
-                  {r.remarks ? (
-                    <div className="flex items-center gap-1" title={r.remarks}>
-                      <MessageSquare className="w-3 h-3 text-gray-400 shrink-0" />
-                      <span className="text-[10px] text-gray-500 truncate max-w-[80px]">{r.remarks}</span>
-                    </div>
-                  ) : (
-                    <span className="text-[10px] text-gray-300 italic">—</span>
-                  )}
+                  <div title={r.remarks || undefined}>
+                    <VerifBadge status={r.status} />
+                    {r.remarks && (
+                      <p className="text-[9px] text-gray-400 text-center mt-0.5 truncate max-w-[90px]">{r.remarks}</p>
+                    )}
+                  </div>
                 </div>
                 {/* Actions */}
                 <div className="col-span-1 flex items-center justify-center gap-1.5">

@@ -28,7 +28,7 @@ export const WhyChooseUs: React.FC = () => {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3 mb-16">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-50 text-brand-700 text-xs font-semibold uppercase tracking-wider">
-            <span>Why Amman Communications</span>
+            <span>Why TechnoVanam Communications</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-brand-700 tracking-tight">
             Built for Transparency, Speed & Peace of Mind

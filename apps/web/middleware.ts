@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { NextRequest, NextResponse } from 'next/server';
 
 type JwtPayload = {
@@ -80,7 +81,11 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/portal') && payload.role !== 'CUSTOMER') {
     return NextResponse.redirect(new URL('/admin/dashboard', request.url));
   }
+=======
+import { NextResponse } from 'next/server';
+>>>>>>> origin/backend-merge
 
+export async function middleware() {
   return NextResponse.next();
 }
 

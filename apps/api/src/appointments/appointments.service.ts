@@ -24,7 +24,7 @@ export class AppointmentsService {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
     const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
-    const [todayCount, upcomingCount, confirmedCount, completedCount, cancelledCount, totalCount] =
+    const [todayCount, upcomingCount, confirmedCount, completedCount, cancelledCount, pendingCount, totalCount] =
       await Promise.all([
         this.prisma.appointment.count({
           where: {
@@ -53,6 +53,9 @@ export class AppointmentsService {
         this.prisma.appointment.count({
           where: { status: AppointmentStatus.CANCELLED },
         }),
+        this.prisma.appointment.count({
+          where: { status: AppointmentStatus.PENDING },
+        }),
         this.prisma.appointment.count(),
       ]);
 
@@ -62,6 +65,7 @@ export class AppointmentsService {
       confirmed: confirmedCount,
       completed: completedCount,
       cancelled: cancelledCount,
+      pending: pendingCount,
       total: totalCount,
     };
   }
@@ -150,9 +154,10 @@ export class AppointmentsService {
           },
         },
       },
-      orderBy: {
-        appointmentDate: 'asc',
-      },
+      orderBy: [
+        { appointmentDate: 'desc' },
+        { createdAt: 'desc' },
+      ],
     });
 
     return appointments;
@@ -178,6 +183,20 @@ export class AppointmentsService {
     const appointmentDate = new Date(dto.appointmentDate);
     if (isNaN(appointmentDate.getTime())) {
       throw new BadRequestException('Invalid appointment date format');
+    }
+
+    if (!dto.customerId) {
+      const existingCustomer = await this.prisma.customer.findFirst({
+        where: {
+          OR: [
+            { email: { equals: dto.customerEmail.toLowerCase().trim(), mode: 'insensitive' } },
+            { name: { equals: dto.customerName.trim(), mode: 'insensitive' } },
+          ]
+        }
+      });
+      if (existingCustomer) {
+        throw new BadRequestException('A customer with this email or name already exists.');
+      }
     }
 
     const appointment = await this.prisma.appointment.create({
