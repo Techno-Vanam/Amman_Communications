@@ -1,8 +1,13 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+<<<<<<< HEAD
+import NotificationDropdown from '../ui/NotificationDropdown';
+=======
+import { useAuth } from '@/lib/auth-context';
+>>>>>>> origin/backend-merge
 import {
   LayoutDashboard,
   FileText,
@@ -23,6 +28,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 
+<<<<<<< HEAD
 const ADMIN_NAV_ITEMS = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Customers', href: '/admin/customers', icon: Users },
@@ -44,13 +50,47 @@ function AdminSidebarNavContent({
 }) {
   const pathname = usePathname();
   const isProfileActive = pathname === '/admin/profile';
+=======
+export default function AdminLayoutShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { ready, user, clearSession } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  React.useEffect(() => {
+    if (ready && !isSigningOut && (!user || user.role !== 'ADMIN')) router.replace('/login?forbidden=true');
+  }, [isSigningOut, ready, router, user]);
+
+  if (!ready || !user || user.role !== 'ADMIN') {
+    return <div className="min-h-screen bg-gray-50" />;
+  }
+
+  const handleLogout = async () => {
+    setIsSigningOut(true);
+    await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => undefined);
+    clearSession();
+    router.replace('/login');
+  };
+
+  const navItems = [
+    { name: 'Dashboard', href: '/admin', icon: Home },
+    { name: 'Applications', href: '/admin/applications', icon: FileText },
+    { name: 'Appointments', href: '/admin/appointments', icon: Calendar },
+    { name: 'Customers', href: '/admin/customers', icon: User },
+    { name: 'Services', href: '/admin/services', icon: Building2 },
+    { name: 'Expenses', href: '/admin/expenses', icon: Receipt },
+    { name: 'Settings', href: '/admin/settings', icon: Settings },
+  ];
+>>>>>>> origin/backend-merge
 
   return (
     <aside
       className={`
         fixed inset-y-0 left-0 z-40 w-72 md:w-60 lg:w-72 bg-white text-gray-800 flex flex-col transition-transform duration-300 ease-in-out md:static md:translate-x-0
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-3 lg:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:shrink-0
+        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-3 lg:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:sticky md:top-4
       `}
     >
       {/* Fixed Brand Header — not scrollable */}
@@ -66,17 +106,78 @@ function AdminSidebarNavContent({
             >
               Amman Admin
             </Link>
+<<<<<<< HEAD
             <p className="text-[10px] font-bold tracking-wider text-gray-400 uppercase mt-0.5">
               Control Center
             </p>
+=======
+          </div>
+
+          {/* Search bar */}
+          <div className="hidden md:flex items-center flex-1 max-w-md mx-4">
+            <div className="relative w-full text-emerald-200 focus-within:text-white">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+              <input
+                type="text"
+                placeholder="Search portal..."
+                className="w-full bg-emerald-900/60 border border-emerald-800 rounded-xl pl-9 pr-4 py-2 text-sm text-white placeholder-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-emerald-900"
+              />
+            </div>
+          </div>
+
+          {/* Right Header Actions */}
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                className="flex items-center gap-2 py-1.5 px-3 rounded-xl hover:bg-emerald-900 text-sm font-medium transition-colors"
+                aria-expanded={userDropdownOpen}
+              >
+                <div className="w-8 h-8 rounded-full bg-emerald-800 flex items-center justify-center text-emerald-200 font-bold border border-emerald-700">
+                  <User className="w-4 h-4" />
+                </div>
+                <span className="hidden sm:inline text-white">Admin Account</span>
+                <ChevronDown className="w-4 h-4 text-emerald-400" />
+              </button>
+
+              {userDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 text-gray-800">
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-xs text-gray-500">Signed in as</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">admin@test.com</p>
+                  </div>
+                  <Link
+                    href="/admin/settings"
+                    onClick={() => setUserDropdownOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-emerald-700" />
+                    <span>Settings</span>
+                  </Link>
+                  <Link
+                    href="#"
+                    onClick={(event) => { event.preventDefault(); void handleLogout(); }}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+>>>>>>> origin/backend-merge
           </div>
         </div>
       </div>
 
       {/* Scrollable Navigation */}
-      <div className="p-5 pt-4 space-y-1 flex-1 admin-scrollbar">
+      <div className="p-5 pt-4 space-y-1 overflow-y-auto flex-1 admin-scrollbar">
         {/* Main Nav Section */}
         <div className="space-y-1">
+          <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+            Main Menu
+          </p>
           <nav aria-label="Admin portal main navigation" className="space-y-1.5">
             {ADMIN_NAV_ITEMS.map((item) => {
               const Icon = item.icon;
@@ -155,6 +256,85 @@ function AdminSidebarNavContent({
   );
 }
 
+// ── Profile Dropdown ─────────────────────────────────────────────
+function ProfileDropdown() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [open]);
+
+  function handleLogout() {
+    setOpen(false);
+    try { localStorage.removeItem('user_email'); } catch (_) {}
+    router.push('/login');
+  }
+
+  return (
+    <div className="relative shrink-0" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className={`flex items-center gap-2 sm:gap-3.5 bg-white border rounded-full pl-1.5 sm:pl-3 pr-2.5 sm:pr-5 py-1 sm:py-2 shadow-xs transition-all
+          ${open ? 'border-[#a8d5b9] bg-[#f0f7f2]' : 'border-gray-200/90 hover:bg-[#f0f7f2] hover:border-[#a8d5b9] hover:shadow-sm'}`}
+      >
+        <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-[#12372A] text-[#a8d5b9] font-bold text-xs sm:text-sm flex items-center justify-center border border-[#a8d5b9]/30 shadow-2xs shrink-0">
+          AD
+        </div>
+        <div className="text-left leading-tight hidden sm:block">
+          <p className="text-sm font-extrabold text-gray-900">Administrator</p>
+          <p className="text-xs text-gray-500 font-semibold mt-0.5">Admin Account</p>
+        </div>
+        <ChevronDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 ml-0.5 sm:ml-1 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-3 w-52 bg-white rounded-2xl border border-gray-100 shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+          {/* User info header */}
+          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/60">
+            <p className="text-xs font-extrabold text-gray-900">Administrator</p>
+            <p className="text-[10px] text-gray-400 font-medium mt-0.5">Admin Account</p>
+          </div>
+
+          {/* Menu items */}
+          <div className="py-1.5">
+            <Link
+              href="/admin/profile"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-[#f0f7f2] hover:text-[#12372A] transition-colors group"
+            >
+              <div className="w-7 h-7 rounded-full bg-gray-100 group-hover:bg-[#12372A]/10 flex items-center justify-center transition-colors">
+                <User className="w-3.5 h-3.5 text-gray-500 group-hover:text-[#12372A]" />
+              </div>
+              My Profile
+            </Link>
+
+            <div className="mx-3 my-1 border-t border-gray-100" />
+
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-rose-50 hover:text-rose-600 transition-colors group"
+            >
+              <div className="w-7 h-7 rounded-full bg-gray-100 group-hover:bg-rose-100 flex items-center justify-center transition-colors">
+                <LogOut className="w-3.5 h-3.5 text-gray-500 group-hover:text-rose-600" />
+              </div>
+              Log Out
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const PATH_METADATA: Record<
   string,
   { title: string; subtext: string; icon: React.ComponentType<{ className?: string }> }
@@ -181,7 +361,7 @@ function AdminTopHeader() {
   const Icon = matched.icon;
 
   return (
-    <header className="bg-transparent pb-4 sm:pb-6 flex items-center justify-between gap-3 border-b border-gray-200/50 mb-4 sm:mb-6 shrink-0 flex-wrap">
+    <header className="max-w-7xl mx-auto w-full bg-transparent pb-4 sm:pb-6 flex items-center justify-between gap-3 border-b border-gray-200/50 mb-4 sm:mb-6 shrink-0 flex-wrap">
       <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
         <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#12372A] flex items-center justify-center shrink-0 shadow-sm">
           <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#a8d5b9]" />
@@ -196,36 +376,12 @@ function AdminTopHeader() {
         </div>
       </div>
 
-      <div className="flex items-center space-x-3 shrink-0">
+      <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
         {/* Notification Bell */}
-        <button
-          type="button"
-          suppressHydrationWarning
-          className="w-10 h-10 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative shrink-0"
-          title="Notifications"
-        >
-          <Bell className="w-5 h-5" />
-        </button>
+        <NotificationDropdown />
 
-        {/* Admin Profile Badge: Small screen = w-10 h-10 single circle; Big screen = h-10 pill with avatar + name & view profile */}
-        <Link
-          href="/admin/profile"
-          className="h-10 w-10 sm:w-auto rounded-full bg-[#12372A] sm:bg-white border border-[#12372A] sm:border-gray-200/90 hover:border-gray-300 hover:bg-[#1a4a38] sm:hover:bg-gray-50 transition-all shadow-xs flex items-center justify-center sm:justify-start p-0 sm:p-1 sm:pr-3 sm:gap-2 group shrink-0"
-          title="Admin Profile"
-        >
-          <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-[#12372A] text-white font-extrabold text-xs flex items-center justify-center shrink-0 border border-transparent sm:border-[#12372A] shadow-2xs">
-            AD
-          </div>
-          <div className="hidden sm:flex flex-col text-left pr-0.5">
-            <span className="text-[11px] font-bold text-gray-900 group-hover:text-[#12372A] leading-tight truncate max-w-[110px] lg:max-w-[140px]">
-              Administrator
-            </span>
-            <span className="text-[10px] font-semibold text-[#12372A]/75 group-hover:text-[#12372A] leading-tight flex items-center gap-0.5 mt-0.5">
-              View profile
-              <ChevronRight className="w-2.5 h-2.5 text-[#12372A]/60 group-hover:translate-x-0.5 transition-transform" />
-            </span>
-          </div>
-        </Link>
+        {/* Admin Profile Dropdown */}
+        <ProfileDropdown />
       </div>
     </header>
   );
@@ -235,7 +391,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="h-screen overflow-hidden overscroll-none bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full" suppressHydrationWarning>
+    <div className="h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-hidden" suppressHydrationWarning>
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c]">
         <div className="flex items-center space-x-3">
@@ -262,12 +418,12 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
       </div>
 
       {/* Sidebar Navigation */}
-      <Suspense fallback={<aside className="w-72 md:w-60 lg:w-72 max-w-[85vw] bg-white rounded-3xl m-3 lg:m-4 border border-gray-100 shrink-0" />}>
+      <Suspense fallback={<aside className="w-72 md:w-60 lg:w-72 max-w-[85vw] bg-white rounded-3xl m-3 lg:m-4 border border-gray-100" />}>
         <AdminSidebarNavContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
       </Suspense>
 
       {/* Main Content Area */}
-      <main className="min-w-0 flex-1 p-3.5 sm:p-4 md:p-5 lg:p-8 h-full overflow-y-auto overscroll-contain max-w-full overflow-x-hidden">
+      <main className="min-w-0 flex-1 p-3.5 sm:p-4 md:p-5 lg:p-8 overflow-y-auto max-w-full overflow-x-hidden">
         <AdminTopHeader />
         {children}
       </main>

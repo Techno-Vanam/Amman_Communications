@@ -23,9 +23,10 @@ import {
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser } from '@/context/UserContext';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
+import CustomTimePicker from '@/components/ui/CustomTimePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
 import CustomTabDropdown from '@/components/ui/CustomTabDropdown';
-import { fetchAppointmentsAction, cancelAppointmentAction } from '@/app/portal/actions';
+import { fetchAppointmentsAction, cancelAppointmentAction, rescheduleAppointmentAction } from '@/app/portal/actions';
 
 interface AppointmentItem {
   id: string;
@@ -42,11 +43,25 @@ interface AppointmentItem {
 function mapBackendAppointment(apt: any): AppointmentItem {
   const serviceType = apt.service?.name || 'Broadband Setup';
   
-  const dateObj = new Date(apt.appointmentDate || apt.preferredDate);
-  const formattedDate = isNaN(dateObj.getTime()) 
-    ? '2026-08-29' 
-    : dateObj.toISOString().split('T')[0];
+  const hasBeenRescheduled = !!apt.rescheduledFrom || apt.status === 'RESCHEDULED';
+
+  const origDateObj = new Date(apt.rescheduledFrom || apt.appointmentDate || apt.preferredDate);
+  const formattedOrigDate = isNaN(origDateObj.getTime()) 
+    ? '' 
+    : origDateObj.toISOString().split('T')[0];
   const timeStr = apt.preferredTime || '10:30 AM';
+
+<<<<<<< HEAD
+  let newDateStr = '-';
+  if (hasBeenRescheduled) {
+    const newDateObj = new Date(apt.appointmentDate || apt.preferredDate);
+    const formattedNewDate = isNaN(newDateObj.getTime())
+      ? ''
+      : newDateObj.toISOString().split('T')[0];
+    if (formattedNewDate) {
+      newDateStr = `${formattedNewDate} ${timeStr}`;
+    }
+  }
   
   let consultationType = 'Office Visit';
   if (apt.appointmentType === 'ONLINE_CONSULTATION' || apt.mode === 'ONLINE') {
@@ -64,9 +79,9 @@ function mapBackendAppointment(apt: any): AppointmentItem {
   else if (apt.status === 'CANCELLED') status = 'Cancelled';
 
   return {
-    id: apt.id, // Keep direct DB id for actions
-    originalDateTime: `${formattedDate} ${timeStr}`,
-    newDateTime: apt.rescheduledFrom ? `${new Date(apt.appointmentDate).toISOString().split('T')[0]} ${timeStr}` : '-',
+    id: apt.id,
+    originalDateTime: formattedOrigDate ? `${formattedOrigDate} ${timeStr}` : timeStr,
+    newDateTime: newDateStr,
     serviceType,
     consultationType,
     status,
@@ -107,8 +122,16 @@ export default function AppointmentsPage() {
     };
   }, [pathname]);
 
+function getTodayISOString(): string {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
   // Form state for Reschedule Modal
-  const [rescheduleDate, setRescheduleDate] = useState('2026-09-01');
+  const [rescheduleDate, setRescheduleDate] = useState(getTodayISOString());
   const [rescheduleTime, setRescheduleTime] = useState('10:30 AM');
   const [rescheduleReason, setRescheduleReason] = useState('');
 
@@ -121,6 +144,18 @@ export default function AppointmentsPage() {
     const mapped = (raw || []).map(mapBackendAppointment);
     setAppointments(mapped);
     setLoading(false);
+=======
+  const counts: Partial<Record<TabKey, number>> = {
+    ALL: allAppointments.length,
+    UPCOMING: allAppointments.filter(
+      (a) =>
+        (a.status === 'PENDING' || a.status === 'CONFIRMED') &&
+        new Date(a.preferredDate || a.appointmentDate || Date.now()) >= new Date()
+    ).length,
+    RESCHEDULED: allAppointments.filter((a) => a.status === 'RESCHEDULED').length,
+    COMPLETED: allAppointments.filter((a) => a.status === 'COMPLETED').length,
+    CANCELLED: allAppointments.filter((a) => a.status === 'CANCELLED').length,
+>>>>>>> origin/backend-merge
   };
 
   useEffect(() => {
@@ -128,13 +163,26 @@ export default function AppointmentsPage() {
     setSelectedAppointment(null);
   }, [user.email]);
 
-  const handleConfirmReschedule = (e: React.FormEvent) => {
+  const handleConfirmReschedule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rescheduleModalItem) return;
 
-    // Rescheduling can be implemented similarly if needed, but for now we let it log/warn.
-    showToast('Info', 'Rescheduling request submitted.');
+    setLoading(true);
+    const res = await rescheduleAppointmentAction(rescheduleModalItem.id, {
+      preferredDate: rescheduleDate,
+      preferredTime: rescheduleTime,
+      reason: rescheduleReason,
+    });
+    setLoading(false);
+
+    if (res.error) {
+      showToast('Error', res.error);
+      return;
+    }
+
+    showToast('Success', 'Appointment rescheduled successfully.');
     setRescheduleModalItem(null);
+    loadAppointments();
   };
 
   const handleConfirmCancel = async (e: React.FormEvent) => {
@@ -160,7 +208,7 @@ export default function AppointmentsPage() {
       activeTab === 'All'
         ? true
         : activeTab === 'Upcoming'
-        ? item.status === 'Confirmed' || item.status === 'Pending'
+        ? item.status === 'Confirmed' || item.status === 'Pending' || item.status === 'Rescheduled'
         : activeTab === 'Completed'
         ? item.status === 'Completed'
         : activeTab === 'Cancelled'
@@ -664,10 +712,9 @@ export default function AppointmentsPage() {
 
                 <div className="space-y-1.5">
                   <label className="block font-bold text-gray-700">New Time Slot *</label>
-                  <CustomSelect
+                  <CustomTimePicker
                     value={rescheduleTime}
                     onChange={setRescheduleTime}
-                    options={['09:30 AM', '10:30 AM', '11:30 AM', '02:00 PM', '03:30 PM', '04:30 PM']}
                   />
                 </div>
               </div>

@@ -624,45 +624,6 @@
         ]
       }
     },
-    "/api/v1/admin/applications/{applicationId}/documents/upload": {
-      "post": {
-        "operationId": "AdminDocumentsController_adminUploadDocument",
-        "parameters": [
-          {
-            "name": "applicationId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DirectUploadDocumentDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Admin uploads a document on behalf of a customer (base64)",
-        "tags": [
-          "Admin - Documents"
-        ]
-      }
-    },
     "/api/v1/admin/applications/{applicationId}/documents/{documentId}/status": {
       "put": {
         "operationId": "AdminDocumentsController_updateDocumentStatus",
@@ -776,14 +737,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -803,14 +757,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -850,7 +797,7 @@
         "parameters": [
           {
             "name": "search",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -858,7 +805,7 @@
           },
           {
             "name": "status",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -1327,21 +1274,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateCustomerAppointmentDto"
+                "$ref": "#/components/schemas/CreateAppointmentDto"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1361,32 +1301,13 @@
             "required": false,
             "in": "query",
             "schema": {
-              "type": "string",
-              "enum": [
-                "ALL",
-                "UPCOMING",
-                "PENDING",
-                "CONFIRMED",
-                "RESCHEDULED",
-                "COMPLETED",
-                "CANCELLED"
-              ]
+              "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1490,14 +1411,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1521,6 +1435,44 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer - Appointments"
+        ]
+      }
+    },
+    "/api/v1/customer/appointments/{id}/reschedule": {
+      "patch": {
+        "operationId": "CustomerAppointmentsController_rescheduleAppointment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerRescheduleAppointmentDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -1736,17 +1688,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1773,14 +1715,7 @@
         },
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1808,14 +1743,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1851,14 +1779,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -1877,7 +1798,7 @@
         "parameters": [
           {
             "name": "search",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -1885,7 +1806,7 @@
           },
           {
             "name": "status",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -1893,7 +1814,7 @@
           },
           {
             "name": "page",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -1901,7 +1822,7 @@
           },
           {
             "name": "limit",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -1973,14 +1894,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2028,108 +1942,6 @@
         ]
       }
     },
-    "/api/v1/admin/applications/{id}": {
-      "put": {
-        "operationId": "AdminApplicationsController_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateApplicationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Update an application fully",
-        "tags": [
-          "Admin - Applications"
-        ]
-      },
-      "get": {
-        "operationId": "AdminApplicationsController_findOne",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get single application by ID",
-        "tags": [
-          "Admin - Applications"
-        ]
-      }
-    },
-    "/api/v1/admin/applications/{id}/documents": {
-      "get": {
-        "operationId": "AdminApplicationsController_getDocuments",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Get documents for application",
-        "tags": [
-          "Admin - Applications"
-        ]
-      }
-    },
     "/api/v1/admin/appointments/stats": {
       "get": {
         "operationId": "AppointmentsController_getStats",
@@ -2156,7 +1968,7 @@
         "parameters": [
           {
             "name": "search",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2164,7 +1976,7 @@
           },
           {
             "name": "status",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2172,7 +1984,7 @@
           },
           {
             "name": "mode",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2180,7 +1992,7 @@
           },
           {
             "name": "date",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2188,7 +2000,7 @@
           },
           {
             "name": "startDate",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2196,7 +2008,7 @@
           },
           {
             "name": "endDate",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2204,7 +2016,7 @@
           },
           {
             "name": "timeframe",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2213,17 +2025,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object"
-                  }
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2251,14 +2053,7 @@
         },
         "responses": {
           "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2287,14 +2082,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2331,14 +2119,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2404,14 +2185,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2450,14 +2224,7 @@
         },
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2504,7 +2271,7 @@
         "parameters": [
           {
             "name": "skip",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "number"
@@ -2512,7 +2279,7 @@
           },
           {
             "name": "take",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "number"
@@ -2520,7 +2287,7 @@
           },
           {
             "name": "category",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2528,7 +2295,7 @@
           },
           {
             "name": "startDate",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2536,7 +2303,7 @@
           },
           {
             "name": "endDate",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2544,7 +2311,7 @@
           },
           {
             "name": "search",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2572,7 +2339,7 @@
         "parameters": [
           {
             "name": "category",
-            "required": false,
+            "required": true,
             "in": "query",
             "schema": {
               "type": "string"
@@ -2609,14 +2376,7 @@
         ],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
+            "description": ""
           }
         },
         "security": [
@@ -2831,24 +2591,7 @@
     "/api/v1/admin/finance/summary": {
       "get": {
         "operationId": "FinanceController_getSummary",
-        "parameters": [
-          {
-            "name": "from",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "to",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
@@ -2862,84 +2605,7 @@
     "/api/v1/admin/finance/invoices": {
       "get": {
         "operationId": "FinanceController_findAllInvoices",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "default": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "maximum": 100,
-              "default": 10,
-              "type": "number"
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "status",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "CANCELLED",
-                "UNPAID",
-                "PARTIALLY_PAID",
-                "PAID",
-                "OVERDUE"
-              ]
-            }
-          },
-          {
-            "name": "customerId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "serviceId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "from",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "to",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
@@ -3095,84 +2761,7 @@
     "/api/v1/admin/finance/payments": {
       "get": {
         "operationId": "FinanceController_findAllPayments",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "default": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "maximum": 100,
-              "default": 10,
-              "type": "number"
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "paymentMethod",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "OTHER",
-                "CASH",
-                "BANK_TRANSFER",
-                "CREDIT_CARD",
-                "DEBIT_CARD",
-                "UPI",
-                "CHEQUE"
-              ]
-            }
-          },
-          {
-            "name": "status",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "PENDING",
-                "CANCELLED",
-                "PAID",
-                "FAILED"
-              ]
-            }
-          },
-          {
-            "name": "from",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "to",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": ""
@@ -3239,6 +2828,110 @@
         },
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Customer Payments"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{applicationId}/documents/upload": {
+      "post": {
+        "operationId": "AdminDocumentsController_adminUploadDocument",
+        "parameters": [
+          {
+            "name": "applicationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectUploadDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Admin uploads a document on behalf of a customer (base64)",
+        "tags": [
+          "Admin - Documents"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{id}": {
+      "put": {
+        "operationId": "AdminApplicationsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApplicationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an application fully",
+        "tags": [
+          "Admin - Applications"
+        ]
+      },
+      "get": {
+        "operationId": "AdminApplicationsController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": "",
             "content": {
               "application/json": {
@@ -3254,8 +2947,38 @@
             "bearer": []
           }
         ],
+        "summary": "Get single application by ID",
         "tags": [
-          "Customer Payments"
+          "Admin - Applications"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{id}/documents": {
+      "get": {
+        "operationId": "AdminApplicationsController_getDocuments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get documents for application",
+        "tags": [
+          "Admin - Applications"
         ]
       }
     }
@@ -3482,14 +3205,14 @@
         "type": "object",
         "properties": {
           "status": {
+            "type": "string",
             "enum": [
               "UPLOADED",
               "UNDER_REVIEW",
               "VERIFIED",
               "REJECTED",
               "ACTION_REQUIRED"
-            ],
-            "type": "string"
+            ]
           },
           "rejectionReason": {
             "type": "string"
@@ -3509,7 +3232,6 @@
           },
           "name": {
             "type": "string",
-            "minLength": 1,
             "description": "Document name",
             "example": "Commercial License Copy"
           },
@@ -3533,7 +3255,6 @@
         "properties": {
           "name": {
             "type": "string",
-            "minLength": 2,
             "description": "Service title",
             "example": "Commercial Fiber Connectivity"
           },
@@ -3544,13 +3265,11 @@
           },
           "governmentFee": {
             "type": "number",
-            "minimum": 0,
             "description": "Government processing fee",
             "example": 250
           },
           "serviceFee": {
             "type": "number",
-            "minimum": 0,
             "description": "Service provider fee",
             "example": 750
           },
@@ -3560,13 +3279,13 @@
             "example": "2-3 Working Days"
           },
           "status": {
+            "type": "string",
+            "description": "Service publishing status",
             "enum": [
               "DRAFT",
               "ACTIVE",
               "INACTIVE"
             ],
-            "type": "string",
-            "description": "Service publishing status",
             "example": "ACTIVE"
           },
           "requiredDocuments": {
@@ -3587,35 +3306,27 @@
         "type": "object",
         "properties": {
           "name": {
-            "type": "string",
-            "minLength": 2
+            "type": "string"
           },
           "description": {
             "type": "string"
           },
           "governmentFee": {
-            "type": "number",
-            "minimum": 0
+            "type": "number"
           },
           "serviceFee": {
-            "type": "number",
-            "minimum": 0
+            "type": "number"
           },
           "estimatedTime": {
             "type": "string"
           },
           "status": {
-            "enum": [
-              "ACTIVE",
-              "INACTIVE",
-              "DRAFT"
-            ],
             "type": "string"
           },
           "requiredDocuments": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/RequiredDocumentDto"
+              "type": "string"
             }
           }
         }
@@ -3624,13 +3335,13 @@
         "type": "object",
         "properties": {
           "status": {
+            "type": "string",
+            "description": "New status for the service",
             "enum": [
               "DRAFT",
               "ACTIVE",
               "INACTIVE"
             ],
-            "type": "string",
-            "description": "New status for the service",
             "example": "ACTIVE"
           }
         },
@@ -3647,7 +3358,6 @@
           },
           "email": {
             "type": "string",
-            "format": "email",
             "description": "Email address (must be unique)"
           },
           "phone": {
@@ -3656,15 +3366,15 @@
           },
           "password": {
             "type": "string",
-            "minLength": 6,
-            "description": "Raw password (will be hashed)"
+            "description": "Raw password (will be hashed)",
+            "minLength": 6
           },
           "status": {
+            "type": "string",
             "enum": [
               "ACTIVE",
               "INACTIVE"
             ],
-            "type": "string",
             "description": "Initial status of the customer"
           }
         },
@@ -3681,17 +3391,9 @@
             "type": "string"
           },
           "email": {
-            "type": "string",
-            "format": "email"
+            "type": "string"
           },
           "phone": {
-            "type": "string",
-            "enum": [
-              "ACTIVE",
-              "INACTIVE"
-            ]
-          },
-          "status": {
             "type": "string",
             "enum": [
               "ACTIVE",
@@ -3704,64 +3406,103 @@
         "type": "object",
         "properties": {
           "status": {
+            "type": "string",
             "enum": [
               "ACTIVE",
               "INACTIVE"
-            ],
-            "type": "string"
+            ]
           }
         },
         "required": [
           "status"
         ]
       },
-      "CreateCustomerAppointmentDto": {
+      "CreateAppointmentDto": {
         "type": "object",
         "properties": {
+          "customerName": {
+            "type": "string",
+            "description": "Full name of the customer",
+            "example": "Test Customer"
+          },
+          "customerEmail": {
+            "type": "string",
+            "description": "Customer email address",
+            "example": "customer@test.com"
+          },
+          "customerPhone": {
+            "type": "string",
+            "description": "Customer contact phone number",
+            "example": "+91 9876543210"
+          },
+          "customerId": {
+            "type": "string",
+            "description": "Customer ID if registered",
+            "example": "cust-123"
+          },
           "serviceId": {
-            "type": "string"
+            "type": "string",
+            "description": "Associated Service ID",
+            "example": "serv-456"
           },
-          "appointmentType": {
+          "appointmentDate": {
+            "type": "string",
+            "description": "ISO Date string for appointment",
+            "example": "2026-09-01T10:00:00.000Z"
+          },
+          "durationMinutes": {
+            "type": "number",
+            "description": "Duration in minutes",
+            "example": 30
+          },
+          "mode": {
+            "type": "string",
+            "description": "Appointment mode",
             "enum": [
-              "OFFICE_VISIT",
-              "ONLINE_CONSULTATION"
+              "OFFLINE",
+              "ONLINE"
             ],
-            "type": "string"
+            "example": "OFFLINE"
           },
-          "officeId": {
-            "type": "string"
-          },
-          "consultationMode": {
+          "onlineType": {
+            "type": "string",
+            "description": "Online meeting channel type",
             "enum": [
               "PHONE",
               "VIDEO",
-              "WHATSAPP"
+              "MEETING"
             ],
-            "type": "string"
+            "example": "PHONE"
           },
-          "preferredDate": {
-            "type": "string"
-          },
-          "preferredTime": {
+          "meetingLink": {
             "type": "string",
-            "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$"
+            "description": "Meeting URL for online appointments",
+            "example": "https://meet.google.com/abc-defg-hij"
           },
-          "contactNumber": {
-            "type": "string"
-          },
-          "address": {
-            "type": "string"
+          "status": {
+            "type": "string",
+            "description": "Initial appointment status",
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "RESCHEDULED",
+              "COMPLETED",
+              "CANCELLED"
+            ],
+            "example": "CONFIRMED"
           },
           "notes": {
-            "type": "string"
+            "type": "string",
+            "description": "Additional notes or instructions",
+            "example": "Discuss commercial fiber deployment schedule."
           }
         },
         "required": [
-          "serviceId",
-          "appointmentType",
-          "preferredDate",
-          "preferredTime",
-          "contactNumber"
+          "customerName",
+          "customerEmail",
+          "customerPhone",
+          "appointmentDate",
+          "mode"
         ]
       },
       "CreateUploadUrlDto": {
@@ -3777,9 +3518,7 @@
             "type": "string"
           },
           "fileSize": {
-            "type": "number",
-            "maximum": 10485760,
-            "minimum": 1
+            "type": "number"
           }
         },
         "required": [
@@ -3802,8 +3541,7 @@
             "type": "string"
           },
           "fileSize": {
-            "type": "number",
-            "minimum": 1
+            "type": "number"
           }
         },
         "required": [
@@ -3813,16 +3551,37 @@
           "fileSize"
         ]
       },
+      "CustomerRescheduleAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "preferredDate": {
+            "type": "string",
+            "description": "New preferred date (YYYY-MM-DD or ISO string)",
+            "example": "2026-09-10"
+          },
+          "preferredTime": {
+            "type": "string",
+            "description": "New preferred time slot",
+            "example": "10:30 AM"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason for rescheduling",
+            "example": "Schedule conflict"
+          }
+        },
+        "required": [
+          "preferredDate"
+        ]
+      },
       "UpdateProfileDto": {
         "type": "object",
         "properties": {
           "name": {
-            "type": "string",
-            "minLength": 2
+            "type": "string"
           },
           "email": {
-            "type": "string",
-            "format": "email"
+            "type": "string"
           },
           "contactNumber": {
             "type": "string"
@@ -3860,8 +3619,7 @@
             "type": "string"
           },
           "newPassword": {
-            "type": "string",
-            "minLength": 8
+            "type": "string"
           },
           "confirmNewPassword": {
             "type": "string"
@@ -3977,6 +3735,294 @@
           }
         }
       },
+      "UpdateAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "customerName": {
+            "type": "string"
+          },
+          "customerEmail": {
+            "type": "string"
+          },
+          "customerPhone": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "string"
+          },
+          "serviceId": {
+            "type": "string"
+          },
+          "appointmentDate": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "number"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "onlineType": {
+            "type": "string"
+          },
+          "meetingLink": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "rescheduledFrom": {
+            "type": "string"
+          },
+          "rescheduleReason": {
+            "type": "string"
+          }
+        }
+      },
+      "RescheduleAppointmentDto": {
+        "type": "object",
+        "properties": {
+          "newDate": {
+            "type": "string",
+            "description": "New proposed date/time ISO string",
+            "example": "2026-09-05T14:00:00.000Z"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason for rescheduling",
+            "example": "Customer requested afternoon slot."
+          },
+          "mode": {
+            "type": "string",
+            "description": "Updated appointment mode",
+            "enum": [
+              "OFFLINE",
+              "ONLINE"
+            ],
+            "example": "ONLINE"
+          },
+          "onlineType": {
+            "type": "string",
+            "description": "Online meeting channel type",
+            "enum": [
+              "PHONE",
+              "VIDEO",
+              "MEETING"
+            ],
+            "example": "VIDEO"
+          },
+          "meetingLink": {
+            "type": "string",
+            "description": "Meeting link if mode is online",
+            "example": "https://meet.google.com/xyz-uvwx-rst"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Updated notes",
+            "example": "Rescheduled per customer email."
+          }
+        },
+        "required": [
+          "newDate"
+        ]
+      },
+      "UpdateAppointmentStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "New appointment status",
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "RESCHEDULED",
+              "COMPLETED",
+              "CANCELLED"
+            ],
+            "example": "CONFIRMED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "CreateExpenseDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Office Supplies"
+          },
+          "description": {
+            "type": "string",
+            "example": "Pens, paper, and staplers"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "OFFICE",
+              "TRAVEL",
+              "EMPLOYEE",
+              "PROPERTY",
+              "UTILITIES",
+              "MARKETING",
+              "EQUIPMENT",
+              "OTHER"
+            ],
+            "example": "OFFICE"
+          },
+          "amount": {
+            "type": "number",
+            "example": 250.5
+          },
+          "expenseDate": {
+            "type": "string",
+            "example": "2026-08-25T10:00:00Z"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "BANK_TRANSFER",
+              "CREDIT_CARD",
+              "DEBIT_CARD",
+              "UPI",
+              "CHEQUE",
+              "OTHER"
+            ],
+            "example": "CREDIT_CARD"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Bought from Staples"
+          },
+          "isVoided": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "title",
+          "category",
+          "amount",
+          "expenseDate"
+        ]
+      },
+      "UpdateExpenseDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Updated Office Supplies"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated description"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "OFFICE",
+              "TRAVEL",
+              "EMPLOYEE",
+              "PROPERTY",
+              "UTILITIES",
+              "MARKETING",
+              "EQUIPMENT",
+              "OTHER"
+            ],
+            "example": "OFFICE"
+          },
+          "amount": {
+            "type": "number",
+            "example": 300
+          },
+          "expenseDate": {
+            "type": "string",
+            "example": "2026-08-26T10:00:00Z"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "BANK_TRANSFER",
+              "CREDIT_CARD",
+              "DEBIT_CARD",
+              "UPI",
+              "CHEQUE",
+              "OTHER"
+            ],
+            "example": "CASH"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Price went up"
+          },
+          "isVoided": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "UpdateBusinessProfileDto": {
+        "type": "object",
+        "properties": {
+          "businessName": {
+            "type": "string",
+            "description": "Name of the business organization",
+            "example": "Amman Communications"
+          },
+          "registrationNumber": {
+            "type": "string",
+            "description": "Official business registration number",
+            "example": "AC-2023-894"
+          },
+          "officeAddress": {
+            "type": "string",
+            "description": "Physical office address of the business",
+            "example": "124 Main Street, Business District"
+          },
+          "primaryPhone": {
+            "type": "string",
+            "description": "Primary contact phone number",
+            "example": "+91 9876543210"
+          },
+          "supportEmail": {
+            "type": "string",
+            "description": "Support email address",
+            "example": "support@example.com"
+          }
+        },
+        "required": [
+          "businessName",
+          "officeAddress",
+          "primaryPhone",
+          "supportEmail"
+        ]
+      },
+      "CreateInvoiceDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateInvoiceDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateInvoiceStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RecordPaymentDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateCustomerPaymentDto": {
+        "type": "object",
+        "properties": {}
+      },
       "AdminCreateApplicationDto": {
         "type": "object",
         "properties": {
@@ -4011,516 +4057,6 @@
           "customerId",
           "serviceType"
         ]
-      },
-      "CreateAppointmentDto": {
-        "type": "object",
-        "properties": {
-          "customerName": {
-            "type": "string",
-            "description": "Full name of the customer",
-            "example": "Test Customer"
-          },
-          "customerEmail": {
-            "type": "string",
-            "description": "Customer email address",
-            "example": "customer@test.com"
-          },
-          "customerPhone": {
-            "type": "string",
-            "description": "Customer contact phone number",
-            "example": "+91 9876543210"
-          },
-          "customerId": {
-            "type": "string",
-            "description": "Customer ID if registered",
-            "example": "cust-123"
-          },
-          "serviceId": {
-            "type": "string",
-            "description": "Associated Service ID",
-            "example": "serv-456"
-          },
-          "appointmentDate": {
-            "type": "string",
-            "description": "ISO Date string for appointment",
-            "example": "2026-09-01T10:00:00.000Z"
-          },
-          "durationMinutes": {
-            "type": "number",
-            "minimum": 5,
-            "maximum": 480,
-            "description": "Duration in minutes",
-            "example": 30
-          },
-          "mode": {
-            "enum": [
-              "OFFLINE",
-              "ONLINE"
-            ],
-            "type": "string",
-            "description": "Appointment mode",
-            "example": "OFFLINE"
-          },
-          "onlineType": {
-            "enum": [
-              "PHONE",
-              "VIDEO",
-              "MEETING"
-            ],
-            "type": "string",
-            "description": "Online meeting channel type",
-            "example": "PHONE"
-          },
-          "meetingLink": {
-            "type": "string",
-            "description": "Meeting URL for online appointments",
-            "example": "https://meet.google.com/abc-defg-hij"
-          },
-          "status": {
-            "enum": [
-              "PENDING",
-              "CONFIRMED",
-              "RESCHEDULED",
-              "COMPLETED",
-              "CANCELLED"
-            ],
-            "type": "string",
-            "description": "Initial appointment status",
-            "example": "CONFIRMED"
-          },
-          "notes": {
-            "type": "string",
-            "description": "Additional notes or instructions",
-            "example": "Discuss commercial fiber deployment schedule."
-          }
-        },
-        "required": [
-          "customerName",
-          "customerEmail",
-          "customerPhone",
-          "appointmentDate",
-          "mode"
-        ]
-      },
-      "UpdateAppointmentDto": {
-        "type": "object",
-        "properties": {
-          "customerName": {
-            "type": "string"
-          },
-          "customerEmail": {
-            "type": "string"
-          },
-          "customerPhone": {
-            "type": "string"
-          },
-          "customerId": {
-            "type": "string"
-          },
-          "serviceId": {
-            "type": "string"
-          },
-          "appointmentDate": {
-            "type": "string"
-          },
-          "durationMinutes": {
-            "type": "number",
-            "minimum": 5,
-            "maximum": 480
-          },
-          "mode": {
-            "enum": [
-              "OFFLINE",
-              "ONLINE"
-            ],
-            "type": "string"
-          },
-          "onlineType": {
-            "enum": [
-              "PHONE",
-              "VIDEO",
-              "MEETING"
-            ],
-            "type": "string"
-          },
-          "meetingLink": {
-            "type": "string"
-          },
-          "status": {
-            "enum": [
-              "PENDING",
-              "COMPLETED",
-              "CONFIRMED",
-              "RESCHEDULED",
-              "CANCELLED"
-            ],
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          },
-          "rescheduledFrom": {
-            "type": "string"
-          },
-          "rescheduleReason": {
-            "type": "string"
-          }
-        }
-      },
-      "RescheduleAppointmentDto": {
-        "type": "object",
-        "properties": {
-          "newDate": {
-            "type": "string",
-            "description": "New proposed date/time ISO string",
-            "example": "2026-09-05T14:00:00.000Z"
-          },
-          "reason": {
-            "type": "string",
-            "description": "Reason for rescheduling",
-            "example": "Customer requested afternoon slot."
-          },
-          "mode": {
-            "enum": [
-              "OFFLINE",
-              "ONLINE"
-            ],
-            "type": "string",
-            "description": "Updated appointment mode",
-            "example": "ONLINE"
-          },
-          "onlineType": {
-            "enum": [
-              "PHONE",
-              "VIDEO",
-              "MEETING"
-            ],
-            "type": "string",
-            "description": "Online meeting channel type",
-            "example": "VIDEO"
-          },
-          "meetingLink": {
-            "type": "string",
-            "description": "Meeting link if mode is online",
-            "example": "https://meet.google.com/xyz-uvwx-rst"
-          },
-          "notes": {
-            "type": "string",
-            "description": "Updated notes",
-            "example": "Rescheduled per customer email."
-          }
-        },
-        "required": [
-          "newDate"
-        ]
-      },
-      "UpdateAppointmentStatusDto": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "enum": [
-              "PENDING",
-              "CONFIRMED",
-              "RESCHEDULED",
-              "COMPLETED",
-              "CANCELLED"
-            ],
-            "type": "string",
-            "description": "New appointment status",
-            "example": "CONFIRMED"
-          }
-        },
-        "required": [
-          "status"
-        ]
-      },
-      "CreateExpenseDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "example": "Office Supplies"
-          },
-          "description": {
-            "type": "string",
-            "example": "Pens, paper, and staplers"
-          },
-          "category": {
-            "enum": [
-              "OFFICE",
-              "TRAVEL",
-              "EMPLOYEE",
-              "PROPERTY",
-              "UTILITIES",
-              "MARKETING",
-              "EQUIPMENT",
-              "OTHER"
-            ],
-            "type": "string",
-            "example": "OFFICE"
-          },
-          "amount": {
-            "type": "number",
-            "minimum": 1,
-            "example": 250.5
-          },
-          "expenseDate": {
-            "type": "string",
-            "example": "2026-08-25T10:00:00Z"
-          },
-          "paymentMethod": {
-            "enum": [
-              "CASH",
-              "BANK_TRANSFER",
-              "CREDIT_CARD",
-              "DEBIT_CARD",
-              "UPI",
-              "CHEQUE",
-              "OTHER"
-            ],
-            "type": "string",
-            "example": "CREDIT_CARD"
-          },
-          "notes": {
-            "type": "string",
-            "example": "Bought from Staples"
-          },
-          "isVoided": {
-            "type": "boolean",
-            "example": false
-          }
-        },
-        "required": [
-          "title",
-          "category",
-          "amount",
-          "expenseDate"
-        ]
-      },
-      "UpdateExpenseDto": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "example": "Updated Office Supplies"
-          },
-          "description": {
-            "type": "string",
-            "example": "Updated description"
-          },
-          "category": {
-            "enum": [
-              "OFFICE",
-              "TRAVEL",
-              "EMPLOYEE",
-              "PROPERTY",
-              "UTILITIES",
-              "MARKETING",
-              "EQUIPMENT",
-              "OTHER"
-            ],
-            "type": "string",
-            "example": "OFFICE"
-          },
-          "amount": {
-            "type": "number",
-            "minimum": 1,
-            "example": 300
-          },
-          "expenseDate": {
-            "type": "string",
-            "example": "2026-08-26T10:00:00Z"
-          },
-          "paymentMethod": {
-            "enum": [
-              "CASH",
-              "BANK_TRANSFER",
-              "CREDIT_CARD",
-              "DEBIT_CARD",
-              "UPI",
-              "CHEQUE",
-              "OTHER"
-            ],
-            "type": "string",
-            "example": "CASH"
-          },
-          "notes": {
-            "type": "string",
-            "example": "Price went up"
-          },
-          "isVoided": {
-            "type": "boolean",
-            "example": true
-          }
-        }
-      },
-      "UpdateBusinessProfileDto": {
-        "type": "object",
-        "properties": {
-          "businessName": {
-            "type": "string",
-            "minLength": 2,
-            "description": "Name of the business organization",
-            "example": "Amman Communications"
-          },
-          "registrationNumber": {
-            "type": "string",
-            "description": "Official business registration number",
-            "example": "AC-2023-894"
-          },
-          "officeAddress": {
-            "type": "string",
-            "minLength": 5,
-            "description": "Physical office address of the business",
-            "example": "124 Main Street, Business District"
-          },
-          "primaryPhone": {
-            "type": "string",
-            "pattern": "^[+]?[\\d\\s\\-()]{7,20}$",
-            "description": "Primary contact phone number",
-            "example": "+91 9876543210"
-          },
-          "supportEmail": {
-            "type": "string",
-            "format": "email",
-            "description": "Support email address",
-            "example": "support@example.com"
-          }
-        },
-        "required": [
-          "businessName",
-          "officeAddress",
-          "primaryPhone",
-          "supportEmail"
-        ]
-      },
-      "CreateInvoiceDto": {
-        "type": "object",
-        "properties": {
-          "customerId": {
-            "type": "string",
-            "minLength": 1
-          },
-          "serviceId": {
-            "type": "string"
-          },
-          "applicationId": {
-            "type": "string"
-          },
-          "governmentFee": {
-            "type": "number",
-            "minimum": 0
-          },
-          "serviceFee": {
-            "type": "number",
-            "minimum": 0
-          },
-          "dueDate": {
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "customerId",
-          "governmentFee",
-          "serviceFee"
-        ]
-      },
-      "UpdateInvoiceDto": {
-        "type": "object",
-        "properties": {
-          "governmentFee": {
-            "type": "number",
-            "minimum": 0
-          },
-          "serviceFee": {
-            "type": "number",
-            "minimum": 0
-          },
-          "dueDate": {
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "CANCELLED",
-              "UNPAID",
-              "PARTIALLY_PAID",
-              "PAID",
-              "OVERDUE"
-            ]
-          }
-        }
-      },
-      "UpdateInvoiceStatusDto": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "CANCELLED",
-              "UNPAID",
-              "PARTIALLY_PAID",
-              "PAID",
-              "OVERDUE"
-            ]
-          }
-        },
-        "required": [
-          "status"
-        ]
-      },
-      "RecordPaymentDto": {
-        "type": "object",
-        "properties": {
-          "amount": {
-            "type": "number",
-            "minimum": 0.01
-          },
-          "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "OTHER",
-              "CASH",
-              "BANK_TRANSFER",
-              "CREDIT_CARD",
-              "DEBIT_CARD",
-              "UPI",
-              "CHEQUE"
-            ]
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "PENDING",
-              "CANCELLED",
-              "PAID",
-              "FAILED"
-            ]
-          },
-          "reference": {
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          },
-          "paidAt": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "amount",
-          "paymentMethod"
-        ]
-      },
-      "CreateCustomerPaymentDto": {
-        "type": "object",
-        "properties": {}
       }
     }
   }

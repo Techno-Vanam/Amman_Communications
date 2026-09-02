@@ -1,5 +1,6 @@
 'use client';
 
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
@@ -27,6 +28,11 @@ import {
   Cell,
 } from 'recharts';
 import { fetchAdminDashboardStatsAction } from './actions';
+=======
+import { useCallback, useEffect, useState } from 'react';
+import { fetchAdminDashboardSummary, fetchAdminVerificationQueue, verifyDocumentStatus } from './actions';
+import { AlertCircle, CheckCircle2, Clock, FileText, RefreshCw, X } from 'lucide-react';
+>>>>>>> origin/backend-merge
 
 interface RecentItem {
   id: string;

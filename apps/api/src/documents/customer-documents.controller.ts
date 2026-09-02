@@ -25,11 +25,16 @@ import {
   UploadOrReplaceDocumentDto,
 } from './dto/upload-document.dto';
 
+<<<<<<< HEAD
 @ApiTags('Customer - Documents')
 @ApiBearerAuth()
 @Controller('customer')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('CUSTOMER')
+=======
+@Controller(['customer', 'v1/customer', 'api/v1/customer'])
+@UseGuards(CustomerAuthGuard)
+>>>>>>> origin/backend-merge
 export class CustomerDocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 

@@ -12,30 +12,29 @@ import { ServicesModule } from './services/services.module';
 import { CustomersModule } from './customers/customers.module';
 import { CustomerAppointmentsModule } from './customer-appointments/customer-appointments.module';
 import { CustomerProfileModule } from './customer-profile/customer-profile.module';
+<<<<<<< HEAD
 import { ApplicationsModule } from './applications/applications.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { ExpensesModule } from './expenses/expenses.module';
-// Need to handle business profile and admin preferences which seem to be inside settings/
 import { BusinessProfileModule } from './settings/business-profile/business-profile.module';
-import { AdminPreferencesModule } from './settings/admin-preferences/admin-preferences.module';
 import { StorageModule } from './storage/storage.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { FinanceModule } from './finance/finance.module';
-import { MailModule } from './mail/mail.module';
+=======
+import { AppointmentsModule } from './appointments/appointments.module';
+import { ExpensesModule } from './expenses/expenses.module';
+import { BusinessProfileModule } from './settings/business-profile/business-profile.module';
+import { ApplicationsModule } from './applications/applications.module';
+import { NotificationsModule } from './notifications/notifications.module';
+>>>>>>> origin/backend-merge
 
 @Module({
   imports: [
-    EventEmitterModule.forRoot(),
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000,
-        limit: 10,
-      },
-    ]),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [
-        path.resolve(__dirname, '../.env.local'),
+        path.resolve(process.cwd(), '.env'),
+        path.resolve(process.cwd(), '../../.env'),
         path.resolve(__dirname, '../.env'),
       ],
     }),
@@ -48,15 +47,21 @@ import { MailModule } from './mail/mail.module';
     CustomersModule,
     CustomerAppointmentsModule,
     CustomerProfileModule,
+<<<<<<< HEAD
     ApplicationsModule,
     AppointmentsModule,
     ExpensesModule,
     BusinessProfileModule,
-    AdminPreferencesModule,
     StorageModule,
     NotificationsModule,
     FinanceModule,
-    MailModule,
+=======
+    AppointmentsModule,
+    ExpensesModule,
+    BusinessProfileModule,
+    ApplicationsModule,
+    NotificationsModule,
+>>>>>>> origin/backend-merge
   ],
 })
 export class AppModule {}
