@@ -24,6 +24,7 @@ import {
   FileText,
   MapPin,
 } from 'lucide-react';
+import CustomTimePicker from '@/components/ui/CustomTimePicker';
 import {
   fetchAppointmentsAction,
   createAppointmentAction,
@@ -635,7 +636,7 @@ export default function AppointmentsPage() {
     setErrorMsg(null);
     if (data.status) {
       const st = data.status.toUpperCase() as any;
-      await updateAdminAppointmentStatusAction(editApt.id, st);
+      await updateAppointmentStatusAction(editApt.id, st);
     }
     setEditApt(null);
     loadAppointments();
