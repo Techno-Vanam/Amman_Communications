@@ -208,21 +208,44 @@ export default function BookAppointmentPage() {
             <label className="block text-sm font-semibold text-slate-700 mb-2">
               Service <span className="text-red-500">*</span>
             </label>
-            <select
-              value={serviceId}
-              onChange={(e) => setServiceId(e.target.value)}
-              required
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/10"
-            >
-              <option value="" disabled>
-                Select Service
-              </option>
-              {services.map((svc) => (
-                <option key={svc.id} value={svc.id}>
-                  {svc.name} {svc.totalFee ? `($${svc.totalFee})` : ''}
-                </option>
-              ))}
-            </select>
+            <div className="space-y-3">
+              {services.map((svc) => {
+                const isSelected = serviceId === svc.id;
+                return (
+                  <label
+                    key={svc.id}
+                    onClick={() => setServiceId(svc.id)}
+                    className={`p-4 rounded-xl border flex items-center justify-between gap-4 cursor-pointer transition-all ${
+                      isSelected
+                        ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-500/10 shadow-xs'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <input
+                        type="radio"
+                        name="customerBookService"
+                        value={svc.id}
+                        checked={isSelected}
+                        onChange={() => setServiceId(svc.id)}
+                        className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500 accent-blue-600 shrink-0 cursor-pointer"
+                      />
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-bold text-slate-900 leading-snug">{svc.name}</h3>
+                        <p className="text-[11px] text-slate-400 font-medium mt-0.5">ID: {svc.id}</p>
+                      </div>
+                    </div>
+                    {svc.totalFee !== undefined && svc.totalFee !== null && (
+                      <div className="text-right shrink-0">
+                        <span className="text-xs font-bold text-slate-800">
+                          ₹{Number(svc.totalFee).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
             {services.length === 0 && (
               <p className="mt-1 text-xs text-amber-600">No active services currently available for booking.</p>
             )}

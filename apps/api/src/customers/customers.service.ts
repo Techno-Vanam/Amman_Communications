@@ -179,10 +179,10 @@ export class CustomersService {
       dataToUpdate.phone = dto.phone ? dto.phone.trim() : null;
     }
 
-    if (dto.email !== undefined) {
-      const normalizedEmail = dto.email ? dto.email.toLowerCase().trim() : undefined;
+    if (dto.email !== undefined && dto.email) {
+      const normalizedEmail = dto.email.toLowerCase().trim();
       
-      if (normalizedEmail && normalizedEmail !== existing.email) {
+      if (normalizedEmail !== existing.email) {
         const [existingAdmin, otherCustomer] = await Promise.all([
           this.prisma.admin.findUnique({ where: { email: normalizedEmail } }),
           this.prisma.customer.findFirst({
@@ -196,9 +196,7 @@ export class CustomersService {
         if (existingAdmin || otherCustomer) {
           throw new BadRequestException('Email is already in use by another account.');
         }
-      }
 
-      if (normalizedEmail) {
         dataToUpdate.email = normalizedEmail;
       }
     }

@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateExpenseDto, UpdateExpenseDto } from './dto/expense.dto';
 
 
+
 @Injectable()
 export class ExpensesService {
   constructor(private readonly prisma: PrismaService) {}

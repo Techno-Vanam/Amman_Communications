@@ -297,4 +297,3 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onCl
     </div>
   );
 };
-

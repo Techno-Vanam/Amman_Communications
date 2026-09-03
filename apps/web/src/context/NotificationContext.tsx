@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, X, MessageSquare } from 'lucide-react';
+import { useLanguage } from './LanguageContext';
+import { useUser, getUserStorageKey } from './UserContext';
 
 export interface NotificationItem {
   id: string;
@@ -74,8 +76,11 @@ const INITIAL_NOTIFICATIONS: NotificationItem[] = [];
 interface NotificationContextType {
   notifications: NotificationItem[];
   unreadCount: number;
+  toast?: ToastMessage | null;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  deleteNotification?: (id: string) => void;
+  clearAllNotifications?: () => void;
   loadMore: () => void;
   showToast: (
     title: string,
@@ -90,14 +95,13 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-import { useUser, getUserStorageKey } from './UserContext';
-
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
+  const { whatsappAlerts, t } = useLanguage();
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     try {
       const storageKey = getUserStorageKey(user.email, 'amman_user_notifications');
       const saved = localStorage.getItem(storageKey);
@@ -108,7 +112,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [user.email]);
 
-  const saveNotificationsToStorage = (items: NotificationItem[]) => {
+  const saveNotifications = (items: NotificationItem[]) => {
+    setNotifications(items);
     try {
       const storageKey = getUserStorageKey(user.email, 'amman_user_notifications');
       localStorage.setItem(storageKey, JSON.stringify(items));
@@ -139,7 +144,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     setToast({ id, title, message, type, shareUrl });
 
     if (shouldCreateNotification) {
-      // Automatically push a real notification item into user's notification list with actual timestamp & formatted time
       const nowMs = Date.now();
       const newNotif: NotificationItem = {
         id: `n-${nowMs}`,
@@ -150,76 +154,67 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         actionText,
         actionUrl,
         read: false,
-        iconType: type === 'warning' ? 'document-red' : 'check-blue'
+        iconType: type === 'warning' ? 'document-red' : type === 'info' ? 'info-gray' : 'check-blue'
       };
 
-      setNotifications((prev) => {
-        const updated = [newNotif, ...prev];
-        saveNotificationsToStorage(updated);
-        return updated;
-      });
+      const updated = [newNotif, ...notifications];
+      saveNotifications(updated);
     }
   };
 
   const markAsRead = (id: string) => {
-    setNotifications((prev) => {
-      const updated = prev.map((n) => (n.id === id ? { ...n, read: true } : n));
-      saveNotificationsToStorage(updated);
-      return updated;
-    });
+    const updated = notifications.map((n) => (n.id === id ? { ...n, read: true } : n));
+    saveNotifications(updated);
   };
 
   const markAllAsRead = () => {
-    setNotifications((prev) => {
-      const updated = prev.map((n) => ({ ...n, read: true }));
-      saveNotificationsToStorage(updated);
-      return updated;
-    });
+    const updated = notifications.map((n) => ({ ...n, read: true }));
+    saveNotifications(updated);
   };
 
-  const loadMore = () => {
-    // No-op: pagination handled in page view without injecting mock items
+  const deleteNotification = (id: string) => {
+    const updated = notifications.filter((n) => n.id !== id);
+    saveNotifications(updated);
   };
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const clearAllNotifications = () => {
+    saveNotifications([]);
+  };
+
+  const loadMore = () => {};
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, markAsRead, markAllAsRead, loadMore, showToast }}
+      value={{
+        notifications,
+        unreadCount,
+        toast,
+        markAsRead,
+        markAllAsRead,
+        deleteNotification,
+        clearAllNotifications,
+        loadMore,
+        showToast,
+      }}
     >
       {children}
 
-      {/* Centered Modal Success Notification Pop-up with Full Dim Overlay */}
-      {mounted && toast && createPortal(
-        <div
-          onClick={() => setToast(null)}
-          className="fixed inset-0 z-[999999] bg-black/70 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-[2rem] shadow-2xl border border-gray-200/90 ring-1 ring-black/5 max-w-sm w-full p-8 text-center relative overflow-hidden animate-in zoom-in-95 duration-200 space-y-4"
-          >
-            {/* Soft Green Pattern Header Overlay */}
-            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#f0f7f2] via-[#f7faf8] to-transparent pointer-events-none" />
-
-            {/* Dismiss X Button */}
+      {toast && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl border border-gray-100 text-center space-y-5 animate-in zoom-in-95 duration-200 relative">
             <button
               onClick={() => setToast(null)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100/80 transition-colors z-20"
-              title="Close"
+              className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
 
-            {/* Brand Dark Green Checkmark Circle Badge */}
-            <div className="relative z-10 w-20 h-20 rounded-full bg-[#12372A] text-white flex items-center justify-center mx-auto shadow-lg shadow-[#12372A]/20 border-4 border-white ring-4 ring-[#f0f7f2] my-2">
+            {/* Success Check Icon */}
+            <div className="w-16 h-16 rounded-full bg-[#12372A] mx-auto flex items-center justify-center shadow-lg shadow-[#12372A]/20">
               <Check className="w-10 h-10 stroke-[3] text-[#a8d5b9]" />
             </div>
 
-            {/* Content Text (Emoji removed) */}
+            {/* Content Text */}
             <div className="relative z-10 space-y-2">
               <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">
                 {toast.title}

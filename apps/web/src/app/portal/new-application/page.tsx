@@ -95,6 +95,18 @@ interface UploadedDocState {
 
 export default function NewApplicationPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
+
+  useEffect(() => {
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+      mainEl.scrollTop = 0;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [step]);
+
   const [services, setServices] = useState<ServiceDefinition[]>(DEFAULT_SERVICES);
   const [selectedService, setSelectedService] = useState<ServiceDefinition>(DEFAULT_SERVICES[0]);
 
@@ -451,48 +463,64 @@ export default function NewApplicationPage() {
       {/* STEP 1: SERVICE SELECTION */}
       {step === 1 && (
         <div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-              gap: '1.25rem',
-              marginBottom: '2.5rem',
-            }}
-          >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2.5rem' }}>
             {services.map((svc) => {
               const isSelected = selectedService.id === svc.id;
               return (
-                <div
+                <label
                   key={svc.id}
                   onClick={() => setSelectedService(svc)}
-                  className={`card service-card ${isSelected ? 'selected' : ''}`}
-                  style={{ padding: '1.5rem' }}
+                  style={{
+                    padding: '1rem 1.25rem',
+                    borderRadius: '12px',
+                    border: `1px solid ${isSelected ? '#12372A' : '#e2e8f0'}`,
+                    background: isSelected ? '#f0f7f2' : '#ffffff',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '1rem',
+                    transition: 'all 0.2s ease',
+                    boxShadow: isSelected ? '0 0 0 2px rgba(18, 55, 42, 0.15)' : 'none',
+                  }}
                 >
-                  {isSelected && <div className="check-circle">✓</div>}
-                  <div style={{ fontSize: '2.25rem', marginBottom: '0.75rem' }}>{svc.icon}</div>
-                  <span className="badge badge-info" style={{ marginBottom: '0.5rem' }}>
-                    {svc.category}
-                  </span>
-                  <h3 style={{ fontSize: '1.25rem', color: '#0f172a', marginBottom: '0.5rem' }}>{svc.title}</h3>
-                  <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem' }}>
-                    {svc.tagline}
-                  </p>
-
-                  <div
-                    style={{
-                      borderTop: '1px solid #e2e8f0',
-                      paddingTop: '0.875rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      fontSize: '0.8rem',
-                      color: '#64748b',
-                    }}
-                  >
-                    <span>⏱️ {svc.estimatedProcessingDays}</span>
-                    <span>📑 {svc.requiredDocuments.length} Documents Required</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', minWidth: 0 }}>
+                    <input
+                      type="radio"
+                      name="portalNewAppService"
+                      value={svc.id}
+                      checked={isSelected}
+                      onChange={() => setSelectedService(svc)}
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        accentColor: '#12372A',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <div style={{ minWidth: 0 }}>
+                      <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.3 }}>
+                        {svc.title || (svc as any).name}
+                      </h3>
+                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500, marginTop: '2px' }}>
+                        ID: {svc.id}
+                      </div>
+                      {svc.tagline && (
+                        <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>
+                          {svc.tagline}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                  {svc.totalFee !== undefined && svc.totalFee !== null && (
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#15803d' }}>
+                        ₹{Number(svc.totalFee).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  )}
+                </label>
               );
             })}
           </div>

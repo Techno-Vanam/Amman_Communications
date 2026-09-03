@@ -273,241 +273,241 @@ export default function PortalDocumentsPage() {
       <div className="flex-1 overflow-y-auto min-h-0 space-y-5 pr-1">
         {/* Upload Panel */}
         <div
-          onDragOver={(e) => { e.preventDefault(); setDragging(false); }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragging(false);
-          const file = e.dataTransfer.files[0];
-          if (file) handleUpload(file, selectedAppId);
-        }}
-        className={`bg-white border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
-          dragging ? 'border-[#12372A] bg-[#f0f7f2]' : 'border-gray-300 hover:border-[#12372A]'
-        }`}
-      >
-        <div className="max-w-lg mx-auto space-y-5">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-[#12372A] flex items-center justify-center mx-auto">
-            <Upload className="w-7 h-7" />
-          </div>
-          <div>
-            <h3 className="text-base font-bold text-gray-900">Upload Official Documents</h3>
-            <p className="text-xs text-gray-500 mt-1">
-              Files are AES-256-GCM encrypted and stored securely. Supported: PDF, PNG, JPG, WEBP (max 10 MB).
-            </p>
-          </div>
-
-          {/* Application & Doc-Type selectors */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+          onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            const file = e.dataTransfer.files[0];
+            if (file) handleUpload(file, selectedAppId);
+          }}
+          className={`bg-white border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
+            dragging ? 'border-[#12372A] bg-[#f0f7f2]' : 'border-gray-300 hover:border-[#12372A]'
+          }`}
+        >
+          <div className="max-w-lg mx-auto space-y-5">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-[#12372A] flex items-center justify-center mx-auto">
+              <Upload className="w-7 h-7" />
+            </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Application</label>
-              {groups.length === 0 ? (
-                <p className="text-xs text-gray-400 italic">No applications found — create one first.</p>
-              ) : (
+              <h3 className="text-base font-bold text-gray-900">Upload New Document</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Files are AES-256-GCM encrypted and stored securely. Supported: PDF, PNG, JPG, WEBP (max 10 MB).
+              </p>
+            </div>
+
+            {/* Application & Doc-Type selectors */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Application</label>
+                {groups.length === 0 ? (
+                  <p className="text-xs text-gray-400 italic">No applications found — create one first.</p>
+                ) : (
+                  <select
+                    value={selectedAppId}
+                    onChange={(e) => setSelectedAppId(e.target.value)}
+                    className="w-full text-xs border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#12372A]/20 focus:border-[#12372A]"
+                  >
+                    {groups.map((g) => (
+                      <option key={g.applicationId} value={g.applicationId}>
+                        {g.applicationNumber || g.applicationId.slice(0, 8)} — {g.serviceType}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Document Type</label>
                 <select
-                  value={selectedAppId}
-                  onChange={(e) => setSelectedAppId(e.target.value)}
+                  value={selectedDocType}
+                  onChange={(e) => setSelectedDocType(e.target.value)}
                   className="w-full text-xs border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#12372A]/20 focus:border-[#12372A]"
                 >
-                  {groups.map((g) => (
-                    <option key={g.applicationId} value={g.applicationId}>
-                      {g.applicationNumber || g.applicationId.slice(0, 8)} — {g.serviceType}
-                    </option>
+                  {DOC_TYPE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </select>
+              </div>
+            </div>
+
+            <label
+              className={`inline-flex items-center gap-2 px-6 py-2.5 text-white text-xs font-bold rounded-xl cursor-pointer transition-colors shadow-sm ${
+                groups.length === 0 || uploading
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-[#12372A] hover:bg-[#1a4a38]'
+              }`}
+            >
+              {uploading === selectedAppId ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /><span>Uploading…</span></>
+              ) : (
+                <><Plus className="w-4 h-4 text-[#a8d5b9]" /><span>Browse &amp; Upload</span></>
               )}
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Document Type</label>
-              <select
-                value={selectedDocType}
-                onChange={(e) => setSelectedDocType(e.target.value)}
-                className="w-full text-xs border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#12372A]/20 focus:border-[#12372A]"
-              >
-                {DOC_TYPE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
+              <input
+                type="file"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) handleUpload(e.target.files[0], selectedAppId);
+                  e.target.value = '';
+                }}
+                className="hidden"
+                accept=".pdf,.png,.jpg,.jpeg,.webp"
+                disabled={groups.length === 0 || !!uploading}
+              />
+            </label>
           </div>
-
-          <label
-            className={`inline-flex items-center gap-2 px-6 py-2.5 text-white text-xs font-bold rounded-xl cursor-pointer transition-colors shadow-sm ${
-              groups.length === 0 || uploading
-                ? 'bg-gray-300 cursor-not-allowed'
-                : 'bg-[#12372A] hover:bg-[#1a4a38]'
-            }`}
-          >
-            {uploading === selectedAppId ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /><span>Uploading…</span></>
-            ) : (
-              <><Plus className="w-4 h-4 text-[#a8d5b9]" /><span>Browse &amp; Upload</span></>
-            )}
-            <input
-              type="file"
-              onChange={(e) => {
-                if (e.target.files?.[0]) handleUpload(e.target.files[0], selectedAppId);
-                e.target.value = '';
-              }}
-              className="hidden"
-              accept=".pdf,.png,.jpg,.jpeg,.webp"
-              disabled={groups.length === 0 || !!uploading}
-            />
-          </label>
-        </div>
-      </div>
-
-      {/* Documents grouped by Application */}
-      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-            <FileCheck className="w-5 h-5 text-[#12372A]" />
-            Your Documents
-          </h2>
-          <button
-            onClick={loadDocuments}
-            disabled={loading}
-            className="p-1.5 text-gray-500 hover:text-[#12372A] hover:bg-emerald-50 rounded-lg transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
         </div>
 
-        {loading ? (
-          <div className="p-12 text-center">
-            <Loader2 className="w-8 h-8 text-[#12372A] animate-spin mx-auto" />
-            <p className="text-xs text-gray-500 mt-3">Loading your documents…</p>
+        {/* Documents grouped by Application */}
+        <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <FileCheck className="w-5 h-5 text-[#12372A]" />
+              Your Documents
+            </h2>
+            <button
+              onClick={loadDocuments}
+              disabled={loading}
+              className="p-1.5 text-gray-500 hover:text-[#12372A] hover:bg-emerald-50 rounded-lg transition-colors"
+              title="Refresh"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
           </div>
-        ) : groups.length === 0 ? (
-          <div className="p-12 text-center space-y-2">
-            <FileText className="w-10 h-10 text-gray-300 mx-auto" />
-            <p className="font-bold text-gray-700 text-sm">No Documents Yet</p>
-            <p className="text-[11px] text-gray-500">
-              Create an application first, then upload your supporting documents above.
-            </p>
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {groups.map((group) => {
-              const isOpen = expandedGroups.has(group.applicationId);
-              return (
-                <div key={group.applicationId}>
-                  {/* Group Header */}
-                  <button
-                    onClick={() => toggleGroup(group.applicationId)}
-                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors text-left"
-                  >
-                    <div className="flex items-center gap-3">
-                      <FolderOpen className="w-5 h-5 text-[#12372A] shrink-0" />
-                      <div>
-                        <p className="text-sm font-bold text-gray-900">
-                          {group.applicationNumber || group.applicationId.slice(0, 12)}
-                          {group.serviceType && (
-                            <span className="ml-2 text-xs font-semibold text-gray-500">— {group.serviceType}</span>
-                          )}
-                        </p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">
-                          {group.documents.length} document{group.documents.length !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                    </div>
-                    {isOpen ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
-                  </button>
 
-                  {/* Documents inside group */}
-                  {isOpen && (
-                    <div className="divide-y divide-gray-50 bg-gray-50/40">
-                      {group.documents.length === 0 ? (
-                        <div className="px-8 py-6 text-center">
-                          <AlertCircle className="w-6 h-6 text-gray-300 mx-auto mb-1" />
-                          <p className="text-xs text-gray-400">No documents uploaded for this application yet.</p>
+          {loading ? (
+            <div className="p-12 text-center">
+              <Loader2 className="w-8 h-8 text-[#12372A] animate-spin mx-auto" />
+              <p className="text-xs text-gray-500 mt-3">Loading your documents…</p>
+            </div>
+          ) : groups.length === 0 ? (
+            <div className="p-12 text-center space-y-2">
+              <FileText className="w-10 h-10 text-gray-300 mx-auto" />
+              <p className="font-bold text-gray-700 text-sm">No Documents Yet</p>
+              <p className="text-[11px] text-gray-500">
+                Create an application first, then upload your supporting documents above.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {groups.map((group) => {
+                const isOpen = expandedGroups.has(group.applicationId);
+                return (
+                  <div key={group.applicationId}>
+                    {/* Group Header */}
+                    <button
+                      onClick={() => toggleGroup(group.applicationId)}
+                      className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FolderOpen className="w-5 h-5 text-[#12372A] shrink-0" />
+                        <div>
+                          <p className="text-sm font-bold text-gray-900">
+                            {group.applicationNumber || group.applicationId.slice(0, 12)}
+                            {group.serviceType && (
+                              <span className="ml-2 text-xs font-semibold text-gray-500">— {group.serviceType}</span>
+                            )}
+                          </p>
+                          <p className="text-[11px] text-gray-400 mt-0.5">
+                            {group.documents.length} document{group.documents.length !== 1 ? 's' : ''}
+                          </p>
                         </div>
-                      ) : (
-                        group.documents.map((doc) => (
-                          <div
-                            key={doc.documentId}
-                            className="px-8 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-white border border-gray-200 text-[#12372A] flex items-center justify-center shrink-0">
-                                <FileText className="w-4 h-4" />
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-sm font-bold text-gray-900">{doc.originalFileName || doc.fileName}</p>
-                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLES[doc.status] || STATUS_STYLES.UPLOADED}`}>
-                                    {STATUS_LABELS[doc.status] || doc.status}
-                                  </span>
-                                  {doc.version > 1 && (
-                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">v{doc.version}</span>
+                      </div>
+                      {isOpen ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
+                    </button>
+
+                    {/* Documents inside group */}
+                    {isOpen && (
+                      <div className="divide-y divide-gray-50 bg-gray-50/40">
+                        {group.documents.length === 0 ? (
+                          <div className="px-8 py-6 text-center">
+                            <AlertCircle className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                            <p className="text-xs text-gray-400">No documents uploaded for this application yet.</p>
+                          </div>
+                        ) : (
+                          group.documents.map((doc) => (
+                            <div
+                              key={doc.documentId}
+                              className="px-8 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-white border border-gray-200 text-[#12372A] flex items-center justify-center shrink-0">
+                                  <FileText className="w-4 h-4" />
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-sm font-bold text-gray-900">{doc.originalFileName || doc.fileName}</p>
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLES[doc.status] || STATUS_STYLES.UPLOADED}`}>
+                                      {STATUS_LABELS[doc.status] || doc.status}
+                                    </span>
+                                    {doc.version > 1 && (
+                                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">v{doc.version}</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-1 flex-wrap">
+                                    <span>Type: <strong className="text-gray-700">{doc.documentType.replace(/_/g, ' ')}</strong></span>
+                                    <span>•</span>
+                                    <span>{formatSize(doc.fileSize)}</span>
+                                    <span>•</span>
+                                    <span>{formatDate(doc.uploadedAt)}</span>
+                                  </div>
+                                  {doc.rejectionReason && (
+                                    <p className="text-xs text-rose-600 mt-1">❌ Rejection: {doc.rejectionReason}</p>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-3 text-xs text-gray-500 mt-1 flex-wrap">
-                                  <span>Type: <strong className="text-gray-700">{doc.documentType.replace(/_/g, ' ')}</strong></span>
-                                  <span>•</span>
-                                  <span>{formatSize(doc.fileSize)}</span>
-                                  <span>•</span>
-                                  <span>{formatDate(doc.uploadedAt)}</span>
-                                </div>
-                                {doc.rejectionReason && (
-                                  <p className="text-xs text-rose-600 mt-1">❌ Rejection: {doc.rejectionReason}</p>
-                                )}
+                              </div>
+
+                              <div className="flex items-center gap-2 self-end sm:self-center">
+                                {/* Download */}
+                                <button
+                                  onClick={() => handleDownload(doc)}
+                                  className="p-2 text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-1 text-xs font-bold border border-blue-200"
+                                  title="Download"
+                                >
+                                  <Download className="w-4 h-4" />
+                                  <span>Download</span>
+                                </button>
+
+                                {/* Re-upload (replace) */}
+                                <label
+                                  className={`p-2 text-emerald-800 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold border border-emerald-200 ${uploading === group.applicationId ? 'opacity-50 pointer-events-none' : ''}`}
+                                  title="Re-upload / Replace"
+                                >
+                                  <RefreshCw className="w-4 h-4" />
+                                  <span>Replace</span>
+                                  <input
+                                    type="file"
+                                    className="hidden"
+                                    accept=".pdf,.png,.jpg,.jpeg,.webp"
+                                    onChange={(e) => {
+                                      if (e.target.files?.[0]) {
+                                        // Re-upload uses exact target doc type directly to avoid async state race condition
+                                        handleUpload(e.target.files[0], group.applicationId, doc.documentType);
+                                        e.target.value = '';
+                                      }
+                                    }}
+                                  />
+                                </label>
+
+                                {/* Delete */}
+                                <button
+                                  onClick={() => handleDelete(group.applicationId, doc.documentId, doc.originalFileName || doc.fileName)}
+                                  className="p-2 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
                               </div>
                             </div>
-
-                            <div className="flex items-center gap-2 self-end sm:self-center">
-                              {/* Download */}
-                              <button
-                                onClick={() => handleDownload(doc)}
-                                className="p-2 text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-1 text-xs font-bold border border-blue-200"
-                                title="Download"
-                              >
-                                <Download className="w-4 h-4" />
-                                <span>Download</span>
-                              </button>
-
-                              {/* Re-upload (replace) */}
-                              <label
-                                className={`p-2 text-emerald-800 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold border border-emerald-200 ${uploading === group.applicationId ? 'opacity-50 pointer-events-none' : ''}`}
-                                title="Re-upload / Replace"
-                              >
-                                <RefreshCw className="w-4 h-4" />
-                                <span>Replace</span>
-                                <input
-                                  type="file"
-                                  className="hidden"
-                                  accept=".pdf,.png,.jpg,.jpeg,.webp"
-                                  onChange={(e) => {
-                                    if (e.target.files?.[0]) {
-                                      // Re-upload uses exact target doc type directly to avoid async state race condition
-                                      handleUpload(e.target.files[0], group.applicationId, doc.documentType);
-                                      e.target.value = '';
-                                    }
-                                  }}
-                                />
-                              </label>
-
-                              {/* Delete */}
-                              <button
-                                onClick={() => handleDelete(group.applicationId, doc.documentId, doc.originalFileName || doc.fileName)}
-                                className="p-2 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }

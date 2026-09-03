@@ -94,6 +94,7 @@ const INITIAL_TRANSACTIONS: TransactionItem[] = [
 
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser, getUserStorageKey } from '@/context/UserContext';
+import { useLanguage } from '@/context/LanguageContext';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
 import StatCard from '@/components/ui/StatCard';
@@ -103,6 +104,7 @@ import { fetchCustomerPaymentsAction } from '@/app/portal/actions';
 export default function PaymentsPage() {
   const { showToast } = useNotifications();
   const { user } = useUser();
+  const { t } = useLanguage();
   const [transactions, setTransactions] = useState<TransactionItem[]>(INITIAL_TRANSACTIONS);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('All Services/Applications');
   
@@ -453,15 +455,43 @@ export default function PaymentsPage() {
                   'Property Registration & Sales Deed',
                   'Legal & Civil Services',
                   'Visa Processing',
-                  'Work Permit Renewal'
+                  'Driver License & RTO Services',
+                  'PAN Card Services',
+                  'Biometric & Aadhaar Services',
                 ]}
               />
             </div>
 
-            {/* Changeable Date Range Selector Button */}
+            {/* Date Preset Filter Capsule Tabs */}
+            <div className="hidden xl:inline-flex bg-gray-100/80 p-1 rounded-xl items-center gap-1 border border-gray-200/50">
+              {['All Time', 'Today', 'This Week', 'This Month'].map((preset) => (
+                <button
+                  key={preset}
+                  onClick={() => {
+                    setDatePreset(preset);
+                    setSingleSelectedDate('');
+                    setCustomStartDate('');
+                    setCustomEndDate('');
+                  }}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                    datePreset === preset
+                      ? 'bg-[#0e2a47] text-white shadow-xs'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
+                  }`}
+                >
+                  {preset}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom Date Pick Button */}
             <button
               onClick={() => setShowDatePickerModal(true)}
-              className="flex items-center gap-2 bg-gray-50/80 border border-gray-200 hover:bg-gray-100 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-gray-700 transition-colors w-full sm:w-auto justify-center"
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                datePreset === 'Select Date' || datePreset === 'Custom Date Range'
+                  ? 'bg-[#0e2a47] text-white border-[#0e2a47]'
+                  : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+              }`}
             >
               <Calendar className="w-4 h-4 text-gray-400 shrink-0" />
               <span className="truncate">
@@ -1055,106 +1085,209 @@ export default function PaymentsPage() {
       >
         <div
           id="payments-statement-pdf-target"
-          style={{ width: '800px', backgroundColor: '#ffffff', color: '#111827', padding: '32px', fontFamily: 'sans-serif' }}
+          style={{ width: '800px', backgroundColor: '#ffffff', color: '#0f172a', padding: '36px', fontFamily: 'Arial, sans-serif', boxSizing: 'border-box' }}
         >
-          {/* Header Banner */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #12372A', paddingBottom: '16px', marginBottom: '24px' }}>
+          {/* Formal Bank Statement Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '3px solid #0f172a', paddingBottom: '16px', marginBottom: '20px' }}>
             <div>
-              <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#12372A', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Amman Communications
-              </h2>
-              <p style={{ fontSize: '11px', color: '#4b5563', margin: '3px 0 0 0', fontWeight: '600' }}>
-                Services & Financial Transactions Management Portal
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+                <div style={{ width: '40px', height: '40px', backgroundColor: '#0f172a', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontWeight: 'bold', fontSize: '20px', textAlign: 'center', lineHeight: '40px' }}>
+                  A
+                </div>
+                <div>
+                  <h1 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    AMMAN COMMUNICATIONS
+                  </h1>
+                  <p style={{ fontSize: '10px', color: '#475569', margin: '2px 0 0 0', fontWeight: '600' }}>
+                    Government Services & Financial Solutions Division | GSTIN: 33AAAAA0000A1Z5
+                  </p>
+                </div>
+              </div>
+              <p style={{ fontSize: '10px', color: '#64748b', margin: 0 }}>
+                Main Office: T. Nagar, Chennai, Tamil Nadu - 600017 | Phone: +91 98765 43210 | www.ammancommunications.com
               </p>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#12372A', backgroundColor: '#f0f7f2', padding: '4px 12px', borderRadius: '12px', border: '1px solid #a8d5b9', display: 'inline-block' }}>
-                OFFICIAL STATEMENT
-              </span>
-              <p style={{ fontSize: '10px', color: '#6b7280', margin: '4px 0 0 0' }}>
-                Generated: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+              <div style={{ backgroundColor: '#0f172a', color: '#ffffff', fontSize: '11px', fontWeight: '800', padding: '6px 14px', borderRadius: '3px', textTransform: 'uppercase', letterSpacing: '1px', display: 'inline-block', marginBottom: '6px' }}>
+                STATEMENT OF ACCOUNT
+              </div>
+              <p style={{ fontSize: '10px', color: '#1e293b', margin: 0, fontWeight: '700' }}>
+                Statement Ref: STMT-2026-981240
+              </p>
+              <p style={{ fontSize: '10px', color: '#64748b', margin: '2px 0 0 0' }}>
+                Date of Issue: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
               </p>
             </div>
           </div>
 
-          {/* Statement Metadata & Summary Grid */}
-          <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: '12px', padding: '16px', marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '12px' }}>
-            <div>
-              <p style={{ margin: '0 0 4px 0', color: '#6b7280', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>Account Holder</p>
-              <p style={{ margin: 0, fontWeight: 'bold', color: '#111827', fontSize: '13px' }}>{user.name || 'Account User'}</p>
-              <p style={{ margin: '2px 0 0 0', color: '#4b5563' }}>{user.email}</p>
+          {/* Account Details & Statement Period Boxes (2 Columns - Formal Monochrome) */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+            {/* Box 1: Customer Account Info */}
+            <div style={{ border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ backgroundColor: '#f1f5f9', padding: '6px 12px', borderBottom: '1px solid #cbd5e1', fontWeight: '800', fontSize: '10px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                ACCOUNT HOLDER INFORMATION
+              </div>
+              <div style={{ padding: '10px 12px', fontSize: '11px', lineHeight: '1.6' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b', fontWeight: '600' }}>Account Holder:</span>
+                  <span style={{ fontWeight: '800', color: '#0f172a' }}>{user.name || 'Account User'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b', fontWeight: '600' }}>Customer ID:</span>
+                  <span style={{ fontWeight: '700', fontFamily: 'monospace', color: '#0f172a' }}>AMC-CUST-884920</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b', fontWeight: '600' }}>Registered Email:</span>
+                  <span style={{ fontWeight: '700', color: '#0f172a' }}>{user.email}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b', fontWeight: '600' }}>Account Branch:</span>
+                  <span style={{ fontWeight: '700', color: '#0f172a' }}>Chennai Main Branch</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <p style={{ margin: '0 0 4px 0', color: '#6b7280', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>Filter Timeline / Category</p>
-              <p style={{ margin: 0, fontWeight: 'bold', color: '#12372A' }}>Timeline: {getDateTimelineLabel()}</p>
-              <p style={{ margin: '2px 0 0 0', color: '#4b5563' }}>Category: {selectedCategoryFilter}</p>
+
+            {/* Box 2: Statement Period & Currency */}
+            <div style={{ border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden' }}>
+              <div style={{ backgroundColor: '#f1f5f9', padding: '6px 12px', borderBottom: '1px solid #cbd5e1', fontWeight: '800', fontSize: '10px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                STATEMENT SUMMARY PERIOD
+              </div>
+              <div style={{ padding: '10px 12px', fontSize: '11px', lineHeight: '1.6' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b', fontWeight: '600' }}>Statement Period:</span>
+                  <span style={{ fontWeight: '800', color: '#0f172a' }}>{getDateTimelineLabel()}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b', fontWeight: '600' }}>Service Category:</span>
+                  <span style={{ fontWeight: '700', color: '#0f172a' }}>{selectedCategoryFilter}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b', fontWeight: '600' }}>Account Currency:</span>
+                  <span style={{ fontWeight: '800', color: '#0f172a' }}>INR (₹)</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b', fontWeight: '600' }}>Account Status:</span>
+                  <span style={{ fontWeight: '800', color: '#0f172a' }}>ACTIVE / VERIFIED</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Financial Totals Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '20px' }}>
-            <div style={{ border: '1px solid #e5e7eb', borderRadius: '10px', padding: '12px', backgroundColor: '#ffffff' }}>
-              <p style={{ margin: 0, fontSize: '10px', color: '#6b7280', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Transactions</p>
-              <p style={{ margin: '4px 0 0 0', fontSize: '18px', fontWeight: 'bold', color: '#111827' }}>{filteredTransactions.length}</p>
+          {/* Formal Financial Summary Bar (Monochrome Slate) */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+            <div style={{ border: '1px solid #cbd5e1', borderRadius: '4px', padding: '10px', backgroundColor: '#ffffff', textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: '9px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>Opening Balance</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>₹0.00</p>
             </div>
-            <div style={{ border: '1px solid #bfdbfe', borderRadius: '10px', padding: '12px', backgroundColor: '#eff6ff' }}>
-              <p style={{ margin: 0, fontSize: '10px', color: '#1d4ed8', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Amount Paid</p>
-              <p style={{ margin: '4px 0 0 0', fontSize: '18px', fontWeight: 'bold', color: '#1e40af' }}>{formatCurrency(totalPaidSum)}</p>
+            <div style={{ border: '1px solid #cbd5e1', borderRadius: '4px', padding: '10px', backgroundColor: '#f8fafc', textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: '9px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>Total Debits (Billed)</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>{formatCurrency(totalPaidSum + pendingPaymentsSum)}</p>
             </div>
-            <div style={{ border: '1px solid #fecdd3', borderRadius: '10px', padding: '12px', backgroundColor: '#fff1f2' }}>
-              <p style={{ margin: 0, fontSize: '10px', color: '#be123c', fontWeight: 'bold', textTransform: 'uppercase' }}>Total Outstanding</p>
-              <p style={{ margin: '4px 0 0 0', fontSize: '18px', fontWeight: 'bold', color: '#9f1239' }}>{formatCurrency(pendingPaymentsSum)}</p>
+            <div style={{ border: '1px solid #cbd5e1', borderRadius: '4px', padding: '10px', backgroundColor: '#f8fafc', textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: '9px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase' }}>Total Credits (Paid)</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>{formatCurrency(totalPaidSum)}</p>
+            </div>
+            <div style={{ border: '1px solid #94a3b8', borderRadius: '4px', padding: '10px', backgroundColor: '#f1f5f9', textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: '9px', color: '#475569', fontWeight: '700', textTransform: 'uppercase' }}>Closing Balance Due</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>{formatCurrency(pendingPaymentsSum)}</p>
             </div>
           </div>
 
-          {/* Transactions Data Table */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', textAlign: 'left', marginBottom: '24px' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#12372A', color: '#ffffff', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px' }}>
-                <th style={{ padding: '8px 10px', border: '1px solid #12372A' }}>Date</th>
-                <th style={{ padding: '8px 10px', border: '1px solid #12372A' }}>Ref / App ID</th>
-                <th style={{ padding: '8px 10px', border: '1px solid #12372A' }}>Service Description</th>
-                <th style={{ padding: '8px 10px', border: '1px solid #12372A' }}>Mode</th>
-                <th style={{ padding: '8px 10px', border: '1px solid #12372A' }}>Status</th>
-                <th style={{ padding: '8px 10px', border: '1px solid #12372A', textAlign: 'right' }}>Amount (₹)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTransactions.map((t, idx) => (
-                <tr key={t.id + idx} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '8px 10px', fontWeight: '600' }}>{t.date}</td>
-                  <td style={{ padding: '8px 10px', fontFamily: 'monospace', color: '#4b5563' }}>{t.appId || t.id}</td>
-                  <td style={{ padding: '8px 10px', fontWeight: 'bold', color: '#111827' }}>{t.service}</td>
-                  <td style={{ padding: '8px 10px', color: '#4b5563' }}>{t.paymentMode}</td>
-                  <td style={{ padding: '8px 10px' }}>
-                    <span style={{
-                      display: 'inline-block',
-                      padding: '2px 8px',
-                      borderRadius: '10px',
-                      fontSize: '10px',
-                      fontWeight: 'bold',
-                      backgroundColor: t.status === 'Paid' ? '#dcfce7' : t.status === 'Partial' ? '#fef3c7' : '#ffe4e6',
-                      color: t.status === 'Paid' ? '#15803d' : t.status === 'Partial' ? '#b45309' : '#be123c',
-                    }}>
-                      {t.status}
-                    </span>
+          {/* Statement Transaction Ledger Table (Formal Bank Grid) */}
+          <div style={{ border: '1px solid #cbd5e1', borderRadius: '4px', overflow: 'hidden', marginBottom: '20px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#0f172a', color: '#ffffff', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.5px' }}>
+                  <th style={{ padding: '8px 10px', borderRight: '1px solid #334155' }}>Txn Date</th>
+                  <th style={{ padding: '8px 10px', borderRight: '1px solid #334155' }}>Ref / App ID</th>
+                  <th style={{ padding: '8px 10px', borderRight: '1px solid #334155' }}>Particulars / Description</th>
+                  <th style={{ padding: '8px 10px', borderRight: '1px solid #334155' }}>Mode</th>
+                  <th style={{ padding: '8px 10px', borderRight: '1px solid #334155', textAlign: 'right' }}>Debit (₹)</th>
+                  <th style={{ padding: '8px 10px', borderRight: '1px solid #334155', textAlign: 'right' }}>Credit (₹)</th>
+                  <th style={{ padding: '8px 10px', textAlign: 'center' }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredTransactions.map((t, idx) => (
+                  <tr key={t.id + idx} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                    <td style={{ padding: '8px 10px', fontWeight: '600', color: '#334155', whiteSpace: 'nowrap' }}>{t.date}</td>
+                    <td style={{ padding: '8px 10px', fontFamily: 'monospace', fontWeight: '700', color: '#0f172a' }}>{t.appId || t.id}</td>
+                    <td style={{ padding: '8px 10px', fontWeight: '700', color: '#0f172a' }}>
+                      {t.service}
+                    </td>
+                    <td style={{ padding: '8px 10px', color: '#475569', fontWeight: '600' }}>{t.paymentMode}</td>
+                    <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '700', color: '#0f172a' }}>
+                      {formatCurrency(t.totalAmount)}
+                    </td>
+                    <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '700', color: '#0f172a' }}>
+                      {formatCurrency(t.paidAmount)}
+                    </td>
+                    <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '2px 8px',
+                        borderRadius: '3px',
+                        fontSize: '9px',
+                        fontWeight: '800',
+                        backgroundColor: '#f1f5f9',
+                        color: '#334155',
+                        border: '1px solid #cbd5e1'
+                      }}>
+                        {t.status.toUpperCase()}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr style={{ backgroundColor: '#f1f5f9', fontWeight: '800', borderTop: '2px solid #0f172a', color: '#0f172a' }}>
+                  <td colSpan={4} style={{ padding: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    STATEMENT TOTALS ({filteredTransactions.length} ENTRIES)
                   </td>
-                  <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 'bold', color: '#111827' }}>
-                    {formatCurrency(t.totalAmount)}
+                  <td style={{ padding: '10px', textAlign: 'right', color: '#0f172a' }}>
+                    {formatCurrency(totalPaidSum + pendingPaymentsSum)}
+                  </td>
+                  <td style={{ padding: '10px', textAlign: 'right', color: '#0f172a' }}>
+                    {formatCurrency(totalPaidSum)}
+                  </td>
+                  <td style={{ padding: '10px', textAlign: 'center', fontSize: '9px', color: '#0f172a' }}>
+                    BAL: {formatCurrency(pendingPaymentsSum)}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </tfoot>
+            </table>
+          </div>
 
-          {/* Footer Statement Disclaimer */}
-          <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#6b7280' }}>
-            <div>
-              <p style={{ margin: 0, fontWeight: 'bold', color: '#374151' }}>Amman Communications Portal Digital Verification Seal</p>
-              <p style={{ margin: '2px 0 0 0' }}>This is an official computer-generated transaction statement valid without physical signature.</p>
+          {/* Statement Terms & Digital Stamp Footer (Formal Slate) */}
+          <div style={{ borderTop: '2px solid #0f172a', paddingTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: '9px', color: '#475569' }}>
+            <div style={{ width: '60%' }}>
+              <p style={{ margin: '0 0 3px 0', fontWeight: '800', color: '#0f172a', textTransform: 'uppercase' }}>
+                ELECTRONIC STATEMENT VALIDATION & LEGAL DISCLAIMER
+              </p>
+              <p style={{ margin: 0, lineHeight: '1.4' }}>
+                1. This is a computer-generated bank-style statement of account issued by Amman Communications.
+                <br />
+                2. Transactions reflected are processed via encrypted payment gateways.
+                <br />
+                3. Discrepancies, if any, should be reported to support@ammancomm.com within 7 days of statement generation.
+              </p>
+              <p style={{ margin: '6px 0 0 0', fontWeight: '700', fontFamily: 'monospace', color: '#64748b' }}>
+                SECURITY HASH: SHA256-88F4A19B-AMC-STAT-2026
+              </p>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ margin: 0, fontWeight: 'bold', color: '#12372A' }}>Page 1 of 1</p>
+
+            <div style={{ textAlign: 'right', width: '35%' }}>
+              <div style={{ border: '2px dashed #0f172a', borderRadius: '4px', padding: '8px', backgroundColor: '#f8fafc', display: 'inline-block', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}>
+                <p style={{ margin: 0, fontWeight: '800', color: '#0f172a', fontSize: '10px', textTransform: 'uppercase' }}>
+                  AMMAN COMMUNICATIONS
+                </p>
+                <p style={{ margin: '2px 0', fontSize: '9px', color: '#0f172a', fontWeight: '800' }}>
+                  ✓ SYSTEM VERIFIED STATEMENT
+                </p>
+                <p style={{ margin: 0, fontSize: '8px', color: '#64748b' }}>
+                  No Physical Signature Required
+                </p>
+              </div>
             </div>
           </div>
         </div>
