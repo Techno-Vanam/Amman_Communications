@@ -1,29 +1,37 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { getAccessToken } from '@/lib/server-auth';
 import { revalidatePath } from 'next/cache';
 
-const API_BASE_URL =
+const API_BASE_URL = (
   process.env.API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://127.0.0.1:3003';
+  'http://127.0.0.1:3003'
+)
+  .replace(/\/api\/v1\/?$/, '')
+  .replace(/\/api\/?$/, '')
+  .replace(/\/+$/, '');
 
 async function authenticatedFetch(endpoint: string, options: RequestInit = {}) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
+  const token = await getAccessToken();
 
-  const headers = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
+    ...((options.headers as Record<string, string>) || {}),
   };
 
-  const res = await fetch(`${API_BASE_URL}/api/v1${endpoint}`, {
-    ...options,
-    headers,
-  });
+  const cleanPath = endpoint.replace(/^\/?(api\/v1|v1)\/?/, '').replace(/^\/+/, '');
+  const url = `${API_BASE_URL}/api/v1/${cleanPath}`;
 
-  return res;
+  try {
+    return await fetch(url, { ...options, headers, cache: 'no-store' });
+  } catch (_e) {
+    const fallbackUrl = url.includes('localhost')
+      ? url.replace('localhost', '127.0.0.1')
+      : url.replace('127.0.0.1', 'localhost');
+    return await fetch(fallbackUrl, { ...options, headers, cache: 'no-store' });
+  }
 }
 
 export async function fetchAppointmentsAction() {

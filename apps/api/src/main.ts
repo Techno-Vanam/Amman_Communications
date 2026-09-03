@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { json, urlencoded } from 'express';
+import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -15,6 +16,7 @@ async function bootstrap() {
   // Increase JSON body limit to 15 MB for base64 document uploads
   app.use(json({ limit: '15mb' }));
   app.use(urlencoded({ limit: '15mb', extended: true }));
+  app.use(cookieParser());
   const jwtSecret = process.env.JWT_ACCESS_SECRET;
   const refreshSecret = process.env.JWT_REFRESH_SECRET;
   if (!jwtSecret || jwtSecret.length < 32 || !refreshSecret || refreshSecret.length < 32) {
@@ -25,11 +27,16 @@ async function bootstrap() {
     prefix: '/uploads/',
   });
 
-  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? 'http://localhost:3000')
+  const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? 'http://localhost:3000,http://127.0.0.1:3000')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
-  app.enableCors({ origin: allowedOrigins, credentials: true });
+  app.enableCors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  });
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   app.setGlobalPrefix('api/v1', { exclude: ['health'] });
   

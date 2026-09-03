@@ -100,4 +100,58 @@ describe('Authorization', () => {
       }),
     ).rejects.toThrow();
   });
+
+  it('AuthService hashes refreshToken, saves to DB, rotates, and revokes on logout', async () => {
+    const { hash } = await import('bcryptjs');
+    const { JwtService } = await import('@nestjs/jwt');
+    const { AuthService } = await import('./auth.service');
+
+    let currentHash: string | null = null;
+    const adminRecord = {
+      id: 'admin-1',
+      name: 'Admin User',
+      email: 'admin@test.com',
+      passwordHash: await hash('Password@123', 10),
+      get refreshTokenHash() {
+        return currentHash;
+      },
+    };
+
+    const mockPrisma = {
+      admin: {
+        findUnique: async () => adminRecord,
+        update: async ({ data }: { data: { refreshTokenHash?: string | null } }) => {
+          currentHash = data.refreshTokenHash ?? null;
+          return { ...adminRecord, refreshTokenHash: currentHash };
+        },
+      },
+      customer: {
+        findFirst: async () => null,
+        findUnique: async () => null,
+      },
+    } as never;
+
+    const jwtService = new JwtService({ secret: 'amman-communications-jwt-access-secret-32-chars-minimum' });
+    const authService = new AuthService(mockPrisma, jwtService);
+
+    // 1. Login generates access token and stores SHA-256 refreshTokenHash in database
+    const session = await authService.login('admin@test.com', 'Password@123');
+    expect(session.accessToken).toBeDefined();
+    expect(session.refreshToken).toBeDefined();
+    expect(currentHash).not.toBeNull();
+    expect(typeof currentHash).toBe('string');
+
+    // 2. Refresh rotates tokens
+    const refreshedSession = await authService.refresh(session.refreshToken);
+    expect(refreshedSession.accessToken).toBeDefined();
+    expect(refreshedSession.refreshToken).toBeDefined();
+    expect(currentHash).not.toBeNull();
+
+    // 3. Logout revokes token hash
+    await authService.logout(refreshedSession.refreshToken);
+    expect(currentHash).toBe('REVOKED');
+
+    // 4. Subsequent refresh after logout is rejected
+    await expect(() => authService.refresh(refreshedSession.refreshToken)).rejects.toThrow(UnauthorizedException);
+  });
 });

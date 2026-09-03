@@ -1,21 +1,10 @@
-import { getAccessToken } from '@/lib/server-auth';
+import { serverFetch } from '@/lib/server-api';
 
 type AdminSummary = { customers: number; applications: number; documents: number };
 
 async function getSummary(): Promise<AdminSummary | null> {
-	const token = await getAccessToken();
-	const apiBaseUrl = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:3003';
-	if (!token) return null;
-
-	try {
-		const response = await fetch(`${apiBaseUrl}/admin/dashboard/summary`, {
-			headers: { Authorization: `Bearer ${token}` },
-			cache: 'no-store',
-		});
-		return response.ok ? response.json() as Promise<AdminSummary> : null;
-	} catch {
-		return null;
-	}
+  const res = await serverFetch<AdminSummary>('/admin/dashboard/summary');
+  return res.ok && res.data ? res.data : null;
 }
 
 

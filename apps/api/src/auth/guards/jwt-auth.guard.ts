@@ -34,12 +34,6 @@ export class JwtAuthGuard implements CanActivate {
     if (type === 'Bearer' && token) {
       return token;
     }
-
-    if (request.headers.cookie) {
-      const match = request.headers.cookie.match(/access_token=([^;]+)/);
-      if (match) return match[1];
-    }
-    
     return undefined;
   }
 }

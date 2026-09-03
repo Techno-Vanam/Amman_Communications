@@ -1,34 +1,6 @@
 'use server';
 
-import { cookies } from 'next/headers';
-
-const API_BASE_URL =
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3003';
-
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-async function apiFetch(path: string, options: RequestInit = {}) {
-  const authHeader = await getAuthHeader();
-  let res = await fetch(`${API_BASE_URL}/v1${path}`, {
-    ...options,
-    headers: { ...authHeader, ...(options.headers as Record<string, string> ?? {}) },
-    cache: 'no-store',
-  });
-  if (res.status === 404) {
-    res = await fetch(`${API_BASE_URL}/api/v1${path}`, {
-      ...options,
-      headers: { ...authHeader, ...(options.headers as Record<string, string> ?? {}) },
-      cache: 'no-store',
-    });
-  }
-  return res;
-}
+import { serverFetch } from '@/lib/server-api';
 
 // ── Status maps ─────────────────────────────────────────────────
 const UI_TO_DB_STATUS: Record<string, string> = {
@@ -57,26 +29,25 @@ export async function fetchInvoicesAction(search?: string, status?: string) {
     }
     params.append('limit', '100');
 
-    const res = await apiFetch(`/admin/finance/invoices?${params.toString()}`);
+    const res = await serverFetch<any>(`/admin/finance/invoices?${params.toString()}`);
 
     let manualSalesRes: any = null;
     if (!status || status === 'All' || status === 'Paid') {
       const msParams = new URLSearchParams();
       if (search) msParams.append('search', search);
-      manualSalesRes = await apiFetch(`/admin/finance/manual-sales?${msParams.toString()}`);
+      manualSalesRes = await serverFetch<any>(`/admin/finance/manual-sales?${msParams.toString()}`);
     }
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to fetch invoices' };
+      return { error: res.error || 'Failed to fetch invoices' };
     }
 
-    const data = await res.json();
-    let items = data.items || data.data || [];
+    const data = res.data;
+    let items = data?.items || data?.data || [];
 
     if (manualSalesRes && manualSalesRes.ok) {
-      const msData = await manualSalesRes.json();
-      const msItems = msData.items || msData.data || msData || [];
+      const msData = manualSalesRes.data;
+      const msItems = msData?.items || msData?.data || (Array.isArray(msData) ? msData : []);
       
       const mappedMs = msItems.map((ms: any) => ({
         id: ms.id,
@@ -102,7 +73,6 @@ export async function fetchInvoicesAction(search?: string, status?: string) {
       }));
       
       items = [...items, ...mappedMs];
-      // sort by createdAt desc
       items.sort((a: any, b: any) => {
         const d1 = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const d2 = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -114,33 +84,26 @@ export async function fetchInvoicesAction(search?: string, status?: string) {
       if (inv.isManualSale) return inv;
       
       return {
-      // IDs
-      id: inv.id,
-      invoiceNumber: inv.invoiceNumber || inv.id,
-      appId: inv.applicationId || '—',
-      // Customer
-      customerId: inv.customerId,
-      customer: inv.customer?.name || '—',
-      email: inv.customer?.email || '—',
-      phone: inv.customer?.phone || '—',
-      // Service
-      serviceType: inv.service?.name || '—',
-      // Fees breakdown
-      governmentFee: inv.governmentFee ?? 0,
-      serviceFee: inv.serviceFee ?? 0,
-      totalCost: inv.totalAmount ?? 0,
-      // Payment tracking
-      paidAmount: inv.paidAmount ?? 0,
-      outstandingAmount: inv.outstandingAmount ?? (inv.totalAmount - (inv.paidAmount ?? 0)),
-      paymentsCount: inv.paymentsCount ?? 0,
-      // Dates
-      dueDate: inv.dueDate ? inv.dueDate.split('T')[0] : '',
-      createdAt: inv.createdAt || '',
-      // Status & notes
-      status: DB_TO_UI_STATUS[inv.status] || 'Pending',
-      notes: inv.notes || '',
-      paymentMethod: inv.payments?.[0]?.paymentMethod || '—',
-    };
+        id: inv.id,
+        invoiceNumber: inv.invoiceNumber || inv.id,
+        appId: inv.applicationId || '—',
+        customerId: inv.customerId,
+        customer: inv.customer?.name || '—',
+        email: inv.customer?.email || '—',
+        phone: inv.customer?.phone || '—',
+        serviceType: inv.service?.name || '—',
+        governmentFee: inv.governmentFee ?? 0,
+        serviceFee: inv.serviceFee ?? 0,
+        totalCost: inv.totalAmount ?? 0,
+        paidAmount: inv.paidAmount ?? 0,
+        outstandingAmount: inv.outstandingAmount ?? (inv.totalAmount - (inv.paidAmount ?? 0)),
+        paymentsCount: inv.paymentsCount ?? 0,
+        dueDate: inv.dueDate ? inv.dueDate.split('T')[0] : '',
+        createdAt: inv.createdAt || '',
+        status: DB_TO_UI_STATUS[inv.status] || 'Pending',
+        notes: inv.notes || '',
+        paymentMethod: inv.payments?.[0]?.paymentMethod || '—',
+      };
     });
 
     return { success: true, data: mapped };
@@ -153,14 +116,13 @@ export async function fetchInvoicesAction(search?: string, status?: string) {
 // ── Fetch single invoice with full payment history ──────────────
 export async function fetchInvoiceDetailAction(invoiceId: string) {
   try {
-    const res = await apiFetch(`/admin/finance/invoices/${invoiceId}`);
+    const res = await serverFetch<any>(`/admin/finance/invoices/${invoiceId}`);
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to fetch invoice detail' };
+      return { error: res.error || 'Failed to fetch invoice detail' };
     }
 
-    const inv = await res.json();
+    const inv = res.data;
     return {
       success: true,
       data: {
@@ -201,10 +163,9 @@ export async function fetchInvoiceDetailAction(invoiceId: string) {
 // ── Fetch finance summary ───────────────────────────────────────
 export async function fetchFinanceSummaryAction() {
   try {
-    const res = await apiFetch('/admin/finance/summary');
-    if (!res.ok) return { error: 'Failed to fetch summary' };
-    const data = await res.json();
-    return { success: true, data };
+    const res = await serverFetch<any>('/admin/finance/summary');
+    if (!res.ok) return { error: res.error || 'Failed to fetch summary' };
+    return { success: true, data: res.data };
   } catch (error: any) {
     return { error: error.message || 'Network error' };
   }
@@ -229,19 +190,16 @@ export async function updateInvoiceAction(
     if (formData.governmentFee !== undefined) payload.governmentFee = formData.governmentFee;
     if (formData.serviceFee !== undefined) payload.serviceFee = formData.serviceFee;
 
-    const res = await apiFetch(`/admin/finance/invoices/${id}`, {
+    const res = await serverFetch<any>(`/admin/finance/invoices/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to update invoice' };
+      return { error: res.error || 'Failed to update invoice' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('updateInvoiceAction error:', error);
     return { error: error.message || 'Network error' };
@@ -265,19 +223,16 @@ export async function recordInvoicePaymentAction(
     if (reference) payload.reference = reference;
     if (notes) payload.notes = notes;
 
-    const res = await apiFetch(`/admin/finance/invoices/${invoiceId}/payments`, {
+    const res = await serverFetch<any>(`/admin/finance/invoices/${invoiceId}/payments`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to record payment' };
+      return { error: res.error || 'Failed to record payment' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('recordInvoicePaymentAction error:', error);
     return { error: error.message || 'Network error' };
@@ -287,17 +242,14 @@ export async function recordInvoicePaymentAction(
 // ── Create Manual Sale ──────────────────────────────────────────────────
 export async function createManualSaleAction(data: { customerName: string; phoneNumber?: string; category: string; amount: number; paymentMethod?: string; details?: string }) {
   try {
-    const res = await apiFetch(`/admin/finance/manual-sales`, {
+    const res = await serverFetch<any>('/admin/finance/manual-sales', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to create manual sale' };
+      return { error: res.error || 'Failed to create manual sale' };
     }
-    const result = await res.json();
-    return { success: true, data: result };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('createManualSaleAction error:', error);
     return { error: error.message || 'Network error' };

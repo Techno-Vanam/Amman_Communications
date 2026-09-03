@@ -1,50 +1,22 @@
 'use server';
 
-import { cookies } from 'next/headers';
-import { getAccessToken } from '@/lib/server-auth';
-
-const API_BASE_URL =
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3003';
-
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const token = (await getAccessToken()) || (await cookies()).get('access_token')?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { serverFetch } from '@/lib/server-api';
 
 export async function fetchServicesAction(search?: string, status?: string) {
   try {
-    const authHeader = await getAuthHeader();
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (status && status !== 'All') {
-      params.append('status', status.toUpperCase()); // ACTIVE, INACTIVE, DRAFT
+      params.append('status', status.toUpperCase());
     }
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services?${params.toString()}`, {
-      headers: {
-        ...authHeader,
-      },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services?${params.toString()}`, {
-        headers: {
-          ...authHeader,
-        },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverFetch<any>(`/admin/services?${params.toString()}`);
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to fetch services' };
+      return { error: res.error || 'Failed to fetch services' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('fetchServicesAction error:', error);
     return { error: error.message || 'Network error' };
@@ -62,8 +34,6 @@ export async function createServiceAction(formData: {
   requiredDocs: { name: string }[];
 }) {
   try {
-    const authHeader = await getAuthHeader();
-    // Encode category into description
     const fullDescription = `[${formData.category}] ${formData.description || ''}`;
 
     const payload = {
@@ -72,7 +42,7 @@ export async function createServiceAction(formData: {
       governmentFee: formData.govtFee,
       serviceFee: formData.officeCharge,
       estimatedTime: `${formData.estDays} working days`,
-      status: formData.status.toUpperCase(), // ACTIVE, INACTIVE, DRAFT
+      status: formData.status.toUpperCase(),
       requiredDocuments: formData.requiredDocs.map((d, index) => ({
         name: d.name,
         displayOrder: index + 1,
@@ -80,33 +50,16 @@ export async function createServiceAction(formData: {
       })),
     };
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services`, {
+    const res = await serverFetch<any>('/admin/services', {
       method: 'POST',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
 
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services`, {
-        method: 'POST',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to create service' };
+      return { error: res.error || 'Failed to create service' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('createServiceAction error:', error);
     return { error: error.message || 'Network error' };
@@ -127,7 +80,6 @@ export async function updateServiceAction(
   }
 ) {
   try {
-    const authHeader = await getAuthHeader();
     const payload: any = {};
 
     if (formData.name !== undefined) payload.name = formData.name;
@@ -148,33 +100,16 @@ export async function updateServiceAction(
       }));
     }
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services/${id}`, {
+    const res = await serverFetch<any>(`/admin/services/${id}`, {
       method: 'PATCH',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
 
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services/${id}`, {
-        method: 'PATCH',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to update service' };
+      return { error: res.error || 'Failed to update service' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('updateServiceAction error:', error);
     return { error: error.message || 'Network error' };
@@ -183,36 +118,18 @@ export async function updateServiceAction(
 
 export async function updateServiceStatusAction(id: string, status: string) {
   try {
-    const authHeader = await getAuthHeader();
     const payload = { status: status.toUpperCase() };
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services/${id}/status`, {
+    const res = await serverFetch<any>(`/admin/services/${id}/status`, {
       method: 'PATCH',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
 
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services/${id}/status`, {
-        method: 'PATCH',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to update service status' };
+      return { error: res.error || 'Failed to update service status' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('updateServiceStatusAction error:', error);
     return { error: error.message || 'Network error' };
@@ -221,27 +138,12 @@ export async function updateServiceStatusAction(id: string, status: string) {
 
 export async function deleteServiceAction(id: string) {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services/${id}`, {
+    const res = await serverFetch<any>(`/admin/services/${id}`, {
       method: 'DELETE',
-      headers: {
-        ...authHeader,
-      },
     });
 
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services/${id}`, {
-        method: 'DELETE',
-        headers: {
-          ...authHeader,
-        },
-      });
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to delete service' };
+      return { error: res.error || 'Failed to delete service' };
     }
 
     return { success: true };

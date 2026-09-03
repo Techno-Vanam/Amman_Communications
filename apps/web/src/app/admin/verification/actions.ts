@@ -1,62 +1,28 @@
 'use server';
 
-import { cookies } from 'next/headers';
-
-const API_BASE_URL =
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3003';
-
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { serverFetch } from '@/lib/server-api';
 
 export async function fetchVerificationRecordsAction() {
   try {
-    const authHeader = await getAuthHeader();
-
     // 1. Fetch applications
-    let res = await fetch(`${API_BASE_URL}/v1/admin/applications?limit=100`, {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/applications?limit=100`, {
-        headers: { ...authHeader },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverFetch<any>('/admin/applications?limit=100');
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to fetch applications' };
+      return { error: res.error || 'Failed to fetch applications' };
     }
 
-    const appData = await res.json();
-    const apps = appData.items || [];
+    const appData = res.data;
+    const apps = appData?.items || appData?.data?.items || [];
 
     // 2. Fetch documents for each application in parallel
     const allRecordsPromises = apps.map(async (app: any) => {
       try {
-        let docRes = await fetch(`${API_BASE_URL}/v1/admin/applications/${app.id}/documents`, {
-          headers: { ...authHeader },
-          cache: 'no-store',
-        });
-
-        if (docRes.status === 404) {
-          docRes = await fetch(`${API_BASE_URL}/api/v1/admin/applications/${app.id}/documents`, {
-            headers: { ...authHeader },
-            cache: 'no-store',
-          });
-        }
+        const docRes = await serverFetch<any>(`/admin/applications/${app.id}/documents`);
 
         if (!docRes.ok) return [];
 
-        const docData = await docRes.json();
-        const documents = docData.documents || [];
+        const docData = docRes.data;
+        const documents = docData?.documents || (Array.isArray(docData) ? docData : []);
 
         const DB_TO_UI_STATUS: Record<string, string> = {
           PENDING: 'Pending Review',
@@ -78,9 +44,8 @@ export async function fetchVerificationRecordsAction() {
 
         return documents.map((doc: any) => {
           let docType = DOC_TYPE_MAPPING[doc.documentType] || doc.documentType;
-          // Capitalize and format nicely if fallback
           if (!DOC_TYPE_MAPPING[doc.documentType]) {
-            docType = doc.documentType.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+            docType = doc.documentType?.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
           }
 
           return {
@@ -114,8 +79,6 @@ export async function updateVerificationStatusAction(
   remarks?: string
 ) {
   try {
-    const authHeader = await getAuthHeader();
-
     const UI_TO_DB_STATUS: Record<string, string> = {
       'Pending Review': 'UNDER_REVIEW',
       Verified: 'VERIFIED',
@@ -128,39 +91,19 @@ export async function updateVerificationStatusAction(
       rejectionReason: remarks || undefined,
     };
 
-    let res = await fetch(
-      `${API_BASE_URL}/v1/admin/applications/${applicationId}/documents/${documentId}/status`,
+    const res = await serverFetch<any>(
+      `/admin/applications/${applicationId}/documents/${documentId}/status`,
       {
         method: 'PUT',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(payload),
       }
     );
 
-    if (res.status === 404) {
-      res = await fetch(
-        `${API_BASE_URL}/api/v1/admin/applications/${applicationId}/documents/${documentId}/status`,
-        {
-          method: 'PUT',
-          headers: {
-            ...authHeader,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to update document status' };
+      return { error: res.error || 'Failed to update document status' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('updateVerificationStatusAction error:', error);
     return { error: error.message || 'Network error' };

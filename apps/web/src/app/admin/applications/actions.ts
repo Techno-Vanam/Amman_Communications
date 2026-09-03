@@ -1,21 +1,9 @@
 'use server';
 
-import { cookies } from 'next/headers';
-import { getAccessToken } from '@/lib/server-auth';
-
-const API_BASE_URL =
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3003';
-
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const token = (await getAccessToken()) || (await cookies()).get('access_token')?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { serverFetch } from '@/lib/server-api';
 
 export async function fetchApplicationsAction(search?: string, status?: string) {
   try {
-    const authHeader = await getAuthHeader();
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (status && status !== 'All') {
@@ -33,26 +21,14 @@ export async function fetchApplicationsAction(search?: string, status?: string) 
     }
     params.append('limit', '100');
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/applications?${params.toString()}`, {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/applications?${params.toString()}`, {
-        headers: { ...authHeader },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverFetch<any>(`/admin/applications?${params.toString()}`);
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to fetch applications' };
+      return { error: res.error || 'Failed to fetch applications' };
     }
 
-    const json = await res.json();
-    const data = json.data ?? json;
-    return { success: true, data: data.items || [] };
+    const data = res.data?.data ?? res.data;
+    return { success: true, data: data?.items || [] };
   } catch (error: any) {
     console.error('fetchApplicationsAction error:', error);
     return { error: error.message || 'Network error' };
@@ -61,7 +37,6 @@ export async function fetchApplicationsAction(search?: string, status?: string) 
 
 export async function updateApplicationStatusAction(id: string, status: string, notes?: string) {
   try {
-    const authHeader = await getAuthHeader();
     const UI_TO_DB_STATUS: Record<string, string> = {
       'Submitted': 'SUBMITTED',
       'Under Verification': 'UNDER_REVIEW',
@@ -73,23 +48,13 @@ export async function updateApplicationStatusAction(id: string, status: string, 
     };
     const apiStatus = UI_TO_DB_STATUS[status] || status || 'SUBMITTED';
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/applications/${id}/status`, {
+    const res = await serverFetch<any>(`/admin/applications/${id}/status`, {
       method: 'PUT',
-      headers: { ...authHeader, 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: apiStatus, notes }),
     });
 
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/applications/${id}/status`, {
-        method: 'PUT',
-        headers: { ...authHeader, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: apiStatus, notes }),
-      });
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to update status' };
+      return { error: res.error || 'Failed to update status' };
     }
 
     return { success: true };
@@ -108,29 +73,16 @@ export async function createApplicationAction(formData: {
   notes?: string;
 }) {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/applications`, {
+    const res = await serverFetch<any>('/admin/applications', {
       method: 'POST',
-      headers: { ...authHeader, 'Content-Type': 'application/json' },
       body: JSON.stringify(formData),
     });
 
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/applications`, {
-        method: 'POST',
-        headers: { ...authHeader, 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to create application' };
+      return { error: res.error || 'Failed to create application' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('createApplicationAction error:', error);
     return { error: error.message || 'Network error' };
@@ -139,24 +91,12 @@ export async function createApplicationAction(formData: {
 
 export async function fetchCustomersForSelectAction() {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/customers?limit=200`, {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/customers?limit=200`, {
-        headers: { ...authHeader },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverFetch<any>('/admin/customers?limit=200');
 
     if (!res.ok) return { error: 'Failed to fetch customers' };
 
-    const data = await res.json();
-    const arr = Array.isArray(data) ? data : data.items || [];
+    const data = res.data;
+    const arr = Array.isArray(data) ? data : data?.items || [];
     return { success: true, data: arr.map((c: any) => ({ id: c.id, name: c.name, email: c.email, phone: c.phone || '' })) };
   } catch (error: any) {
     return { error: error.message || 'Network error' };
@@ -174,29 +114,16 @@ export async function adminUploadDocumentAction(
   }
 ) {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/applications/${applicationId}/documents/upload`, {
+    const res = await serverFetch<any>(`/admin/applications/${applicationId}/documents/upload`, {
       method: 'POST',
-      headers: { ...authHeader, 'Content-Type': 'application/json' },
       body: JSON.stringify(formData),
     });
 
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/applications/${applicationId}/documents/upload`, {
-        method: 'POST',
-        headers: { ...authHeader, 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to upload document' };
+      return { error: res.error || 'Failed to upload document' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('adminUploadDocumentAction error:', error);
     return { error: error.message || 'Network error' };
@@ -205,24 +132,12 @@ export async function adminUploadDocumentAction(
 
 export async function fetchApplicationDocumentsAction(applicationId: string) {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/applications/${applicationId}/documents`, {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/applications/${applicationId}/documents`, {
-        headers: { ...authHeader },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverFetch<any>(`/admin/applications/${applicationId}/documents`);
 
     if (!res.ok) return { error: 'Failed to fetch documents' };
 
-    const data = await res.json();
-    const docs = Array.isArray(data) ? data : data.documents || [];
+    const data = res.data;
+    const docs = Array.isArray(data) ? data : data?.documents || [];
     return { success: true, data: docs };
   } catch (error: any) {
     return { error: error.message || 'Network error' };
@@ -231,8 +146,6 @@ export async function fetchApplicationDocumentsAction(applicationId: string) {
 
 export async function updateApplicationAction(id: string, data: Partial<any>) {
   try {
-    const authHeader = await getAuthHeader();
-
     const payload = { ...data };
     if (payload.status) {
       const UI_TO_DB_STATUS: Record<string, string> = {
@@ -251,27 +164,16 @@ export async function updateApplicationAction(id: string, data: Partial<any>) {
       delete payload.customer;
     }
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/applications/${id}`, {
+    const res = await serverFetch<any>(`/admin/applications/${id}`, {
       method: 'PUT',
-      headers: { ...authHeader, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
 
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/applications/${id}`, {
-        method: 'PUT',
-        headers: { ...authHeader, 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to update application' };
+      return { error: res.error || 'Failed to update application' };
     }
 
-    const resData = await res.json();
-    return { success: true, data: resData };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('updateApplicationAction error:', error);
     return { error: error.message || 'Network error' };
@@ -285,35 +187,16 @@ export async function updateDocumentStatusAction(
   rejectionReason?: string
 ) {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/applications/${applicationId}/documents/${documentId}/status`, {
+    const res = await serverFetch<any>(`/admin/applications/${applicationId}/documents/${documentId}/status`, {
       method: 'PUT',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ status, rejectionReason }),
     });
 
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/applications/${applicationId}/documents/${documentId}/status`, {
-        method: 'PUT',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status, rejectionReason }),
-      });
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to update document status' };
+      return { error: res.error || 'Failed to update document status' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('updateDocumentStatusAction error:', error);
     return { error: error.message || 'Network error' };

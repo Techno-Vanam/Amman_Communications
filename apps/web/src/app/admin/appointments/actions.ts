@@ -1,43 +1,15 @@
 'use server';
 
-import { cookies } from 'next/headers';
-import { getAccessToken } from '@/lib/server-auth';
-
-const API_BASE_URL =
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3003';
-
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const token = (await getAccessToken()) || (await cookies()).get('access_token')?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { serverFetch } from '@/lib/server-api';
 
 // Find a matching service ID by name
 async function resolveServiceId(name: string): Promise<string | undefined> {
   try {
-    const authHeader = await getAuthHeader();
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services`, {
-      headers: {
-        ...authHeader,
-      },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services`, {
-        headers: {
-          ...authHeader,
-        },
-        cache: 'no-store',
-      });
-    }
-
+    const res = await serverFetch<any>('/admin/services');
     if (res.ok) {
-      const data = await res.json();
-      // API wraps in { success, data } envelope
-      const list = Array.isArray(data) ? data : (data.data ?? data.items ?? []);
-      const match = list.find((s: any) => s.name.toLowerCase() === name.toLowerCase());
+      const data = res.data;
+      const list = Array.isArray(data) ? data : (data?.data ?? data?.items ?? []);
+      const match = list.find((s: any) => s.name?.toLowerCase() === name.toLowerCase());
       if (match) return match.id;
     }
   } catch (e) {
@@ -48,36 +20,19 @@ async function resolveServiceId(name: string): Promise<string | undefined> {
 
 export async function fetchAppointmentsAction(search?: string, status?: string) {
   try {
-    const authHeader = await getAuthHeader();
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (status && status !== 'All') {
-      params.append('status', status.toUpperCase()); // CONFIRMED, PENDING, COMPLETED, CANCELLED, RESCHEDULED
+      params.append('status', status.toUpperCase());
     }
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/appointments?${params.toString()}`, {
-      headers: {
-        ...authHeader,
-      },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/appointments?${params.toString()}`, {
-        headers: {
-          ...authHeader,
-        },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverFetch<any>(`/admin/appointments?${params.toString()}`);
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to fetch appointments' };
+      return { error: res.error || 'Failed to fetch appointments' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('fetchAppointmentsAction error:', error);
     return { error: error.message || 'Network error' };
@@ -99,11 +54,8 @@ export async function createAppointmentAction(formData: {
   status: string;
 }) {
   try {
-    const authHeader = await getAuthHeader();
-    // Use directly provided serviceId, or resolve by name as fallback
     const resolvedServiceId = formData.serviceId || await resolveServiceId(formData.service);
 
-    // Combine date and time to ISO Date string
     const dateTimeStr = `${formData.date}T${formData.time}:00`;
     const appointmentDate = new Date(dateTimeStr).toISOString();
 
@@ -122,33 +74,16 @@ export async function createAppointmentAction(formData: {
       status: formData.status.toUpperCase(),
     };
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/appointments`, {
+    const res = await serverFetch<any>('/admin/appointments', {
       method: 'POST',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
 
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/appointments`, {
-        method: 'POST',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to create appointment' };
+      return { error: res.error || 'Failed to create appointment' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('createAppointmentAction error:', error);
     return { error: error.message || 'Network error' };
@@ -157,24 +92,12 @@ export async function createAppointmentAction(formData: {
 
 export async function fetchCustomersForSelectAction() {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/customers?limit=200`, {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/customers?limit=200`, {
-        headers: { ...authHeader },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverFetch<any>('/admin/customers?limit=200');
 
     if (!res.ok) return { error: 'Failed to fetch customers' };
 
-    const data = await res.json();
-    const arr = Array.isArray(data) ? data : data.items || [];
+    const data = res.data;
+    const arr = Array.isArray(data) ? data : data?.items || [];
     return { success: true, data: arr.map((c: any) => ({ id: c.id, name: c.name, email: c.email, phone: c.phone || '' })) };
   } catch (error: any) {
     return { error: error.message || 'Network error' };
@@ -183,27 +106,14 @@ export async function fetchCustomersForSelectAction() {
 
 export async function fetchServicesForSelectAction() {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services`, {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services`, {
-        headers: { ...authHeader },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverFetch<any>('/admin/services');
 
     if (!res.ok) {
       return { error: 'Failed to fetch services' };
     }
 
-    const data = await res.json();
-    // API wraps responses in { success, data } envelope
-    const arr = Array.isArray(data) ? data : (data.data ?? data.items ?? []);
+    const data = res.data;
+    const arr = Array.isArray(data) ? data : (data?.data ?? data?.items ?? []);
     return { success: true, data: arr.map((s: any) => ({ id: s.id, name: s.name })) };
   } catch (error: any) {
     return { error: error.message || 'Network error' };
@@ -227,7 +137,6 @@ export async function updateAppointmentAction(
   }
 ) {
   try {
-    const authHeader = await getAuthHeader();
     const payload: any = {};
 
     if (formData.customer) payload.customerName = formData.customer;
@@ -250,33 +159,16 @@ export async function updateAppointmentAction(
       payload.appointmentDate = new Date(dateTimeStr).toISOString();
     }
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/appointments/${id}`, {
+    const res = await serverFetch<any>(`/admin/appointments/${id}`, {
       method: 'PATCH',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
 
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/appointments/${id}`, {
-        method: 'PATCH',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to update appointment' };
+      return { error: res.error || 'Failed to update appointment' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('updateAppointmentAction error:', error);
     return { error: error.message || 'Network error' };
@@ -285,36 +177,18 @@ export async function updateAppointmentAction(
 
 export async function updateAppointmentStatusAction(id: string, status: string) {
   try {
-    const authHeader = await getAuthHeader();
     const payload = { status: status.toUpperCase() };
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/appointments/${id}/status`, {
+    const res = await serverFetch<any>(`/admin/appointments/${id}/status`, {
       method: 'PATCH',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
 
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/appointments/${id}/status`, {
-        method: 'PATCH',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to update status' };
+      return { error: res.error || 'Failed to update status' };
     }
 
-    const data = await res.json();
-    return { success: true, data };
+    return { success: true, data: res.data };
   } catch (error: any) {
     console.error('updateAppointmentStatusAction error:', error);
     return { error: error.message || 'Network error' };
@@ -323,27 +197,12 @@ export async function updateAppointmentStatusAction(id: string, status: string) 
 
 export async function deleteAppointmentAction(id: string) {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/appointments/${id}`, {
+    const res = await serverFetch<any>(`/admin/appointments/${id}`, {
       method: 'DELETE',
-      headers: {
-        ...authHeader,
-      },
     });
 
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/appointments/${id}`, {
-        method: 'DELETE',
-        headers: {
-          ...authHeader,
-        },
-      });
-    }
-
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      return { error: errData.message || 'Failed to cancel appointment' };
+      return { error: res.error || 'Failed to cancel appointment' };
     }
 
     return { success: true };

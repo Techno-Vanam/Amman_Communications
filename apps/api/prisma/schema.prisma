@@ -64,6 +64,7 @@ model Customer {
   email              String         @unique
   phone              String?
   passwordHash       String
+  refreshTokenHash   String?
   name               String
   address            String?
   contactNumber      String?
@@ -85,14 +86,15 @@ model Customer {
 }
 
 model Admin {
-  id             String         @id @default(cuid())
-  email          String         @unique
-  passwordHash   String
-  name           String
-  expenses       Expense[]
-  adminSettings  AdminSettings?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id               String         @id @default(cuid())
+  email            String         @unique
+  passwordHash     String
+  refreshTokenHash String?
+  name             String
+  expenses         Expense[]
+  adminSettings    AdminSettings?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }
 
 model Application {

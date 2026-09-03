@@ -1,55 +1,16 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { fetchInvoicesAction } from './finance/actions';
 import { fetchExpensesAction } from './expenses/actions';
 import { fetchAppointmentsAction } from './appointments/actions';
-import { getAccessToken } from '@/lib/server-auth';
-
-const API_BASE_URL =
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://127.0.0.1:3003';
-
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const token = (await getAccessToken()) || (await cookies()).get('access_token')?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-async function authenticatedFetch(path: string, options: RequestInit = {}) {
-  const headers = await getAuthHeader();
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const prefix = normalizedPath.startsWith('/api') || normalizedPath.startsWith('/v1') ? '' : '/api/v1';
-  return fetch(`${API_BASE_URL}${prefix}${normalizedPath}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-      ...(options.headers || {}),
-    },
-    cache: 'no-store',
-  });
-}
+import { serverFetch } from '@/lib/server-api';
 
 export async function fetchAdminDashboardStatsAction() {
   try {
-    const authHeader = await getAuthHeader();
-
     // 1. Fetch Admin Summary
-    let summaryRes = await fetch(`${API_BASE_URL}/v1/admin/dashboard/summary`, {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
-
-    if (summaryRes.status === 404) {
-      summaryRes = await fetch(`${API_BASE_URL}/api/v1/admin/dashboard/summary`, {
-        headers: { ...authHeader },
-        cache: 'no-store',
-      });
-    }
-
-    const summary = summaryRes.ok ? await summaryRes.json() : { customers: 0, applications: 0, documents: 0 };
+    const summaryRes = await serverFetch<any>('/admin/dashboard/summary');
+    const summary = summaryRes.ok ? summaryRes.data : { customers: 0, applications: 0, documents: 0 };
 
     // 2. Fetch Invoices for income
     const invRes = await fetchInvoicesAction();
@@ -67,20 +28,9 @@ export async function fetchAdminDashboardStatsAction() {
     const appointments = aptRes.success ? (aptRes.data || []) : [];
 
     // 5. Fetch Verification Queue
-    let verifRes = await fetch(`${API_BASE_URL}/v1/admin/dashboard/verification-queue`, {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
-
-    if (verifRes.status === 404) {
-      verifRes = await fetch(`${API_BASE_URL}/api/v1/admin/dashboard/verification-queue`, {
-        headers: { ...authHeader },
-        cache: 'no-store',
-      });
-    }
-
-    const verificationQueue = verifRes.ok ? await verifRes.json() : [];
-    const pendingVerifications = verificationQueue.filter((doc: any) => doc.status === 'UPLOADED' || doc.status === 'UNDER_REVIEW').length;
+    const verifRes = await serverFetch<any>('/admin/dashboard/verification-queue');
+    const verificationQueue = verifRes.ok ? verifRes.data : [];
+    const pendingVerifications = (Array.isArray(verificationQueue) ? verificationQueue : []).filter((doc: any) => doc.status === 'UPLOADED' || doc.status === 'UNDER_REVIEW').length;
 
     // 6. Recent Lists (Last 5)
     // Map recent appointments
@@ -100,18 +50,9 @@ export async function fetchAdminDashboardStatsAction() {
     }));
 
     // Fetch applications list to map recent applications
-    let appRes = await fetch(`${API_BASE_URL}/v1/admin/applications?limit=5`, {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
-    if (appRes.status === 404) {
-      appRes = await fetch(`${API_BASE_URL}/api/v1/admin/applications?limit=5`, {
-        headers: { ...authHeader },
-        cache: 'no-store',
-      });
-    }
-    const appData = appRes.ok ? await appRes.json() : { items: [] };
-    const recentApplications = (appData.items || []).map((app: any) => ({
+    const appRes = await serverFetch<any>('/admin/applications?limit=5');
+    const appData = appRes.ok ? appRes.data : { items: [] };
+    const recentApplications = (appData?.items || []).map((app: any) => ({
       id: app.id,
       customer: app.fullName || app.customer?.name || '—',
       service: app.serviceType || app.title || 'Support',
@@ -136,13 +77,13 @@ export async function fetchAdminDashboardStatsAction() {
       success: true,
       data: {
         stats: {
-          totalClients: summary.customers || 0,
+          totalClients: summary?.customers || 0,
           totalIncome,
           totalExpense,
           totalProfit: totalIncome - totalExpense,
           totalAppointments: appointments.length,
           pendingVerifications,
-          totalApplications: summary.applications || 0,
+          totalApplications: summary?.applications || 0,
           pendingPayment: pendingPaymentCount,
         },
         recentAppointments,
@@ -160,10 +101,9 @@ export async function fetchAdminDashboardStatsAction() {
 
 export async function fetchAdminAppointmentsAction() {
   try {
-    const res = await authenticatedFetch('/admin/appointments');
+    const res = await serverFetch<any>('/admin/appointments');
     if (!res.ok) return [];
-    const data = await res.json();
-    return data.data || data || [];
+    return res.data?.data || res.data || [];
   } catch (error) {
     console.error('Error fetching admin appointments:', error);
     return [];
@@ -180,19 +120,18 @@ export async function rescheduleAdminAppointmentAction(
   },
 ) {
   try {
-    const res = await authenticatedFetch(`/admin/appointments/${appointmentId}/reschedule`, {
+    const res = await serverFetch<any>(`/admin/appointments/${appointmentId}/reschedule`, {
       method: 'PATCH',
       body: JSON.stringify(dto),
     });
 
-    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      return { error: data.message || 'Failed to reschedule appointment' };
+      return { error: res.error || 'Failed to reschedule appointment' };
     }
 
     revalidatePath('/admin/appointments');
     revalidatePath('/portal/appointments');
-    return { success: true, appointment: data.data || data };
+    return { success: true, appointment: res.data?.data || res.data };
   } catch (error) {
     console.error('Error rescheduling admin appointment:', error);
     return { error: 'Network error occurred while rescheduling appointment.' };
@@ -204,19 +143,18 @@ export async function updateAdminAppointmentStatusAction(
   status: 'CONFIRMED' | 'PENDING' | 'RESCHEDULED' | 'COMPLETED' | 'CANCELLED',
 ) {
   try {
-    const res = await authenticatedFetch(`/admin/appointments/${appointmentId}/status`, {
+    const res = await serverFetch<any>(`/admin/appointments/${appointmentId}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     });
 
-    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      return { error: data.message || 'Failed to update appointment status' };
+      return { error: res.error || 'Failed to update appointment status' };
     }
 
     revalidatePath('/admin/appointments');
     revalidatePath('/portal/appointments');
-    return { success: true, appointment: data.data || data };
+    return { success: true, appointment: res.data?.data || res.data };
   } catch (error) {
     console.error('Error updating admin appointment status:', error);
     return { error: 'Network error occurred while updating appointment status.' };

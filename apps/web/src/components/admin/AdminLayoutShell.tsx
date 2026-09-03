@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import NotificationDropdown from '../ui/NotificationDropdown';
 import {
   LayoutDashboard,
@@ -161,7 +161,6 @@ function AdminSidebarNavContent({
 function ProfileDropdown() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -173,10 +172,13 @@ function ProfileDropdown() {
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, [open]);
 
-  function handleLogout() {
+  async function handleLogout() {
     setOpen(false);
+    try {
+      await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch (_) {}
     try { localStorage.removeItem('user_email'); } catch (_) {}
-    router.push('/login');
+    window.location.href = '/login';
   }
 
   return (

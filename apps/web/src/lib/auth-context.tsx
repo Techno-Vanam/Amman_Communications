@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
 export type AuthRole = 'ADMIN' | 'CUSTOMER';
 
@@ -9,6 +9,7 @@ export interface AuthUser {
   name: string;
   email: string;
   role: AuthRole;
+  isProfileCompleted?: boolean;
 }
 
 interface AuthContextValue {
@@ -17,12 +18,15 @@ interface AuthContextValue {
   ready: boolean;
   setSession: (accessToken: string, user: AuthUser) => void;
   clearSession: () => void;
+  refreshSession: () => Promise<string | null>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
 let inMemoryAccessToken: string | null = null;
 
-export function getInMemoryAccessToken() {
+export function getInMemoryAccessToken(): string | null {
   return inMemoryAccessToken;
 }
 
@@ -35,87 +39,92 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [ready, setReady] = useState(false);
 
-  const setSession = (token: string, authenticatedUser: AuthUser) => {
+  const setSession = useCallback((token: string, authenticatedUser: AuthUser) => {
     setInMemoryAccessToken(token);
     setAccessToken(token);
     setUser(authenticatedUser);
-    try {
-      localStorage.setItem('auth_user', JSON.stringify(authenticatedUser));
-      localStorage.setItem('auth_token', token);
-    } catch (e) {
-      console.warn('Unable to persist auth state to localStorage', e);
-    }
-  };
+  }, []);
 
-  const clearSession = () => {
+  const clearSession = useCallback(() => {
     setInMemoryAccessToken(null);
     setAccessToken(null);
     setUser(null);
+  }, []);
+
+  const refreshSession = useCallback(async (): Promise<string | null> => {
     try {
-      localStorage.removeItem('auth_user');
-      localStorage.removeItem('auth_token');
-    } catch (e) {
-      console.warn('Unable to clear auth state from localStorage', e);
+      const refreshRes = await fetch('/api/v1/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!refreshRes.ok) {
+        clearSession();
+        return null;
+      }
+
+      const session = (await refreshRes.json()) as {
+        accessToken?: string;
+        user?: AuthUser;
+      };
+
+      if (session.accessToken && session.user) {
+        setSession(session.accessToken, session.user);
+        return session.accessToken;
+      }
+
+      clearSession();
+      return null;
+    } catch {
+      return null;
     }
-  };
+  }, [setSession, clearSession]);
+
+  const logout = useCallback(async () => {
+    try {
+      await fetch('/api/v1/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (e) {
+      console.error('Logout error:', e);
+    } finally {
+      clearSession();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+    }
+  }, [clearSession]);
 
   useEffect(() => {
     let cancelled = false;
 
-    // 1. Immediate optimistic hydration from localStorage if available
-    try {
-      const storedUser = localStorage.getItem('auth_user');
-      const storedToken = localStorage.getItem('auth_token');
-      if (storedUser) {
-        const parsed = JSON.parse(storedUser) as AuthUser;
-        if (parsed?.id && parsed?.role) {
-          setUser(parsed);
-          if (storedToken) {
-            setAccessToken(storedToken);
-            setInMemoryAccessToken(storedToken);
-          }
-        }
-      }
-    } catch (e) {
-      console.warn('Unable to read auth state from localStorage', e);
-    }
-
-    // 2. Verify active session with /api/v1/auth/me first (without rotating refresh token)
-    async function verifySession() {
+    async function silentTokenRecovery() {
       try {
-        const meRes = await fetch('/api/v1/auth/me', {
-          method: 'GET',
-          credentials: 'include',
-        });
-
-        if (meRes.ok) {
-          const data = (await meRes.json()) as { user?: AuthUser };
-          if (!cancelled && data.user) {
-            setSession(getInMemoryAccessToken() || '', data.user);
-            return;
-          }
-        }
-
-        // 3. If /me failed, fall back to /api/v1/auth/refresh
         const refreshRes = await fetch('/api/v1/auth/refresh', {
           method: 'POST',
           credentials: 'include',
         });
 
         if (refreshRes.ok) {
-          const session = (await refreshRes.json()) as { accessToken?: string; user?: AuthUser };
+          const session = (await refreshRes.json()) as {
+            accessToken?: string;
+            user?: AuthUser;
+          };
+
           if (!cancelled && session.accessToken && session.user) {
             setSession(session.accessToken, session.user);
             return;
           }
         }
 
-        // 4. If unauthenticated, clear session
         if (!cancelled) {
           clearSession();
         }
       } catch {
-        // Keep cached state on temporary network blips
+        if (!cancelled) {
+          clearSession();
+        }
       } finally {
         if (!cancelled) {
           setReady(true);
@@ -123,14 +132,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    void verifySession();
+    void silentTokenRecovery();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [setSession, clearSession]);
 
-  return <AuthContext.Provider value={{ accessToken, user, ready, setSession, clearSession }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        accessToken,
+        user,
+        ready,
+        setSession,
+        clearSession,
+        refreshSession,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 const fallbackAuthContextValue: AuthContextValue = {
@@ -139,6 +162,8 @@ const fallbackAuthContextValue: AuthContextValue = {
   ready: false,
   setSession: () => {},
   clearSession: () => {},
+  refreshSession: async () => null,
+  logout: async () => {},
 };
 
 export function useAuth() {

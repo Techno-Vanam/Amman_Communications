@@ -1,19 +1,30 @@
 import { getInMemoryAccessToken, setInMemoryAccessToken } from './auth-context';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003/api/v1';
 let refreshPromise: Promise<string | null> | null = null;
 
-async function refreshAccessToken() {
+async function refreshAccessToken(): Promise<string | null> {
   if (!refreshPromise) {
-    refreshPromise = fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'include' })
+    refreshPromise = fetch('/api/v1/auth/refresh', {
+      method: 'POST',
+      credentials: 'include',
+    })
       .then(async (response) => {
-        if (!response.ok) return null;
+        if (!response.ok) {
+          setInMemoryAccessToken(null);
+          return null;
+        }
         const session = (await response.json()) as { accessToken?: string };
         const token = session.accessToken ?? null;
         setInMemoryAccessToken(token);
         return token;
       })
-      .finally(() => { refreshPromise = null; });
+      .catch(() => {
+        setInMemoryAccessToken(null);
+        return null;
+      })
+      .finally(() => {
+        refreshPromise = null;
+      });
   }
   return refreshPromise;
 }
@@ -48,7 +59,7 @@ export async function apiClient<T>(
     ? endpoint
     : endpoint.startsWith('/api/')
       ? endpoint
-      : `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+      : `/api/v1/${endpoint.replace(/^\/?(api\/v1|v1)\/?/, '').replace(/^\/+/, '')}`;
 
   let response: Response;
 
@@ -59,7 +70,6 @@ export async function apiClient<T>(
       headers,
     });
   } catch (primaryErr) {
-    // If localhost failed due to IPv6 connection issues, retry with 127.0.0.1
     if (primaryUrl.includes('localhost')) {
       const fallbackUrl = primaryUrl.replace('localhost', '127.0.0.1');
       try {
@@ -76,6 +86,15 @@ export async function apiClient<T>(
     }
   }
 
+  // Response interceptor: automatically catch 401, perform silent refresh, and retry
+  if (!response.ok && response.status === 401 && !endpoint.includes('/auth/refresh') && !endpoint.includes('/auth/login')) {
+    const refreshedToken = await refreshAccessToken();
+    if (refreshedToken) {
+      const retryHeaders = { ...headers, Authorization: `Bearer ${refreshedToken}` };
+      return apiClient<T>(endpoint, { ...options, headers: retryHeaders });
+    }
+  }
+
   const contentType = response.headers.get('content-type');
   let data: unknown = null;
 
@@ -85,16 +104,7 @@ export async function apiClient<T>(
     data = await response.text();
   }
 
-  if (!response.ok && response.status === 401 && !endpoint.includes('/auth/refresh')) {
-    const refreshedToken = await refreshAccessToken();
-    if (refreshedToken) {
-      const retryHeaders = { ...headers, Authorization: `Bearer ${refreshedToken}` };
-      return apiClient<T>(endpoint, { ...options, headers: retryHeaders });
-    }
-  }
-
   if (!response.ok) {
-
     const errorMessage =
       data && typeof data === 'object' && 'message' in data && (data as { message: unknown }).message
         ? Array.isArray((data as { message: unknown }).message)

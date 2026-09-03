@@ -60,7 +60,7 @@ export class ResendOtpDto {
 }
 
 @ApiTags('Auth')
-@Controller(['auth', 'v1/auth', 'api/v1/auth'])
+@Controller('auth')
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
@@ -71,17 +71,25 @@ export class AuthController {
     response.cookie('refresh_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
   }
 
   private clearRefreshCookie(response: Response) {
-    response.clearCookie('refresh_token', { httpOnly: true, sameSite: 'lax', path: '/' });
+    response.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      path: '/',
+    });
   }
 
-  private getRefreshToken(request: Request) {
+  private getRefreshToken(request: Request): string | undefined {
+    if (request.cookies?.refresh_token) {
+      return request.cookies.refresh_token;
+    }
     const cookieHeader = request.headers.cookie ?? '';
     return cookieHeader
       .split(';')
@@ -167,33 +175,41 @@ export class AuthController {
   @ApiOperation({ summary: 'Get Current Authenticated User' })
   async me(@Req() request: Request) {
     const authHeader = request.headers.authorization;
-    let token: string | undefined;
-    if (authHeader?.startsWith('Bearer ')) {
-      token = authHeader.slice(7);
-    } else {
-      const cookieHeader = request.headers.cookie ?? '';
-      token = cookieHeader
-        .split(';')
-        .map((part) => part.trim().split('='))
-        .find(([name]) => name === 'access_token')?.[1];
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Missing or invalid Authorization header');
     }
-    if (!token) throw new UnauthorizedException('Missing access token');
+    const token = authHeader.slice(7);
     const user = await this.auth.getUserFromAccessToken(token);
     return { user };
   }
 
+  @Post('verify-session')
+  @ApiOperation({ summary: 'Verify Session without rotating refresh token' })
+  async verifySession(@Req() request: Request) {
+    const refreshToken = this.getRefreshToken(request);
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is missing');
+    }
+    return this.auth.verifySession(refreshToken);
+  }
+
   @Post('refresh')
+  @ApiOperation({ summary: 'Refresh Access Token' })
   async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
     const refreshToken = this.getRefreshToken(request);
-    if (!refreshToken) throw new UnauthorizedException('Refresh token is missing');
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is missing');
+    }
     const session = await this.auth.refresh(refreshToken);
     this.setRefreshCookie(response, session.refreshToken);
     return { accessToken: session.accessToken, user: session.user };
   }
 
   @Post('logout')
+  @ApiOperation({ summary: 'Logout and Revoke Session' })
   async logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
-    await this.auth.logout(this.getRefreshToken(request));
+    const refreshToken = this.getRefreshToken(request);
+    await this.auth.logout(refreshToken);
     this.clearRefreshCookie(response);
     return { success: true };
   }

@@ -16,7 +16,7 @@ export async function loginAction(formData: FormData) {
   }
 
   try {
-    let res = await fetch(`http://127.0.0.1:3003/api/v1/auth/login`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -25,6 +25,7 @@ export async function loginAction(formData: FormData) {
         email: String(email).trim().toLowerCase(),
         password: String(password),
       }),
+      cache: 'no-store',
     });
 
     const data = await res.json().catch(() => ({}));
@@ -43,15 +44,23 @@ export async function loginAction(formData: FormData) {
       return { error: 'Invalid response from server' };
     }
 
-    // Set HttpOnly cookie
+    // Extract rotated refresh_token from backend set-cookie header and set HttpOnly cookie
+    const setCookieHeader = res.headers.get('set-cookie');
+    const refreshTokenMatch = setCookieHeader?.match(/refresh_token=([^;]+)/);
     const cookieStore = await cookies();
-    cookieStore.set('access_token', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-    });
+
+    if (refreshTokenMatch?.[1]) {
+      cookieStore.set('refresh_token', refreshTokenMatch[1], {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60,
+      });
+    }
+
+    // Clean up any legacy access_token cookies
+    cookieStore.delete('access_token');
 
     return {
       success: true,
@@ -67,6 +76,25 @@ export async function loginAction(formData: FormData) {
 
 export async function logoutAction() {
   const cookieStore = await cookies();
-  cookieStore.delete('access_token');
+  const refreshToken = cookieStore.get('refresh_token')?.value;
+
+  try {
+    if (refreshToken) {
+      await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: `refresh_token=${refreshToken}`,
+        },
+        cache: 'no-store',
+      });
+    }
+  } catch (e) {
+    console.error('Logout request error:', e);
+  } finally {
+    cookieStore.delete('refresh_token');
+    cookieStore.delete('access_token');
+  }
+
   return { success: true };
 }

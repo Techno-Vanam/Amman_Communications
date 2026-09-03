@@ -18,65 +18,7 @@
     "/api/v1/auth/login": {
       "post": {
         "description": "Authenticates admin or customer and returns JWT access token.",
-        "operationId": "AuthController_login[0]",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Authentication successful. Returns access token and user role."
-          },
-          "401": {
-            "description": "Invalid credentials."
-          }
-        },
-        "summary": "User Login",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/v1/auth/login": {
-      "post": {
-        "description": "Authenticates admin or customer and returns JWT access token.",
-        "operationId": "AuthController_login[1]",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Authentication successful. Returns access token and user role."
-          },
-          "401": {
-            "description": "Invalid credentials."
-          }
-        },
-        "summary": "User Login",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/api/v1/auth/login": {
-      "post": {
-        "description": "Authenticates admin or customer and returns JWT access token.",
-        "operationId": "AuthController_login[2]",
+        "operationId": "AuthController_login",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -105,65 +47,7 @@
     "/api/v1/auth/register": {
       "post": {
         "description": "Registers a new customer account.",
-        "operationId": "AuthController_register[0]",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Registration successful. Returns access token and user info."
-          },
-          "400": {
-            "description": "Bad Request - Validation error or duplicate email."
-          }
-        },
-        "summary": "Customer Registration",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/v1/auth/register": {
-      "post": {
-        "description": "Registers a new customer account.",
-        "operationId": "AuthController_register[1]",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Registration successful. Returns access token and user info."
-          },
-          "400": {
-            "description": "Bad Request - Validation error or duplicate email."
-          }
-        },
-        "summary": "Customer Registration",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/api/v1/auth/register": {
-      "post": {
-        "description": "Registers a new customer account.",
-        "operationId": "AuthController_register[2]",
+        "operationId": "AuthController_register",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -192,59 +76,7 @@
     "/api/v1/auth/forgot-password": {
       "post": {
         "description": "Sends a 6-digit OTP to the provided email address. Returns generic success to prevent email enumeration.",
-        "operationId": "AuthController_forgotPassword[0]",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ForgotPasswordDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Reset request processed. Generic success response."
-          }
-        },
-        "summary": "Request Password Reset",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/v1/auth/forgot-password": {
-      "post": {
-        "description": "Sends a 6-digit OTP to the provided email address. Returns generic success to prevent email enumeration.",
-        "operationId": "AuthController_forgotPassword[1]",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ForgotPasswordDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Reset request processed. Generic success response."
-          }
-        },
-        "summary": "Request Password Reset",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/api/v1/auth/forgot-password": {
-      "post": {
-        "description": "Sends a 6-digit OTP to the provided email address. Returns generic success to prevent email enumeration.",
-        "operationId": "AuthController_forgotPassword[2]",
+        "operationId": "AuthController_forgotPassword",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -270,65 +102,7 @@
     "/api/v1/auth/verify-reset-otp": {
       "post": {
         "description": "Verifies the 6-digit OTP code and returns a time-limited reset token.",
-        "operationId": "AuthController_verifyResetOtp[0]",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyResetOtpDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "OTP verified successfully. Returns reset token."
-          },
-          "400": {
-            "description": "Invalid or expired OTP."
-          }
-        },
-        "summary": "Verify Reset OTP",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/v1/auth/verify-reset-otp": {
-      "post": {
-        "description": "Verifies the 6-digit OTP code and returns a time-limited reset token.",
-        "operationId": "AuthController_verifyResetOtp[1]",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyResetOtpDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "OTP verified successfully. Returns reset token."
-          },
-          "400": {
-            "description": "Invalid or expired OTP."
-          }
-        },
-        "summary": "Verify Reset OTP",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/api/v1/auth/verify-reset-otp": {
-      "post": {
-        "description": "Verifies the 6-digit OTP code and returns a time-limited reset token.",
-        "operationId": "AuthController_verifyResetOtp[2]",
+        "operationId": "AuthController_verifyResetOtp",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -357,65 +131,7 @@
     "/api/v1/auth/reset-password": {
       "post": {
         "description": "Resets the user password using a verified reset token.",
-        "operationId": "AuthController_resetPassword[0]",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResetPasswordDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Password reset successful."
-          },
-          "400": {
-            "description": "Invalid token or weak password."
-          }
-        },
-        "summary": "Reset Password",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/v1/auth/reset-password": {
-      "post": {
-        "description": "Resets the user password using a verified reset token.",
-        "operationId": "AuthController_resetPassword[1]",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResetPasswordDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Password reset successful."
-          },
-          "400": {
-            "description": "Invalid token or weak password."
-          }
-        },
-        "summary": "Reset Password",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/api/v1/auth/reset-password": {
-      "post": {
-        "description": "Resets the user password using a verified reset token.",
-        "operationId": "AuthController_resetPassword[2]",
+        "operationId": "AuthController_resetPassword",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -444,59 +160,7 @@
     "/api/v1/auth/resend-reset-otp": {
       "post": {
         "description": "Resends a new OTP for password reset. Subject to cooldown rate limiting.",
-        "operationId": "AuthController_resendResetOtp[0]",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResendOtpDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "OTP resent successfully."
-          }
-        },
-        "summary": "Resend Reset OTP",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/v1/auth/resend-reset-otp": {
-      "post": {
-        "description": "Resends a new OTP for password reset. Subject to cooldown rate limiting.",
-        "operationId": "AuthController_resendResetOtp[1]",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResendOtpDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "OTP resent successfully."
-          }
-        },
-        "summary": "Resend Reset OTP",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/api/v1/auth/resend-reset-otp": {
-      "post": {
-        "description": "Resends a new OTP for password reset. Subject to cooldown rate limiting.",
-        "operationId": "AuthController_resendResetOtp[2]",
+        "operationId": "AuthController_resendResetOtp",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -521,7 +185,7 @@
     },
     "/api/v1/auth/me": {
       "get": {
-        "operationId": "AuthController_me[0]",
+        "operationId": "AuthController_me",
         "parameters": [],
         "responses": {
           "200": {
@@ -534,31 +198,16 @@
         ]
       }
     },
-    "/api/v1/v1/auth/me": {
-      "get": {
-        "operationId": "AuthController_me[1]",
+    "/api/v1/auth/verify-session": {
+      "post": {
+        "operationId": "AuthController_verifySession",
         "parameters": [],
         "responses": {
-          "200": {
+          "201": {
             "description": ""
           }
         },
-        "summary": "Get Current Authenticated User",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/api/v1/auth/me": {
-      "get": {
-        "operationId": "AuthController_me[2]",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "Get Current Authenticated User",
+        "summary": "Verify Session without rotating refresh token",
         "tags": [
           "Auth"
         ]
@@ -566,41 +215,14 @@
     },
     "/api/v1/auth/refresh": {
       "post": {
-        "operationId": "AuthController_refresh[0]",
+        "operationId": "AuthController_refresh",
         "parameters": [],
         "responses": {
           "201": {
             "description": ""
           }
         },
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/v1/auth/refresh": {
-      "post": {
-        "operationId": "AuthController_refresh[1]",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/api/v1/auth/refresh": {
-      "post": {
-        "operationId": "AuthController_refresh[2]",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
+        "summary": "Refresh Access Token",
         "tags": [
           "Auth"
         ]
@@ -608,41 +230,14 @@
     },
     "/api/v1/auth/logout": {
       "post": {
-        "operationId": "AuthController_logout[0]",
+        "operationId": "AuthController_logout",
         "parameters": [],
         "responses": {
           "201": {
             "description": ""
           }
         },
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/v1/auth/logout": {
-      "post": {
-        "operationId": "AuthController_logout[1]",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/v1/api/v1/auth/logout": {
-      "post": {
-        "operationId": "AuthController_logout[2]",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
+        "summary": "Logout and Revoke Session",
         "tags": [
           "Auth"
         ]
