@@ -234,7 +234,7 @@ export default function ProfilePage() {
                     value={profileData.fullName}
                     onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
                     placeholder="Enter your full name"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
+                    className="w-full h-[42px] pl-10 pr-4 bg-white rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
                     required
                   />
                 </div>
@@ -250,7 +250,7 @@ export default function ProfilePage() {
                     value={profileData.mobileNumber}
                     onChange={(e) => setProfileData({ ...profileData, mobileNumber: e.target.value })}
                     placeholder="+91 9876543210"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
+                    className="w-full h-[42px] pl-10 pr-4 bg-white rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
                     required
                   />
                 </div>
@@ -266,7 +266,7 @@ export default function ProfilePage() {
                     value={profileData.emailAddress}
                     onChange={(e) => setProfileData({ ...profileData, emailAddress: e.target.value })}
                     placeholder="your.email@gmail.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
+                    className="w-full h-[42px] pl-10 pr-4 bg-white rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
                     required
                   />
                 </div>
@@ -295,7 +295,7 @@ export default function ProfilePage() {
                     value={profileData.residentialAddress}
                     onChange={(e) => setProfileData({ ...profileData, residentialAddress: e.target.value })}
                     placeholder="Enter house no, street, city & pincode"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
+                    className="w-full h-[42px] pl-10 pr-4 bg-white rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
                     required
                   />
                 </div>
@@ -314,7 +314,7 @@ export default function ProfilePage() {
                     value={profileData.aadhaarNumber}
                     onChange={(e) => setProfileData({ ...profileData, aadhaarNumber: e.target.value })}
                     placeholder="Enter 12-digit Aadhaar number"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
+                    className="w-full h-[42px] px-4 bg-white rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
                     required
                   />
                 </div>
@@ -329,7 +329,7 @@ export default function ProfilePage() {
                     value={profileData.panNumber}
                     onChange={(e) => setProfileData({ ...profileData, panNumber: e.target.value })}
                     placeholder="Enter 10-char PAN (e.g. ABCDE1234F)"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
+                    className="w-full h-[42px] px-4 bg-white rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
                   />
                 </div>
               </div>
@@ -347,7 +347,7 @@ export default function ProfilePage() {
                     value={profileData.emergencyContact}
                     onChange={(e) => setProfileData({ ...profileData, emergencyContact: e.target.value })}
                     placeholder="Name & relation (e.g. Bala - Brother)"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
+                    className="w-full h-[42px] px-4 bg-white rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
                     required
                   />
                 </div>
@@ -360,7 +360,7 @@ export default function ProfilePage() {
                     value={profileData.altPhone}
                     onChange={(e) => setProfileData({ ...profileData, altPhone: e.target.value })}
                     placeholder="+91 9874563210"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
+                    className="w-full h-[42px] px-4 bg-white rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
                     required
                   />
                 </div>

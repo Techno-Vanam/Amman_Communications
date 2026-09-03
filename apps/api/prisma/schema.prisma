@@ -213,10 +213,10 @@ model Appointment {
   appointmentNumber String?          @unique
   customer         Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
   customerId       String?
-  customerName     String
-  customerEmail    String
+  customerName     String            @default("")
+  customerEmail    String            @default("")
   email            String?
-  customerPhone    String
+  customerPhone    String            @default("")
   service          Service?          @relation(fields: [serviceId], references: [id], onDelete: SetNull)
   serviceId        String?
   office           Office?           @relation(fields: [officeId], references: [id])

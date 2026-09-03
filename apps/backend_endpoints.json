@@ -8236,7 +8236,7 @@
             "type": "string"
           },
           "consultationMode": {
-            "type": "string"
+            "type": "object"
           },
           "preferredDate": {
             "type": "string"
@@ -8753,7 +8753,17 @@
           },
           "category": {
             "type": "string",
-            "example": "Operations"
+            "enum": [
+              "OFFICE",
+              "TRAVEL",
+              "EMPLOYEE",
+              "PROPERTY",
+              "UTILITIES",
+              "MARKETING",
+              "EQUIPMENT",
+              "OTHER"
+            ],
+            "example": "OFFICE"
           },
           "amount": {
             "type": "number",
@@ -8805,7 +8815,17 @@
           },
           "category": {
             "type": "string",
-            "example": "Operations"
+            "enum": [
+              "OFFICE",
+              "TRAVEL",
+              "EMPLOYEE",
+              "PROPERTY",
+              "UTILITIES",
+              "MARKETING",
+              "EQUIPMENT",
+              "OTHER"
+            ],
+            "example": "OFFICE"
           },
           "amount": {
             "type": "number",

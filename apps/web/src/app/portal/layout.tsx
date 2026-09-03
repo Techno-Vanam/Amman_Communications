@@ -225,15 +225,6 @@ function PortalTopHeader() {
         return {
           title: `Good day, ${user.name} 👋`,
           subtitle: "Here's a real-time overview of your current applications and scheduled appointments.",
-          action: (
-            <Link
-              href="/portal/book-appointment"
-              className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-md shrink-0"
-            >
-              <Plus className="w-4 h-4 text-[#a8d5b9]" />
-              <span>Book New Service</span>
-            </Link>
-          )
         };
       case '/portal/appointments':
         return {
@@ -283,7 +274,7 @@ function PortalTopHeader() {
     }
   };
 
-  const { title, subtitle, action } = getHeaderInfo();
+  const { title, subtitle } = getHeaderInfo();
 
   return (
     <header className="mb-3.5 sm:mb-4 flex items-center justify-between gap-4 print:hidden">
@@ -299,40 +290,38 @@ function PortalTopHeader() {
         )}
       </div>
 
-      {/* Right Controls: Action Button (if any) + Notification Bell + Profile Pill */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {action}
-
+      {/* Right Controls: Notification Bell + Profile Pill */}
+      <div className="flex items-center gap-3 shrink-0">
         {/* Notification Bell */}
         <Link
           href="/portal/notifications"
-          className="w-10 h-10 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative shrink-0"
+          className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-700 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative shrink-0"
           title="Notifications"
         >
-          <Bell className="w-5 h-5" />
+          <Bell className="w-5.5 h-5.5 sm:w-6 sm:h-6" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center shadow-xs border-2 border-white leading-none shrink-0">
+            <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs border-2 border-white leading-none shrink-0">
               {unreadCount}
             </span>
           )}
         </Link>
 
-        {/* User Profile Badge: Small screen = w-10 h-10 single circle; Big screen = h-10 pill with avatar + name & view profile */}
+        {/* User Profile Badge: Slightly enlarged avatar and text */}
         <Link
           href="/portal/profile"
-          className="h-10 w-10 sm:w-auto rounded-full bg-[#12372A] sm:bg-white border border-[#12372A] sm:border-gray-200/90 hover:border-gray-300 hover:bg-[#1a4a38] sm:hover:bg-gray-50 transition-all shadow-xs flex items-center justify-center sm:justify-start p-0 sm:p-1 sm:pr-3 sm:gap-2 group shrink-0"
+          className="h-11 sm:h-12 w-11 sm:w-auto rounded-full bg-[#12372A] sm:bg-white border border-[#12372A] sm:border-gray-200/90 hover:border-gray-300 hover:bg-[#1a4a38] sm:hover:bg-gray-50 transition-all shadow-xs flex items-center justify-center sm:justify-start p-0.5 sm:p-1.5 sm:pr-4 sm:gap-2.5 group shrink-0"
           title={`Profile (${user.name})`}
         >
-          <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-[#12372A] text-white font-extrabold text-xs flex items-center justify-center shrink-0 border border-transparent sm:border-[#12372A] shadow-2xs">
+          <div className="w-10 h-10 sm:w-9.5 sm:h-9.5 rounded-full bg-[#12372A] text-white font-extrabold text-xs sm:text-sm flex items-center justify-center shrink-0 border border-transparent sm:border-[#12372A] shadow-2xs">
             {user.initials}
           </div>
           <div className="hidden sm:flex flex-col text-left pr-0.5">
-            <span className="text-[11px] font-bold text-gray-900 group-hover:text-[#12372A] leading-tight truncate max-w-[110px] lg:max-w-[140px]">
+            <span className="text-xs font-bold text-gray-900 group-hover:text-[#12372A] leading-tight truncate max-w-[120px] lg:max-w-[150px]">
               {user.name}
             </span>
-            <span className="text-[10px] font-semibold text-[#12372A]/75 group-hover:text-[#12372A] leading-tight flex items-center gap-0.5 mt-0.5">
+            <span className="text-[11px] font-semibold text-[#12372A]/80 group-hover:text-[#12372A] leading-tight flex items-center gap-0.5 mt-0.5">
               View profile
-              <ChevronRight className="w-2.5 h-2.5 text-[#12372A]/60 group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRight className="w-3 h-3 text-[#12372A]/70 group-hover:translate-x-0.5 transition-transform" />
             </span>
           </div>
         </Link>
@@ -425,9 +414,11 @@ function PortalContentWrapper({ children }: { children: React.ReactNode }) {
       <PortalSidebarContent mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
       {/* Main Content Area */}
-      <main className="min-w-0 flex-1 h-full overflow-y-auto p-3.5 sm:p-4 md:p-5 lg:p-8 max-w-full print:h-auto print:overflow-visible print:p-0 print:m-0 print:bg-white print:w-full">
+      <main className="min-w-0 flex-1 h-full overflow-hidden p-3.5 sm:p-4 md:p-5 lg:p-6 max-w-full flex flex-col print:h-auto print:overflow-visible print:p-0 print:m-0 print:bg-white print:w-full">
         <PortalTopHeader />
-        {children}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {children}
+        </div>
       </main>
 
       {/* Backdrop for Mobile */}

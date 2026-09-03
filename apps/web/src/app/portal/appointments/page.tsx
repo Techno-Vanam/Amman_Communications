@@ -256,9 +256,9 @@ function getTodayISOString(): string {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12">
+    <div className="max-w-7xl w-full mx-auto flex-1 flex flex-col min-h-0 space-y-4 lg:space-y-5 font-sans">
       {/* ── KPI Summary Cards ── */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
         <StatCard
           label="Total Appointments"
           value={appointments.length}
@@ -290,8 +290,8 @@ function getTodayISOString(): string {
       </div>
 
       {/* Filter Tabs & Search Bar & Book Appointment Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Mobile Custom Tab Dropdown (Animated Custom Menu - No "Filter:" text) */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 shrink-0">
+        {/* Mobile Custom Tab Dropdown */}
         <CustomTabDropdown
           value={activeTab}
           options={['All', 'Upcoming', 'Completed', 'Cancelled', 'Rescheduled']}
@@ -299,7 +299,7 @@ function getTodayISOString(): string {
           className="sm:hidden self-start"
         />
 
-        {/* Desktop Capsule Filter Tabs (Visible on sm screens and up) */}
+        {/* Desktop Capsule Filter Tabs */}
         <div className="hidden sm:inline-flex bg-gray-100/90 p-1.5 rounded-full items-center gap-1 border border-gray-200/60 shrink-0">
           {(['All', 'Upcoming', 'Completed', 'Cancelled', 'Rescheduled'] as const).map((tab) => {
             const isActive = activeTab === tab;
@@ -352,27 +352,34 @@ function getTodayISOString(): string {
       </div>
 
       {/* Responsive Table (Desktop) / Cards (Mobile) Layout */}
-      <div className="space-y-4">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-white rounded-3xl border border-gray-200/80 shadow-2xs">
         {filteredAppointments.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center text-gray-500 font-medium shadow-xs">
+          <div className="p-12 text-center text-gray-500 font-medium my-auto">
             No appointments found in this category.
           </div>
         ) : (
           <>
-            {/* Desktop Table View (Visible on md screens and larger) */}
-            <div className="hidden md:block bg-white rounded-3xl border border-gray-200/80 shadow-xs overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+            {/* Desktop Table View */}
+            <div className="hidden md:flex flex-col flex-1 min-h-0 overflow-hidden">
+              {/* Fixed Column Title Header (Scrollbar is NOT next to column titles) */}
+              <div className="bg-[#f8faf9] border-b border-gray-200/80 shrink-0">
+                <table className="w-full text-left border-collapse table-fixed">
                   <thead>
-                    <tr className="bg-[#f8faf9] border-b border-gray-200/80 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">
-                      <th scope="col" className="py-3.5 px-6">Service / ID</th>
-                      <th scope="col" className="py-3.5 px-4">Date &amp; Time</th>
-                      <th scope="col" className="py-3.5 px-4">New Date &amp; Time</th>
-                      <th scope="col" className="py-3.5 px-4">Consultation</th>
-                      <th scope="col" className="py-3.5 px-4">Status</th>
-                      <th scope="col" className="py-3.5 px-6 text-right">Actions</th>
+                    <tr className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">
+                      <th scope="col" className="py-3.5 px-6 w-[28%]">Service / ID</th>
+                      <th scope="col" className="py-3.5 px-4 w-[16%]">Date &amp; Time</th>
+                      <th scope="col" className="py-3.5 px-4 w-[15%]">New Date &amp; Time</th>
+                      <th scope="col" className="py-3.5 px-4 w-[17%]">Consultation</th>
+                      <th scope="col" className="py-3.5 px-4 w-[10%]">Status</th>
+                      <th scope="col" className="py-3.5 px-6 w-[14%] text-right">Actions</th>
                     </tr>
                   </thead>
+                </table>
+              </div>
+
+              {/* Scrollable Entry Rows (Scrollbar is ONLY for entries) */}
+              <div className="flex-1 overflow-y-auto min-h-0">
+                <table className="w-full text-left border-collapse table-fixed">
                   <tbody className="divide-y divide-gray-100 text-xs">
                     {filteredAppointments.map((apt) => {
                       const isSelected = selectedAppointment?.id === apt.id;
@@ -386,23 +393,23 @@ function getTodayISOString(): string {
                           }`}
                         >
                           {/* Service & ID */}
-                          <td className="py-4 px-6 align-middle">
+                          <td className="py-3.5 px-6 align-middle w-[28%]">
                             <div className="font-bold text-gray-900 leading-snug">{apt.serviceType}</div>
                             <div className="text-[11px] text-gray-400 font-medium mt-0.5">ID: {apt.id}</div>
                           </td>
 
                           {/* Original Date & Time */}
-                          <td className="py-4 px-4 align-middle whitespace-nowrap">
+                          <td className="py-3.5 px-4 align-middle whitespace-nowrap w-[16%]">
                             <span className="font-bold text-gray-800">{apt.originalDateTime}</span>
                           </td>
 
                           {/* New Date & Time */}
-                          <td className="py-4 px-4 align-middle whitespace-nowrap">
+                          <td className="py-3.5 px-4 align-middle whitespace-nowrap w-[15%]">
                             <span className="font-bold text-gray-800">{apt.newDateTime || '-'}</span>
                           </td>
 
                           {/* Consultation Type */}
-                          <td className="py-4 px-4 align-middle whitespace-nowrap">
+                          <td className="py-3.5 px-4 align-middle whitespace-nowrap w-[17%]">
                             <div className="inline-flex items-center gap-1.5 font-bold text-gray-800">
                               {getConsultationIcon(apt.consultationType)}
                               <span>{apt.consultationType}</span>
@@ -410,26 +417,26 @@ function getTodayISOString(): string {
                           </td>
 
                           {/* Status */}
-                          <td className="py-4 px-4 align-middle whitespace-nowrap">
+                          <td className="py-3.5 px-4 align-middle whitespace-nowrap w-[10%]">
                             <span className={`inline-block text-[10px] font-extrabold px-2.5 py-1 rounded-md ${getStatusBadgeClass(apt.status)}`}>
                               {apt.status}
                             </span>
                           </td>
 
                           {/* Action Buttons */}
-                          <td className="py-4 px-6 align-middle text-right whitespace-nowrap">
-                            <div className="inline-flex items-center justify-end gap-1.5">
+                          <td className="py-3.5 px-6 align-middle text-right whitespace-nowrap w-[14%]">
+                            <div className="inline-flex items-center justify-end gap-1.5 shrink-0">
                               {/* View Details Icon Button */}
                               <button
                                 onClick={() => setSelectedAppointment(apt)}
-                                className={`p-2 rounded-xl border transition-all ${
+                                className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-all ${
                                   isSelected
                                     ? 'bg-[#12372A] text-white border-[#12372A]'
                                     : 'bg-[#f0f7f2] text-[#12372A] border-[#d8ebdd] hover:bg-[#d8ebdd]'
                                 }`}
                                 title="View Details"
                               >
-                                <Eye className="w-4 h-4" />
+                                <Eye className="w-4 h-4 shrink-0" />
                               </button>
 
                               {canModify && (
@@ -440,10 +447,10 @@ function getTodayISOString(): string {
                                       setRescheduleModalItem(apt);
                                       setRescheduleReason('');
                                     }}
-                                    className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-100 rounded-xl transition-all"
+                                    className="w-8 h-8 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0 transition-all"
                                     title="Reschedule Appointment"
                                   >
-                                    <RotateCcw className="w-4 h-4" />
+                                    <RotateCcw className="w-4 h-4 shrink-0" />
                                   </button>
 
                                   {/* Cancel Icon Button */}
@@ -452,10 +459,10 @@ function getTodayISOString(): string {
                                       setCancelModalItem(apt);
                                       setCancelReason('Schedule conflict / Change of plans');
                                     }}
-                                    className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 rounded-xl transition-all"
+                                    className="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0 transition-all"
                                     title="Cancel Appointment"
                                   >
-                                    <XCircle className="w-4 h-4" />
+                                    <XCircle className="w-4 h-4 shrink-0" />
                                   </button>
                                 </>
                               )}
@@ -469,8 +476,8 @@ function getTodayISOString(): string {
               </div>
             </div>
 
-            {/* Mobile Cards View (Visible only on mobile screens) */}
-            <div className="block md:hidden space-y-4">
+            {/* Mobile Cards View */}
+            <div className="block md:hidden flex-1 overflow-y-auto min-h-0 space-y-4 p-4">
               {filteredAppointments.map((apt) => {
                 const isSelected = selectedAppointment?.id === apt.id;
                 const canModify = apt.status !== 'Cancelled' && apt.status !== 'Completed';

@@ -1,11 +1,13 @@
 import { getInMemoryAccessToken, setInMemoryAccessToken } from './auth-context';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003/api/v1';
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003/api/v1').replace(/\/+$/, '');
+const BASE_HOST = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
+
 let refreshPromise: Promise<string | null> | null = null;
 
 async function refreshAccessToken() {
   if (!refreshPromise) {
-    refreshPromise = fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'include' })
+    refreshPromise = fetch(`${BASE_HOST}/api/v1/auth/refresh`, { method: 'POST', credentials: 'include' })
       .then(async (response) => {
         if (!response.ok) return null;
         const session = (await response.json()) as { accessToken?: string };
@@ -44,11 +46,15 @@ export async function apiClient<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const primaryUrl = endpoint.startsWith('http')
-    ? endpoint
-    : endpoint.startsWith('/api/')
-      ? endpoint
-      : `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  let primaryUrl: string;
+  if (endpoint.startsWith('http')) {
+    primaryUrl = endpoint;
+  } else if (endpoint.startsWith('/api/v1')) {
+    primaryUrl = `${BASE_HOST}${endpoint}`;
+  } else {
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    primaryUrl = `${API_BASE_URL}${cleanEndpoint}`;
+  }
 
   let response: Response;
 

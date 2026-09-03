@@ -22,6 +22,13 @@ export class ApplicationsService {
     const applications = await this.prisma.application.findMany({
       where: { customerId },
       include: {
+        service: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+          },
+        },
         documents: {
           select: {
             id: true,
@@ -49,6 +56,13 @@ export class ApplicationsService {
     const application = await this.prisma.application.findUnique({
       where: { id: applicationId },
       include: {
+        service: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+          },
+        },
         documents: {
           select: {
             id: true,

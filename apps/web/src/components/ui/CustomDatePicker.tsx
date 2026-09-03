@@ -264,15 +264,15 @@ export default function CustomDatePicker({
           setIsOpen(!isOpen);
           setViewMode('days');
         }}
-        className={`w-full flex items-center justify-between px-4 py-2.5 bg-white border-2 border-solid rounded-xl text-xs transition-all duration-200 shadow-2xs ${
+        className={`w-full h-[42px] flex items-center justify-between px-3.5 bg-white border rounded-xl text-xs font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0e2a47] ${
           isOpen
-            ? 'border-[#12372A] ring-2 ring-[#12372A]/15 text-gray-900'
+            ? 'border-[#0e2a47] ring-2 ring-[#0e2a47]/15 text-gray-900'
             : 'border-gray-300 text-gray-800 hover:border-gray-400'
         } ${className}`}
       >
         <div className="flex items-center gap-2.5 truncate">
-          <CalendarIcon className={`w-4 h-4 shrink-0 transition-colors ${isOpen || value ? 'text-[#12372A]' : 'text-gray-400'}`} />
-          <span className={`truncate ${!value ? 'text-gray-400 font-normal' : 'font-semibold text-gray-900'}`}>
+          <CalendarIcon className="w-4 h-4 text-gray-400 shrink-0" />
+          <span className={`truncate ${!value ? 'text-gray-400 font-normal' : 'font-semibold text-gray-800'}`}>
             {getDisplayText()}
           </span>
         </div>

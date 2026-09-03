@@ -209,7 +209,15 @@ export default function ApplicationsPage() {
     };
   }, [pathname]);
 
-  // Wizard Details
+  // Wizard Details & Scroll Ref
+  const appWizardScrollRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (appWizardScrollRef.current) {
+      appWizardScrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentStep, mode]);
+
   const [details, setDetails] = useState({
     applicantName: user.name || '',
     applicantPhone: user.phone || '+91 ',
@@ -757,7 +765,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
         setApplications(data.map((app: any) => ({
           id: app.applicationNumber || app.id,
           dbId: app.id, // real DB cuid for API calls
-          serviceType: app.serviceType,
+          serviceType: app.serviceType || app.title || app.service?.name || (app.notes ? (app.notes.length > 35 ? app.notes.slice(0, 35) + '...' : app.notes) : '') || 'General Application Service',
           submittedDate: app.submittedAt
             ? new Date(app.submittedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
             : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -947,14 +955,14 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12">
+    <div className="max-w-7xl w-full mx-auto flex-1 flex flex-col min-h-0 space-y-4 lg:space-y-5 font-sans">
       {/* ======================================================== */}
       {/* 1. LIST MODE (Pillio Metric Cards & Application Grid) */}
       {/* ======================================================== */}
       {mode === 'list' && (
-        <>
+        <div className="flex-1 flex flex-col min-h-0 space-y-4 lg:space-y-5">
           {/* ── Summary Metric Cards ── */}
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
             <StatCard
               label="Total Applications"
               value={applications.length}
@@ -986,9 +994,9 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
           </div>
 
           {/* Main Container Card */}
-          <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-2xs space-y-6">
+          <div className="bg-white rounded-3xl p-4 sm:p-5 lg:p-6 border border-gray-100 shadow-2xs flex-1 flex flex-col min-h-0 space-y-4 overflow-hidden">
             {/* Top Control Bar with Search */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 shrink-0">
               {/* Mobile Custom Tab Dropdown */}
               <CustomTabDropdown
                 value={activeTabFilter}
@@ -1060,8 +1068,8 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
               </div>
             </div>
 
-            {/* Responsive Application Cards Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {/* Responsive Application Cards Grid - Internally Scrollable */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 flex-1 overflow-y-auto min-h-0 pr-1 py-1 align-content-start">
               {filteredApps.length === 0 ? (
                 <div className="col-span-full bg-white rounded-3xl border border-gray-200/80 p-12 text-center space-y-4 shadow-2xs">
                   <div className="w-16 h-16 rounded-full bg-[#f0f7ff] text-[#12372A] flex items-center justify-center mx-auto border border-blue-100">
@@ -1103,7 +1111,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                           </div>
                           <div>
                             <h3 className="text-sm font-bold text-gray-900 group-hover:text-[#12372A] transition-colors leading-snug">
-                              {app.serviceType}
+                              {app.serviceType || 'General Application Service'}
                             </h3>
                             <p className="text-[11px] text-gray-400 font-medium">
                               {app.id}
@@ -1191,14 +1199,14 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
               )}
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* ======================================================== */}
       {/* 2. VIEW MODE: APPLICATION DETAIL + TRACKING (Matching Reference Screenshot) */}
       {/* ======================================================== */}
       {mode === 'view' && selectedApp && (
-        <div className="space-y-6">
+        <div className="space-y-6 flex-1 overflow-y-auto min-h-0 pr-1 pb-4">
           {/* Top Breadcrumb & Download Summary Header Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center space-x-2 text-xs font-semibold text-gray-500">
@@ -1502,8 +1510,8 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
       {/* 3. WIZARD MODE: CREATE NEW APPLICATION */}
       {/* ======================================================== */}
       {mode === 'create' && (
-        <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-2xs space-y-6">
-          <div className="flex items-center justify-between border-b pb-4">
+        <div className={`bg-white rounded-3xl p-5 sm:p-6 border border-gray-100 shadow-2xs flex flex-col overflow-hidden space-y-4 ${currentStep === 1 ? 'h-auto max-h-full shrink-0' : 'flex-1 min-h-0'}`}>
+          <div className="flex items-center justify-between border-b pb-3 shrink-0">
             <div>
               <div className="flex items-center gap-2.5">
                 <h2 className="text-lg font-bold text-gray-900">New Service Application</h2>
@@ -1525,13 +1533,13 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             </div>
             <button
               onClick={() => setMode('list')}
-              className="text-xs font-bold text-gray-500 hover:text-gray-800 border border-gray-200 rounded-xl px-4 py-2 bg-gray-50"
+              className="text-xs font-bold text-gray-500 hover:text-gray-800 border border-gray-200 rounded-xl px-4 py-2 bg-gray-50 shrink-0"
             >
               Back to Applications
             </button>
           </div>
 
-          <div className="flex items-center justify-between max-w-4xl mx-auto py-4 overflow-x-auto gap-3">
+          <div className="flex items-center justify-between max-w-4xl mx-auto py-2 overflow-x-auto gap-3 shrink-0">
             {WIZARD_STEPS.map((step) => (
               <div key={step.id} className="flex items-center space-x-2 shrink-0">
                 <div
@@ -1550,7 +1558,9 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             ))}
           </div>
 
-          {currentStep === 1 && (
+          {/* STEP FORM CONTENT AREA */}
+          <div ref={appWizardScrollRef} className={`space-y-6 pr-1 ${currentStep === 1 ? 'overflow-y-auto max-h-[calc(100vh-260px)]' : 'flex-1 overflow-y-auto min-h-0'}`}>
+            {currentStep === 1 && (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <p className="text-xs font-bold text-gray-700">Select Service Type</p>
@@ -1575,7 +1585,8 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Services Table View - Tightly fitted to entries with zero unwanted white space */}
+              <div className="bg-white rounded-2xl border border-gray-200/90 shadow-2xs overflow-hidden max-h-[380px] flex flex-col">
                 {dbServices.filter((s) => {
                   if (!appServiceSearchQuery.trim()) return true;
                   const q = appServiceSearchQuery.toLowerCase().trim();
@@ -1584,46 +1595,110 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                     (s.description && s.description.toLowerCase().includes(q))
                   );
                 }).length === 0 ? (
-                  <div className="col-span-full py-10 text-center text-xs font-semibold text-gray-400 bg-gray-50/80 rounded-2xl border border-gray-200/80">
+                  <div className="py-8 text-center text-xs font-semibold text-gray-400 bg-gray-50/80">
                     No services found matching &quot;{appServiceSearchQuery}&quot;
                   </div>
                 ) : (
-                  dbServices.filter((s) => {
-                    if (!appServiceSearchQuery.trim()) return true;
-                    const q = appServiceSearchQuery.toLowerCase().trim();
-                    return (
-                      (s.name && s.name.toLowerCase().includes(q)) ||
-                      (s.description && s.description.toLowerCase().includes(q))
-                    );
-                  }).map((srv) => {
-                    const Icon = getServiceIcon(srv.id);
-                    const isSelected = selectedService === srv.id;
-                    return (
-                      <div
-                        key={srv.id}
-                        onClick={() => setSelectedService(srv.id)}
-                        className={`p-5 rounded-2xl border transition-all cursor-pointer space-y-3 ${
-                          isSelected
-                            ? 'border-[#12372A] bg-[#f0f7f2] shadow-sm'
-                            : 'border-gray-200/80 bg-white hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="w-10 h-10 rounded-xl bg-white text-[#12372A] flex items-center justify-center border border-gray-200">
-                            <Icon className="w-5 h-5 text-[#12372A]" />
-                          </div>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200/50">
-                            Active
-                          </span>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-bold text-gray-900">{srv.name}</h3>
-                          <p className="text-xs text-gray-500 mt-1 leading-relaxed">{srv.description || 'Service description not provided'}</p>
-                        </div>
-                      </div>
-                    );
-                  })
+                  <div className="overflow-y-auto min-h-0">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="sticky top-0 bg-[#f8faf9] z-10 border-b border-gray-200/80">
+                        <tr className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">
+                          <th scope="col" className="py-3 px-3.5 sm:px-6">Available Service</th>
+                          <th scope="col" className="py-3 px-4 hidden sm:table-cell">Status / Category</th>
+                          <th scope="col" className="py-3 px-3.5 sm:px-6 text-center">Selection</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 text-xs">
+                        {dbServices.filter((s) => {
+                          if (!appServiceSearchQuery.trim()) return true;
+                          const q = appServiceSearchQuery.toLowerCase().trim();
+                          return (
+                            (s.name && s.name.toLowerCase().includes(q)) ||
+                            (s.description && s.description.toLowerCase().includes(q))
+                          );
+                        }).map((srv) => {
+                          const Icon = getServiceIcon(srv.id);
+                          const isSelected = selectedService === srv.id;
+                          return (
+                            <tr
+                              key={srv.id}
+                              onClick={() => setSelectedService(srv.id)}
+                              className={`cursor-pointer transition-colors ${
+                                isSelected
+                                  ? 'bg-[#f0f7f2] font-semibold'
+                                  : 'hover:bg-gray-50/80'
+                              }`}
+                            >
+                              {/* Service Icon & Name */}
+                              <td className="py-3.5 px-3.5 sm:px-6 align-middle min-w-0">
+                                <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+                                  <div
+                                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center shrink-0 border transition-all ${
+                                      isSelected
+                                        ? 'bg-[#12372A] text-white border-[#12372A] shadow-2xs'
+                                        : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                    }`}
+                                  >
+                                    <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h3 className={`text-xs font-bold leading-snug break-normal ${isSelected ? 'text-[#12372A]' : 'text-gray-900'}`}>
+                                      {srv.name}
+                                    </h3>
+                                    {srv.description && (
+                                      <p className="text-[10px] sm:text-[11px] text-gray-400 font-medium mt-0.5 line-clamp-1">
+                                        {srv.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Service Category / Status */}
+                              <td className="py-3 px-4 align-middle hidden sm:table-cell whitespace-nowrap">
+                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200/60">
+                                  Active Service
+                                </span>
+                              </td>
+
+                              {/* Selection Button */}
+                              <td className="py-3.5 px-3.5 sm:px-6 align-middle text-center whitespace-nowrap">
+                                <div className="inline-flex items-center justify-center">
+                                  {isSelected ? (
+                                    <span className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-[#12372A] text-white text-[10px] sm:text-[11px] font-bold shadow-2xs">
+                                      <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#a8d5b9] stroke-[3]" />
+                                      Selected
+                                    </span>
+                                  ) : (
+                                    <span className="px-2.5 sm:px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-[10px] sm:text-[11px] font-semibold transition-colors">
+                                      Select
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
+              </div>
+
+              {/* Step 1 Action Buttons directly below table (No empty space down!) */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-4">
+                <button
+                  disabled
+                  className="px-6 py-2.5 border border-gray-300 rounded-full font-semibold text-xs text-gray-700 opacity-40 cursor-not-allowed"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={() => setCurrentStep(2)}
+                  className="px-6 py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-full hover:bg-[#1a4a38] shadow-md"
+                >
+                  Next Step
+                </button>
               </div>
             </div>
           )}
@@ -2092,45 +2167,48 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
           </div>
         )}
 
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-            <button
-              disabled={currentStep === 1}
-              onClick={() => setCurrentStep(currentStep - 1)}
-              className="px-6 py-2.5 border border-gray-300 rounded-full font-semibold text-xs text-gray-700 disabled:opacity-40"
-            >
-              Back
-            </button>
+          {currentStep > 1 && (
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <button
+                disabled={currentStep === 1}
+                onClick={() => setCurrentStep(currentStep - 1)}
+                className="px-6 py-2.5 border border-gray-300 rounded-full font-semibold text-xs text-gray-700 disabled:opacity-40"
+              >
+                Back
+              </button>
 
-            {currentStep < 5 ? (
-              <button
-                onClick={() => {
-                  if (currentStep === 3 && !isFeePaid) {
-                    showToast('Payment Required', 'Only after completion of fee payment is the upload document section allowed.');
-                    setShowPaymentGatewayModal(true);
-                    return;
-                  }
-                  setCurrentStep(currentStep + 1);
-                }}
-                className="px-6 py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-full hover:bg-[#1a4a38] shadow-md"
-              >
-                Next Step
-              </button>
-            ) : (
-              <button
-                onClick={handleFinishCreate}
-                disabled={submitting}
-                className="px-6 py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-full hover:bg-[#1a4a38] shadow-md flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {submitting ? (
-                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Submitting…</span></>
-                ) : (
-                  <span>Submit Application</span>
-                )}
-              </button>
-            )}
-          </div>
+              {currentStep < 5 ? (
+                <button
+                  onClick={() => {
+                    if (currentStep === 3 && !isFeePaid) {
+                      showToast('Payment Required', 'Only after completion of fee payment is the upload document section allowed.');
+                      setShowPaymentGatewayModal(true);
+                      return;
+                    }
+                    setCurrentStep(currentStep + 1);
+                  }}
+                  className="px-6 py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-full hover:bg-[#1a4a38] shadow-md"
+                >
+                  Next Step
+                </button>
+              ) : (
+                <button
+                  onClick={handleFinishCreate}
+                  disabled={submitting}
+                  className="px-6 py-2.5 bg-[#12372A] text-white font-bold text-xs rounded-full hover:bg-[#1a4a38] shadow-md flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {submitting ? (
+                    <><Loader2 className="w-3.5 h-3.5 animate-spin" /><span>Submitting…</span></>
+                  ) : (
+                    <span>Submit Application</span>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
         </div>
-      )}
+      </div>
+    )}
 
       {/* MODAL: Fee Payment Gateway Simulator */}
       {mounted && showPaymentGatewayModal && createPortal(

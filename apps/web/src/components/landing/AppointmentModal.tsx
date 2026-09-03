@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Calendar, CheckCircle2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { X, Calendar, CheckCircle2, ShieldCheck, ArrowRight, Phone } from 'lucide-react';
 import { ServiceSelector } from './ServiceSelector';
 import { CalendarPicker } from './CalendarPicker';
 import { TimePicker } from './TimePicker';
@@ -131,7 +131,10 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onCl
               {/* WhatsApp Share Box / Continue Box */}
               <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-left max-w-md mx-auto space-y-2 font-sans">
                 <div className="flex items-center justify-between text-xs font-bold text-emerald-900">
-                  <span>📲 Priority Admin Desk Confirmation</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                    Priority Admin Desk Confirmation
+                  </span>
                   <span className="bg-emerald-200/80 text-emerald-800 px-2 py-0.5 rounded text-[11px] font-mono">+91 9360645466</span>
                 </div>
                 <p className="text-xs text-emerald-800">

@@ -84,6 +84,38 @@ export async function fetchAppointmentsAction(search?: string, status?: string) 
   }
 }
 
+function formatDateAndTimeToIso(dateStr: string, timeStr?: string): string {
+  if (!dateStr) return new Date().toISOString();
+  if (dateStr.includes('T')) {
+    const parsed = new Date(dateStr);
+    if (!isNaN(parsed.getTime())) return parsed.toISOString();
+  }
+
+  let time24 = '10:00';
+  if (timeStr) {
+    const match12 = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (match12) {
+      let h = parseInt(match12[1], 10);
+      const m = match12[2];
+      const ampm = match12[3].toUpperCase();
+      if (ampm === 'PM' && h < 12) h += 12;
+      if (ampm === 'AM' && h === 12) h = 0;
+      time24 = `${String(h).padStart(2, '0')}:${m}`;
+    } else {
+      const match24 = timeStr.trim().match(/^(\d{1,2}):(\d{2})/);
+      if (match24) {
+        time24 = `${String(match24[1]).padStart(2, '0')}:${match24[2]}`;
+      }
+    }
+  }
+
+  const d = new Date(`${dateStr}T${time24}:00`);
+  if (isNaN(d.getTime())) {
+    return new Date().toISOString();
+  }
+  return d.toISOString();
+}
+
 export async function createAppointmentAction(formData: {
   customerId?: string;
   customer: string;
@@ -103,9 +135,7 @@ export async function createAppointmentAction(formData: {
     // Use directly provided serviceId, or resolve by name as fallback
     const resolvedServiceId = formData.serviceId || await resolveServiceId(formData.service);
 
-    // Combine date and time to ISO Date string
-    const dateTimeStr = `${formData.date}T${formData.time}:00`;
-    const appointmentDate = new Date(dateTimeStr).toISOString();
+    const appointmentDate = formatDateAndTimeToIso(formData.date, formData.time);
 
     const isOnline = formData.mode.toLowerCase() === 'online';
     const payload = {
@@ -245,9 +275,8 @@ export async function updateAppointmentAction(
       const serviceId = formData.serviceId || await resolveServiceId(formData.service);
       if (serviceId) payload.serviceId = serviceId;
     }
-    if (formData.date && formData.time) {
-      const dateTimeStr = `${formData.date}T${formData.time}:00`;
-      payload.appointmentDate = new Date(dateTimeStr).toISOString();
+    if (formData.date || formData.time) {
+      payload.appointmentDate = formatDateAndTimeToIso(formData.date || '', formData.time);
     }
 
     let res = await fetch(`${API_BASE_URL}/v1/admin/appointments/${id}`, {

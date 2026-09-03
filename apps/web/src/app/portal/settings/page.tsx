@@ -90,17 +90,19 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-7xl w-full mx-auto space-y-6 font-sans pb-12">
+    <div className="max-w-7xl w-full mx-auto flex-1 flex flex-col min-h-0 space-y-4 font-sans overflow-hidden">
       {/* Save Toast Notification */}
       {saved && (
-        <div className="bg-[#e6f4ea] border border-[#a8d5b9] text-[#137333] p-4 rounded-xl flex items-center gap-3 text-xs font-bold animate-in fade-in duration-200">
+        <div className="bg-[#e6f4ea] border border-[#a8d5b9] text-[#137333] p-4 rounded-xl flex items-center gap-3 text-xs font-bold animate-in fade-in duration-200 shrink-0">
           <CheckCircle2 className="w-5 h-5 text-[#137333]" />
           <span>Settings updated successfully!</span>
         </div>
       )}
 
-      {/* SECTION 1: Account Security & Password */}
-      <form onSubmit={handleSaveSecurity} className="bg-white rounded-3xl border border-gray-200/80 p-6 md:p-8 shadow-2xs space-y-6">
+      {/* ── SCROLLABLE SETTINGS FORMS AREA ── */}
+      <div className="flex-1 overflow-y-auto min-h-0 space-y-6 pr-1">
+        {/* SECTION 1: Account Security & Password */}
+        <form onSubmit={handleSaveSecurity} className="bg-white rounded-3xl border border-gray-200/80 p-6 md:p-8 shadow-2xs space-y-6">
         <div>
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-[#1c3a63]" />
@@ -272,6 +274,7 @@ export default function SettingsPage() {
           </button>
         </div>
       </form>
+      </div>
     </div>
   );
 }

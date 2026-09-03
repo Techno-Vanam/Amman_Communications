@@ -177,6 +177,11 @@ export default function PaymentsPage() {
     setMounted(true);
   }, []);
 
+  // Reset pagination to page 1 whenever any filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategoryFilter, datePreset, singleSelectedDate, customStartDate, customEndDate, filterStatus, filterMode, minAmount, maxAmount]);
+
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -395,10 +400,10 @@ export default function PaymentsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4 font-sans pb-1">
+    <div className="max-w-7xl mx-auto flex-1 flex flex-col min-h-0 space-y-4 font-sans overflow-hidden">
 
       {/* ── KPI Metric Cards ── */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
         <StatCard
           label="Total Paid"
           value={formatCurrency(totalPaidSum)}
@@ -430,11 +435,11 @@ export default function PaymentsPage() {
       </div>
 
       {/* Main Transactions Container Card */}
-      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs overflow-hidden space-y-3">
+      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Filter Toolbar */}
-        <div className="p-4 sm:p-5 pb-2 flex flex-col lg:flex-row items-center justify-between gap-3">
+        <div className="p-3 sm:p-5 pb-2 flex flex-col lg:flex-row items-center justify-between gap-2.5 shrink-0">
           {/* Left Controls */}
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto">
             {/* Category Dropdown */}
             <div className="w-full sm:w-56">
               <CustomSelect
@@ -458,47 +463,47 @@ export default function PaymentsPage() {
               onClick={() => setShowDatePickerModal(true)}
               className="flex items-center gap-2 bg-gray-50/80 border border-gray-200 hover:bg-gray-100 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-gray-700 transition-colors w-full sm:w-auto justify-center"
             >
-              <Calendar className="w-4 h-4 text-gray-400" />
-              <span>
+              <Calendar className="w-4 h-4 text-gray-400 shrink-0" />
+              <span className="truncate">
                 {datePreset === 'Select Date' && singleSelectedDate
                   ? singleSelectedDate
                   : datePreset === 'Custom Date Range' && customStartDate && customEndDate
                   ? `${customStartDate} - ${customEndDate}`
                   : datePreset}
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-1" />
+              <ChevronDown className="w-3.5 h-3.5 text-gray-400 ml-1 shrink-0" />
             </button>
           </div>
 
           {/* Right Controls */}
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end sm:justify-start">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3 w-full lg:w-auto">
             <button
               onClick={() => setShowMoreFilters(!showMoreFilters)}
-              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border transition-all shadow-2xs ${
+              className={`inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold border transition-all shadow-2xs w-full sm:w-auto ${
                 showMoreFilters
                   ? 'bg-[#0e2a47] text-white border-[#0e2a47]'
                   : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
               }`}
             >
-              <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>More Filters</span>
+              <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
+              <span className="whitespace-nowrap">More Filters</span>
             </button>
 
             <button
               onClick={handleExportPDF}
               disabled={isExportingPDF}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 hover:border-gray-300 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-white border border-gray-200 hover:border-gray-300 rounded-xl text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-2xs disabled:opacity-50 w-full sm:w-auto"
               title="Export Transactions Statement as PDF"
             >
-              <Download className="w-3.5 h-3.5 text-gray-500" />
-              <span>{isExportingPDF ? 'Generating PDF...' : 'Export PDF'}</span>
+              <Download className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+              <span className="whitespace-nowrap">{isExportingPDF ? 'Generating...' : 'Export PDF'}</span>
             </button>
           </div>
         </div>
 
         {/* Collapsible "More Filters" Options Panel */}
         {showMoreFilters && (
-          <div className="mx-6 p-4 bg-[#f8fafc] border border-gray-200 rounded-2xl space-y-4 animate-in slide-in-from-top-2 duration-200">
+          <div className="mx-3 sm:mx-6 mb-3 p-3.5 sm:p-4 bg-[#f8fafc] border border-gray-200 rounded-2xl space-y-3 sm:space-y-4 animate-in slide-in-from-top-2 duration-200 shrink-0">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">Filter Options</h3>
               <button
@@ -509,7 +514,7 @@ export default function PaymentsPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <div className="space-y-1">
                 <label className="block font-bold text-gray-600 text-[11px]">Payment Status</label>
                 <CustomSelect
@@ -553,18 +558,19 @@ export default function PaymentsPage() {
           </div>
         )}
 
-        {/* Scrollable Data Table Container (Shows 4 entries at a time, entries scrollable) */}
-        <div className="overflow-x-auto max-h-[295px] overflow-y-auto admin-scrollbar relative">
-          <table className="w-full text-left border-separate border-spacing-0 min-w-[850px]">
+        {/* Scrollable Data Table Container */}
+        <div className="overflow-x-auto flex-1 overflow-y-auto min-h-0 relative [scrollbar-gutter:stable]">
+          {/* Desktop / Tablet View Table (hidden on small screens) */}
+          <table className="w-full text-left border-separate border-spacing-0 min-w-[900px] table-fixed hidden md:table">
             <thead>
               <tr className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
-                <th className="sticky top-0 z-20 py-3.5 px-6 bg-[#f8fafc] border-y border-gray-200/80">SERVICE/APPLICATION</th>
-                <th className="sticky top-0 z-20 py-3.5 px-4 bg-[#f8fafc] border-y border-gray-200/80">TOTAL AMOUNT</th>
-                <th className="sticky top-0 z-20 py-3.5 px-4 bg-[#f8fafc] border-y border-gray-200/80">PAID AMOUNT</th>
-                <th className="sticky top-0 z-20 py-3.5 px-4 bg-[#f8fafc] border-y border-gray-200/80">PENDING AMOUNT</th>
-                <th className="sticky top-0 z-20 py-3.5 px-4 bg-[#f8fafc] border-y border-gray-200/80">PAYMENT MODE</th>
-                <th className="sticky top-0 z-20 py-3.5 px-4 bg-[#f8fafc] border-y border-gray-200/80">STATUS</th>
-                <th className="sticky top-0 z-20 py-3.5 px-6 text-center bg-[#f8fafc] border-y border-gray-200/80">ACTION</th>
+                <th className="sticky top-0 z-20 py-3.5 px-4 sm:px-5 bg-[#f8fafc] border-y border-gray-200/80 w-[26%] whitespace-nowrap">SERVICE/APPLICATION</th>
+                <th className="sticky top-0 z-20 py-3.5 px-3 sm:px-4 bg-[#f8fafc] border-y border-gray-200/80 w-[11%] whitespace-nowrap">TOTAL AMOUNT</th>
+                <th className="sticky top-0 z-20 py-3.5 px-3 sm:px-4 bg-[#f8fafc] border-y border-gray-200/80 w-[11%] whitespace-nowrap">PAID AMOUNT</th>
+                <th className="sticky top-0 z-20 py-3.5 px-3 sm:px-4 bg-[#f8fafc] border-y border-gray-200/80 w-[12%] whitespace-nowrap">PENDING AMOUNT</th>
+                <th className="sticky top-0 z-20 py-3.5 px-3 sm:px-4 bg-[#f8fafc] border-y border-gray-200/80 w-[12%] whitespace-nowrap">PAYMENT MODE</th>
+                <th className="sticky top-0 z-20 py-3.5 px-3 sm:px-4 bg-[#f8fafc] border-y border-gray-200/80 w-[10%] whitespace-nowrap">STATUS</th>
+                <th className="sticky top-0 z-20 py-3.5 px-4 sm:px-5 text-center bg-[#f8fafc] border-y border-gray-200/80 w-[18%] whitespace-nowrap">ACTION</th>
               </tr>
             </thead>
             <tbody className="text-xs text-gray-800 bg-white">
@@ -579,23 +585,23 @@ export default function PaymentsPage() {
                   return (
                     <tr key={`${txn.id}-${txn.appId}-${index}`} className="hover:bg-gray-50/70 transition-colors">
                       {/* Service & Application ID */}
-                      <td className="py-4 px-6 border-b border-gray-100">
-                        <p className="font-bold text-gray-900 leading-tight">{txn.service}</p>
-                        <p className="text-[11px] font-mono text-gray-400 mt-0.5">{txn.appId}</p>
+                      <td className="py-2.5 px-6 border-b border-gray-100 min-w-0">
+                        <p className="font-bold text-gray-900 leading-tight truncate whitespace-nowrap" title={txn.service}>{txn.service}</p>
+                        <p className="text-[11px] font-mono text-gray-400 mt-0.5 whitespace-nowrap">{txn.appId}</p>
                       </td>
 
                       {/* Total Amount */}
-                      <td className="py-4 px-4 font-bold text-gray-900 border-b border-gray-100">
+                      <td className="py-2.5 px-4 font-bold text-gray-900 border-b border-gray-100 whitespace-nowrap">
                         {formatCurrency(txn.totalAmount)}
                       </td>
 
                       {/* Paid Amount */}
-                      <td className="py-4 px-4 font-bold text-gray-900 border-b border-gray-100">
+                      <td className="py-2.5 px-4 font-bold text-gray-900 border-b border-gray-100 whitespace-nowrap">
                         {formatCurrency(txn.paidAmount)}
                       </td>
 
                       {/* Pending Amount */}
-                      <td className="py-4 px-4 font-bold border-b border-gray-100">
+                      <td className="py-2.5 px-4 font-bold border-b border-gray-100 whitespace-nowrap">
                         {txn.pendingAmount > 0 ? (
                           <span className="text-rose-600">{formatCurrency(txn.pendingAmount)}</span>
                         ) : (
@@ -604,7 +610,7 @@ export default function PaymentsPage() {
                       </td>
 
                       {/* Payment Mode Badge */}
-                      <td className="py-4 px-4 border-b border-gray-100">
+                      <td className="py-2.5 px-4 border-b border-gray-100 whitespace-nowrap">
                         {txn.paymentMode === 'Credit Card' && (
                           <span className="inline-block text-[11px] font-semibold bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg border border-indigo-100">
                             Credit Card
@@ -633,7 +639,7 @@ export default function PaymentsPage() {
                       </td>
 
                       {/* Status Badge */}
-                      <td className="py-4 px-4 border-b border-gray-100">
+                      <td className="py-2.5 px-4 border-b border-gray-100 whitespace-nowrap">
                         {txn.status === 'Paid' && (
                           <span className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -655,23 +661,23 @@ export default function PaymentsPage() {
                       </td>
 
                       {/* Action Button */}
-                      <td className="py-4 px-6 text-center border-b border-gray-100">
+                      <td className="py-2.5 px-6 text-center border-b border-gray-100 whitespace-nowrap">
                         <div className="flex items-center justify-center gap-2">
                           <Link
                             href={`/portal/payments/${txn.id}`}
-                            className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl transition-all shadow-2xs"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-xl transition-all shadow-2xs whitespace-nowrap shrink-0"
                             title="View Official Invoice"
                           >
-                            <FileText className="w-3.5 h-3.5 text-white" />
-                            <span>Invoice</span>
+                            <FileText className="w-3.5 h-3.5 text-white shrink-0" />
+                            <span className="whitespace-nowrap">Invoice</span>
                           </Link>
 
                           {txn.status !== 'Paid' && (
                             <button
                               onClick={() => setSelectedTxnForPayNow(txn)}
-                              className="inline-flex items-center gap-1 px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition-all shadow-2xs"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl transition-all shadow-2xs whitespace-nowrap shrink-0"
                             >
-                              <span>Pay Now</span>
+                              <span className="whitespace-nowrap">Pay Now</span>
                             </button>
                           )}
                         </div>
@@ -682,10 +688,118 @@ export default function PaymentsPage() {
               )}
             </tbody>
           </table>
+
+          {/* Mobile / Small Screen Card View (visible only on mobile) */}
+          <div className="p-2.5 sm:p-3 space-y-2.5 block md:hidden">
+            {paginatedTransactions.length === 0 ? (
+              <div className="py-8 text-center text-gray-500 font-medium bg-white rounded-2xl border border-gray-100">
+                No transactions found matching the selected filters.
+              </div>
+            ) : (
+              paginatedTransactions.map((txn, index) => (
+                <div key={`mobile-${txn.id}-${index}`} className="bg-white border border-gray-200/90 rounded-2xl p-3 shadow-2xs space-y-2.5 min-w-0">
+                  {/* Header: Service Name & Status Badge */}
+                  <div className="flex items-start justify-between gap-2 min-w-0">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-bold text-gray-900 text-xs leading-snug truncate" title={txn.service}>{txn.service}</h4>
+                      <p className="text-[10px] font-mono text-gray-400 mt-0.5 truncate">{txn.appId}</p>
+                    </div>
+                    <div className="shrink-0">
+                      {txn.status === 'Paid' && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          Paid
+                        </span>
+                      )}
+                      {txn.status === 'Partial' && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          Partial
+                        </span>
+                      )}
+                      {txn.status === 'Pending' && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-full whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                          Pending
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Financial Metrics Grid */}
+                  <div className="grid grid-cols-3 gap-1 bg-gray-50/80 p-2 rounded-xl border border-gray-100 text-[11px] min-w-0">
+                    <div className="min-w-0">
+                      <span className="text-[9px] uppercase font-extrabold text-gray-400 block truncate">Total</span>
+                      <span className="font-bold text-gray-900 truncate block text-[11px]">{formatCurrency(txn.totalAmount)}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[9px] uppercase font-extrabold text-gray-400 block truncate">Paid</span>
+                      <span className="font-bold text-gray-900 truncate block text-[11px]">{formatCurrency(txn.paidAmount)}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[9px] uppercase font-extrabold text-gray-400 block truncate">Pending</span>
+                      <span className={`font-bold truncate block text-[11px] ${txn.pendingAmount > 0 ? 'text-rose-600' : 'text-gray-500'}`}>
+                        {formatCurrency(txn.pendingAmount)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Payment Mode & Actions */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-gray-100/80">
+                    <div className="text-xs shrink-0">
+                      {txn.paymentMode === 'Credit Card' && (
+                        <span className="text-[10px] font-semibold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-lg border border-indigo-100 whitespace-nowrap">
+                          Credit Card
+                        </span>
+                      )}
+                      {txn.paymentMode === 'Bank Transfer' && (
+                        <span className="text-[10px] font-semibold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-lg border border-blue-100 whitespace-nowrap">
+                          Bank Transfer
+                        </span>
+                      )}
+                      {txn.paymentMode === 'Wire Transfer' && (
+                        <span className="text-[10px] font-semibold bg-purple-50 text-purple-700 px-2 py-0.5 rounded-lg border border-purple-100 whitespace-nowrap">
+                          Wire Transfer
+                        </span>
+                      )}
+                      {txn.paymentMode === 'Pending' && (
+                        <span className="text-[10px] font-medium text-gray-400 italic bg-gray-50 px-2 py-0.5 rounded-lg whitespace-nowrap">
+                          Pending
+                        </span>
+                      )}
+                      {txn.paymentMode === 'UPI / NetBanking' && (
+                        <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-lg border border-emerald-100 whitespace-nowrap">
+                          UPI / NetBanking
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                      <Link
+                        href={`/portal/payments/${txn.id}`}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-[11px] rounded-lg transition-all shadow-2xs whitespace-nowrap"
+                      >
+                        <FileText className="w-3 h-3 text-white shrink-0" />
+                        <span>Invoice</span>
+                      </Link>
+                      {txn.status !== 'Paid' && (
+                        <button
+                          onClick={() => setSelectedTxnForPayNow(txn)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[11px] rounded-lg transition-all shadow-2xs whitespace-nowrap"
+                        >
+                          <span>Pay Now</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         {/* Table Footer - Total entries counter */}
-        <div className="px-5 py-2.5 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-medium bg-gray-50/50">
+        <div className="px-5 py-2.5 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-medium bg-gray-50/50 shrink-0">
           <div>
             Showing <span className="font-bold text-gray-900">{filteredTransactions.length}</span> {filteredTransactions.length === 1 ? 'entry' : 'entries'}
           </div>

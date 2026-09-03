@@ -66,9 +66,9 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-4 font-sans pb-12">
+    <div className="max-w-7xl w-full mx-auto flex-1 flex flex-col min-h-0 space-y-4 font-sans overflow-hidden">
       {/* Top Title & Mark All as Read */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <h1 className="text-sm font-medium text-gray-600 tracking-tight">
           All your notifications and alerts
         </h1>
@@ -85,9 +85,9 @@ export default function NotificationsPage() {
       </div>
 
       {/* Main Card Container */}
-      <div className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs overflow-hidden">
+      <div className="bg-white rounded-3xl border border-gray-200/80 shadow-2xs flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Mobile Custom Tab Dropdown (Animated Custom Menu - No "Filter:" text) */}
-        <div className="p-3 border-b border-gray-200/80 sm:hidden">
+        <div className="p-3 border-b border-gray-200/80 sm:hidden shrink-0">
           <CustomTabDropdown
             value={activeTab}
             options={['All', 'Unread', 'Read']}
@@ -96,7 +96,7 @@ export default function NotificationsPage() {
         </div>
 
         {/* Desktop Tab Navigation Header (All | Unread | Read) */}
-        <div className="hidden sm:flex px-6 border-b border-gray-200/80 items-center space-x-8 text-xs font-semibold">
+        <div className="hidden sm:flex px-6 border-b border-gray-200/80 items-center space-x-8 text-xs font-semibold shrink-0">
           {(['All', 'Unread', 'Read'] as const).map((tab) => (
             <button
               key={tab}
@@ -117,8 +117,8 @@ export default function NotificationsPage() {
           ))}
         </div>
 
-        {/* Notification List */}
-        <div className="divide-y divide-gray-100">
+        {/* Notification List (Internally Scrollable) */}
+        <div className="divide-y divide-gray-100 flex-1 overflow-y-auto min-h-0">
           {filteredNotifications.length === 0 ? (
             <div className="p-12 text-center text-xs text-gray-500 font-medium">
               No {activeTab.toLowerCase()} notifications found.

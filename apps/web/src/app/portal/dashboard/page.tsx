@@ -49,7 +49,7 @@ export default function PortalDashboardPage() {
         if (appsData && Array.isArray(appsData) && appsData.length > 0) {
           setApplications(appsData.map((app: any) => ({
             id: app.applicationNumber || app.id,
-            serviceType: app.serviceType || 'Service',
+            serviceType: app.serviceType || app.title || app.service?.name || (app.notes ? (app.notes.length > 35 ? app.notes.slice(0, 35) + '...' : app.notes) : '') || 'General Application Service',
             status: app.status === 'COMPLETED' ? 'Completed' : (app.status === 'PROCESSING' ? 'Processing' : 'Verification'),
             submittedDate: app.submittedAt
               ? new Date(app.submittedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -103,7 +103,7 @@ export default function PortalDashboardPage() {
   const pendingActionsCount = applications.filter((a) => a.status === 'Verification' || a.status === 'Documents Received').length;
   const appointmentsCount = appointments.length;
 
-  // Build combined top 3 recent activities list
+  // Build combined top 5 recent activities list
   const recentActivities = [
     ...applications.map((app) => ({
       id: `app-${app.id}`,
@@ -121,9 +121,9 @@ export default function PortalDashboardPage() {
       date: apt.originalDateTime || 'Scheduled',
       isApp: false
     }))
-  ].slice(0, 3);
+  ].slice(0, 4);
 
-  // Build top 3 alerts & reminders list
+  // Build top 4 alerts & reminders list
   const topAlerts = [
     ...(applications.length > 0 ? [{
       id: 'alt-1',
@@ -139,19 +139,33 @@ export default function PortalDashboardPage() {
       badge: 'Scheduled',
       badgeBg: 'bg-emerald-100 text-emerald-800'
     }] : []),
-    {
+    ...(applications.length > 1 ? [{
       id: 'alt-3',
+      title: 'Document Processing Update',
+      desc: `Application ${applications[1].id} for ${applications[1].serviceType} documents verified.`,
+      badge: 'Processing',
+      badgeBg: 'bg-amber-100 text-amber-800'
+    }] : []),
+    {
+      id: 'alt-4',
       title: 'System Security & Verification',
       desc: 'Account credentials and identity document vault status active.',
       badge: 'Protected',
       badgeBg: 'bg-gray-100 text-gray-800'
+    },
+    {
+      id: 'alt-5',
+      title: 'Payment & Receipt Records',
+      desc: 'All official government service fees and receipts updated.',
+      badge: 'Verified',
+      badgeBg: 'bg-emerald-100 text-emerald-800'
     }
-  ].slice(0, 3);
+  ].slice(0, 4);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4 lg:space-y-5 font-sans">
+    <div className="max-w-7xl w-full mx-auto flex-1 flex flex-col min-h-0 space-y-4 lg:space-y-5 font-sans overflow-hidden">
       {/* ── KPI Summary Cards ── */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
         <StatCard
           label="Total Applications"
           value={applications.length}
@@ -182,12 +196,12 @@ export default function PortalDashboardPage() {
         />
       </div>
 
-      {/* Main Container Card Grid: Recent Activity (Top 3) & Alerts (Top 3) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Recent Activity (Left Col 7/12) - Perfectly Sized Top 3 Cards */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-5 flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center justify-between gap-3 pb-3 border-b border-gray-100">
+      {/* Main Container Card Grid: Recent Activity & Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 min-h-0 items-stretch overflow-hidden">
+        {/* Recent Activity (Left Col 7/12) */}
+        <div className="lg:col-span-7 bg-white rounded-3xl border border-gray-200/80 shadow-2xs p-4 lg:p-5 flex flex-col justify-between h-full space-y-3 min-h-0 overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-gray-100 shrink-0">
               <h2 className="text-sm font-bold text-gray-900 min-w-0 truncate">Recent Activity &amp; Updates</h2>
               <Link
                 href="/portal/applications"
@@ -198,9 +212,9 @@ export default function PortalDashboardPage() {
               </Link>
             </div>
 
-            <div className="mt-3 space-y-2.5">
+            <div className="mt-2.5 flex-1 flex flex-col justify-between overflow-hidden gap-2.5">
               {recentActivities.length === 0 ? (
-                <div className="p-6 text-center bg-gray-50/70 border border-gray-200/60 rounded-xl space-y-1.5">
+                <div className="p-6 text-center bg-gray-50/70 border border-gray-200/60 rounded-xl space-y-1.5 my-auto">
                   <Info className="w-5 h-5 text-gray-400 mx-auto" />
                   <p className="text-xs font-bold text-gray-800">No Recent Activity Recorded</p>
                   <p className="text-[11px] text-gray-500 max-w-sm mx-auto">
@@ -208,8 +222,8 @@ export default function PortalDashboardPage() {
                   </p>
                 </div>
               ) : (
-                recentActivities.slice(0, 3).map((act) => (
-                  <div key={act.id} className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/60 flex items-start gap-4">
+                recentActivities.slice(0, 4).map((act) => (
+                  <div key={act.id} className="p-3 sm:p-3.5 rounded-2xl bg-gray-50/70 border border-gray-200/60 flex items-center gap-3.5 hover:bg-gray-50 transition-colors flex-1">
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
                       act.isApp ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'
                     }`}>
@@ -217,15 +231,15 @@ export default function PortalDashboardPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       {act.isApp ? (
-                        <p className="text-xs text-gray-800 font-semibold leading-relaxed">
-                          {act.title} ({act.service}) is currently in <span className="font-bold text-[#12372A]">&quot;{act.status}&quot;</span>.
+                        <p className="text-xs text-gray-800 font-bold leading-snug">
+                          {act.title} ({act.service}) is currently in <span className="font-extrabold text-[#12372A]">&quot;{act.status}&quot;</span>.
                         </p>
                       ) : (
-                        <p className="text-xs text-gray-800 font-semibold leading-relaxed">
-                          Appointment scheduled for <span className="font-bold text-gray-900">{act.service}</span> via <span className="font-bold text-gray-900">{act.status}</span>.
+                        <p className="text-xs text-gray-800 font-bold leading-snug">
+                          Appointment scheduled for <span className="font-extrabold text-gray-900">{act.service}</span> via <span className="font-extrabold text-gray-900">{act.status}</span>.
                         </p>
                       )}
-                      <span className="text-[10px] text-gray-400 block mt-0.5">{act.isApp ? `Submitted: ${act.date}` : act.date}</span>
+                      <span className="text-[11px] text-gray-400 block mt-0.5 font-medium">{act.isApp ? `Submitted: ${act.date}` : act.date}</span>
                     </div>
                   </div>
                 ))
@@ -233,7 +247,7 @@ export default function PortalDashboardPage() {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
+          <div className="pt-2.5 border-t border-gray-100 flex items-center justify-between text-xs mt-auto shrink-0">
             <span className="text-gray-400 font-medium text-[11px]">Real-time tracking active</span>
             <Link href="/portal/applications" className="font-bold text-[#12372A] hover:underline">
               Track requests &rarr;
@@ -241,10 +255,10 @@ export default function PortalDashboardPage() {
           </div>
         </div>
 
-        {/* Action Alerts & Reminders (Right Col 5/12) - Perfectly Sized Cards */}
-        <div className="lg:col-span-5 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-5 flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center justify-between gap-3 pb-3 border-b border-gray-100">
+        {/* Action Alerts & Reminders (Right Col 5/12) */}
+        <div className="lg:col-span-5 bg-white rounded-3xl border border-gray-200/80 shadow-2xs p-4 lg:p-5 flex flex-col justify-between h-full space-y-3 min-h-0 overflow-hidden">
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex items-center justify-between gap-3 pb-2.5 border-b border-gray-100 shrink-0">
               <div className="flex items-center gap-2 min-w-0">
                 <h2 className="text-sm font-bold text-gray-900 truncate">Alerts &amp; Reminders</h2>
               </div>
@@ -253,16 +267,16 @@ export default function PortalDashboardPage() {
               </Link>
             </div>
 
-            <div className="mt-3 space-y-2.5 text-xs">
-              {topAlerts.map((alt) => (
-                <div key={alt.id} className="p-3.5 rounded-xl bg-gray-50/80 border border-gray-200/70 space-y-1.5 transition-all hover:bg-gray-50">
+            <div className="mt-2.5 text-xs flex-1 flex flex-col justify-between overflow-hidden gap-2.5">
+              {topAlerts.slice(0, 4).map((alt) => (
+                <div key={alt.id} className="p-3 sm:p-3.5 rounded-2xl bg-gray-50/80 border border-gray-200/70 flex flex-col justify-center space-y-1 transition-all hover:bg-gray-50 flex-1">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-gray-900 text-xs truncate">{alt.title}</span>
                     <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-gray-200 ${alt.badgeBg}`}>
                       {alt.badge}
                     </span>
                   </div>
-                  <p className="text-gray-600 text-[11px] leading-relaxed line-clamp-2">
+                  <p className="text-gray-600 text-[11px] leading-snug line-clamp-1">
                     {alt.desc}
                   </p>
                 </div>
@@ -270,7 +284,7 @@ export default function PortalDashboardPage() {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-gray-100 text-center">
+          <div className="pt-2.5 border-t border-gray-100 text-center mt-auto shrink-0">
             <Link href="/portal/notifications" className="text-xs font-bold text-[#12372A] hover:underline">
               Open Notification Center &rarr;
             </Link>

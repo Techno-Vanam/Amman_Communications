@@ -236,9 +236,9 @@ export default function PortalDocumentsPage() {
   const pendingDocs = allDocs.filter((d) => d.status === 'UNDER_REVIEW' || d.status === 'UPLOADED');
 
   return (
-    <div className="max-w-7xl w-full mx-auto space-y-6 font-sans">
-      {/* ── KPI Summary Cards ── */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="max-w-7xl w-full mx-auto flex-1 flex flex-col min-h-0 space-y-4 sm:space-y-5 font-sans overflow-hidden">
+      {/* ── FIXED KPI Summary Cards ── */}
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
         <StatCard
           label="Total Documents"
           value={allDocs.length}
@@ -269,9 +269,11 @@ export default function PortalDocumentsPage() {
         />
       </div>
 
-      {/* Upload Panel */}
-      <div
-        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+      {/* ── SCROLLABLE CONTENT: Upload Panel & Documents List ── */}
+      <div className="flex-1 overflow-y-auto min-h-0 space-y-5 pr-1">
+        {/* Upload Panel */}
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragging(false); }}
         onDragLeave={() => setDragging(false)}
         onDrop={(e) => {
           e.preventDefault();
@@ -506,5 +508,6 @@ export default function PortalDocumentsPage() {
         )}
       </div>
     </div>
-  );
+  </div>
+);
 }

@@ -3,10 +3,13 @@
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 
-const API_BASE_URL =
+const API_BASE_URL = (
   process.env.API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://127.0.0.1:3003';
+  'http://127.0.0.1:3003'
+).replace(/\/+$/, '');
+
+const BASE_HOST = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
 
 async function authenticatedFetch(endpoint: string, options: RequestInit = {}) {
   const cookieStore = await cookies();
@@ -18,7 +21,17 @@ async function authenticatedFetch(endpoint: string, options: RequestInit = {}) {
     ...options.headers,
   };
 
-  const res = await fetch(`${API_BASE_URL}/api/v1${endpoint}`, {
+  let targetUrl: string;
+  if (endpoint.startsWith('http')) {
+    targetUrl = endpoint;
+  } else if (endpoint.startsWith('/api/v1')) {
+    targetUrl = `${BASE_HOST}${endpoint}`;
+  } else {
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    targetUrl = `${BASE_HOST}/api/v1${cleanEndpoint}`;
+  }
+
+  const res = await fetch(targetUrl, {
     ...options,
     headers,
   });
