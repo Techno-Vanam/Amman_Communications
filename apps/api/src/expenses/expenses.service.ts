@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ExpenseCategory, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateExpenseDto, UpdateExpenseDto } from './dto/expense.dto';
-
 
 @Injectable()
 export class ExpensesService {
@@ -20,14 +20,14 @@ export class ExpensesService {
   async findAll(params: {
     skip?: number;
     take?: number;
-    category?: string;
+    category?: ExpenseCategory;
     startDate?: string;
     endDate?: string;
     search?: string;
   }) {
     const { skip = 0, take = 10, category, startDate, endDate, search } = params;
 
-    const where: import('@prisma/client').Prisma.ExpenseWhereInput = {};
+    const where: Prisma.ExpenseWhereInput = {};
     if (category) where.category = category;
     if (startDate && endDate) {
       where.expenseDate = {
@@ -56,12 +56,12 @@ export class ExpensesService {
     return { data: expenses, total, page: skip / take + 1, limit: take };
   }
 
-  async getStats(category?: string) {
+  async getStats(category?: ExpenseCategory) {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);
     
-    const baseWhere: import('@prisma/client').Prisma.ExpenseWhereInput = { isVoided: false };
+    const baseWhere: Prisma.ExpenseWhereInput = { isVoided: false };
     if (category) {
       baseWhere.category = category;
     }

@@ -1,6 +1,3 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
-
 -- CreateEnum
 CREATE TYPE "DocumentStatus" AS ENUM ('UPLOADED', 'UNDER_REVIEW', 'VERIFIED', 'REJECTED', 'ACTION_REQUIRED');
 
@@ -9,6 +6,15 @@ CREATE TYPE "ApplicationStatus" AS ENUM ('DRAFT', 'SUBMITTED', 'UNDER_REVIEW', '
 
 -- CreateEnum
 CREATE TYPE "CustomerStatus" AS ENUM ('ACTIVE', 'INACTIVE');
+
+-- CreateEnum
+CREATE TYPE "InvoiceStatus" AS ENUM ('UNPAID', 'PARTIALLY_PAID', 'PAID', 'OVERDUE', 'CANCELLED');
+
+-- CreateEnum
+CREATE TYPE "PaymentMethod" AS ENUM ('CASH', 'BANK_TRANSFER', 'CREDIT_CARD', 'DEBIT_CARD', 'UPI', 'CHEQUE', 'OTHER');
+
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'PAID', 'FAILED', 'CANCELLED');
 
 -- CreateEnum
 CREATE TYPE "AppointmentType" AS ENUM ('OFFICE_VISIT', 'ONLINE_CONSULTATION');
@@ -35,7 +41,13 @@ CREATE TYPE "DocumentVerificationStatus" AS ENUM ('PENDING', 'VERIFIED', 'REJECT
 CREATE TYPE "ExpenseCategory" AS ENUM ('OFFICE', 'TRAVEL', 'EMPLOYEE', 'PROPERTY', 'UTILITIES', 'MARKETING', 'EQUIPMENT', 'OTHER');
 
 -- CreateEnum
-CREATE TYPE "PaymentMethod" AS ENUM ('CASH', 'BANK_TRANSFER', 'CREDIT_CARD', 'UPI', 'CHEQUE', 'OTHER');
+CREATE TYPE "SaleCategory" AS ENUM ('APPLICATION', 'XEROX', 'STATIONARY', 'OTHER');
+
+-- CreateEnum
+CREATE TYPE "NotificationType" AS ENUM ('INFO', 'SUCCESS', 'WARNING', 'ERROR');
+
+-- CreateEnum
+CREATE TYPE "NotificationUserType" AS ENUM ('ADMIN', 'CUSTOMER');
 
 -- CreateTable
 CREATE TABLE "HealthCheck" (
@@ -49,11 +61,18 @@ CREATE TABLE "HealthCheck" (
 CREATE TABLE "Customer" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "phone" TEXT,
     "passwordHash" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "address" TEXT,
     "contactNumber" TEXT,
-    "phone" TEXT,
+    "dob" TEXT,
+    "aadhaarNumber" TEXT,
+    "panNumber" TEXT,
+    "occupation" TEXT,
+    "altPhone" TEXT,
+    "emergencyContact" TEXT,
+    "isProfileCompleted" BOOLEAN NOT NULL DEFAULT false,
     "status" "CustomerStatus" NOT NULL DEFAULT 'ACTIVE',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -130,6 +149,8 @@ CREATE TABLE "Service" (
     "serviceFee" DECIMAL(10,2) NOT NULL,
     "totalFee" DECIMAL(10,2) NOT NULL,
     "estimatedTime" TEXT,
+    "isPartialPaymentAllowed" BOOLEAN NOT NULL DEFAULT false,
+    "minimumPartialFee" DECIMAL(10,2),
     "status" "ServiceStatus" NOT NULL DEFAULT 'DRAFT',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -245,6 +266,107 @@ CREATE TABLE "AppointmentDocument" (
     CONSTRAINT "AppointmentDocument_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Invoice" (
+    "id" TEXT NOT NULL,
+    "invoiceNumber" TEXT NOT NULL,
+    "customerId" TEXT NOT NULL,
+    "applicationId" TEXT,
+    "serviceId" TEXT,
+    "governmentFee" DECIMAL(10,2) NOT NULL,
+    "serviceFee" DECIMAL(10,2) NOT NULL,
+    "totalAmount" DECIMAL(10,2) NOT NULL,
+    "status" "InvoiceStatus" NOT NULL DEFAULT 'UNPAID',
+    "dueDate" TIMESTAMP(3),
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Invoice_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Payment" (
+    "id" TEXT NOT NULL,
+    "paymentNumber" TEXT NOT NULL,
+    "invoiceId" TEXT NOT NULL,
+    "customerId" TEXT NOT NULL,
+    "amount" DECIMAL(10,2) NOT NULL,
+    "paymentMethod" "PaymentMethod" NOT NULL DEFAULT 'BANK_TRANSFER',
+    "status" "PaymentStatus" NOT NULL DEFAULT 'PAID',
+    "reference" TEXT,
+    "notes" TEXT,
+    "paidAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PasswordResetToken" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "otpHash" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "used" BOOLEAN NOT NULL DEFAULT false,
+    "attempts" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PasswordResetToken_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ManualSale" (
+    "id" TEXT NOT NULL,
+    "saleNumber" TEXT NOT NULL,
+    "customerName" TEXT NOT NULL,
+    "customerPhone" TEXT,
+    "category" "SaleCategory" NOT NULL DEFAULT 'OTHER',
+    "amount" DECIMAL(10,2) NOT NULL,
+    "details" TEXT,
+    "status" "PaymentStatus" NOT NULL DEFAULT 'PAID',
+    "paymentMethod" "PaymentMethod" NOT NULL DEFAULT 'CASH',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ManualSale_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AdminSettings" (
+    "id" TEXT NOT NULL,
+    "adminId" TEXT NOT NULL,
+    "emailAlerts" BOOLEAN NOT NULL DEFAULT true,
+    "smsAlerts" BOOLEAN NOT NULL DEFAULT true,
+    "whatsappAlerts" BOOLEAN NOT NULL DEFAULT true,
+    "weeklyDigest" BOOLEAN NOT NULL DEFAULT false,
+    "language" TEXT NOT NULL DEFAULT 'English',
+    "timezone" TEXT NOT NULL DEFAULT 'Asia/Kolkata (IST +5:30)',
+    "autoLogout" TEXT NOT NULL DEFAULT '30 minutes',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "AdminSettings_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Notification" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "type" "NotificationType" NOT NULL DEFAULT 'INFO',
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "href" TEXT,
+    "userId" TEXT,
+    "userType" "NotificationUserType" NOT NULL DEFAULT 'ADMIN',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Customer_email_key" ON "Customer"("email");
 
@@ -265,6 +387,57 @@ CREATE INDEX "Expense_expenseDate_idx" ON "Expense"("expenseDate");
 
 -- CreateIndex
 CREATE INDEX "Expense_category_idx" ON "Expense"("category");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Invoice_invoiceNumber_key" ON "Invoice"("invoiceNumber");
+
+-- CreateIndex
+CREATE INDEX "Invoice_customerId_idx" ON "Invoice"("customerId");
+
+-- CreateIndex
+CREATE INDEX "Invoice_status_idx" ON "Invoice"("status");
+
+-- CreateIndex
+CREATE INDEX "Invoice_createdAt_idx" ON "Invoice"("createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Payment_paymentNumber_key" ON "Payment"("paymentNumber");
+
+-- CreateIndex
+CREATE INDEX "Payment_invoiceId_idx" ON "Payment"("invoiceId");
+
+-- CreateIndex
+CREATE INDEX "Payment_customerId_idx" ON "Payment"("customerId");
+
+-- CreateIndex
+CREATE INDEX "Payment_status_idx" ON "Payment"("status");
+
+-- CreateIndex
+CREATE INDEX "Payment_paidAt_idx" ON "Payment"("paidAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PasswordResetToken_token_key" ON "PasswordResetToken"("token");
+
+-- CreateIndex
+CREATE INDEX "PasswordResetToken_email_idx" ON "PasswordResetToken"("email");
+
+-- CreateIndex
+CREATE INDEX "PasswordResetToken_token_idx" ON "PasswordResetToken"("token");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ManualSale_saleNumber_key" ON "ManualSale"("saleNumber");
+
+-- CreateIndex
+CREATE INDEX "ManualSale_createdAt_idx" ON "ManualSale"("createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "AdminSettings_adminId_key" ON "AdminSettings"("adminId");
+
+-- CreateIndex
+CREATE INDEX "Notification_userId_userType_isRead_idx" ON "Notification"("userId", "userType", "isRead");
+
+-- CreateIndex
+CREATE INDEX "Notification_createdAt_idx" ON "Notification"("createdAt");
 
 -- AddForeignKey
 ALTER TABLE "Application" ADD CONSTRAINT "Application_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -296,3 +469,20 @@ ALTER TABLE "Expense" ADD CONSTRAINT "Expense_createdById_fkey" FOREIGN KEY ("cr
 -- AddForeignKey
 ALTER TABLE "AppointmentDocument" ADD CONSTRAINT "AppointmentDocument_appointmentId_fkey" FOREIGN KEY ("appointmentId") REFERENCES "Appointment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- AddForeignKey
+ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_applicationId_fkey" FOREIGN KEY ("applicationId") REFERENCES "Application"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Invoice" ADD CONSTRAINT "Invoice_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AdminSettings" ADD CONSTRAINT "AdminSettings_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "Admin"("id") ON DELETE CASCADE ON UPDATE CASCADE;

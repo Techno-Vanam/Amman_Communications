@@ -133,8 +133,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return <AuthContext.Provider value={{ accessToken, user, ready, setSession, clearSession }}>{children}</AuthContext.Provider>;
 }
 
+const fallbackAuthContextValue: AuthContextValue = {
+  accessToken: null,
+  user: null,
+  ready: false,
+  setSession: () => {},
+  clearSession: () => {},
+};
+
 export function useAuth() {
   const value = useContext(AuthContext);
-  if (!value) throw new Error('useAuth must be used inside AuthProvider');
+  if (!value) {
+    return fallbackAuthContextValue;
+  }
   return value;
 }

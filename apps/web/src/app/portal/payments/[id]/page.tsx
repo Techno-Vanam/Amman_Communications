@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { mockPayments } from '@/lib/mockPayments';
 import { PaymentReceipt } from '@/components/portal/PaymentReceipt';
 import { ReceiptData } from '@/types/payment';
@@ -15,7 +14,6 @@ interface ReceiptPageProps {
 }
 
 export default function ReceiptDetailPage({ params }: ReceiptPageProps) {
-  const searchParams = useSearchParams();
   const resolvedParams = use(params);
   const paymentId = resolvedParams.id;
 

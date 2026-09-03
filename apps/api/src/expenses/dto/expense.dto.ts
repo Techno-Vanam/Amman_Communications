@@ -1,21 +1,21 @@
 import { IsString, IsEnum, IsNumber, IsOptional, IsDateString, IsPositive } from 'class-validator';
-import { PaymentMethod } from '@prisma/client';
+import { ExpenseCategory, PaymentMethod } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateExpenseDto {
   @ApiProperty({ example: 'Office Supplies' })
   @IsString()
   title!: string;
 
-  @ApiProperty({ example: 'Pens, paper, and staplers', required: false })
+  @ApiPropertyOptional({ example: 'Pens, paper, and staplers' })
   @IsOptional()
   @IsString()
   description?: string;
 
-  @ApiProperty({ example: 'Operations' })
-  @IsString()
-  category!: string;
+  @ApiProperty({ enum: ExpenseCategory, example: ExpenseCategory.OFFICE })
+  @IsEnum(ExpenseCategory)
+  category!: ExpenseCategory;
 
   @ApiProperty({ example: 250.50 })
   @IsNumber()
@@ -27,60 +27,60 @@ export class CreateExpenseDto {
   @IsDateString()
   expenseDate!: string;
 
-  @ApiProperty({ enum: PaymentMethod, example: PaymentMethod.CREDIT_CARD, required: false })
+  @ApiPropertyOptional({ enum: PaymentMethod, example: PaymentMethod.CREDIT_CARD })
   @IsOptional()
   @IsEnum(PaymentMethod)
   paymentMethod?: PaymentMethod;
 
-  @ApiProperty({ example: 'Bought from Staples', required: false })
+  @ApiPropertyOptional({ example: 'Bought from Staples' })
   @IsOptional()
   @IsString()
   notes?: string;
   
-  @ApiProperty({ example: false, required: false })
+  @ApiPropertyOptional({ example: false })
   @IsOptional()
   isVoided?: boolean;
 }
 
 export class UpdateExpenseDto {
-  @ApiProperty({ example: 'Updated Office Supplies', required: false })
+  @ApiPropertyOptional({ example: 'Updated Office Supplies' })
   @IsOptional()
   @IsString()
   title?: string;
 
-  @ApiProperty({ example: 'Updated description', required: false })
+  @ApiPropertyOptional({ example: 'Updated description' })
   @IsOptional()
   @IsString()
   description?: string;
 
-  @ApiProperty({ example: 'Operations', required: false })
+  @ApiPropertyOptional({ enum: ExpenseCategory, example: ExpenseCategory.OFFICE })
   @IsOptional()
-  @IsString()
-  category?: string;
+  @IsEnum(ExpenseCategory)
+  category?: ExpenseCategory;
 
-  @ApiProperty({ example: 300.00, required: false })
+  @ApiPropertyOptional({ example: 300.00 })
   @IsOptional()
   @IsNumber()
   @IsPositive()
   @Type(() => Number)
   amount?: number;
 
-  @ApiProperty({ example: '2026-08-26T10:00:00Z', required: false })
+  @ApiPropertyOptional({ example: '2026-08-26T10:00:00Z' })
   @IsOptional()
   @IsDateString()
   expenseDate?: string;
 
-  @ApiProperty({ enum: PaymentMethod, example: PaymentMethod.CASH, required: false })
+  @ApiPropertyOptional({ enum: PaymentMethod, example: PaymentMethod.CASH })
   @IsOptional()
   @IsEnum(PaymentMethod)
   paymentMethod?: PaymentMethod;
 
-  @ApiProperty({ example: 'Price went up', required: false })
+  @ApiPropertyOptional({ example: 'Price went up' })
   @IsOptional()
   @IsString()
   notes?: string;
 
-  @ApiProperty({ example: true, required: false })
+  @ApiPropertyOptional({ example: true })
   @IsOptional()
   isVoided?: boolean;
 }

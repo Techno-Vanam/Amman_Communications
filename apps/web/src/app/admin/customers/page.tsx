@@ -74,7 +74,7 @@ function CustomerModal({
   mode: 'add' | 'edit';
   customer?: Customer;
   onClose: () => void;
-  onSave: (data: Partial<Customer>) => void;
+  onSave: (data: { name: string; email: string; phone: string; password?: string; status: string }) => void;
 }) {
   const [form, setForm] = useState({
     name: customer?.name ?? '',
@@ -99,7 +99,13 @@ function CustomerModal({
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
-    onSave(form);
+    onSave({
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      password: form.password ? form.password : undefined,
+      status: form.status,
+    });
     onClose();
   }
 
@@ -302,13 +308,14 @@ export default function CustomersPage() {
     loadCustomers();
   }, [search]);
 
-  async function handleAdd(data: Partial<Customer>) {
+  async function handleAdd(data: { name: string; email: string; phone: string; password?: string; status: string }) {
     setErrorMsg(null);
     const res = await createCustomerAction({
-      name: data.name ?? '',
-      email: data.email ?? '',
-      phone: data.phone ?? '',
-      status: data.status ?? 'Active',
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      password: data.password,
+      status: data.status,
     });
     if (res.error) {
       setErrorMsg(res.error);
@@ -317,7 +324,7 @@ export default function CustomersPage() {
     }
   }
 
-  async function handleEdit(data: Partial<Customer>) {
+  async function handleEdit(data: { name: string; email: string; phone: string; password?: string; status: string }) {
     if (!editCustomer) return;
     setErrorMsg(null);
     const res = await updateCustomerAction(editCustomer.id, {

@@ -41,7 +41,8 @@ export async function fetchExpensesAction(search?: string, category?: string) {
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (category && category !== 'All') {
-      params.append('category', category);
+      const dbCat = UI_TO_DB_CATEGORY[category] || category;
+      params.append('category', dbCat);
     }
     params.append('take', '100'); // limit to 100 entries
 
@@ -69,7 +70,7 @@ export async function fetchExpensesAction(search?: string, category?: string) {
     const result = await res.json();
     const mapped = (result.data || []).map((e: any) => ({
       id: e.id,
-      category: e.category || 'Miscellaneous',
+      category: DB_TO_UI_CATEGORY[e.category] || e.category || 'Miscellaneous',
       amount: Number(e.amount),
       title: e.title || '',
       description: e.description || '',
@@ -130,10 +131,14 @@ export async function createExpenseAction(formData: {
 }) {
   try {
     const authHeader = await getAuthHeader();
+    const dbCategory = (formData.category && UI_TO_DB_CATEGORY[formData.category])
+      ? UI_TO_DB_CATEGORY[formData.category]
+      : (formData.category || 'OTHER');
+
     const payload = {
       title: formData.title || formData.description || 'Expense',
       description: formData.description,
-      category: formData.category || 'Miscellaneous',
+      category: dbCategory,
       amount: formData.amount,
       expenseDate: new Date(formData.date).toISOString(),
       paymentMethod: formData.paymentMethod || 'OTHER',
@@ -190,7 +195,7 @@ export async function updateExpenseAction(
       payload.description = formData.description;
     }
     if (formData.category) {
-      payload.category = formData.category;
+      payload.category = UI_TO_DB_CATEGORY[formData.category] || formData.category;
     }
     if (formData.amount !== undefined) payload.amount = formData.amount;
     if (formData.date) payload.expenseDate = new Date(formData.date).toISOString();
