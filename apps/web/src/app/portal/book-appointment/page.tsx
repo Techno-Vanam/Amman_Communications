@@ -34,6 +34,7 @@ import CustomSelect from '@/components/ui/CustomSelect';
 
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser } from '@/context/UserContext';
+import { useLanguage } from '@/context/LanguageContext';
 import {
   createAppointmentAction,
   fetchServicesAction,
@@ -74,7 +75,19 @@ function getTodayISOString(): string {
 export default function BookAppointmentPage() {
   const { showToast } = useNotifications();
   const { user } = useUser();
+  const { whatsappAlerts, t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(1);
+
+  useEffect(() => {
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+      mainEl.scrollTop = 0;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [currentStep]);
   
   const [services, setServices] = useState<any[]>([]);
   const [offices, setOffices] = useState<any[]>([]);
@@ -210,10 +223,10 @@ export default function BookAppointmentPage() {
         'Appointment Booked Successfully!',
         `Reference ID: ${returnedId} has been scheduled.`,
         'success',
-        'View Details',
+        t('View Details'),
         '/portal/appointments',
         true,
-        getWhatsAppShareUrl(returnedId)
+        whatsappAlerts ? getWhatsAppShareUrl(returnedId) : undefined
       );
     }
     if (currentStep < 5) setCurrentStep(currentStep + 1);
@@ -307,9 +320,9 @@ export default function BookAppointmentPage() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Step 1: Select Service</h2>
+                <h2 className="text-lg font-bold text-gray-900">{t('book.step1Header')}</h2>
                 <p className="text-xs text-gray-500 mt-1">
-                  Choose the primary service you require an appointment for.
+                  {t('book.step1Sub')}
                 </p>
               </div>
 
@@ -319,7 +332,7 @@ export default function BookAppointmentPage() {
                   type="text"
                   value={serviceSearchQuery}
                   onChange={(e) => setServiceSearchQuery(e.target.value)}
-                  placeholder="Search service by name..."
+                  placeholder={t('book.searchServicePlaceholder')}
                   className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-full text-xs font-medium text-gray-900 focus:outline-none focus:border-[#12372A] focus:ring-2 focus:ring-[#12372A]/10 shadow-2xs transition-all"
                   suppressHydrationWarning
                 />
@@ -336,50 +349,57 @@ export default function BookAppointmentPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-3">
               {filteredServices.length === 0 ? (
-                <div className="col-span-full py-10 text-center text-xs font-semibold text-gray-400 bg-gray-50/80 rounded-2xl border border-gray-200/80">
+                <div className="py-10 text-center text-xs font-semibold text-gray-400 bg-gray-50/80 rounded-2xl border border-gray-200/80">
                   No services found matching &quot;{serviceSearchQuery}&quot;
                 </div>
               ) : (
                 filteredServices.map((srv) => {
-                  const Icon = getServiceIcon(srv.id);
                   const isSelected = selectedService === srv.id;
 
                   return (
-                    <button
+                    <label
                       key={srv.id}
-                      type="button"
                       onClick={() => setSelectedService(srv.id)}
                       className={`
-                        p-6 rounded-2xl border text-center flex flex-col items-center justify-center space-y-3 transition-all duration-200 group relative
+                        p-4 rounded-2xl border flex items-center justify-between gap-4 cursor-pointer transition-all duration-200
                         ${isSelected
-                          ? 'border-[#12372A] bg-[#f0f7f2] ring-2 ring-[#12372A]/20 shadow-sm'
+                          ? 'border-[#12372A] bg-[#f0f7f2] ring-2 ring-[#12372A]/20 shadow-xs'
                           : 'border-gray-200 hover:border-[#12372A]/50 bg-white hover:bg-gray-50/50'
                         }
                       `}
                       suppressHydrationWarning
                     >
-                      {isSelected && (
-                        <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[#12372A] text-white flex items-center justify-center">
-                          <Check className="w-3 h-3 text-[#a8d5b9]" />
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <input
+                          type="radio"
+                          name="portalAppointmentService"
+                          value={srv.id}
+                          checked={isSelected}
+                          onChange={() => setSelectedService(srv.id)}
+                          className="w-4 h-4 text-[#12372A] border-gray-300 focus:ring-[#12372A] accent-[#12372A] shrink-0 cursor-pointer"
+                        />
+                        <div className="min-w-0">
+                          <h3 className={`text-sm font-bold leading-snug ${isSelected ? 'text-[#12372A]' : 'text-gray-900'}`}>
+                            {srv.name}
+                          </h3>
+                          <p className="text-[11px] text-gray-400 font-medium mt-0.5">
+                            ID: {srv.id}
+                          </p>
+                          {srv.description && (
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-1">{srv.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      {srv.totalFee !== undefined && srv.totalFee !== null && (
+                        <div className="text-right shrink-0">
+                          <span className="text-xs font-bold text-emerald-800">
+                            ₹{Number(srv.totalFee).toLocaleString('en-IN')}
+                          </span>
                         </div>
                       )}
-                      <div
-                        className={`
-                          w-12 h-12 rounded-xl flex items-center justify-center transition-colors
-                          ${isSelected
-                            ? 'bg-[#12372A] text-white'
-                            : 'bg-emerald-50 text-emerald-600 group-hover:bg-[#12372A]/10 group-hover:text-[#12372A]'
-                          }
-                        `}
-                      >
-                        <Icon className="w-6 h-6" />
-                      </div>
-                      <span className={`text-xs font-bold ${isSelected ? 'text-[#12372A]' : 'text-gray-800'}`}>
-                        {srv.name}
-                      </span>
-                    </button>
+                    </label>
                   );
                 })
               )}
@@ -903,16 +923,18 @@ export default function BookAppointmentPage() {
               Your reference ID is <strong className="text-[#12372A] font-mono">{createdAptId}</strong>. A confirmation email and SMS notification have been sent to <strong className="text-gray-900">{details.applicantEmail}</strong>.
             </p>
 
-            {/* WhatsApp Info Banner */}
-            <div className="max-w-md mx-auto bg-emerald-50 border border-emerald-200 p-4 rounded-2xl text-left space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold text-emerald-900">
-                <span>📲 Priority Admin Desk Confirmation</span>
-                <span className="bg-emerald-200/80 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-mono">+91 9360645466</span>
+            {/* WhatsApp Info Banner - Shown only if whatsappAlerts is enabled */}
+            {whatsappAlerts && (
+              <div className="max-w-md mx-auto bg-emerald-50 border border-emerald-200 p-4 rounded-2xl text-left space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-emerald-900">
+                  <span>📲 Priority Admin Desk Confirmation</span>
+                  <span className="bg-emerald-200/80 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-mono">+91 9360645466</span>
+                </div>
+                <p className="text-[11px] text-emerald-800">
+                  You can share your appointment details directly to our admin desk on WhatsApp for instant booking review and verification.
+                </p>
               </div>
-              <p className="text-[11px] text-emerald-800">
-                You can share your appointment details directly to our admin desk on WhatsApp for instant booking review and verification.
-              </p>
-            </div>
+            )}
           </div>
         )}
 
@@ -940,17 +962,19 @@ export default function BookAppointmentPage() {
                 </button>
               </div>
 
-              {/* Share option inside the continue / action box */}
-              <a
-                href={getWhatsAppShareUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs rounded-full transition-all shadow-md flex items-center gap-2"
-              >
-                <MessageSquare className="w-4 h-4 fill-white" />
-                <span>Share Details to Admin on WhatsApp (+91 9360645466)</span>
-                <ChevronRight className="w-4 h-4 text-white" />
-              </a>
+              {/* Share option inside the continue / action box - Shown only if whatsappAlerts is enabled */}
+              {whatsappAlerts && (
+                <a
+                  href={getWhatsAppShareUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs rounded-full transition-all shadow-md flex items-center gap-2"
+                >
+                  <MessageSquare className="w-4 h-4 fill-white" />
+                  <span>{t('btn.shareWhatsApp')} (+91 9360645466)</span>
+                  <ChevronRight className="w-4 h-4 text-white" />
+                </a>
+              )}
             </>
           ) : (
             <>
@@ -962,7 +986,7 @@ export default function BookAppointmentPage() {
                   suppressHydrationWarning
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  <span>Back</span>
+                  <span>{t('btn.back')}</span>
                 </button>
               ) : (
                 <Link
@@ -983,8 +1007,8 @@ export default function BookAppointmentPage() {
                   {currentStep === 4
                     ? 'Confirm Appointment'
                     : currentStep === 3 && uploadedFiles.length === 0
-                    ? 'Skip / Next'
-                    : 'Next'}
+                    ? t('btn.skipNext')
+                    : t('btn.next')}
                 </span>
                 <ChevronRight className="w-4 h-4 text-[#a8d5b9]" />
               </button>

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser } from '@/context/UserContext';
+import { useLanguage } from '@/context/LanguageContext';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import CustomTimePicker from '@/components/ui/CustomTimePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
@@ -98,6 +99,7 @@ export default function AppointmentsPage() {
   const pathname = usePathname();
   const { showToast } = useNotifications();
   const { user } = useUser();
+  const { t } = useLanguage();
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
   const [activeTab, setActiveTab] = useState<'All' | 'Upcoming' | 'Completed' | 'Cancelled' | 'Rescheduled'>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -227,18 +229,12 @@ function getTodayISOString(): string {
 
   const getStatusBadgeClass = (status: AppointmentItem['status']) => {
     switch (status) {
-      case 'Rescheduled':
-        return 'bg-[#fdf2f2] text-[#e02424] border border-red-200';
-      case 'Cancelled':
-        return 'bg-rose-50 text-rose-600 border border-rose-200';
-      case 'Completed':
-        return 'bg-blue-50 text-blue-600 border border-blue-200';
-      case 'Pending':
-        return 'bg-amber-50 text-amber-700 border border-amber-200';
-      case 'Confirmed':
-        return 'bg-[#d8ebdd] text-[#12372A] border border-[#a8d5b9]';
-      default:
-        return 'bg-gray-100 text-gray-700';
+      case 'Rescheduled': return 'bg-[#fdf2f2] text-[#e02424] border border-red-200';
+      case 'Cancelled': return 'bg-rose-50 text-rose-600 border border-rose-200';
+      case 'Completed': return 'bg-blue-50 text-blue-600 border border-blue-200';
+      case 'Pending': return 'bg-amber-50 text-amber-700 border border-amber-200';
+      case 'Confirmed': return 'bg-[#d8ebdd] text-[#12372A] border border-[#a8d5b9]';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -255,122 +251,80 @@ function getTodayISOString(): string {
     return <Building className="w-3.5 h-3.5 text-gray-500" />;
   };
 
+  const tabTranslations: Record<string, string> = {
+    All: t('btn.all'),
+    Upcoming: t('btn.upcoming'),
+    Completed: t('btn.completed'),
+    Cancelled: t('btn.cancelled'),
+    Rescheduled: t('btn.rescheduled'),
+  };
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12">
-      {/* ── KPI Summary Cards ── */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard
-          label="Total Appointments"
-          value={appointments.length}
-          sub="Booked sessions"
-          icon={CalendarIcon}
-          variant="indigo"
-        />
-        <StatCard
-          label="Confirmed Slots"
-          value={appointments.filter(a => a.status === 'Confirmed' || a.status === 'Pending').length}
-          sub="Active bookings"
-          icon={CheckCircle}
-          variant="emerald"
-        />
-        <StatCard
-          label="Completed Sessions"
-          value={appointments.filter(a => a.status === 'Completed').length}
-          sub="Concluded"
-          icon={CalendarClock}
-          variant="blue"
-        />
-        <StatCard
-          label="Rescheduled / Cancelled"
-          value={appointments.filter(a => a.status === 'Rescheduled' || a.status === 'Cancelled').length}
-          sub="Modified slots"
-          icon={Clock}
-          variant="amber"
-        />
+    <div className="max-w-7xl mx-auto font-sans flex flex-col h-[calc(100vh-140px)] md:h-[calc(100vh-150px)] overflow-hidden gap-4 sm:gap-5 pb-2">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 shrink-0">
+        <StatCard label={t('apts.statTotal')} value={appointments.length} sub={t('apts.statTotalSub')} icon={CalendarIcon} variant="indigo" />
+        <StatCard label={t('apts.statConfirmed')} value={appointments.filter(a => ['Confirmed', 'Pending'].includes(a.status)).length} sub={t('apts.statConfirmedSub')} icon={CheckCircle} variant="emerald" />
+        <StatCard label={t('apts.statCompleted')} value={appointments.filter(a => a.status === 'Completed').length} sub={t('apts.statCompletedSub')} icon={CalendarClock} variant="blue" />
+        <StatCard label={t('apts.statRescheduled')} value={appointments.filter(a => ['Rescheduled', 'Cancelled'].includes(a.status)).length} sub={t('apts.statRescheduledSub')} icon={Clock} variant="amber" />
       </div>
 
-      {/* Filter Tabs & Search Bar & Book Appointment Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Mobile Custom Tab Dropdown (Animated Custom Menu - No "Filter:" text) */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 shrink-0">
         <CustomTabDropdown
           value={activeTab}
           options={['All', 'Upcoming', 'Completed', 'Cancelled', 'Rescheduled']}
-          onChange={(val) => setActiveTab(val)}
+          onChange={(val) => setActiveTab(val as any)}
           className="sm:hidden self-start"
         />
 
-        {/* Desktop Capsule Filter Tabs (Visible on sm screens and up) */}
         <div className="hidden sm:inline-flex bg-gray-100/90 p-1.5 rounded-full items-center gap-1 border border-gray-200/60 shrink-0">
-          {(['All', 'Upcoming', 'Completed', 'Cancelled', 'Rescheduled'] as const).map((tab) => {
-            const isActive = activeTab === tab;
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all whitespace-nowrap ${
-                  isActive
-                    ? 'bg-[#12372A] text-white shadow-xs font-extrabold'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60 font-semibold'
-                }`}
-              >
-                {tab}
-              </button>
-            );
-          })}
+          {(['All', 'Upcoming', 'Completed', 'Cancelled', 'Rescheduled'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${activeTab === tab ? 'bg-[#12372A] text-white' : 'text-gray-600'}`}
+            >
+              {tabTranslations[tab]}
+            </button>
+          ))}
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-          {/* Search Bar Input */}
           <div className="relative flex-1 sm:flex-initial sm:w-64">
             <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search appointments..."
-              className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200/90 rounded-full text-xs font-medium text-gray-900 focus:outline-none focus:border-[#12372A] focus:ring-2 focus:ring-[#12372A]/10 shadow-2xs transition-all"
+              placeholder={t('apts.searchPlaceholder')}
+              className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200 rounded-full text-xs"
             />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
           </div>
-
-          {/* Book Appointment Action Button on Right */}
-          <Link
-            href="/portal/book-appointment"
-            className="inline-flex items-center gap-2 px-5 py-2 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-md shrink-0 ml-auto sm:ml-0"
-          >
-            <CalendarPlus className="w-4 h-4 text-[#a8d5b9]" />
-            <span>+ Book Appointment</span>
+          <Link href="/portal/book-appointment" className="inline-flex items-center gap-2 px-5 py-2 bg-[#12372A] text-white font-bold text-xs rounded-full">
+            <CalendarPlus className="w-4 h-4" />
+            <span>{t('apts.bookAptBtn')}</span>
           </Link>
         </div>
       </div>
 
-      {/* Responsive Table (Desktop) / Cards (Mobile) Layout */}
-      <div className="space-y-4">
+      <div className="flex-1 min-h-0 bg-white rounded-3xl border border-gray-200/80 overflow-hidden">
         {filteredAppointments.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center text-gray-500 font-medium shadow-xs">
+          <div className="p-12 text-center text-gray-500 font-medium font-sans">
             No appointments found in this category.
           </div>
         ) : (
           <>
             {/* Desktop Table View (Visible on md screens and larger) */}
-            <div className="hidden md:block bg-white rounded-3xl border border-gray-200/80 shadow-xs overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
+            <div className="hidden md:flex flex-col flex-1 min-h-0 bg-white rounded-3xl border border-gray-200/80 shadow-xs overflow-hidden">
+              <div className="overflow-y-auto overflow-x-auto flex-1 min-h-0">
+                <table className="w-full text-left border-collapse relative">
+                  <thead className="sticky top-0 z-10 bg-[#f8faf9] shadow-2xs">
                     <tr className="bg-[#f8faf9] border-b border-gray-200/80 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">
-                      <th scope="col" className="py-3.5 px-6">Service / ID</th>
-                      <th scope="col" className="py-3.5 px-4">Date &amp; Time</th>
-                      <th scope="col" className="py-3.5 px-4">New Date &amp; Time</th>
-                      <th scope="col" className="py-3.5 px-4">Consultation</th>
-                      <th scope="col" className="py-3.5 px-4">Status</th>
-                      <th scope="col" className="py-3.5 px-6 text-right">Actions</th>
+                      <th scope="col" className="py-3.5 px-6 bg-[#f8faf9]">Service / ID</th>
+                      <th scope="col" className="py-3.5 px-4 bg-[#f8faf9]">Date &amp; Time</th>
+                      <th scope="col" className="py-3.5 px-4 bg-[#f8faf9]">New Date &amp; Time</th>
+                      <th scope="col" className="py-3.5 px-4 bg-[#f8faf9]">Consultation</th>
+                      <th scope="col" className="py-3.5 px-4 bg-[#f8faf9]">Status</th>
+                      <th scope="col" className="py-3.5 px-6 text-right bg-[#f8faf9]">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 text-xs">
@@ -470,7 +424,7 @@ function getTodayISOString(): string {
             </div>
 
             {/* Mobile Cards View (Visible only on mobile screens) */}
-            <div className="block md:hidden space-y-4">
+            <div className="block md:hidden space-y-4 flex-1 min-h-0 overflow-y-auto pr-1">
               {filteredAppointments.map((apt) => {
                 const isSelected = selectedAppointment?.id === apt.id;
                 const canModify = apt.status !== 'Cancelled' && apt.status !== 'Completed';

@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
 import { useUser, getUserStorageKey } from '@/context/UserContext';
+import { useLanguage } from '@/context/LanguageContext';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
 import CustomTabDropdown from '@/components/ui/CustomTabDropdown';
@@ -157,12 +158,24 @@ export default function ApplicationsPage() {
   const pathname = usePathname();
   const { showToast } = useNotifications();
   const { user } = useUser();
+  const { t } = useLanguage();
   const [applications, setApplications] = useState<ApplicationItem[]>(INITIAL_APPLICATIONS);
   const [selectedApp, setSelectedApp] = useState<ApplicationItem | null>(null);
 
   // Mode: 'list' | 'create' | 'view'
   const [mode, setMode] = useState<'list' | 'create' | 'view'>('list');
   const [currentStep, setCurrentStep] = useState(1);
+
+  useEffect(() => {
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+      mainEl.scrollTop = 0;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [currentStep, mode]);
   const [selectedService, setSelectedService] = useState('');
   const [activeTabFilter, setActiveTabFilter] = useState<'All' | 'Draft' | 'Verification' | 'Processing' | 'Completed'>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -956,30 +969,30 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
           {/* ── Summary Metric Cards ── */}
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <StatCard
-              label="Total Applications"
+              label={t('apps.statTotal')}
               value={applications.length}
-              sub="Client requests"
+              sub={t('apps.statTotalSub')}
               icon={FileText}
               variant="teal"
             />
             <StatCard
-              label="Under Review"
+              label={t('apps.statProgress')}
               value={applications.filter(a => a.status === 'Verification' || a.status === 'Documents Received').length}
-              sub="Verification active"
+              sub={t('apps.statProgressSub')}
               icon={Clock}
               variant="amber"
             />
             <StatCard
-              label="In Processing"
+              label={t('apps.statProgress')}
               value={applications.filter(a => a.status === 'Processing' || a.status === 'Awaiting Approval').length}
-              sub="Pipeline stages"
+              sub={t('apps.statProgressSub')}
               icon={FileCheck}
               variant="blue"
             />
             <StatCard
-              label="Completed Requests"
+              label={t('apps.statApproved')}
               value={applications.filter(a => a.status === 'Completed').length}
-              sub="Successfully dispatched"
+              sub={t('apps.statApprovedSub')}
               icon={CheckCircle2}
               variant="emerald"
             />
@@ -1013,12 +1026,12 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                           : 'text-gray-600 hover:text-gray-900 font-semibold'
                       }`}
                     >
-                      <span>{tab}</span>
+                      <span>{tab === 'All' ? t('btn.all') : tab === 'Completed' ? t('btn.completed') : tab}</span>
                       {count > 0 && (
                         <span className={`px-1.5 py-0.2 text-[10px] rounded-full font-bold ${
                           activeTabFilter === tab
                             ? 'bg-white/20 text-white'
-                            : tab === 'Draft' ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-gray-200 text-gray-700'
+                            : 'bg-gray-200 text-gray-700'
                         }`}>
                           {count}
                         </span>
@@ -1030,14 +1043,14 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
 
               <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                 {/* Search Bar Input */}
-                <div className="relative flex-1 sm:flex-initial sm:w-64">
+                <div className="relative flex-1 sm:flex-initial sm:w-72">
                   <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search applications..."
-                    className="w-full pl-9 pr-8 py-2 bg-white border border-gray-200/90 rounded-full text-xs font-medium text-gray-900 focus:outline-none focus:border-[#12372A] focus:ring-2 focus:ring-[#12372A]/10 shadow-2xs transition-all"
+                    placeholder={t('apps.searchPlaceholder')}
+                    className="w-full pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-full text-xs font-medium text-gray-900 focus:outline-none focus:border-[#12372A] focus:ring-2 focus:ring-[#12372A]/10 shadow-2xs transition-all"
                   />
                   {searchQuery && (
                     <button
@@ -1051,11 +1064,12 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
 
                 {/* Add Application Action Button */}
                 <button
+                  type="button"
                   onClick={() => startNewFreshApplication()}
-                  className="bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2 rounded-full font-bold text-xs transition-all shadow-md flex items-center justify-center gap-2 shrink-0 ml-auto sm:ml-0"
+                  className="inline-flex items-center gap-2 px-5 py-2 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-md shrink-0 ml-auto sm:ml-0"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Application</span>
+                  <Plus className="w-4 h-4 text-[#a8d5b9]" />
+                  <span>{t('apps.newAppBtn')}</span>
                 </button>
               </div>
             </div>
@@ -1575,56 +1589,73 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {dbServices.filter((s) => {
+            <div className="space-y-3">
+              {dbServices.filter((s) => {
+                if (!appServiceSearchQuery.trim()) return true;
+                const q = appServiceSearchQuery.toLowerCase().trim();
+                return (
+                  (s.name && s.name.toLowerCase().includes(q)) ||
+                  (s.description && s.description.toLowerCase().includes(q)) ||
+                  (s.id && s.id.toLowerCase().includes(q))
+                );
+              }).length === 0 ? (
+                <div className="py-10 text-center text-xs font-semibold text-gray-400 bg-gray-50/80 rounded-2xl border border-gray-200/80">
+                  No services found matching &quot;{appServiceSearchQuery}&quot;
+                </div>
+              ) : (
+                dbServices.filter((s) => {
                   if (!appServiceSearchQuery.trim()) return true;
                   const q = appServiceSearchQuery.toLowerCase().trim();
                   return (
                     (s.name && s.name.toLowerCase().includes(q)) ||
-                    (s.description && s.description.toLowerCase().includes(q))
+                    (s.description && s.description.toLowerCase().includes(q)) ||
+                    (s.id && s.id.toLowerCase().includes(q))
                   );
-                }).length === 0 ? (
-                  <div className="col-span-full py-10 text-center text-xs font-semibold text-gray-400 bg-gray-50/80 rounded-2xl border border-gray-200/80">
-                    No services found matching &quot;{appServiceSearchQuery}&quot;
-                  </div>
-                ) : (
-                  dbServices.filter((s) => {
-                    if (!appServiceSearchQuery.trim()) return true;
-                    const q = appServiceSearchQuery.toLowerCase().trim();
-                    return (
-                      (s.name && s.name.toLowerCase().includes(q)) ||
-                      (s.description && s.description.toLowerCase().includes(q))
-                    );
-                  }).map((srv) => {
-                    const Icon = getServiceIcon(srv.id);
-                    const isSelected = selectedService === srv.id;
-                    return (
-                      <div
-                        key={srv.id}
-                        onClick={() => setSelectedService(srv.id)}
-                        className={`p-5 rounded-2xl border transition-all cursor-pointer space-y-3 ${
-                          isSelected
-                            ? 'border-[#12372A] bg-[#f0f7f2] shadow-sm'
-                            : 'border-gray-200/80 bg-white hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="w-10 h-10 rounded-xl bg-white text-[#12372A] flex items-center justify-center border border-gray-200">
-                            <Icon className="w-5 h-5 text-[#12372A]" />
-                          </div>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200/50">
-                            Active
-                          </span>
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-bold text-gray-900">{srv.name}</h3>
-                          <p className="text-xs text-gray-500 mt-1 leading-relaxed">{srv.description || 'Service description not provided'}</p>
+                }).map((srv) => {
+                  const isSelected = selectedService === srv.id;
+                  return (
+                    <label
+                      key={srv.id}
+                      onClick={() => setSelectedService(srv.id)}
+                      className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-4 ${
+                        isSelected
+                          ? 'border-[#12372A] bg-[#f0f7f2] ring-2 ring-[#12372A]/20 shadow-xs'
+                          : 'border-gray-200/80 bg-white hover:border-gray-300 hover:bg-gray-50/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <input
+                          type="radio"
+                          name="portalApplicationService"
+                          value={srv.id}
+                          checked={isSelected}
+                          onChange={() => setSelectedService(srv.id)}
+                          className="w-4 h-4 text-[#12372A] border-gray-300 focus:ring-[#12372A] accent-[#12372A] shrink-0 cursor-pointer"
+                        />
+                        <div className="min-w-0">
+                          <h3 className={`text-sm font-bold leading-snug ${isSelected ? 'text-[#12372A]' : 'text-gray-900'}`}>
+                            {srv.name}
+                          </h3>
+                          <p className="text-[11px] text-gray-400 font-medium mt-0.5">
+                            ID: {srv.id}
+                          </p>
+                          {srv.description && (
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-1">{srv.description}</p>
+                          )}
                         </div>
                       </div>
-                    );
-                  })
-                )}
-              </div>
+                      {srv.totalFee !== undefined && srv.totalFee !== null && (
+                        <div className="text-right shrink-0">
+                          <span className="text-xs font-bold text-emerald-800">
+                            ₹{Number(srv.totalFee).toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                      )}
+                    </label>
+                  );
+                })
+              )}
+            </div>
             </div>
           )}
 

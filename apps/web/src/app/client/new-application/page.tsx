@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SERVICES_CATALOG, ServiceDefinition } from '@repo/shared-types';
 import { apiRequest } from '@/lib/api';
 import Link from 'next/link';
@@ -22,6 +22,18 @@ interface UploadedDocState {
 
 export default function NewApplicationPage() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
+
+  useEffect(() => {
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+      mainEl.scrollTop = 0;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [step]);
+
   const [selectedService, setSelectedService] = useState<ServiceDefinition>(SERVICES_CATALOG[0]);
   
   // Step 2 Customer Basic Details
@@ -352,47 +364,63 @@ export default function NewApplicationPage() {
       {/* ========================================================================= */}
       {step === 1 && (
         <div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-              gap: '1.25rem',
-              marginBottom: '2.5rem',
-            }}
-          >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '2.5rem' }}>
             {services.map((svc) => {
               const isSelected = selectedService.id === svc.id;
               return (
-                <div
+                <label
                   key={svc.id}
                   onClick={() => setSelectedService(svc)}
-                  className={`card service-card ${isSelected ? 'selected' : ''}`}
+                  style={{
+                    padding: '1rem 1.25rem',
+                    borderRadius: '12px',
+                    border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`,
+                    background: isSelected ? 'rgba(6, 182, 212, 0.1)' : 'var(--bg-card)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '1rem',
+                    transition: 'all 0.2s ease',
+                  }}
                 >
-                  {isSelected && <div className="check-circle">✓</div>}
-                  <div style={{ fontSize: '2.25rem', marginBottom: '0.75rem' }}>{svc.icon}</div>
-                  <span className="badge badge-info" style={{ marginBottom: '0.5rem' }}>
-                    {svc.category}
-                  </span>
-                  <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>{svc.title}</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1rem' }}>
-                    {svc.tagline}
-                  </p>
-
-                  <div
-                    style={{
-                      borderTop: '1px solid var(--border)',
-                      paddingTop: '0.875rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      fontSize: '0.8rem',
-                      color: 'var(--text-dim)',
-                    }}
-                  >
-                    <span>⏱️ {svc.estimatedProcessingDays}</span>
-                    <span>📑 {svc.requiredDocuments.length} Documents Required</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem', minWidth: 0 }}>
+                    <input
+                      type="radio"
+                      name="clientNewAppService"
+                      value={svc.id}
+                      checked={isSelected}
+                      onChange={() => setSelectedService(svc)}
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        accentColor: 'var(--primary)',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <div style={{ minWidth: 0 }}>
+                      <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, lineHeight: 1.3 }}>
+                        {svc.title || (svc as any).name}
+                      </h3>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 500, marginTop: '2px' }}>
+                        ID: {svc.id}
+                      </div>
+                      {svc.tagline && (
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                          {svc.tagline}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                  {svc.totalFee !== undefined && svc.totalFee !== null && (
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--primary)' }}>
+                        ₹{Number(svc.totalFee).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  )}
+                </label>
               );
             })}
           </div>

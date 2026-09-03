@@ -17,6 +17,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
+import { useLanguage } from '@/context/LanguageContext';
 import StatCard from '@/components/ui/StatCard';
 import {
   fetchDocumentsGroupedAction,
@@ -44,7 +45,7 @@ interface DocRecord {
 
 interface ApplicationGroup {
   applicationId: string;
-  applicationNumber?: string;
+  applicationNumber: string;
   title?: string;
   serviceType: string;
   status: string;
@@ -65,9 +66,12 @@ const STATUS_LABELS: Record<string, string> = {
   REJECTED: 'Rejected',
 };
 
-function formatSize(bytes: number) {
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function formatBytes(bytes: number) {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
 function formatDate(iso: string) {
@@ -89,6 +93,7 @@ function fileToBase64(file: File): Promise<string> {
 
 export default function PortalDocumentsPage() {
   const { showToast } = useNotifications();
+  const { t } = useLanguage();
   const [groups, setGroups] = useState<ApplicationGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState<string | null>(null); // applicationId being uploaded to
@@ -240,30 +245,30 @@ export default function PortalDocumentsPage() {
       {/* ── KPI Summary Cards ── */}
       <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard
-          label="Total Documents"
+          label={t('docs.statTotal')}
           value={allDocs.length}
-          sub="Encrypted in vault"
+          sub={t('docs.statTotalSub')}
           icon={FileText}
           variant="teal"
         />
         <StatCard
-          label="Approved / Verified"
+          label={t('docs.statApproved')}
           value={approvedDocs.length}
-          sub="Verified by officer"
+          sub={t('docs.statApprovedSub')}
           icon={FileCheck}
           variant="emerald"
         />
         <StatCard
-          label="Under Review"
+          label={t('docs.statReview')}
           value={pendingDocs.length}
-          sub="Pending verification"
+          sub={t('docs.statReviewSub')}
           icon={Clock}
           variant="amber"
         />
         <StatCard
-          label="Linked Applications"
+          label={t('docs.statLinked')}
           value={groups.length}
-          sub="Active folders"
+          sub={t('docs.statLinkedSub')}
           icon={FolderOpen}
           variant="indigo"
         />
@@ -288,16 +293,16 @@ export default function PortalDocumentsPage() {
             <Upload className="w-7 h-7" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-gray-900">Upload Official Documents</h3>
+            <h3 className="text-base font-bold text-gray-900">{t('docs.uploadHeader')}</h3>
             <p className="text-xs text-gray-500 mt-1">
-              Files are AES-256-GCM encrypted and stored securely. Supported: PDF, PNG, JPG, WEBP (max 10 MB).
+              {t('docs.uploadSub')}
             </p>
           </div>
 
           {/* Application & Doc-Type selectors */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Application</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">{t('docs.appLabel')}</label>
               {groups.length === 0 ? (
                 <p className="text-xs text-gray-400 italic">No applications found — create one first.</p>
               ) : (
@@ -315,7 +320,7 @@ export default function PortalDocumentsPage() {
               )}
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Document Type</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">{t('docs.docTypeLabel')}</label>
               <select
                 value={selectedDocType}
                 onChange={(e) => setSelectedDocType(e.target.value)}
@@ -443,7 +448,7 @@ export default function PortalDocumentsPage() {
                                 <div className="flex items-center gap-3 text-xs text-gray-500 mt-1 flex-wrap">
                                   <span>Type: <strong className="text-gray-700">{doc.documentType.replace(/_/g, ' ')}</strong></span>
                                   <span>•</span>
-                                  <span>{formatSize(doc.fileSize)}</span>
+                                  <span>{formatBytes(doc.fileSize)}</span>
                                   <span>•</span>
                                   <span>{formatDate(doc.uploadedAt)}</span>
                                 </div>

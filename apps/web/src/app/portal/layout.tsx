@@ -24,21 +24,23 @@ import {
 } from 'lucide-react';
 import { NotificationProvider, useNotifications } from '@/context/NotificationContext';
 import { UserProvider, useUser } from '@/context/UserContext';
+import { LanguageProvider, useLanguage } from '@/context/LanguageContext';
 import { fetchProfileAction } from '@/app/portal/actions';
 
 const MAIN_NAV_ITEMS = [
-  { name: 'Dashboard', href: '/portal/dashboard', icon: LayoutDashboard },
-  { name: 'Book Appointment', href: '/portal/book-appointment', icon: CalendarPlus },
-  { name: 'My Appointments', href: '/portal/appointments', icon: Calendar },
-  { name: 'My Applications', href: '/portal/applications', icon: FileText },
-  { name: 'Document Upload', href: '/portal/documents', icon: Upload },
-  { name: 'Payments & Receipts', href: '/portal/payments', icon: CreditCard },
+  { key: 'nav.dashboard', defaultName: 'Dashboard', href: '/portal/dashboard', icon: LayoutDashboard },
+  { key: 'nav.bookAppointment', defaultName: 'Book Appointment', href: '/portal/book-appointment', icon: CalendarPlus },
+  { key: 'nav.myAppointments', defaultName: 'My Appointments', href: '/portal/appointments', icon: Calendar },
+  { key: 'nav.myApplications', defaultName: 'My Applications', href: '/portal/applications', icon: FileText },
+  { key: 'nav.documentUpload', defaultName: 'Document Upload', href: '/portal/documents', icon: Upload },
+  { key: 'nav.paymentsReceipts', defaultName: 'Payments & Receipts', href: '/portal/payments', icon: CreditCard },
 ];
 
 function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen: boolean; setMobileMenuOpen: (v: boolean) => void }) {
   const pathname = usePathname();
   const { unreadCount } = useNotifications();
   const { user, logoutUser } = useUser();
+  const { t } = useLanguage();
   const isProfileLocked = user.isProfileCompleted === false;
 
   // Distinguish Profile vs Settings pages so ONLY ONE gets highlighted
@@ -72,12 +74,13 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
 
         {/* Main Nav Section */}
         <div className="space-y-1">
-          <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Main Menu</p>
+          <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">{t('nav.mainMenu')}</p>
           <nav aria-label="Customer portal main navigation" className="space-y-1.5">
             {MAIN_NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href || (item.href !== '/portal/dashboard' && pathname.startsWith(item.href));
-              const badgeValue = item.name === 'Notifications' && unreadCount > 0 ? String(unreadCount) : null;
+              const displayName = t(item.key) || item.defaultName;
+              const badgeValue = displayName === 'Notifications' && unreadCount > 0 ? String(unreadCount) : null;
               const targetHref = isProfileLocked ? '/portal/profile' : item.href;
 
               return (
@@ -94,7 +97,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-semibold'
                     }
                   `}
-                  title={isProfileLocked ? 'Complete your profile setup to unlock' : item.name}
+                  title={isProfileLocked ? 'Complete your profile setup to unlock' : displayName}
                 >
                   <div className="flex items-center space-x-3">
                     <div
@@ -108,7 +111,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
                     >
                       <Icon className="w-4 h-4" />
                     </div>
-                    <span className="text-xs">{item.name}</span>
+                    <span className="text-xs">{displayName}</span>
                   </div>
 
                   {isProfileLocked ? (
@@ -127,7 +130,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
 
       {/* Bottom Fixed Footer Section: Profile, Settings & Log Out */}
       <div className="p-4 border-t border-gray-100 bg-white space-y-1.5 shrink-0 rounded-b-3xl">
-        <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Account &amp; Preferences</p>
+        <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">{t('nav.accountPreferences')}</p>
         
         {/* Profile Link */}
         <Link
@@ -153,7 +156,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
             <User className="w-4 h-4" />
           </div>
           <span className="flex items-center gap-1.5">
-            <span>Profile</span>
+            <span>{t('nav.profile')}</span>
             {isProfileLocked && (
               <span className="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[9px] font-bold">
                 Setup Required
@@ -185,7 +188,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
           >
             <Settings className="w-4 h-4" />
           </div>
-          <span>Settings</span>
+          <span>{t('nav.settings')}</span>
         </Link>
 
         {/* Log Out Button */}
@@ -198,7 +201,7 @@ function SidebarNavContent({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOp
             <div className="w-8 h-8 rounded-full bg-transparent text-gray-400 group-hover:bg-rose-100 group-hover:text-rose-600 flex items-center justify-center shrink-0 transition-colors">
               <LogOut className="w-4 h-4" />
             </div>
-            <span>Log out</span>
+            <span>{t('nav.logOut')}</span>
           </Link>
         </div>
       </div>
@@ -218,66 +221,67 @@ function PortalTopHeader() {
   const pathname = usePathname();
   const { unreadCount } = useNotifications();
   const { user } = useUser();
+  const { t } = useLanguage();
 
   const getHeaderInfo = () => {
     switch (pathname) {
       case '/portal/dashboard':
         return {
-          title: `Good day, ${user.name} 👋`,
-          subtitle: "Here's a real-time overview of your current applications and scheduled appointments.",
+          title: `${t('header.goodDay')}, ${user.name} 👋`,
+          subtitle: t('header.dashboardSub'),
           action: (
             <Link
               href="/portal/book-appointment"
               className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#12372A] hover:bg-[#1a4a38] text-white font-bold text-xs rounded-full transition-all shadow-md shrink-0"
             >
               <Plus className="w-4 h-4 text-[#a8d5b9]" />
-              <span>Book New Service</span>
+              <span>{t('nav.bookNewService')}</span>
             </Link>
           )
         };
       case '/portal/appointments':
         return {
-          title: 'My Appointments',
-          subtitle: 'View, reschedule, or cancel your scheduled appointments.'
+          title: t('header.myAppointmentsTitle'),
+          subtitle: t('header.myAppointmentsSub')
         };
       case '/portal/applications':
         return {
-          title: 'My Applications',
-          subtitle: 'Track and manage your submitted service requests.'
+          title: t('header.myApplicationsTitle'),
+          subtitle: t('header.myApplicationsSub')
         };
       case '/portal/documents':
         return {
-          title: 'Document Upload & Management',
-          subtitle: 'Upload essential certificates, government IDs, and legal deeds for official verification.'
+          title: t('header.documentUploadTitle'),
+          subtitle: t('header.documentUploadSub')
         };
       case '/portal/payments':
         return {
-          title: 'Payments & Receipts',
-          subtitle: 'Manage your financial transactions and documentation.'
+          title: t('header.paymentsTitle'),
+          subtitle: t('header.paymentsSub')
         };
       case '/portal/book-appointment':
         return {
-          title: 'Book Appointment',
-          subtitle: 'Follow the steps below to schedule an appointment for your required service.'
+          title: t('header.bookAppointmentTitle'),
+          subtitle: t('header.bookAppointmentSub')
         };
       case '/portal/profile':
         return {
-          title: 'My Profile & Identity',
-          subtitle: 'Manage your official personal information, government verification status, and contact credentials.'
+          title: t('header.profileTitle'),
+          subtitle: t('header.profileSub')
         };
       case '/portal/settings':
         return {
-          title: 'System & Security Settings',
-          subtitle: 'Configure security preferences, notifications, and portal settings.'
+          title: t('header.settingsTitle'),
+          subtitle: t('header.settingsSub')
         };
       case '/portal/notifications':
         return {
-          title: 'Notification Center',
-          subtitle: 'All your notifications and alerts in real-time.'
+          title: t('header.notificationsTitle'),
+          subtitle: t('header.notificationsSub')
         };
       default:
         return {
-          title: 'Customer Portal',
+          title: t('header.customerPortal'),
           subtitle: 'Manage your services and account details.'
         };
     }
@@ -300,39 +304,39 @@ function PortalTopHeader() {
       </div>
 
       {/* Right Controls: Action Button (if any) + Notification Bell + Profile Pill */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+      <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
         {action}
 
         {/* Notification Bell */}
         <Link
           href="/portal/notifications"
-          className="w-10 h-10 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative shrink-0"
+          className="w-12 h-12 rounded-full bg-white border border-gray-200/90 flex items-center justify-center text-gray-600 hover:text-[#12372A] hover:bg-gray-50 hover:border-gray-300 transition-all shadow-xs relative shrink-0"
           title="Notifications"
         >
-          <Bell className="w-5 h-5" />
+          <Bell className="w-5.5 h-5.5 text-gray-700" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center shadow-xs border-2 border-white leading-none shrink-0">
+            <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-extrabold flex items-center justify-center shadow-xs border-2 border-white leading-none shrink-0">
               {unreadCount}
             </span>
           )}
         </Link>
 
-        {/* User Profile Badge: Small screen = w-10 h-10 single circle; Big screen = h-10 pill with avatar + name & view profile */}
+        {/* User Profile Badge: Small screen = w-12 h-12 single circle; Big screen = h-12 pill with avatar + name & view profile */}
         <Link
           href="/portal/profile"
-          className="h-10 w-10 sm:w-auto rounded-full bg-[#12372A] sm:bg-white border border-[#12372A] sm:border-gray-200/90 hover:border-gray-300 hover:bg-[#1a4a38] sm:hover:bg-gray-50 transition-all shadow-xs flex items-center justify-center sm:justify-start p-0 sm:p-1 sm:pr-3 sm:gap-2 group shrink-0"
+          className="h-12 w-12 sm:w-auto rounded-full bg-[#12372A] sm:bg-white border border-[#12372A] sm:border-gray-200/90 hover:border-gray-300 hover:bg-[#1a4a38] sm:hover:bg-gray-50 transition-all shadow-xs flex items-center justify-center sm:justify-start p-0 sm:p-1.5 sm:pr-4 sm:gap-3 group shrink-0"
           title={`Profile (${user.name})`}
         >
-          <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-[#12372A] text-white font-extrabold text-xs flex items-center justify-center shrink-0 border border-transparent sm:border-[#12372A] shadow-2xs">
+          <div className="w-12 h-12 sm:w-9 sm:h-9 rounded-full bg-[#12372A] text-white font-black text-sm flex items-center justify-center shrink-0 border border-transparent sm:border-[#12372A] shadow-2xs">
             {user.initials}
           </div>
           <div className="hidden sm:flex flex-col text-left pr-0.5">
-            <span className="text-[11px] font-bold text-gray-900 group-hover:text-[#12372A] leading-tight truncate max-w-[110px] lg:max-w-[140px]">
+            <span className="text-xs font-extrabold text-gray-900 group-hover:text-[#12372A] leading-tight truncate max-w-[130px] lg:max-w-[160px]">
               {user.name}
             </span>
-            <span className="text-[10px] font-semibold text-[#12372A]/75 group-hover:text-[#12372A] leading-tight flex items-center gap-0.5 mt-0.5">
-              View profile
-              <ChevronRight className="w-2.5 h-2.5 text-[#12372A]/60 group-hover:translate-x-0.5 transition-transform" />
+            <span className="text-[11px] font-bold text-[#12372A]/80 group-hover:text-[#12372A] leading-tight flex items-center gap-0.5 mt-0.5">
+              {t('nav.viewProfile')}
+              <ChevronRight className="w-3 h-3 text-[#12372A]/70 group-hover:translate-x-0.5 transition-transform" />
             </span>
           </div>
         </Link>
@@ -444,11 +448,13 @@ function PortalContentWrapper({ children }: { children: React.ReactNode }) {
 export default function PortalLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <UserProvider>
-      <NotificationProvider>
-        <PortalContentWrapper>
-          {children}
-        </PortalContentWrapper>
-      </NotificationProvider>
+      <LanguageProvider>
+        <NotificationProvider>
+          <PortalContentWrapper>
+            {children}
+          </PortalContentWrapper>
+        </NotificationProvider>
+      </LanguageProvider>
     </UserProvider>
   );
 }

@@ -8,12 +8,14 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
+import { useLanguage, SupportedLanguage } from '@/context/LanguageContext';
 import CustomSelect from '@/components/ui/CustomSelect';
 
 import { changePasswordAction } from '@/app/portal/actions';
 
 export default function SettingsPage() {
   const { showToast } = useNotifications();
+  const { preferences, updatePreferences, t } = useLanguage();
   const [saved, setSaved] = useState(false);
   const [loadingSecurity, setLoadingSecurity] = useState(false);
 
@@ -23,25 +25,6 @@ export default function SettingsPage() {
     newPassword: '',
     confirmPassword: '',
   });
-
-  // Notification Preferences
-  const [notificationsForm, setNotificationsForm] = useState({
-    emailAlerts: true,
-    smsAlerts: fontSmsDefault(true),
-    whatsappAlerts: true,
-    weeklyDigest: false
-  });
-
-  // Portal Preferences
-  const [portalForm, setPortalForm] = useState({
-    language: 'English',
-    timezone: 'Asia/Kolkata (IST +5:30)',
-    autoLogout: '30 minutes'
-  });
-
-  function fontSmsDefault(val: boolean) {
-    return val;
-  }
 
   const handleSaveSecurity = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +68,7 @@ export default function SettingsPage() {
   const handleSavePreferences = (e: React.FormEvent) => {
     e.preventDefault();
     setSaved(true);
-    showToast('Portal Preferences Saved!', 'Your notification and language preferences have been updated.');
+    showToast(t('settings.savedSuccess'), t('settings.notificationSub'));
     setTimeout(() => setSaved(false), 3000);
   };
 
@@ -95,7 +78,7 @@ export default function SettingsPage() {
       {saved && (
         <div className="bg-[#e6f4ea] border border-[#a8d5b9] text-[#137333] p-4 rounded-xl flex items-center gap-3 text-xs font-bold animate-in fade-in duration-200">
           <CheckCircle2 className="w-5 h-5 text-[#137333]" />
-          <span>Settings updated successfully!</span>
+          <span>{t('settings.savedSuccess')}</span>
         </div>
       )}
 
@@ -164,10 +147,10 @@ export default function SettingsPage() {
         <div>
           <div className="flex items-center gap-2">
             <Bell className="w-5 h-5 text-[#1c3a63]" />
-            <h2 className="text-lg font-bold text-gray-900">Notification Alerts &amp; Portal Preferences</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t('settings.notificationHeader')}</h2>
           </div>
           <p className="text-xs text-gray-500 mt-1">
-            Control which notification channels stay active and set language defaults.
+            {t('settings.notificationSub')}
           </p>
           <div className="mt-4 border-b border-gray-100" />
         </div>
@@ -176,52 +159,52 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200">
               <div>
-                <p className="font-bold text-gray-900">Email Notifications</p>
-                <p className="text-[11px] text-gray-500 mt-0.5">Receive application receipts &amp; status emails.</p>
+                <p className="font-bold text-gray-900">{t('settings.emailAlerts')}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{t('settings.emailAlertsSub')}</p>
               </div>
               <input
                 type="checkbox"
-                checked={notificationsForm.emailAlerts}
-                onChange={(e) => setNotificationsForm({ ...notificationsForm, emailAlerts: e.target.checked })}
+                checked={preferences.emailAlerts}
+                onChange={(e) => updatePreferences({ emailAlerts: e.target.checked })}
                 className="w-5 h-5 text-[#0e2a47] rounded cursor-pointer"
               />
             </div>
 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200">
               <div>
-                <p className="font-bold text-gray-900">SMS Reminders</p>
-                <p className="text-[11px] text-gray-500 mt-0.5">Receive appointment reminders via SMS.</p>
+                <p className="font-bold text-gray-900">{t('settings.smsAlerts')}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{t('settings.smsAlertsSub')}</p>
               </div>
               <input
                 type="checkbox"
-                checked={notificationsForm.smsAlerts}
-                onChange={(e) => setNotificationsForm({ ...notificationsForm, smsAlerts: e.target.checked })}
+                checked={preferences.smsAlerts}
+                onChange={(e) => updatePreferences({ smsAlerts: e.target.checked })}
                 className="w-5 h-5 text-[#0e2a47] rounded cursor-pointer"
               />
             </div>
 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200">
               <div>
-                <p className="font-bold text-gray-900">WhatsApp Alerts</p>
-                <p className="text-[11px] text-gray-500 mt-0.5">Receive direct status updates on WhatsApp.</p>
+                <p className="font-bold text-gray-900">{t('settings.whatsappAlerts')}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{t('settings.whatsappAlertsSub')}</p>
               </div>
               <input
                 type="checkbox"
-                checked={notificationsForm.whatsappAlerts}
-                onChange={(e) => setNotificationsForm({ ...notificationsForm, whatsappAlerts: e.target.checked })}
+                checked={preferences.whatsappAlerts}
+                onChange={(e) => updatePreferences({ whatsappAlerts: e.target.checked })}
                 className="w-5 h-5 text-[#0e2a47] rounded cursor-pointer"
               />
             </div>
 
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-200">
               <div>
-                <p className="font-bold text-gray-900">Weekly Activity Summary</p>
-                <p className="text-[11px] text-gray-500 mt-0.5">Receive a weekly digest report of active requests.</p>
+                <p className="font-bold text-gray-900">{t('settings.weeklyDigest')}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{t('settings.weeklyDigestSub')}</p>
               </div>
               <input
                 type="checkbox"
-                checked={notificationsForm.weeklyDigest}
-                onChange={(e) => setNotificationsForm({ ...notificationsForm, weeklyDigest: e.target.checked })}
+                checked={preferences.weeklyDigest}
+                onChange={(e) => updatePreferences({ weeklyDigest: e.target.checked })}
                 className="w-5 h-5 text-[#0e2a47] rounded cursor-pointer"
               />
             </div>
@@ -229,10 +212,10 @@ export default function SettingsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2">
             <div className="space-y-1.5">
-              <label className="block font-bold text-gray-700">Preferred Portal Language</label>
+              <label className="block font-bold text-gray-700">{t('settings.languageLabel')}</label>
               <CustomSelect
-                value={portalForm.language}
-                onChange={(val) => setPortalForm({ ...portalForm, language: val })}
+                value={preferences.language}
+                onChange={(val) => updatePreferences({ language: val as SupportedLanguage })}
                 options={[
                   { value: 'English', label: 'English' },
                   { value: 'Tamil', label: 'Tamil (தமிழ்)' },
@@ -242,20 +225,20 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block font-bold text-gray-700">Timezone</label>
+              <label className="block font-bold text-gray-700">{t('settings.timezoneLabel')}</label>
               <input
                 type="text"
                 disabled
-                value={portalForm.timezone}
+                value={preferences.timezone}
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-200 font-semibold text-gray-500 bg-gray-50 cursor-not-allowed"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="block font-bold text-gray-700">Auto Logout Inactivity</label>
+              <label className="block font-bold text-gray-700">{t('settings.autoLogoutLabel')}</label>
               <CustomSelect
-                value={portalForm.autoLogout}
-                onChange={(val) => setPortalForm({ ...portalForm, autoLogout: val })}
+                value={preferences.autoLogout}
+                onChange={(val) => updatePreferences({ autoLogout: val })}
                 options={['15 minutes', '30 minutes', '1 hour']}
               />
             </div>
@@ -268,7 +251,7 @@ export default function SettingsPage() {
             className="px-6 py-2.5 bg-[#0e2a47] hover:bg-[#153e68] text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
-            <span>Save Preferences</span>
+            <span>{t('btn.savePreferences')}</span>
           </button>
         </div>
       </form>

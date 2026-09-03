@@ -125,7 +125,7 @@ export class CustomersService {
   }
 
   async create(dto: CreateCustomerDto) {
-    const normalizedEmail = dto.email ? dto.email.toLowerCase().trim() : null;
+    const normalizedEmail = dto.email ? dto.email.toLowerCase().trim() : '';
 
     if (normalizedEmail) {
       const [existingAdmin, existingCustomer] = await Promise.all([
@@ -179,11 +179,10 @@ export class CustomersService {
       dataToUpdate.phone = dto.phone ? dto.phone.trim() : null;
     }
 
-    if (dto.email !== undefined) {
-      const normalizedEmail = dto.email ? dto.email.toLowerCase().trim() : null;
+    if (dto.email !== undefined && dto.email) {
+      const normalizedEmail = dto.email.toLowerCase().trim();
       
       if (normalizedEmail !== existing.email) {
-        if (normalizedEmail) {
         const [existingAdmin, otherCustomer] = await Promise.all([
           this.prisma.admin.findUnique({ where: { email: normalizedEmail } }),
           this.prisma.customer.findFirst({
@@ -194,12 +193,11 @@ export class CustomersService {
           }),
         ]);
 
-          if (existingAdmin || otherCustomer) {
-            throw new BadRequestException('Email is already in use by another account.');
-          }
+        if (existingAdmin || otherCustomer) {
+          throw new BadRequestException('Email is already in use by another account.');
         }
 
-        dataToUpdate.email = normalizedEmail as string | null;
+        dataToUpdate.email = normalizedEmail;
       }
     }
 

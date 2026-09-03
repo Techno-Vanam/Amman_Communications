@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards, Req, Delete } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ExpenseCategory } from '@prisma/client';
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto, UpdateExpenseDto } from './dto/expense.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -24,7 +25,7 @@ export class ExpensesController {
   findAll(
     @Query('skip') skip?: number,
     @Query('take') take?: number,
-    @Query('category') category?: string,
+    @Query('category') category?: ExpenseCategory,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('search') search?: string,
@@ -33,7 +34,7 @@ export class ExpensesController {
   }
 
   @Get('stats')
-  getStats(@Query('category') category?: string) {
+  getStats(@Query('category') category?: ExpenseCategory) {
     return this.expensesService.getStats(category);
   }
 
