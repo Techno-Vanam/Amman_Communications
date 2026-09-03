@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState, use, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { mockPayments } from '@/lib/mockPayments';
 import { PaymentReceipt } from '@/components/portal/PaymentReceipt';
 import { ReceiptData } from '@/types/payment';
@@ -13,7 +14,8 @@ interface ReceiptPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default function ReceiptDetailPage({ params }: ReceiptPageProps) {
+function ReceiptDetailContent({ params }: ReceiptPageProps) {
+  const searchParams = useSearchParams();
   const resolvedParams = use(params);
   const paymentId = resolvedParams.id;
 
@@ -259,5 +261,13 @@ export default function ReceiptDetailPage({ params }: ReceiptPageProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ReceiptDetailPage({ params }: ReceiptPageProps) {
+  return (
+    <Suspense fallback={<div className="max-w-7xl w-full mx-auto text-center py-12"><h1 className="text-2xl font-bold text-gray-900">Loading Invoice...</h1></div>}>
+      <ReceiptDetailContent params={params} />
+    </Suspense>
   );
 }
