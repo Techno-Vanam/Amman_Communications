@@ -1,43 +1,92 @@
 import { PrismaClient } from '@prisma/client';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
-const prisma = new PrismaClient();
+const pooler5432 =
+  'postgresql://postgres.urakhvsfqmbmtiokxuua:Qazxswplmnko%40123@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?connection_limit=2&connect_timeout=60&sslmode=require';
 
-async function checkConnection() {
+const prisma = new PrismaClient({
+  datasources: { db: { url: pooler5432 } },
+});
+
+async function testDashboardStats() {
+  console.log('Testing stats()...');
   try {
-    const result = await prisma.$queryRaw<Array<{ current_database: string; current_user: string }>>`
-      SELECT current_database(), current_user;
-    `;
-    console.log('--- DB CONNECTION TEST RESULT ---');
-    console.log('CONNECTED: TRUE');
-    console.log('DATABASE NAME:', result[0].current_database);
-    console.log('CONNECTED USER:', result[0].current_user);
-
-    const { compare, hash } = await import('bcryptjs');
-
-    // Update password hashes if they don't match
-    const passHash123 = await hash('password123', 10);
-    const adminHash123 = await hash('admin123', 10);
-    await prisma.admin.update({ where: { email: 'admin@test.com' }, data: { passwordHash: passHash123 } });
-    await prisma.admin.update({ where: { email: 'admin@ammancomm.in' }, data: { passwordHash: adminHash123 } });
-    console.log('✅ Admin passwords updated successfully in Supabase!');
-
-    const updatedAdmins = await prisma.admin.findMany();
-    console.log('UPDATED ADMINS IN DATABASE:');
-    for (const a of updatedAdmins) {
-      const matchPass123 = await compare('password123', a.passwordHash);
-      const matchAdmin123 = await compare('admin123', a.passwordHash);
-      console.log(`- [${a.id}] ${a.email} (${a.name}) | matches 'password123': ${matchPass123} | matches 'admin123': ${matchAdmin123}`);
-    }
-
-    const customers = await prisma.customer.findMany({ select: { id: true, email: true, name: true } });
-    console.log('CUSTOMERS IN DATABASE:', customers);
-    console.log('---------------------------------');
-  } catch (err) {
-    console.error('--- DB CONNECTION ERROR ---');
-    console.error((err as Error).message);
-  } finally {
-    await prisma.$disconnect();
+    const [
+      customersCount,
+      applicationsCount,
+      invoices,
+      expensesSum,
+      appointments,
+      totalAppointmentsCount,
+      pendingVerificationsCount,
+      recentApplications,
+    ] = await Promise.all([
+      prisma.customer.count(),
+      prisma.application.count(),
+      prisma.invoice.findMany({
+        select: {
+          id: true,
+          status: true,
+          service: { select: { name: true } },
+          payments: { select: { amount: true, status: true } },
+        },
+      }),
+      prisma.expense.aggregate({
+        where: { isVoided: false },
+        _sum: { amount: true },
+      }),
+      prisma.appointment.findMany({
+        take: 5,
+        orderBy: { appointmentDate: 'desc' },
+        include: { service: { select: { name: true } } },
+      }),
+      prisma.appointment.count(),
+      prisma.document.count({
+        where: { status: { in: ['UPLOADED', 'UNDER_REVIEW'] } },
+      }),
+      prisma.application.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: { customer: { select: { name: true } } },
+      }),
+    ]);
+    console.log('✅ stats() succeeded!');
+    console.log({
+      customersCount,
+      applicationsCount,
+      totalAppointmentsCount,
+      pendingVerificationsCount,
+      invoiceCount: invoices.length,
+      recentApplicationsCount: recentApplications.length,
+      expensesTotal: expensesSum._sum.amount,
+      appointmentsCount: appointments.length,
+    });
+  } catch (err: any) {
+    console.error('❌ stats() failed:', err);
   }
 }
 
-checkConnection();
+async function testExports() {
+  console.log('\nTesting ReportsService exports...');
+  // @ts-ignore
+  const { ReportsService } = await import('./src/admin/reports/reports.service');
+  // @ts-ignore
+  const reportsService = new ReportsService(prisma);
+  try {
+    const pdfBuf = await reportsService.generatePdfReport({ page: 1, limit: 10 });
+    console.log('✅ PDF Generation succeeded! Size:', pdfBuf.length, 'bytes');
+
+    const excelBuf = await reportsService.generateExcelReport({ page: 1, limit: 10 });
+    console.log('✅ Excel Generation succeeded! Size:', excelBuf.length, 'bytes');
+  } catch (err: any) {
+    console.error('❌ Export failed:', err);
+  }
+}
+
+async function runAll() {
+  await testDashboardStats();
+  await testExports();
+}
+
+runAll().finally(() => prisma.$disconnect());

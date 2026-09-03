@@ -1,41 +1,14 @@
 'use server';
 
-import { cookies } from 'next/headers';
-import { getAccessToken } from '@/lib/server-auth';
-
-const API_BASE_URL =
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3003';
-
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const token = (await getAccessToken()) || (await cookies()).get('access_token')?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { serverApiFetch } from '@/lib/server-api';
 
 // Find a matching service ID by name
 async function resolveServiceId(name: string): Promise<string | undefined> {
   try {
-    const authHeader = await getAuthHeader();
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services`, {
-      headers: {
-        ...authHeader,
-      },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services`, {
-        headers: {
-          ...authHeader,
-        },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverApiFetch('/admin/services');
 
     if (res.ok) {
       const data = await res.json();
-      // API wraps in { success, data } envelope
       const list = Array.isArray(data) ? data : (data.data ?? data.items ?? []);
       const match = list.find((s: any) => s.name.toLowerCase() === name.toLowerCase());
       if (match) return match.id;
@@ -48,28 +21,13 @@ async function resolveServiceId(name: string): Promise<string | undefined> {
 
 export async function fetchAppointmentsAction(search?: string, status?: string) {
   try {
-    const authHeader = await getAuthHeader();
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (status && status !== 'All') {
       params.append('status', status.toUpperCase()); // CONFIRMED, PENDING, COMPLETED, CANCELLED, RESCHEDULED
     }
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/appointments?${params.toString()}`, {
-      headers: {
-        ...authHeader,
-      },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/appointments?${params.toString()}`, {
-        headers: {
-          ...authHeader,
-        },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverApiFetch(`/admin/appointments?${params.toString()}`);
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -131,8 +89,6 @@ export async function createAppointmentAction(formData: {
   status: string;
 }) {
   try {
-    const authHeader = await getAuthHeader();
-    // Use directly provided serviceId, or resolve by name as fallback
     const resolvedServiceId = formData.serviceId || await resolveServiceId(formData.service);
 
     const appointmentDate = formatDateAndTimeToIso(formData.date, formData.time);
@@ -152,25 +108,10 @@ export async function createAppointmentAction(formData: {
       status: formData.status.toUpperCase(),
     };
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/appointments`, {
+    const res = await serverApiFetch('/admin/appointments', {
       method: 'POST',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/appointments`, {
-        method: 'POST',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -187,19 +128,7 @@ export async function createAppointmentAction(formData: {
 
 export async function fetchCustomersForSelectAction() {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/customers?limit=200`, {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/customers?limit=200`, {
-        headers: { ...authHeader },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverApiFetch('/admin/customers?limit=200');
 
     if (!res.ok) return { error: 'Failed to fetch customers' };
 
@@ -213,26 +142,13 @@ export async function fetchCustomersForSelectAction() {
 
 export async function fetchServicesForSelectAction() {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services`, {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services`, {
-        headers: { ...authHeader },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverApiFetch('/admin/services');
 
     if (!res.ok) {
       return { error: 'Failed to fetch services' };
     }
 
     const data = await res.json();
-    // API wraps responses in { success, data } envelope
     const arr = Array.isArray(data) ? data : (data.data ?? data.items ?? []);
     return { success: true, data: arr.map((s: any) => ({ id: s.id, name: s.name })) };
   } catch (error: any) {
@@ -257,7 +173,6 @@ export async function updateAppointmentAction(
   }
 ) {
   try {
-    const authHeader = await getAuthHeader();
     const payload: any = {};
 
     if (formData.customer) payload.customerName = formData.customer;
@@ -279,25 +194,10 @@ export async function updateAppointmentAction(
       payload.appointmentDate = formatDateAndTimeToIso(formData.date || '', formData.time);
     }
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/appointments/${id}`, {
+    const res = await serverApiFetch(`/admin/appointments/${id}`, {
       method: 'PATCH',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/appointments/${id}`, {
-        method: 'PATCH',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -314,28 +214,12 @@ export async function updateAppointmentAction(
 
 export async function updateAppointmentStatusAction(id: string, status: string) {
   try {
-    const authHeader = await getAuthHeader();
     const payload = { status: status.toUpperCase() };
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/appointments/${id}/status`, {
+    const res = await serverApiFetch(`/admin/appointments/${id}/status`, {
       method: 'PATCH',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/appointments/${id}/status`, {
-        method: 'PATCH',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -352,23 +236,9 @@ export async function updateAppointmentStatusAction(id: string, status: string) 
 
 export async function deleteAppointmentAction(id: string) {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/appointments/${id}`, {
+    const res = await serverApiFetch(`/admin/appointments/${id}`, {
       method: 'DELETE',
-      headers: {
-        ...authHeader,
-      },
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/appointments/${id}`, {
-        method: 'DELETE',
-        headers: {
-          ...authHeader,
-        },
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));

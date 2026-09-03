@@ -25,15 +25,9 @@ const API_BASE_URL =
  */
 export async function fetchServices(): Promise<Service[] | null> {
   try {
-    let res = await fetch(`${API_BASE_URL}/v1/customer/services`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/customer/services`, {
       cache: 'no-store',
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/customer/services`, {
-        cache: 'no-store',
-      });
-    }
 
     if (!res.ok) {
       return [];

@@ -35,8 +35,8 @@ async function forwardRequest(
   body?: string | FormData
 ) {
   const token = await resolveAuthToken(request);
-  const backendPath = pathStr.startsWith('v1/') ? pathStr : `v1/${pathStr}`;
-  const targetUrl = `${API_BASE}/${backendPath}${request.nextUrl.search}`;
+  const cleanPath = pathStr.replace(/^v1\//, '').replace(/^api\/v1\//, '');
+  const targetUrl = `${API_BASE}/api/v1/${cleanPath}${request.nextUrl.search}`;
 
   const headers: Record<string, string> = {
     ...(token ? { Authorization: token } : {}),

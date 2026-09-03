@@ -15,19 +15,13 @@ async function getAuthHeader(): Promise<Record<string, string>> {
 
 async function apiFetch(path: string, options: RequestInit = {}) {
   const authHeader = await getAuthHeader();
-  let res = await fetch(`${API_BASE_URL}/v1${path}`, {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const endpoint = normalizedPath.startsWith('/api/v1') ? normalizedPath : `/api/v1${normalizedPath}`;
+  return fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers: { ...authHeader, ...(options.headers as Record<string, string> ?? {}) },
     cache: 'no-store',
   });
-  if (res.status === 404) {
-    res = await fetch(`${API_BASE_URL}/api/v1${path}`, {
-      ...options,
-      headers: { ...authHeader, ...(options.headers as Record<string, string> ?? {}) },
-      cache: 'no-store',
-    });
-  }
-  return res;
 }
 
 // ── Status maps ─────────────────────────────────────────────────

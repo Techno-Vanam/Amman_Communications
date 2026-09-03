@@ -1,3 +1,6 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import fs from 'node:fs';
 import path from 'node:path';
 import { json, urlencoded } from 'express';

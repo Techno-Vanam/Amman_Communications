@@ -1,31 +1,9 @@
 'use server';
 
-import { cookies } from 'next/headers';
-import { getAccessToken } from '@/lib/server-auth';
-
-const RAW_API_URL = (
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3003'
-).replace(/\/+$/, '');
-
-const BASE_HOST = RAW_API_URL.replace(/\/api\/v1\/?$/, '').replace(/\/v1\/?$/, '');
-
-function getApiUrl(path: string): string {
-  if (path.startsWith('http')) return path;
-  const clean = path.startsWith('/') ? path : `/${path}`;
-  const withoutPrefix = clean.replace(/^\/(api\/v1|v1)/, '');
-  return `${BASE_HOST}/api/v1${withoutPrefix}`;
-}
-
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const token = (await getAccessToken()) || (await cookies()).get('access_token')?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { serverApiFetch } from '@/lib/server-api';
 
 export async function fetchApplicationsAction(search?: string, status?: string) {
   try {
-    const authHeader = await getAuthHeader();
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (status && status !== 'All') {
@@ -43,10 +21,7 @@ export async function fetchApplicationsAction(search?: string, status?: string) 
     }
     params.append('limit', '100');
 
-    const res = await fetch(getApiUrl(`/admin/applications?${params.toString()}`), {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
+    const res = await serverApiFetch(`/admin/applications?${params.toString()}`);
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -64,7 +39,6 @@ export async function fetchApplicationsAction(search?: string, status?: string) 
 
 export async function updateApplicationStatusAction(id: string, status: string, notes?: string) {
   try {
-    const authHeader = await getAuthHeader();
     const UI_TO_DB_STATUS: Record<string, string> = {
       'Submitted': 'SUBMITTED',
       'Under Verification': 'UNDER_REVIEW',
@@ -76,9 +50,8 @@ export async function updateApplicationStatusAction(id: string, status: string, 
     };
     const apiStatus = UI_TO_DB_STATUS[status] || status || 'SUBMITTED';
 
-    const res = await fetch(getApiUrl(`/admin/applications/${id}/status`), {
+    const res = await serverApiFetch(`/admin/applications/${id}/status`, {
       method: 'PUT',
-      headers: { ...authHeader, 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: apiStatus, notes }),
     });
 
@@ -103,11 +76,8 @@ export async function createApplicationAction(formData: {
   notes?: string;
 }) {
   try {
-    const authHeader = await getAuthHeader();
-
-    const res = await fetch(getApiUrl('/admin/applications'), {
+    const res = await serverApiFetch('/admin/applications', {
       method: 'POST',
-      headers: { ...authHeader, 'Content-Type': 'application/json' },
       body: JSON.stringify(formData),
     });
 
@@ -126,12 +96,7 @@ export async function createApplicationAction(formData: {
 
 export async function fetchCustomersForSelectAction() {
   try {
-    const authHeader = await getAuthHeader();
-
-    const res = await fetch(getApiUrl('/admin/customers?limit=200'), {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
+    const res = await serverApiFetch('/admin/customers?limit=200');
 
     if (!res.ok) return { error: 'Failed to fetch customers' };
 
@@ -154,11 +119,8 @@ export async function adminUploadDocumentAction(
   }
 ) {
   try {
-    const authHeader = await getAuthHeader();
-
-    const res = await fetch(getApiUrl(`/admin/applications/${applicationId}/documents/upload`), {
+    const res = await serverApiFetch(`/admin/applications/${applicationId}/documents/upload`, {
       method: 'POST',
-      headers: { ...authHeader, 'Content-Type': 'application/json' },
       body: JSON.stringify(formData),
     });
 
@@ -177,12 +139,7 @@ export async function adminUploadDocumentAction(
 
 export async function fetchApplicationDocumentsAction(applicationId: string) {
   try {
-    const authHeader = await getAuthHeader();
-
-    const res = await fetch(getApiUrl(`/admin/applications/${applicationId}/documents`), {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
+    const res = await serverApiFetch(`/admin/applications/${applicationId}/documents`);
 
     if (!res.ok) return { error: 'Failed to fetch documents' };
 
@@ -196,8 +153,6 @@ export async function fetchApplicationDocumentsAction(applicationId: string) {
 
 export async function updateApplicationAction(id: string, data: Partial<any>) {
   try {
-    const authHeader = await getAuthHeader();
-
     const payload = { ...data };
     if (payload.status) {
       const UI_TO_DB_STATUS: Record<string, string> = {
@@ -216,9 +171,8 @@ export async function updateApplicationAction(id: string, data: Partial<any>) {
       delete payload.customer;
     }
 
-    const res = await fetch(getApiUrl(`/admin/applications/${id}`), {
+    const res = await serverApiFetch(`/admin/applications/${id}`, {
       method: 'PUT',
-      headers: { ...authHeader, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
 
@@ -242,14 +196,8 @@ export async function updateDocumentStatusAction(
   rejectionReason?: string
 ) {
   try {
-    const authHeader = await getAuthHeader();
-
-    const res = await fetch(getApiUrl(`/admin/applications/${applicationId}/documents/${documentId}/status`), {
+    const res = await serverApiFetch(`/admin/applications/${applicationId}/documents/${documentId}/status`, {
       method: 'PUT',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ status, rejectionReason }),
     });
 

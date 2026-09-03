@@ -31,7 +31,7 @@ const ADMIN_NAV_ITEMS = [
   { name: 'Finance', href: '/admin/finance', icon: Wallet },
   { name: 'Expense', href: '/admin/expenses', icon: Receipt },
   { name: 'Service', href: '/admin/services', icon: Building2 },
-  { name: 'Report', href: '/admin/reports', icon: PieChart },
+  { name: 'Reports', href: '/admin/reports', icon: PieChart },
 ];
 
 function AdminSidebarNavContent({

@@ -1,0 +1,136 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.iconWrapper {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #12372A;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.skeletonValue {
+  width: 5rem;
+  height: 1.25rem;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: pulse 1.5s infinite;
+  border-radius: 0.25rem;
+}
+
+@keyframes pulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Color Accents (60/20/10/10 design system) */
+.accent_green .iconWrapper {
+  background: #f0fdf4;
+  color: #12372A;
+}
+
+.accent_emerald .iconWrapper {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.accent_blue .iconWrapper {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.accent_purple .iconWrapper {
+  background: #faf5ff;
+  color: #9333ea;
+}
+
+.accent_amber .iconWrapper {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.accent_indigo .iconWrapper {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.accent_teal .iconWrapper {
+  background: #f0fdfa;
+  color: #0d9488;
+}
+
+.accent_rose .iconWrapper {
+  background: #fff1f2;
+  color: #e11d48;
+}
+
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

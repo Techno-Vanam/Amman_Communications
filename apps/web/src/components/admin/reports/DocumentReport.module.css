@@ -1,0 +1,171 @@
+.sectionContainer {
+  margin-bottom: 2rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.sectionTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #12372A;
+  margin: 0 0 0.2rem 0;
+}
+
+.sectionSubtitle {
+  font-size: 0.825rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.pipelineGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.pipeCard {
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+.pipeLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.2rem;
+}
+
+.pipeVal {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.pipe_blue {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.pipe_amber {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.pipe_purple {
+  background: #faf5ff;
+  border-color: #e9d5ff;
+  color: #7e22ce;
+}
+
+.pipe_green {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+.pipe_red {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.fileCell {
+  display: flex;
+  flex-direction: column;
+}
+
+.fileName {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.typeSub {
+  font-size: 0.725rem;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.appNo {
+  font-family: monospace;
+  color: #12372A;
+  font-weight: 600;
+}
+
+.customerText {
+  color: #374151;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.badge_blue {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge_amber {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge_purple {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.badge_green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge_red {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge_gray {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.dateText {
+  color: #4b5563;
+  font-size: 0.8rem;
+}
+
+.remarksText {
+  color: #6b7280;
+  font-size: 0.775rem;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1024px) {
+  .pipelineGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .pipelineGrid {
+    grid-template-columns: 1fr;
+  }
+}
