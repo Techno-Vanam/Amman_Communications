@@ -238,6 +238,7 @@ export default function ApplicationsPage() {
   const [upiIdInput, setUpiIdInput] = useState('');
   const [cashVerified, setCashVerified] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
 
   // Resets wizard state completely for starting a fresh application
   const startNewFreshApplication = (initialServiceId?: string) => {
@@ -248,6 +249,7 @@ export default function ApplicationsPage() {
     setPaymentOption('PARTITION');
     setSelectedPaymentMode('UPI');
     setPendingFiles({});
+    setCurrentDraftId(null);
     if (initialServiceId) {
       setSelectedService(initialServiceId);
     }
@@ -275,6 +277,7 @@ export default function ApplicationsPage() {
     const todayDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     const draftDisplayId = `AMC-2026-${Math.floor(100000 + Math.random() * 900000)}`;
     const serviceName = serviceObj?.name || 'Service Request';
+    setCurrentDraftId(draftDisplayId);
 
     const draftItem: ApplicationItem = {
       id: draftDisplayId,
@@ -312,6 +315,7 @@ export default function ApplicationsPage() {
   };
 
   const handleResumeDraft = (draftApp: ApplicationItem) => {
+    setCurrentDraftId(draftApp.id);
     if (draftApp.draftDetails?.serviceId) {
       setSelectedService(draftApp.draftDetails.serviceId);
     }
@@ -755,7 +759,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
         setApplications(data.map((app: any) => ({
           id: app.applicationNumber || app.id,
           dbId: app.id, // real DB cuid for API calls
-          serviceType: app.serviceType,
+          serviceType: app.serviceType || app.service?.name || app.serviceName || 'Document Clearance & Legal Verification',
           submittedDate: app.submittedAt
             ? new Date(app.submittedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
             : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -863,7 +867,15 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
       assignedOfficer: 'Officer Rajesh Kumar',
       estimatedDays: '7 days left'
     };
-    setApplications([newApp, ...applications]);
+    setApplications((prev) => [
+      newApp,
+      ...prev.filter(
+        (a) =>
+          a.id !== currentDraftId &&
+          a.id !== displayId &&
+          !(a.status === 'Draft' && (a.serviceType === newApp.serviceType || a.draftDetails?.serviceId === selectedService))
+      ),
+    ]);
     setPendingFiles({});
 
     // Record payment locally for Payments & Receipts page (fallback)
@@ -908,13 +920,19 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
       const existingDrafts = localStorage.getItem(draftStorageKey);
       if (existingDrafts) {
         const draftsArr = JSON.parse(existingDrafts);
-        const remaining = draftsArr.filter((d: any) => d.id !== displayId && d.draftDetails?.serviceId !== selectedService);
+        const remaining = draftsArr.filter(
+          (d: any) =>
+            d.id !== currentDraftId &&
+            d.id !== displayId &&
+            d.draftDetails?.serviceId !== selectedService
+        );
         localStorage.setItem(draftStorageKey, JSON.stringify(remaining));
       }
     } catch (e) {
       console.error('Error clearing draft:', e);
     }
 
+    setCurrentDraftId(null);
     setSubmitting(false);
     // Reset payment & wizard state completely so subsequent new applications start 100% fresh
     setIsFeePaid(false);
@@ -1131,10 +1149,10 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                             <FileText className="w-5 h-5" />
                           </div>
                           <div>
-                            <h3 className="text-sm font-bold text-gray-900 group-hover:text-[#12372A] transition-colors leading-snug">
-                              {app.serviceType}
+                            <h3 className="text-sm font-extrabold text-gray-900 group-hover:text-[#12372A] transition-colors leading-snug">
+                              {app.serviceType || app.draftDetails?.serviceName || 'Document Clearance & Legal Verification'}
                             </h3>
-                            <p className="text-[11px] text-gray-400 font-medium">
+                            <p className="text-[11px] text-gray-400 font-medium mt-0.5">
                               {app.id}
                             </p>
                           </div>
@@ -1416,62 +1434,62 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="border-b border-gray-100 text-gray-400 font-bold uppercase tracking-wider text-[10px]">
-                      <th className="pb-3">Document</th>
-                      <th className="pb-3">Required</th>
-                      <th className="pb-3">Uploaded</th>
-                      <th className="pb-3">Status</th>
-                      <th className="pb-3 text-right">Action</th>
+                      <th className="pb-3 pr-4 text-left">Document</th>
+                      <th className="pb-3 px-3 text-center whitespace-nowrap">Required</th>
+                      <th className="pb-3 px-3 text-center whitespace-nowrap">Uploaded</th>
+                      <th className="pb-3 px-3 text-center whitespace-nowrap">Status</th>
+                      <th className="pb-3 pl-3 text-right whitespace-nowrap">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {requiredDocs.map((doc) => (
                       <tr key={doc.id} className="hover:bg-gray-50/60 transition-colors">
-                        <td className="py-3.5 font-bold text-gray-900">{doc.name}</td>
-                        <td className="py-3.5">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                            doc.required === 'Required' ? 'bg-gray-100 text-gray-600' : 'bg-gray-50 text-gray-400'
+                        <td className="py-3.5 pr-4 font-bold text-gray-900 leading-snug">{doc.name}</td>
+                        <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            doc.required === 'Required' ? 'bg-gray-100 text-gray-600 border border-gray-200' : 'bg-gray-50 text-gray-400 border border-gray-100'
                           }`}>
                             {doc.required}
                           </span>
                         </td>
-                        <td className="py-3.5 font-semibold text-gray-700">{doc.uploaded}</td>
-                        <td className="py-3.5">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        <td className="py-3.5 px-3 text-center whitespace-nowrap font-semibold text-gray-700">{doc.uploaded}</td>
+                        <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-extrabold whitespace-nowrap ${
                             doc.status === 'Approved'
-                              ? 'bg-emerald-100 text-emerald-800'
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                               : doc.status === 'Under Review'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-gray-100 text-gray-500'
+                              ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                              : 'bg-gray-100 text-gray-500 border border-gray-200'
                           }`}>
                             {doc.status}
                           </span>
                         </td>
-                        <td className="py-3.5 text-right">
+                        <td className="py-3.5 pl-3 text-right whitespace-nowrap">
                           {doc.uploaded === 'Yes' ? (
-                            <div className="flex items-center justify-end gap-1.5">
+                            <div className="flex items-center justify-end gap-1.5 shrink-0">
                               {/* View Button */}
                               <button
                                 onClick={() => setViewingDoc(doc)}
-                                className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold text-[11px] rounded-xl transition-all shadow-2xs flex items-center gap-1"
+                                className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold text-[11px] rounded-xl transition-all shadow-2xs flex items-center gap-1 whitespace-nowrap"
                                 title="View Document"
                               >
-                                <Eye className="w-3.5 h-3.5 text-gray-500" />
+                                <Eye className="w-3.5 h-3.5 text-gray-500 shrink-0" />
                                 <span>View</span>
                               </button>
 
                               {/* Download Button */}
                               <button
                                 onClick={() => handleDownloadDocFile(doc.uploadedFile || doc.name, doc.name)}
-                                className="px-3 py-1.5 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 font-bold text-[11px] rounded-xl transition-all shadow-2xs flex items-center gap-1"
+                                className="px-3 py-1.5 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 font-bold text-[11px] rounded-xl transition-all shadow-2xs flex items-center gap-1 whitespace-nowrap"
                                 title="Download Document"
                               >
-                                <Download className="w-3.5 h-3.5" />
+                                <Download className="w-3.5 h-3.5 shrink-0" />
                                 <span>Download</span>
                               </button>
 
                               {/* Re-upload Button */}
-                              <label className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-800 font-bold text-[11px] rounded-xl transition-all shadow-2xs cursor-pointer inline-flex items-center gap-1">
-                                <RefreshCw className="w-3.5 h-3.5" />
+                              <label className="px-3 py-1.5 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-800 font-bold text-[11px] rounded-xl transition-all shadow-2xs cursor-pointer inline-flex items-center gap-1 whitespace-nowrap shrink-0">
+                                <RefreshCw className="w-3.5 h-3.5 shrink-0" />
                                 <span>Re-upload</span>
                                 <input
                                   type="file"
@@ -1481,7 +1499,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                               </label>
                             </div>
                           ) : (
-                            <label className="px-4 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold text-[11px] rounded-xl transition-all shadow-2xs cursor-pointer inline-block">
+                            <label className="px-4 py-1.5 border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold text-[11px] rounded-xl transition-all shadow-2xs cursor-pointer inline-block whitespace-nowrap">
                               <span>Upload</span>
                               <input
                                 type="file"
@@ -1531,8 +1549,8 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
       {/* 3. WIZARD MODE: CREATE NEW APPLICATION */}
       {/* ======================================================== */}
       {mode === 'create' && (
-        <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-2xs space-y-6">
-          <div className="flex items-center justify-between border-b pb-4">
+        <div className="bg-white rounded-3xl p-4 sm:p-5 md:p-6 border border-gray-100 shadow-2xs space-y-3 sm:space-y-4">
+          <div className="flex items-center justify-between border-b pb-3">
             <div>
               <div className="flex items-center gap-2.5">
                 <h2 className="text-lg font-bold text-gray-900">New Service Application</h2>
@@ -1560,7 +1578,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
             </button>
           </div>
 
-          <div className="flex items-center justify-between max-w-4xl mx-auto py-4 overflow-x-auto gap-3">
+          <div className="flex items-center justify-between max-w-4xl mx-auto py-2.5 overflow-x-auto gap-3">
             {WIZARD_STEPS.map((step) => (
               <div key={step.id} className="flex items-center space-x-2 shrink-0">
                 <div
@@ -2061,9 +2079,9 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
 
           {/* STEP 5: Review & Submit */}
           {currentStep === 5 && (
-            <div className="max-w-xl mx-auto space-y-4 text-xs">
+            <div className="max-w-xl mx-auto space-y-2.5 sm:space-y-3 text-xs">
               {!isFeePaid ? (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between text-amber-950">
+                <div className="p-3 px-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between text-amber-950">
                   <div className="flex items-center gap-2 font-semibold">
                     <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
                     <span>Temporary Draft: Details are stored in temporary data memory. Only after initial fee payment will details be saved to the database.</span>
@@ -2080,15 +2098,15 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
                   </button>
                 </div>
               ) : (
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-2 text-emerald-900 font-semibold">
+                <div className="p-2.5 px-3.5 sm:p-3 sm:px-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-2 text-emerald-900 font-semibold">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                   <span>✓ Initial payment completed. Click &quot;Submit Application&quot; below to save your details to the database.</span>
                 </div>
               )}
 
-              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 space-y-4">
-                <h3 className="font-bold text-sm text-gray-900 border-b pb-2">Review Application Summary</h3>
-              <div className="space-y-2.5">
+              <div className="bg-gray-50 p-3.5 sm:p-4 md:p-5 rounded-2xl border border-gray-200 space-y-2.5 sm:space-y-3">
+                <h3 className="font-bold text-sm text-gray-900 border-b pb-1.5 sm:pb-2">Review Application Summary</h3>
+              <div className="space-y-1.5 sm:space-y-2">
                 <p className="flex justify-between"><span className="text-gray-500 font-medium">Selected Service:</span> <strong className="text-gray-900 font-bold">{serviceObj.name}</strong></p>
                 <p className="flex justify-between"><span className="text-gray-500 font-medium">Applicant Name:</span> <strong className="text-gray-900 font-bold">{details.applicantName}</strong></p>
                 <p className="flex justify-between"><span className="text-gray-500 font-medium">Primary Phone:</span> <strong className="text-gray-900 font-bold">{details.applicantPhone}</strong></p>
@@ -2121,7 +2139,7 @@ Admin Remarks   : ${selectedApp.adminRemarks || 'None'}
           </div>
         )}
 
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+          <div className="flex items-center justify-between pt-2.5 sm:pt-3 border-t border-gray-100">
             <button
               disabled={currentStep === 1}
               onClick={() => setCurrentStep(currentStep - 1)}

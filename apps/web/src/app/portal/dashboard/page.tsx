@@ -148,97 +148,97 @@ export default function PortalDashboardPage() {
   ].slice(0, 3);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4 lg:space-y-5 font-sans">
-      {/* 4 KPI Summary Cards Grid - Matching Payments Card Styling & Size */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+    <div className="max-w-7xl w-full mx-auto flex-1 flex flex-col justify-between space-y-4 lg:space-y-6 font-sans">
+      {/* 4 KPI Summary Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 shrink-0">
         {/* Card 1: Active Applications */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 shadow-2xs relative flex flex-col justify-between h-44 sm:h-48 lg:h-52">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
-                <FileText className="w-4.5 h-4.5" />
+              <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Active Applications</span>
+              <span className="text-xs sm:text-sm font-bold text-gray-700 tracking-wide truncate">Active Applications</span>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
+            <p className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {applications.length}
             </p>
           </div>
           <div className="mt-3">
-            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/60">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200/60">
               {activeAppsCount > 0 ? `${activeAppsCount} active` : 'No active apps'}
             </span>
           </div>
         </div>
 
         {/* Card 2: Pending Actions */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 shadow-2xs relative flex flex-col justify-between h-44 sm:h-48 lg:h-52">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
-                <Clock className="w-4.5 h-4.5" />
+              <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Pending Actions</span>
+              <span className="text-xs sm:text-sm font-bold text-gray-700 tracking-wide truncate">Pending Actions</span>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
+            <p className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {pendingActionsCount}
             </p>
           </div>
           <div className="mt-3">
-            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/60">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-extrabold bg-amber-50 text-amber-800 border border-amber-200/60">
               {pendingActionsCount > 0 ? 'Verification in progress' : 'Up to date'}
             </span>
           </div>
         </div>
 
         {/* Card 3: Completed Services */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 shadow-2xs relative flex flex-col justify-between h-44 sm:h-48 lg:h-52">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-4.5 h-4.5" />
+              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Completed Services</span>
+              <span className="text-xs sm:text-sm font-bold text-gray-700 tracking-wide truncate">Completed Services</span>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
+            <p className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {completedAppsCount}
             </p>
           </div>
           <div className="mt-3">
-            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-extrabold bg-blue-50 text-blue-800 border border-blue-200/60">
               {completedAppsCount > 0 ? `${completedAppsCount} Completed` : '0 Completed'}
             </span>
           </div>
         </div>
 
         {/* Card 4: Appointments */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-6 shadow-2xs relative flex flex-col justify-between min-h-[140px] sm:h-44">
+        <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 shadow-2xs relative flex flex-col justify-between h-44 sm:h-48 lg:h-52">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
-                <Calendar className="w-4.5 h-4.5" />
+              <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
+                <Calendar className="w-5 h-5" />
               </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Appointments</span>
+              <span className="text-xs sm:text-sm font-bold text-gray-700 tracking-wide truncate">Appointments</span>
             </div>
-            <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
+            <p className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
               {appointmentsCount}
             </p>
           </div>
           <div className="mt-3">
-            <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-200/60">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-800 border border-indigo-200/60">
               Scheduled
             </span>
           </div>
         </div>
       </div>
 
-      {/* Main Container Card Grid: Recent Activity (Top 3) & Alerts (Top 3) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Recent Activity (Left Col 7/12) - Perfectly Sized Top 3 Cards */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-5 flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center justify-between gap-3 pb-3 border-b border-gray-100">
-              <h2 className="text-sm font-bold text-gray-900 min-w-0 truncate">Recent Activity &amp; Updates</h2>
+      {/* Main Container Card Grid: Recent Activity & Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 flex-1 min-h-0">
+        {/* Recent Activity (Left Col 7/12) */}
+        <div className="lg:col-span-7 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-5 sm:p-6 flex flex-col justify-between space-y-4">
+          <div className="flex-1 flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-3 pb-3.5 border-b border-gray-100">
+              <h2 className="text-base font-extrabold text-gray-900 min-w-0 truncate">Recent Activity &amp; Updates</h2>
               <Link
                 href="/portal/applications"
                 className="text-xs font-bold text-[#12372A] hover:underline flex items-center gap-1 shrink-0 whitespace-nowrap"
@@ -248,9 +248,9 @@ export default function PortalDashboardPage() {
               </Link>
             </div>
 
-            <div className="mt-3 space-y-2.5">
+            <div className="mt-3 flex-1 flex flex-col justify-evenly space-y-3">
               {recentActivities.length === 0 ? (
-                <div className="p-6 text-center bg-gray-50/70 border border-gray-200/60 rounded-xl space-y-1.5">
+                <div className="p-6 text-center bg-gray-50/70 border border-gray-200/60 rounded-xl space-y-1.5 my-auto">
                   <Info className="w-5 h-5 text-gray-400 mx-auto" />
                   <p className="text-xs font-bold text-gray-800">No Recent Activity Recorded</p>
                   <p className="text-[11px] text-gray-500 max-w-sm mx-auto">
@@ -259,23 +259,23 @@ export default function PortalDashboardPage() {
                 </div>
               ) : (
                 recentActivities.slice(0, 3).map((act) => (
-                  <div key={act.id} className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/60 flex items-start gap-4">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                  <div key={act.id} className="p-4 sm:p-4.5 rounded-2xl bg-gray-50/80 border border-gray-200/60 flex items-center gap-4 transition-all hover:bg-gray-50">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
                       act.isApp ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'
                     }`}>
-                      {act.isApp ? <RefreshCw className="w-4 h-4" /> : <Calendar className="w-4 h-4" />}
+                      {act.isApp ? <RefreshCw className="w-4.5 h-4.5" /> : <Calendar className="w-4.5 h-4.5" />}
                     </div>
                     <div className="flex-1 min-w-0">
                       {act.isApp ? (
-                        <p className="text-xs text-gray-800 font-semibold leading-relaxed">
-                          {act.title} ({act.service}) is currently in <span className="font-bold text-[#12372A]">&quot;{act.status}&quot;</span>.
+                        <p className="text-xs sm:text-sm text-gray-800 font-semibold leading-relaxed">
+                          {act.title} ({act.service}) is currently in <span className="font-extrabold text-[#12372A]">&quot;{act.status}&quot;</span>.
                         </p>
                       ) : (
-                        <p className="text-xs text-gray-800 font-semibold leading-relaxed">
+                        <p className="text-xs sm:text-sm text-gray-800 font-semibold leading-relaxed">
                           Appointment scheduled for <span className="font-bold text-gray-900">{act.service}</span> via <span className="font-bold text-gray-900">{act.status}</span>.
                         </p>
                       )}
-                      <span className="text-[10px] text-gray-400 block mt-0.5">{act.isApp ? `Submitted: ${act.date}` : act.date}</span>
+                      <span className="text-[11px] text-gray-400 font-medium block mt-1">{act.isApp ? `Submitted: ${act.date}` : act.date}</span>
                     </div>
                   </div>
                 ))
@@ -283,7 +283,7 @@ export default function PortalDashboardPage() {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
+          <div className="pt-3.5 border-t border-gray-100 flex items-center justify-between text-xs">
             <span className="text-gray-400 font-medium text-[11px]">Real-time tracking active</span>
             <Link href="/portal/applications" className="font-bold text-[#12372A] hover:underline">
               Track requests &rarr;
@@ -291,28 +291,28 @@ export default function PortalDashboardPage() {
           </div>
         </div>
 
-        {/* Action Alerts & Reminders (Right Col 5/12) - Perfectly Sized Cards */}
-        <div className="lg:col-span-5 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-5 flex flex-col justify-between space-y-4">
-          <div>
-            <div className="flex items-center justify-between gap-3 pb-3 border-b border-gray-100">
+        {/* Action Alerts & Reminders (Right Col 5/12) */}
+        <div className="lg:col-span-5 bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-5 sm:p-6 flex flex-col justify-between space-y-4">
+          <div className="flex-1 flex flex-col justify-between">
+            <div className="flex items-center justify-between gap-3 pb-3.5 border-b border-gray-100">
               <div className="flex items-center gap-2 min-w-0">
-                <h2 className="text-sm font-bold text-gray-900 truncate">Alerts &amp; Reminders</h2>
+                <h2 className="text-base font-extrabold text-gray-900 truncate">Alerts &amp; Reminders</h2>
               </div>
               <Link href="/portal/notifications" className="text-xs font-bold text-[#12372A] hover:underline shrink-0 whitespace-nowrap">
                 View All
               </Link>
             </div>
 
-            <div className="mt-3 space-y-2.5 text-xs">
+            <div className="mt-3 flex-1 flex flex-col justify-evenly space-y-3 text-xs">
               {topAlerts.map((alt) => (
-                <div key={alt.id} className="p-3.5 rounded-xl bg-gray-50/80 border border-gray-200/70 space-y-1.5 transition-all hover:bg-gray-50">
+                <div key={alt.id} className="p-4 rounded-xl bg-gray-50/80 border border-gray-200/70 space-y-1.5 transition-all hover:bg-gray-50">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-gray-900 text-xs truncate">{alt.title}</span>
-                    <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-gray-200 ${alt.badgeBg}`}>
+                    <span className="font-extrabold text-gray-900 text-xs sm:text-sm truncate">{alt.title}</span>
+                    <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-gray-200 ${alt.badgeBg}`}>
                       {alt.badge}
                     </span>
                   </div>
-                  <p className="text-gray-600 text-[11px] leading-relaxed line-clamp-2">
+                  <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">
                     {alt.desc}
                   </p>
                 </div>
@@ -320,7 +320,7 @@ export default function PortalDashboardPage() {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-gray-100 text-center">
+          <div className="pt-3.5 border-t border-gray-100 text-center">
             <Link href="/portal/notifications" className="text-xs font-bold text-[#12372A] hover:underline">
               Open Notification Center &rarr;
             </Link>

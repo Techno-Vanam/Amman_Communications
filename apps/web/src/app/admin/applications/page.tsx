@@ -721,11 +721,11 @@ export default function ApplicationsPage() {
   function handleDownloadSummary() {
     if (!selectedApp) return;
     const summary = `AMMAN COMMUNICATIONS - APPLICATION SUMMARY
-Application ID: ${selectedApp.id}
-Customer: ${selectedApp.customerName}
-Service: ${selectedApp.service}
+Application ID: ${selectedApp.applicationNumber || selectedApp.id}
+Customer: ${selectedApp.customer}
+Service: ${selectedApp.serviceType}
 Status: ${selectedApp.status}
-Submission Date: ${selectedApp.submissionDate}`;
+Submission Date: ${selectedApp.createdDate}`;
     const blob = new Blob([summary], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

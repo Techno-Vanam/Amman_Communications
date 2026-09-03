@@ -173,6 +173,22 @@ export async function fetchAdminAppointmentsAction() {
   }
 }
 
+export async function fetchAdminServicesAction(search?: string, status?: string) {
+  try {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (status && status !== 'ALL') params.set('status', status);
+    const endpoint = `/admin/services${params.toString() ? `?${params.toString()}` : ''}`;
+    const res = await authenticatedFetch(endpoint);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : data.data || [];
+  } catch (error) {
+    console.error('Error fetching admin services:', error);
+    return [];
+  }
+}
+
 export async function createAdminServiceAction(dto: {
   name: string;
   description?: string;

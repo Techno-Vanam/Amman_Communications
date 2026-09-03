@@ -1,5 +1,6 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { getAccessToken } from '@/lib/server-auth';
 
 const API_BASE_URL =

@@ -87,6 +87,22 @@ export default function ProfilePage() {
     loadProfile();
   }, []);
 
+  // Helper to extract 10 digits from phone string
+  const extract10Digits = (val: string) => {
+    if (!val) return '';
+    const digits = val.replace(/\D/g, '');
+    if (digits.startsWith('91') && digits.length > 10) {
+      return digits.slice(2, 12);
+    }
+    return digits.slice(0, 10);
+  };
+
+  // Helper for 12-digit Aadhaar
+  const extract12Digits = (val: string) => {
+    if (!val) return '';
+    return val.replace(/\D/g, '').slice(0, 12);
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -95,9 +111,9 @@ export default function ProfilePage() {
       showToast('Validation Error', 'Full Name is mandatory.');
       return;
     }
-    const cleanMobile = profileData.mobileNumber.replace('+91', '').trim();
-    if (!cleanMobile) {
-      showToast('Validation Error', 'Mobile Phone Number is mandatory.');
+    const mobileDigits = extract10Digits(profileData.mobileNumber);
+    if (mobileDigits.length !== 10) {
+      showToast('Validation Error', 'Mobile Phone Number must be exactly 10 digits.');
       return;
     }
     if (!profileData.emailAddress.trim()) {
@@ -108,17 +124,18 @@ export default function ProfilePage() {
       showToast('Validation Error', 'Residential Address is mandatory.');
       return;
     }
-    if (!profileData.aadhaarNumber.trim()) {
-      showToast('Validation Error', 'Aadhaar Number is mandatory.');
+    const aadhaarDigits = extract12Digits(profileData.aadhaarNumber);
+    if (aadhaarDigits.length !== 12) {
+      showToast('Validation Error', 'Aadhaar Number must be exactly 12 digits.');
       return;
     }
     if (!profileData.emergencyContact.trim()) {
       showToast('Validation Error', 'Emergency Contact Person is mandatory.');
       return;
     }
-    const cleanAltPhone = profileData.altPhone.replace('+91', '').trim();
-    if (!cleanAltPhone) {
-      showToast('Validation Error', 'Alternate Phone Number is mandatory.');
+    const altPhoneDigits = extract10Digits(profileData.altPhone);
+    if (altPhoneDigits.length !== 10) {
+      showToast('Validation Error', 'Alternate Phone Number must be exactly 10 digits.');
       return;
     }
 
@@ -129,13 +146,13 @@ export default function ProfilePage() {
     const res = await updateProfileAction({
       name: profileData.fullName,
       email: profileData.emailAddress,
-      contactNumber: profileData.mobileNumber,
+      contactNumber: `+91 ${mobileDigits}`,
       address: profileData.residentialAddress,
       dob: profileData.dob,
-      aadhaarNumber: profileData.aadhaarNumber,
+      aadhaarNumber: aadhaarDigits,
       panNumber: profileData.panNumber,
       occupation: profileData.occupation,
-      altPhone: profileData.altPhone,
+      altPhone: `+91 ${altPhoneDigits}`,
       emergencyContact: profileData.emergencyContact,
       isProfileCompleted: true
     });
@@ -246,9 +263,14 @@ export default function ProfilePage() {
                 <div className="relative">
                   <Smartphone className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />
                   <input
-                    type="tel"
-                    value={profileData.mobileNumber}
-                    onChange={(e) => setProfileData({ ...profileData, mobileNumber: e.target.value })}
+                    type="text"
+                    inputMode="numeric"
+                    value={profileData.mobileNumber.startsWith('+91 ') ? profileData.mobileNumber : `+91 ${profileData.mobileNumber.replace(/\D/g, '').slice(0, 10)}`}
+                    onChange={(e) => {
+                      const inputVal = e.target.value;
+                      const digitsOnly = inputVal.replace('+91', '').replace(/\D/g, '').slice(0, 10);
+                      setProfileData({ ...profileData, mobileNumber: digitsOnly ? `+91 ${digitsOnly}` : '+91 ' });
+                    }}
                     placeholder="+91 9876543210"
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
                     required
@@ -311,9 +333,13 @@ export default function ProfilePage() {
                   <label className="block font-bold text-gray-700">Aadhaar Number *</label>
                   <input
                     type="text"
-                    value={profileData.aadhaarNumber}
-                    onChange={(e) => setProfileData({ ...profileData, aadhaarNumber: e.target.value })}
+                    value={extract12Digits(profileData.aadhaarNumber)}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 12);
+                      setProfileData({ ...profileData, aadhaarNumber: digits });
+                    }}
                     placeholder="Enter 12-digit Aadhaar number"
+                    maxLength={12}
                     className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
                     required
                   />
@@ -355,14 +381,22 @@ export default function ProfilePage() {
                 {/* Alternate Phone Number */}
                 <div className="space-y-1.5">
                   <label className="block font-bold text-gray-700">Alternate Phone Number *</label>
-                  <input
-                    type="tel"
-                    value={profileData.altPhone}
-                    onChange={(e) => setProfileData({ ...profileData, altPhone: e.target.value })}
-                    placeholder="+91 9874563210"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
-                    required
-                  />
+                  <div className="relative">
+                    <Smartphone className="w-4 h-4 text-gray-400 absolute left-3.5 top-3 pointer-events-none" />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={profileData.altPhone.startsWith('+91 ') ? profileData.altPhone : `+91 ${profileData.altPhone.replace(/\D/g, '').slice(0, 10)}`}
+                      onChange={(e) => {
+                        const inputVal = e.target.value;
+                        const digitsOnly = inputVal.replace('+91', '').replace(/\D/g, '').slice(0, 10);
+                        setProfileData({ ...profileData, altPhone: digitsOnly ? `+91 ${digitsOnly}` : '+91 ' });
+                      }}
+                      placeholder="+91 9874563210"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
             </div>

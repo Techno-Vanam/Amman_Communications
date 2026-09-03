@@ -47,6 +47,7 @@ function AdminSidebarNavContent({
 }) {
   const pathname = usePathname();
   const isSettingsActive = pathname === '/admin/settings';
+  const isProfileActive = pathname === '/admin/profile';
 
   return (
     <aside

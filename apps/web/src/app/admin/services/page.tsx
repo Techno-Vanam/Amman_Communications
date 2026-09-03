@@ -458,6 +458,18 @@ type FilterType = 'All' | ServiceStatus;
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
+
+  async function loadServices() {
+    setLoading(true);
+    const data = await fetchAdminServicesAction();
+    const mapped = (data || []).map(mapBackendService);
+    setServices(mapped);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    loadServices();
+  }, []);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterType>('All');
   const [filterCategory, setFilterCategory] = useState<string>('All');

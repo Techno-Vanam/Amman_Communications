@@ -94,6 +94,7 @@ function ExpenseModal({
   });
   const [categoryInput, setCategoryInput] = useState(expense?.category ?? 'Operations');
   const [showCatDropdown, setShowCatDropdown] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const catRef = useRef<HTMLDivElement>(null);
 
   const [customCategories, setCustomCategories] = useState<string[]>(() => {

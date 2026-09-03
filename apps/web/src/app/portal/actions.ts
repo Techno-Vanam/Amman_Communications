@@ -236,6 +236,9 @@ export async function createApplicationAction(dto: {
 
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
+      if (res.status === 401) {
+        return { error: 'Your session has expired. Please log out and log in again to submit.' };
+      }
       return { error: data.message || 'Failed to create application' };
     }
 
