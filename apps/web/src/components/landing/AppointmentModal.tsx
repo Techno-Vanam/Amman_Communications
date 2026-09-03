@@ -51,6 +51,22 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onCl
     return Object.keys(newErrors).length === 0;
   };
 
+  const getWhatsAppShareUrl = () => {
+    const refId = `AC-APT-${Math.floor(1000 + Math.random() * 9000)}`;
+    const message =
+      `*New Appointment Request - Amman Communications*\n\n` +
+      `📌 *Reference ID:* ${refId}\n` +
+      `🛠️ *Service:* ${formData.serviceType || 'General Consultation'}\n` +
+      `👤 *Applicant Name:* ${formData.name}\n` +
+      `📞 *Phone Number:* +91 ${formData.phone}\n` +
+      `✉️ *Email:* ${formData.email}\n` +
+      `📅 *Preferred Date & Time:* ${formData.preferredDate} at ${formData.preferredTime}\n` +
+      (formData.message ? `📝 *Notes:* ${formData.message}\n` : '') +
+      `\nPlease confirm this consultation booking. Thank you!`;
+
+    return `https://wa.me/919360645466?text=${encodeURIComponent(message)}`;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
@@ -96,7 +112,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onCl
         {/* Content Body */}
         <div className="p-4 sm:p-6 sm:p-8 overflow-y-auto space-y-5 sm:space-y-6">
           {isSubmitted ? (
-            <div className="text-center py-8 space-y-6 animate-fade-in">
+            <div className="text-center py-6 space-y-5 animate-fade-in">
               <div className="w-16 h-16 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mx-auto shadow-inner">
                 <CheckCircle2 className="w-10 h-10" />
               </div>
@@ -112,23 +128,33 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({ isOpen, onCl
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-brand-50 border border-brand-100 text-left max-w-md mx-auto space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-brand-900 border-b border-brand-200/80 pb-2">
-                  <span>Booking Reference: AC-APT-{Math.floor(1000 + Math.random() * 9000)}</span>
-                  <span className="bg-brand-100 text-brand-800 px-2 py-0.5 rounded text-[11px]">Confirmed</span>
+              {/* WhatsApp Share Box / Continue Box */}
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-left max-w-md mx-auto space-y-2 font-sans">
+                <div className="flex items-center justify-between text-xs font-bold text-emerald-900">
+                  <span>📲 Priority Admin Desk Confirmation</span>
+                  <span className="bg-emerald-200/80 text-emerald-800 px-2 py-0.5 rounded text-[11px] font-mono">+91 9360645466</span>
                 </div>
-                <div className="text-xs text-brand-800 space-y-1">
-                  <p>• Contact Desk: +91 98765 43210</p>
-                  <p>• A confirmation summary has been sent to {formData.email}</p>
-                </div>
+                <p className="text-xs text-emerald-800">
+                  Share your booking reference directly to our admin desk on WhatsApp for instant confirmation.
+                </p>
               </div>
 
-              <button
-                onClick={handleReset}
-                className="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-colors cursor-pointer"
-              >
-                Close & Return
-              </button>
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
+                <button
+                  onClick={handleReset}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  Close &amp; Return
+                </button>
+                <a
+                  href={getWhatsAppShareUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-2 block text-center"
+                >
+                  <span>Share Details to Admin on WhatsApp</span>
+                </a>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>

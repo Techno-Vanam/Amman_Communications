@@ -14,8 +14,10 @@ import {
   ChevronDown,
   ChevronRight,
   AlertCircle,
+  Clock,
 } from 'lucide-react';
 import { useNotifications } from '@/context/NotificationContext';
+import StatCard from '@/components/ui/StatCard';
 import {
   fetchDocumentsGroupedAction,
   uploadDocumentAction,
@@ -229,8 +231,43 @@ export default function PortalDocumentsPage() {
     { value: 'OTHER', label: 'Other Supporting Document' },
   ];
 
+  const allDocs = groups.flatMap((g) => g.documents || []);
+  const approvedDocs = allDocs.filter((d) => d.status === 'APPROVED');
+  const pendingDocs = allDocs.filter((d) => d.status === 'UNDER_REVIEW' || d.status === 'UPLOADED');
+
   return (
     <div className="max-w-7xl w-full mx-auto space-y-6 font-sans">
+      {/* ── KPI Summary Cards ── */}
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Total Documents"
+          value={allDocs.length}
+          sub="Encrypted in vault"
+          icon={FileText}
+          variant="teal"
+        />
+        <StatCard
+          label="Approved / Verified"
+          value={approvedDocs.length}
+          sub="Verified by officer"
+          icon={FileCheck}
+          variant="emerald"
+        />
+        <StatCard
+          label="Under Review"
+          value={pendingDocs.length}
+          sub="Pending verification"
+          icon={Clock}
+          variant="amber"
+        />
+        <StatCard
+          label="Linked Applications"
+          value={groups.length}
+          sub="Active folders"
+          icon={FolderOpen}
+          variant="indigo"
+        />
+      </div>
 
       {/* Upload Panel */}
       <div

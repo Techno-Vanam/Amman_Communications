@@ -25,11 +25,8 @@ enum ApplicationStatus {
   DRAFT
   SUBMITTED
   UNDER_REVIEW
-  DOCUMENTS_RECEIVED
   APPROVED
   REJECTED
-  PENDING_PAYMENT
-  COMPLETED
 }
 
 enum CustomerStatus {
@@ -64,7 +61,7 @@ enum PaymentStatus {
 
 model Customer {
   id                 String         @id @default(cuid())
-  email              String?        @unique
+  email              String         @unique
   phone              String?
   passwordHash       String
   name               String
@@ -183,7 +180,7 @@ model Service {
   estimatedTime     String?
   isPartialPaymentAllowed Boolean @default(false)
   minimumPartialFee Decimal?      @db.Decimal(10, 2)
-  status            ServiceStatus @default(DRAFT)
+  status            ServiceStatus      @default(DRAFT)
   requiredDocuments RequiredDocument[]
   applications      Application[]
   appointments      Appointment[]
@@ -271,13 +268,22 @@ model RequiredDocument {
   updatedAt    DateTime @updatedAt
 }
 
-
+enum ExpenseCategory {
+  OFFICE
+  TRAVEL
+  EMPLOYEE
+  PROPERTY
+  UTILITIES
+  MARKETING
+  EQUIPMENT
+  OTHER
+}
 
 model Expense {
   id             String          @id @default(cuid())
   title          String
   description    String?
-  category       String
+  category       ExpenseCategory
   amount         Decimal         @db.Decimal(10, 2)
   expenseDate    DateTime
   paymentMethod  PaymentMethod?
@@ -362,6 +368,19 @@ model Payment {
   @@index([paidAt])
 }
 
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  otpHash   String
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+}
 
 enum SaleCategory {
   APPLICATION
@@ -386,22 +405,6 @@ model ManualSale {
   @@index([createdAt])
 }
 
-
-model PasswordResetToken {
-  id        String   @id @default(cuid())
-  email     String
-  otpHash   String
-  token     String   @unique @default(cuid())
-  expiresAt DateTime
-  used      Boolean  @default(false)
-  attempts  Int      @default(0)
-  createdAt DateTime @default(now())
-
-  @@index([email])
-  @@index([token])
-
-}
-
 model AdminSettings {
   id             String   @id @default(cuid())
   adminId        String   @unique
@@ -415,4 +418,35 @@ model AdminSettings {
   autoLogout     String   @default("30 minutes")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+enum NotificationUserType {
+  ADMIN
+  CUSTOMER
+}
+
+model Notification {
+  id        String               @id @default(cuid())
+  title     String
+  message   String
+  type      NotificationType     @default(INFO)
+  isRead    Boolean              @default(false)
+  href      String?
+
+  // Target User
+  userId    String?
+  userType  NotificationUserType @default(ADMIN)
+
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  @@index([userId, userType, isRead])
+  @@index([createdAt])
 }

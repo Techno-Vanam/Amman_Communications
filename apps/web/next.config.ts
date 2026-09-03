@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 import path from 'node:path';
+
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(process.cwd(), '../..'),
   eslint: {
@@ -14,5 +15,5 @@ const nextConfig: NextConfig = {
     },
   },
 };
-export default nextConfig;
 
+export default nextConfig;

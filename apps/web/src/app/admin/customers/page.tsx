@@ -19,7 +19,6 @@ import {
   CheckCircle,
   Clock,
   UserCircle2,
-  AlertCircle,
 } from 'lucide-react';
 import {
   fetchCustomersAction,
@@ -27,6 +26,7 @@ import {
   updateCustomerAction,
   deleteCustomerAction,
 } from './actions';
+import StatCard from '@/components/ui/StatCard';
 
 export interface Customer {
   id: string;
@@ -40,14 +40,6 @@ export interface Customer {
   joinedDate: string;
 }
 
-export interface CustomerFormData {
-  name?: string;
-  email?: string;
-  phone?: string;
-  password?: string;
-  status?: string;
-}
-
 // ── Live Dataset ────────────────────────────────────────────────
 const INITIAL_CUSTOMERS: Customer[] = [];
 type FilterStatus = 'All' | 'Active' | 'Inactive' | 'Pending';
@@ -56,7 +48,7 @@ type FilterStatus = 'All' | 'Active' | 'Inactive' | 'Pending';
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     Active: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    Inactive: 'bg-rose-100 text-rose-700 border-rose-200',
+    Inactive: 'bg-rose-100 text-rose-800 border-rose-200',
     Pending: 'bg-amber-100 text-amber-800 border-amber-200',
   };
   const icons: Record<string, React.ReactNode> = {
@@ -82,12 +74,12 @@ function CustomerModal({
   mode: 'add' | 'edit';
   customer?: Customer;
   onClose: () => void;
-  onSave: (data: CustomerFormData) => Promise<{ success: boolean; error?: string }> | void;
+  onSave: (data: Partial<Customer>) => void;
 }) {
   const [form, setForm] = useState({
     name: customer?.name ?? '',
     email: customer?.email ?? '',
-    phone: customer?.phone ?? '+91 ',
+    phone: customer?.phone ?? '',
     password: '',
     status: customer?.status ?? 'Active',
   });
@@ -97,30 +89,18 @@ function CustomerModal({
   function validate() {
     const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = 'Name is required';
-    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Valid email is required';
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Valid email is required';
     if (!form.phone.trim()) e.phone = 'Phone is required';
     if (mode === 'add' && form.password.length < 6) e.password = 'Password must be at least 6 characters';
     return e;
   }
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
-    
-    setIsSubmitting(true);
-    setSubmitError(null);
-    const res = await onSave(form);
-    setIsSubmitting(false);
-    
-    if (res && res.success === false) {
-      setSubmitError(res.error || 'Failed to save changes.');
-    } else {
-      onClose();
-    }
+    onSave(form);
+    onClose();
   }
 
   return (
@@ -146,18 +126,9 @@ function CustomerModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-          {submitError && (
-            <div className="bg-rose-50 text-rose-600 px-4 py-3 rounded-xl text-xs font-bold flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              {submitError}
-            </div>
-          )}
-
           {/* Name */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5">
-              Full Name <span className="text-rose-500">*</span>
-            </label>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">Full Name</label>
             <input
               type="text"
               placeholder="e.g. Ahmad Hassan"
@@ -170,16 +141,13 @@ function CustomerModal({
 
           {/* Email */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5">
-              Email Address <span className="text-gray-400 font-normal">(Optional)</span>
-            </label>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="email"
                 placeholder="email@example.com"
                 value={form.email}
-                autoComplete="off"
                 onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all"
               />
@@ -189,9 +157,7 @@ function CustomerModal({
 
           {/* Phone */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5">
-              Phone Number <span className="text-rose-500">*</span>
-            </label>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">Phone Number</label>
             <div className="relative">
               <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -208,15 +174,12 @@ function CustomerModal({
           {/* Password (only on add) */}
           {mode === 'add' && (
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                Password <span className="text-rose-500">*</span>
-              </label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">Password</label>
               <div className="relative">
                 <input
                   type={showPass ? 'text' : 'password'}
                   placeholder="Min. 6 characters"
                   value={form.password}
-                  autoComplete="new-password"
                   onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
                   className="w-full px-4 pr-11 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all"
                 />
@@ -239,6 +202,7 @@ function CustomerModal({
               >
                 <option>Active</option>
                 <option>Inactive</option>
+                <option>Pending</option>
               </select>
               <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
@@ -255,10 +219,9 @@ function CustomerModal({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="flex-1 py-2.5 rounded-full bg-[#12372A] text-white text-xs font-bold hover:bg-[#1a4a38] transition-colors shadow-md disabled:opacity-50"
+              className="flex-1 py-2.5 rounded-full bg-[#12372A] text-white text-xs font-bold hover:bg-[#1a4a38] transition-colors shadow-md"
             >
-              {isSubmitting ? 'Saving...' : (mode === 'add' ? 'Add Customer' : 'Save Changes')}
+              {mode === 'add' ? 'Add Customer' : 'Save Changes'}
             </button>
           </div>
         </form>
@@ -309,7 +272,7 @@ export default function CustomersPage() {
   const loadCustomers = async () => {
     setIsLoading(true);
     setErrorMsg(null);
-    const res = await fetchCustomersAction();
+    const res = await fetchCustomersAction(search, 'All');
     if (res.error) {
       setErrorMsg(res.error);
       setCustomers([]);
@@ -319,7 +282,7 @@ export default function CustomersPage() {
         id: c.id,
         name: c.name,
         email: c.email,
-        phone: c.phone || null,
+        phone: c.phone || '—',
         applications: c._count?.applications ?? 0,
         pending: c._count?.documents ?? 0,
         balance: '₹0',
@@ -337,43 +300,36 @@ export default function CustomersPage() {
 
   useEffect(() => {
     loadCustomers();
-  }, []);
+  }, [search]);
 
-  async function handleAdd(data: CustomerFormData): Promise<{ success: boolean; error?: string }> {
+  async function handleAdd(data: Partial<Customer>) {
     setErrorMsg(null);
-    const rawPhone = data.phone?.trim().replace(/^\+91\s*$/, '') ?? '';
-    const finalEmail = data.email?.trim() || undefined;
     const res = await createCustomerAction({
       name: data.name ?? '',
-      email: finalEmail ?? '',
-      phone: rawPhone || '',
-      password: data.password ?? '',
+      email: data.email ?? '',
+      phone: data.phone ?? '',
       status: data.status ?? 'Active',
     });
     if (res.error) {
-      return { success: false, error: res.error };
+      setErrorMsg(res.error);
     } else {
       loadCustomers();
-      return { success: true };
     }
   }
 
-  async function handleEdit(data: CustomerFormData): Promise<{ success: boolean; error?: string }> {
-    if (!editCustomer) return { success: false, error: 'No customer selected' };
+  async function handleEdit(data: Partial<Customer>) {
+    if (!editCustomer) return;
     setErrorMsg(null);
-    const rawPhone = data.phone?.trim().replace(/^\+91\s*$/, '') ?? '';
-    const finalEmail = data.email?.trim() || undefined;
     const res = await updateCustomerAction(editCustomer.id, {
       name: data.name,
-      email: finalEmail,
-      phone: rawPhone || undefined,
+      email: data.email,
+      phone: data.phone,
       status: data.status,
     });
     if (res.error) {
-      return { success: false, error: res.error };
+      setErrorMsg(res.error);
     } else {
       loadCustomers();
-      return { success: true };
     }
   }
 
@@ -387,16 +343,6 @@ export default function CustomersPage() {
     }
   }
 
-  const filtered = useMemo(() => customers.filter(c => {
-    const q = search.toLowerCase();
-    const matchSearch = (c.name || '').toLowerCase().includes(q) || 
-                        (c.email || '').toLowerCase().includes(q) || 
-                        (c.phone || '').toLowerCase().includes(q) || 
-                        (c.id || '').toLowerCase().includes(q);
-    const matchFilter = filterStatus === 'All' || c.status === filterStatus;
-    return matchSearch && matchFilter;
-  }), [customers, search, filterStatus]);
-
   const statusCounts = {
     All: customers.length,
     Active: customers.filter(c => c.status === 'Active').length,
@@ -404,45 +350,51 @@ export default function CustomersPage() {
     Pending: customers.filter(c => c.status === 'Pending').length,
   };
 
+  const filteredCustomers = filterStatus === 'All' 
+    ? customers 
+    : customers.filter(c => c.status === filterStatus);
+
   return (
-    <div className="max-w-7xl mx-auto h-full flex flex-col pb-6 font-sans" suppressHydrationWarning>
+    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
-      {/* Top Section (Fixed) */}
-      <div className="shrink-0 space-y-4 lg:space-y-6">
-        
-        {/* ── Page Header ── */}
-        <div className="flex justify-end">
-          <button
-            onClick={() => setShowAddModal(true)}
-            suppressHydrationWarning
-            className="flex items-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md"
-          >
-            <Plus className="w-4 h-4 text-[#a8d5b9]" />
-            <span>Add New Customer</span>
-          </button>
-        </div>
 
-        {/* ── Stats Summary Row ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {(['All', 'Active', 'Inactive', 'Pending'] as FilterStatus[]).map(s => (
-          <div
-            key={s}
-            className="rounded-2xl border px-4 py-3 text-left bg-white border-gray-200"
-          >
-            <p className="text-2xl font-extrabold text-[#0e2a47]">
-              {statusCounts[s]}
-            </p>
-            <p className="text-[11px] font-semibold mt-0.5 text-gray-500">
-              {s === 'All' ? 'Total Customers' : `${s} Customers`}
-            </p>
-          </div>
-        ))}
+
+      {/* ── Stats Summary Row ── */}
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Total Customers"
+          value={statusCounts.All}
+          sub="Registered accounts"
+          icon={Users}
+          variant="emerald"
+        />
+        <StatCard
+          label="Active Clients"
+          value={statusCounts.Active}
+          sub="Currently active"
+          icon={CheckCircle}
+          variant="blue"
+        />
+        <StatCard
+          label="Pending Activation"
+          value={statusCounts.Pending}
+          sub="Needs review"
+          icon={Clock}
+          variant="amber"
+        />
+        <StatCard
+          label="Inactive Profiles"
+          value={statusCounts.Inactive}
+          sub="Dormant accounts"
+          icon={X}
+          variant="rose"
+        />
       </div>
 
       {/* ── Search & Filter Bar ── */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
         {/* Search */}
-        <div className="relative w-full sm:max-w-sm mr-auto">
+        <div className="relative w-full flex-1 mr-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -485,15 +437,24 @@ export default function CustomersPage() {
             </div>
           )}
         </div>
-      </div>
+
+        {/* New Customer Button */}
+        <button
+          onClick={() => setShowAddModal(true)}
+          suppressHydrationWarning
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md shrink-0"
+        >
+          <Plus className="w-4 h-4 text-[#a8d5b9]" />
+          New Customer
+        </button>
       </div>
 
       {/* ── Customers Table ── */}
-      <div className="mt-4 lg:mt-6 bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden flex flex-col flex-1 min-h-0">
-        <div className="overflow-x-auto w-full flex flex-col flex-1 min-h-0">
-          <div className="min-w-[680px] flex flex-col flex-1 min-h-0">
-            {/* Table Header — sticky */}
-            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest shrink-0 sticky top-0 z-10">
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
+        <div className="overflow-x-auto w-full">
+          <div className="min-w-[680px]">
+            {/* Table Header */}
+            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
               <div className="col-span-3">Customer</div>
               <div className="col-span-2">Phone</div>
               <div className="col-span-2 text-center">Applications</div>
@@ -502,82 +463,78 @@ export default function CustomersPage() {
               <div className="col-span-2 text-center">Actions</div>
             </div>
 
-            {/* Rows — scrollable */}
-            <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
-              {filtered.length === 0 ? (
-                <div className="py-16 text-center">
-                  <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                  <p className="text-sm font-bold text-gray-400">No customers found</p>
-                  <p className="text-xs text-gray-300 mt-1">Try changing your search or filter</p>
-                </div>
-              ) : (
-                filtered.map((c, idx) => (
-                  <div
-                    key={c.id}
-                    className={`grid grid-cols-12 px-5 py-3.5 items-center transition-colors hover:bg-gray-50/80 ${idx !== filtered.length - 1 ? 'border-b border-gray-100' : ''}`}
-                  >
-                    {/* Name + Email */}
-                    <div className="col-span-3 flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
-                        {c.name.charAt(0)}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-gray-900 truncate">{c.name}</p>
-                        <p className="text-[10px] text-gray-400 truncate">{c.email}</p>
-                      </div>
+            {/* Rows */}
+            {filteredCustomers.length === 0 ? (
+              <div className="py-16 text-center">
+                <Users className="w-10 h-10 text-gray-200 mx-auto mb-3" />
+                <p className="text-sm font-bold text-gray-400">No customers found</p>
+                <p className="text-xs text-gray-300 mt-1">Try changing your search or filter</p>
+              </div>
+            ) : (
+              filteredCustomers.map((c, idx) => (
+                <div
+                  key={c.id}
+                  className={`grid grid-cols-12 px-5 py-3.5 items-center transition-colors hover:bg-gray-50/80 ${idx !== filteredCustomers.length - 1 ? 'border-b border-gray-100' : ''}`}
+                >
+                  {/* Name + Email */}
+                  <div className="col-span-3 flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#12372A] to-[#2e8a60] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
+                      {c.name.charAt(0)}
                     </div>
-
-                    {/* Phone */}
-                    <div className="col-span-2">
-                      <p className="text-xs text-gray-600 font-medium truncate">
-                        {(() => { const p = (c.phone || '').replace(/^\+91\s*$/, '').trim(); return p ? (p.startsWith('+') ? p : `+91 ${p}`) : '-'; })()}
-                      </p>
-                    </div>
-
-                    {/* Applications */}
-                    <div className="col-span-2 text-center">
-                      <div className="inline-flex items-center gap-1.5">
-                        <FileText className="w-3.5 h-3.5 text-[#12372A]" />
-                        <span className="text-xs font-bold text-gray-800">{c.applications}</span>
-                      </div>
-                    </div>
-
-                    {/* Pending Balance */}
-                    <div className="col-span-2 text-center">
-                      <div className="inline-flex items-center gap-1.5">
-                        <Wallet className="w-3.5 h-3.5 text-amber-600" />
-                        <span className={`text-xs font-bold ${c.balance === '₹0' ? 'text-gray-400' : 'text-amber-700'}`}>{c.balance}</span>
-                      </div>
-                    </div>
-
-                    {/* Status */}
-                    <div className="col-span-1 flex justify-center">
-                      <StatusBadge status={c.status} />
-                    </div>
-
-                    {/* Actions */}
-                    <div className="col-span-2 flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => setEditCustomer(c)}
-                        suppressHydrationWarning
-                        className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all group"
-                        title="Edit"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteCustomer(c)}
-                        suppressHydrationWarning
-                        className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-gray-900 truncate">{c.name}</p>
+                      <p className="text-[10px] text-gray-400 truncate">{c.email}</p>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
+
+                  {/* Phone */}
+                  <div className="col-span-2">
+                    <p className="text-xs text-gray-600 font-medium truncate">{c.phone}</p>
+                  </div>
+
+                  {/* Applications */}
+                  <div className="col-span-2 text-center">
+                    <div className="inline-flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-[#12372A]" />
+                      <span className="text-xs font-bold text-gray-800">{c.applications}</span>
+                    </div>
+                  </div>
+
+                  {/* Pending Balance */}
+                  <div className="col-span-2 text-center">
+                    <div className="inline-flex items-center gap-1.5">
+                      <Wallet className="w-3.5 h-3.5 text-amber-600" />
+                      <span className={`text-xs font-bold ${c.balance === '₹0' ? 'text-gray-400' : 'text-amber-700'}`}>{c.balance}</span>
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div className="col-span-1 flex justify-center">
+                    <StatusBadge status={c.status} />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="col-span-2 flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => setEditCustomer(c)}
+                      suppressHydrationWarning
+                      className="w-7 h-7 rounded-full bg-[#f0f7f2] hover:bg-[#12372A] text-[#12372A] hover:text-white flex items-center justify-center transition-all group"
+                      title="Edit"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteCustomer(c)}
+                      suppressHydrationWarning
+                      className="w-7 h-7 rounded-full bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white flex items-center justify-center transition-all"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 

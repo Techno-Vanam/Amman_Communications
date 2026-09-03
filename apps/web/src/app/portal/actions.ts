@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 const API_BASE_URL =
   process.env.API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3003';
+  'http://127.0.0.1:3003';
 
 async function authenticatedFetch(endpoint: string, options: RequestInit = {}) {
   const cookieStore = await cookies();
@@ -87,6 +87,33 @@ export async function cancelAppointmentAction(appointmentId: string) {
   } catch (error) {
     console.error('Error canceling appointment:', error);
     return { error: 'Network error occurred while canceling appointment.' };
+  }
+}
+
+export async function rescheduleAppointmentAction(
+  appointmentId: string,
+  dto: {
+    preferredDate: string;
+    preferredTime?: string;
+    reason?: string;
+  },
+) {
+  try {
+    const res = await authenticatedFetch(`/customer/appointments/${appointmentId}/reschedule`, {
+      method: 'PATCH',
+      body: JSON.stringify(dto),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { error: data.message || 'Failed to reschedule appointment' };
+    }
+
+    revalidatePath('/portal/appointments');
+    return { success: true, appointment: data.data || data };
+  } catch (error) {
+    console.error('Error rescheduling appointment:', error);
+    return { error: 'Network error occurred while rescheduling appointment.' };
   }
 }
 

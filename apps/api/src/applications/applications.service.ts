@@ -181,10 +181,13 @@ export class ApplicationsService {
         orderBy: { createdAt: 'desc' },
         include: {
           customer: {
-            select: { name: true, email: true },
+            select: { id: true, name: true, email: true, phone: true },
           },
           service: {
-            select: { name: true },
+            select: { id: true, name: true, totalFee: true },
+          },
+          documents: {
+            orderBy: { uploadedAt: 'asc' },
           },
           _count: {
             select: { documents: true },
@@ -200,6 +203,39 @@ export class ApplicationsService {
     };
   }
 
+  async adminListApplications(filters: { search?: string; status?: any }) {
+    const where: any = {};
+    if (filters.status && filters.status !== 'ALL') {
+      where.status = filters.status;
+    }
+    if (filters.search && filters.search.trim()) {
+      const q = filters.search.trim();
+      where.OR = [
+        { applicationNumber: { contains: q, mode: 'insensitive' } },
+        { fullName: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+        { serviceType: { contains: q, mode: 'insensitive' } },
+        { title: { contains: q, mode: 'insensitive' } },
+      ];
+    }
+
+    return this.prisma.application.findMany({
+      where,
+      include: {
+        customer: {
+          select: { id: true, name: true, email: true, phone: true },
+        },
+        service: {
+          select: { id: true, name: true, totalFee: true },
+        },
+        documents: {
+          orderBy: { uploadedAt: 'asc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async adminUpdateApplicationStatus(applicationId: string, status: any, notes?: string) {
     const existing = await this.prisma.application.findUnique({
       where: { id: applicationId },
@@ -212,7 +248,11 @@ export class ApplicationsService {
     return this.prisma.application.update({
       where: { id: applicationId },
       data: { status, ...(notes !== undefined ? { notes } : {}) },
-      include: { customer: true },
+      include: {
+        customer: true,
+        service: true,
+        documents: true,
+      },
     });
   }
 
@@ -236,6 +276,11 @@ export class ApplicationsService {
         address: dto.address,
         notes: dto.notes,
         status: dto.status,
+      },
+      include: {
+        customer: true,
+        service: true,
+        documents: true,
       },
     });
   }
@@ -262,8 +307,8 @@ export class ApplicationsService {
           OR: [
             ...(emailToCheck ? [{ email: { equals: emailToCheck.toLowerCase().trim(), mode: 'insensitive' as any } }] : []),
             ...(nameToCheck ? [{ name: { equals: nameToCheck.trim(), mode: 'insensitive' as any } }] : []),
-          ]
-        }
+          ],
+        },
       });
 
       if (existingOtherCustomer) {
@@ -272,7 +317,7 @@ export class ApplicationsService {
     }
 
     const matchedService = await this.prisma.service.findFirst({
-      where: { name: { equals: dto.serviceType, mode: 'insensitive' as any } }
+      where: { name: { equals: dto.serviceType, mode: 'insensitive' as any } },
     });
 
     return this.prisma.application.create({
@@ -287,7 +332,7 @@ export class ApplicationsService {
         phone: dto.phone || customer.phone || '',
         address: dto.address || '',
         notes: dto.notes || '',
-        status: 'SUBMITTED', // Admin-created apps start as SUBMITTED, not DRAFT
+        status: 'SUBMITTED',
       },
       include: { customer: true, documents: true },
     });
@@ -298,6 +343,7 @@ export class ApplicationsService {
       where: { id: applicationId },
       include: {
         customer: { select: { id: true, name: true, email: true, phone: true } },
+        service: true,
         documents: true,
       },
     });
@@ -324,4 +370,3 @@ export class ApplicationsService {
     });
   }
 }
-

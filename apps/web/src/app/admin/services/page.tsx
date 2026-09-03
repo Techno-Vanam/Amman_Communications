@@ -18,44 +18,19 @@ import {
   Tag,
   FileText,
   DollarSign,
-  IndianRupee,
   ToggleLeft,
   ToggleRight,
   AlertCircle,
   BadgeCheck,
 } from 'lucide-react';
 import {
-  fetchAdminServicesAction,
-  createAdminServiceAction,
-  updateAdminServiceAction,
-  updateAdminServiceStatusAction,
-  deleteAdminServiceAction,
-} from '@/app/admin/actions';
-
-function mapBackendService(s: any): Service {
-  // Category is encoded into description as "[Category] actual description"
-  let category = 'Broadband';
-  let description = s.description || '';
-  const catMatch = description.match(/^\[([^\]]+)\]\s*(.*)$/);
-  if (catMatch) {
-    category = catMatch[1];
-    description = catMatch[2];
-  }
-
-  return {
-    id: s.id,
-    name: s.name,
-    category,
-    requiredDocs: (s.requiredDocuments || []).map((d: any) => ({ name: d.name })),
-    govtFee: Number(s.governmentFee || 0),
-    officeCharge: Number(s.serviceFee || 0),
-    estDays: parseInt(s.estimatedTime || '7', 10) || 7,
-    status: s.status === 'ACTIVE' ? 'Active' : s.status === 'INACTIVE' ? 'Inactive' : 'Draft',
-    description,
-    isPartialPaymentAllowed: !!s.isPartialPaymentAllowed,
-    minimumPartialFee: s.minimumPartialFee ? Number(s.minimumPartialFee) : null,
-  };
-}
+  fetchServicesAction,
+  createServiceAction,
+  updateServiceAction,
+  updateServiceStatusAction,
+  deleteServiceAction,
+} from './actions';
+import StatCard from '@/components/ui/StatCard';
 
 // ── Types ─────────────────────────────────────────────────────
 type ServiceStatus = 'Active' | 'Inactive' | 'Draft';
@@ -74,8 +49,6 @@ interface Service {
   estDays: number;
   status: ServiceStatus;
   description: string;
-  isPartialPaymentAllowed?: boolean;
-  minimumPartialFee?: number | null;
 }
 
 // ── Mock Data ─────────────────────────────────────────────────
@@ -94,7 +67,7 @@ const DEFAULT_DOCS = [
 // ── Status config ─────────────────────────────────────────────
 const STATUS_CFG: Record<ServiceStatus, { badge: string; icon: React.ReactNode; dot: string }> = {
   Active:   { badge: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: <CheckCircle className="w-3 h-3" />, dot: 'bg-emerald-500' },
-  Inactive: { badge: 'bg-rose-100 text-rose-700 border-rose-200',         icon: <XCircle className="w-3 h-3" />,    dot: 'bg-rose-400' },
+  Inactive: { badge: 'bg-gray-100 text-gray-600 border-gray-200',         icon: <XCircle className="w-3 h-3" />,    dot: 'bg-gray-400' },
   Draft:    { badge: 'bg-amber-100 text-amber-800 border-amber-200',      icon: <FileEdit className="w-3 h-3" />,   dot: 'bg-amber-500' },
 };
 
@@ -126,8 +99,6 @@ function ServiceModal({
     govtFee: service?.govtFee?.toString() ?? '0',
     officeCharge: service?.officeCharge?.toString() ?? '0',
     estDays: service?.estDays?.toString() ?? '7',
-    isPartialPaymentAllowed: service?.isPartialPaymentAllowed ?? false,
-    minimumPartialFee: service?.minimumPartialFee?.toString() ?? '',
     status: service?.status ?? 'Active' as ServiceStatus,
     selectedDocs: service?.requiredDocs.map(d => d.name) ?? [] as string[],
     customDoc: '',
@@ -140,12 +111,6 @@ function ServiceModal({
     if (isNaN(Number(form.govtFee)) || Number(form.govtFee) < 0) e.govtFee = 'Valid amount required';
     if (isNaN(Number(form.officeCharge)) || Number(form.officeCharge) < 0) e.officeCharge = 'Valid amount required';
     if (isNaN(Number(form.estDays)) || Number(form.estDays) < 1) e.estDays = 'Minimum 1 day';
-    if (form.isPartialPaymentAllowed) {
-      const minFee = Number(form.minimumPartialFee);
-      if (isNaN(minFee) || minFee <= 0) {
-        e.minimumPartialFee = 'Valid positive amount required';
-      }
-    }
     return e;
   }
 
@@ -176,8 +141,6 @@ function ServiceModal({
       govtFee: Number(form.govtFee),
       officeCharge: Number(form.officeCharge),
       estDays: Number(form.estDays),
-      isPartialPaymentAllowed: form.isPartialPaymentAllowed,
-      minimumPartialFee: form.isPartialPaymentAllowed ? Number(form.minimumPartialFee) : null,
       status: form.status,
       requiredDocs: form.selectedDocs.map(n => ({ name: n })),
     });
@@ -246,7 +209,7 @@ function ServiceModal({
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5">Govt. Fee (₹)</label>
               <div className="relative">
-                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                 <input type="number" min="0" value={form.govtFee} onChange={e => setForm(p => ({ ...p, govtFee: e.target.value }))}
                   className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all" />
               </div>
@@ -255,7 +218,7 @@ function ServiceModal({
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5">Office Charge (₹)</label>
               <div className="relative">
-                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                 <input type="number" min="0" value={form.officeCharge} onChange={e => setForm(p => ({ ...p, officeCharge: e.target.value }))}
                   className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all" />
               </div>
@@ -277,36 +240,6 @@ function ServiceModal({
             <span className="text-xs font-bold text-[#12372A]">Total Fee</span>
             <span className="text-base font-extrabold text-[#12372A]">₹{totalFee.toLocaleString('en-IN')}</span>
           </div>
-
-          {/* Payment Configuration */}
-          <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-xs font-bold text-gray-900">Allow Partial Payment</h4>
-                <p className="text-[10px] text-gray-500 mt-0.5">Let customers pay an advance amount instead of full fee upfront.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setForm(p => ({ ...p, isPartialPaymentAllowed: !p.isPartialPaymentAllowed }))}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${form.isPartialPaymentAllowed ? 'bg-[#12372A]' : 'bg-gray-300'}`}
-              >
-                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${form.isPartialPaymentAllowed ? 'translate-x-4' : 'translate-x-0'}`} />
-              </button>
-            </div>
-            
-            {form.isPartialPaymentAllowed && (
-              <div className="pt-2 border-t border-gray-200">
-                <label className="block text-[11px] font-bold text-gray-700 mb-1.5">Minimum Advance Amount (₹)</label>
-                <div className="relative">
-                  <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
-                  <input type="number" min="1" value={form.minimumPartialFee} onChange={e => setForm(p => ({ ...p, minimumPartialFee: e.target.value }))}
-                    className="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-200 bg-white text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#12372A]/30 focus:border-[#12372A] transition-all" />
-                </div>
-                {errors.minimumPartialFee && <p className="text-[10px] text-rose-600 mt-1">{errors.minimumPartialFee}</p>}
-              </div>
-            )}
-          </div>
-
 
           {/* Required Docs */}
           <div>
@@ -457,7 +390,6 @@ type FilterType = 'All' | ServiceStatus;
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<FilterType>('All');
   const [filterCategory, setFilterCategory] = useState<string>('All');
@@ -467,94 +399,119 @@ export default function ServicesPage() {
   const [viewService, setViewService] = useState<Service | null>(null);
   const [editService, setEditService] = useState<Service | null>(null);
   const [deleteService, setDeleteService] = useState<Service | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const loadServices = async () => {
-    setLoading(true);
-    const raw = await fetchAdminServicesAction();
-    const mapped = (raw || []).map(mapBackendService);
-    setServices(mapped);
-    setLoading(false);
+    setIsLoading(true);
+    setErrorMsg(null);
+    const res = await fetchServicesAction(search, filterStatus);
+    if (res.error) {
+      setErrorMsg(res.error);
+      setServices([]);
+    } else if (res.success && res.data) {
+      const mapped = res.data.map((s: any) => {
+        let category = 'Support';
+        let description = s.description || '';
+        if (description.startsWith('[')) {
+          const parts = description.split(']');
+          category = parts[0].slice(1);
+          description = parts.slice(1).join(']');
+        }
+        let estDays = 7;
+        if (s.estimatedTime) {
+          const num = parseInt(s.estimatedTime);
+          if (!isNaN(num)) estDays = num;
+        }
+        return {
+          id: s.id,
+          name: s.name,
+          category,
+          requiredDocs: (s.requiredDocuments || []).map((doc: any) => ({ name: doc.name })),
+          govtFee: s.governmentFee || 0,
+          officeCharge: s.serviceFee || 0,
+          estDays,
+          status: s.status === 'ACTIVE' ? 'Active' : s.status === 'INACTIVE' ? 'Inactive' : 'Draft',
+          description,
+        };
+      });
+      setServices(mapped);
+    }
+    setIsLoading(false);
   };
 
   useEffect(() => {
     loadServices();
-  }, []);
+  }, [search, filterStatus]);
 
   const filtered = useMemo(() => services.filter(s => {
     const q = search.toLowerCase();
-    const matchSearch = s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || s.id.toLowerCase().includes(q);
+    const matchSearch = s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || s.id.toLowerCase().includes(q) || (s.description && s.description.toLowerCase().includes(q));
     const matchStatus = filterStatus === 'All' || s.status === filterStatus;
     const matchCat = filterCategory === 'All' || s.category === filterCategory;
     return matchSearch && matchStatus && matchCat;
   }), [services, search, filterStatus, filterCategory]);
 
   async function handleAdd(data: Partial<Service>) {
-    const statusMap: Record<string, 'ACTIVE' | 'INACTIVE' | 'DRAFT'> = {
-      'Active': 'ACTIVE', 'Inactive': 'INACTIVE', 'Draft': 'DRAFT'
-    };
-    // Encode category into description since DB has no category column
-    const encodedDescription = `[${data.category || 'Broadband'}] ${data.description || ''}`;
-    const res = await createAdminServiceAction({
+    setErrorMsg(null);
+    const res = await createServiceAction({
       name: data.name ?? '',
-      description: encodedDescription,
-      governmentFee: Number(data.govtFee || 0),
-      serviceFee: Number(data.officeCharge || 0),
-      estimatedTime: `${data.estDays || 7} Days`,
-      status: statusMap[data.status || 'Active'],
-      isPartialPaymentAllowed: data.isPartialPaymentAllowed ?? false,
-      minimumPartialFee: data.isPartialPaymentAllowed ? (data.minimumPartialFee ?? null) : null,
-      requiredDocuments: (data.requiredDocs || []).map((d, i) => ({ name: d.name, displayOrder: i + 1, isRequired: true }))
+      category: data.category ?? 'Support',
+      description: data.description,
+      govtFee: data.govtFee ?? 0,
+      officeCharge: data.officeCharge ?? 0,
+      estDays: data.estDays ?? 7,
+      status: data.status ?? 'Draft',
+      requiredDocs: data.requiredDocs ?? [],
     });
     if (res.error) {
-      alert(res.error);
-      return;
+      setErrorMsg(res.error);
+    } else {
+      loadServices();
     }
-    loadServices();
   }
 
   async function handleEdit(data: Partial<Service>) {
     if (!editService) return;
-    const statusMap: Record<string, 'ACTIVE' | 'INACTIVE' | 'DRAFT'> = {
-      'Active': 'ACTIVE', 'Inactive': 'INACTIVE', 'Draft': 'DRAFT'
-    };
-    const encodedDescription = `[${data.category || editService.category}] ${data.description ?? editService.description}`;
-    const res = await updateAdminServiceAction(editService.id, {
+    setErrorMsg(null);
+    const res = await updateServiceAction(editService.id, {
       name: data.name,
-      description: encodedDescription,
-      governmentFee: data.govtFee !== undefined ? Number(data.govtFee) : undefined,
-      serviceFee: data.officeCharge !== undefined ? Number(data.officeCharge) : undefined,
-      estimatedTime: data.estDays ? `${data.estDays} Days` : undefined,
-      status: data.status ? statusMap[data.status] : undefined,
-      isPartialPaymentAllowed: data.isPartialPaymentAllowed,
-      minimumPartialFee: data.isPartialPaymentAllowed ? (data.minimumPartialFee ?? null) : null,
-      requiredDocuments: data.requiredDocs ? data.requiredDocs.map((d, i) => ({ name: d.name, displayOrder: i + 1, isRequired: true })) : undefined
+      category: data.category,
+      description: data.description,
+      govtFee: data.govtFee,
+      officeCharge: data.officeCharge,
+      estDays: data.estDays,
+      status: data.status,
+      requiredDocs: data.requiredDocs,
     });
     if (res.error) {
-      alert(res.error);
-      return;
+      setErrorMsg(res.error);
+    } else {
+      loadServices();
     }
-    loadServices();
   }
 
   async function toggleStatus(id: string) {
+    setErrorMsg(null);
     const svc = services.find(s => s.id === id);
     if (!svc) return;
-    const nextStatus = svc.status === 'Active' ? 'INACTIVE' : 'ACTIVE';
-    const res = await updateAdminServiceStatusAction(id, nextStatus as any);
+    const targetStatus = svc.status === 'Active' ? 'Inactive' : 'Active';
+    const res = await updateServiceStatusAction(id, targetStatus);
     if (res.error) {
-      alert(res.error);
-      return;
+      setErrorMsg(res.error);
+    } else {
+      loadServices();
     }
-    loadServices();
   }
 
   async function handleDelete(id: string) {
-    const res = await deleteAdminServiceAction(id);
+    setErrorMsg(null);
+    const res = await deleteServiceAction(id);
     if (res.error) {
-      alert(res.error);
-      return;
+      setErrorMsg(res.error);
+    } else {
+      loadServices();
     }
-    loadServices();
   }
 
   const counts = {
@@ -567,43 +524,45 @@ export default function ServicesPage() {
   const fmtAmt = (n: number) => n === 0 ? '—' : `₹${n.toLocaleString('en-IN')}`;
 
   return (
-    <div className="max-w-7xl mx-auto h-full flex flex-col pb-6 font-sans" suppressHydrationWarning>
+    <div className="max-w-7xl mx-auto space-y-6 pb-12 font-sans" suppressHydrationWarning>
 
-      {/* Top Section (Fixed) */}
-      <div className="shrink-0 space-y-4 lg:space-y-6">
-        {/* ── Page Header ── */}
-        <div className="flex justify-end">
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 text-[#a8d5b9]" />
-          Add New Service
-        </button>
-      </div>
+
 
       {/* ── Summary Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Services', value: counts.total, icon: <Building2 className="w-5 h-5 text-[#12372A]" />, bg: 'bg-[#f0f7f2] border-[#a8d5b9]/50', text: 'text-[#12372A]', sub: 'In catalog' },
-          { label: 'Active Services', value: counts.active, icon: <CheckCircle className="w-5 h-5 text-emerald-600" />, bg: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700', sub: 'Published & live' },
-          { label: 'Inactive Services', value: counts.inactive, icon: <XCircle className="w-5 h-5 text-gray-500" />, bg: 'bg-gray-50 border-gray-200', text: 'text-gray-700', sub: 'Disabled' },
-          { label: 'Draft Services', value: counts.draft, icon: <FileEdit className="w-5 h-5 text-amber-600" />, bg: 'bg-amber-50 border-amber-200', text: 'text-amber-700', sub: 'Unpublished' },
-        ].map(card => (
-          <div key={card.label} className={`rounded-2xl border p-5 ${card.bg} hover:shadow-md transition-shadow`}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-9 h-9 rounded-xl bg-white/60 flex items-center justify-center">{card.icon}</div>
-            </div>
-            <p className={`text-3xl font-extrabold ${card.text}`}>{card.value}</p>
-            <p className="text-xs text-gray-500 font-semibold mt-1">{card.label}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">{card.sub}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Total Services"
+          value={counts.total}
+          sub="Catalog offerings"
+          icon={Building2}
+          variant="teal"
+        />
+        <StatCard
+          label="Active Services"
+          value={counts.active}
+          sub="Published & live"
+          icon={CheckCircle}
+          variant="emerald"
+        />
+        <StatCard
+          label="Draft Services"
+          value={counts.draft}
+          sub="Work in progress"
+          icon={FileEdit}
+          variant="amber"
+        />
+        <StatCard
+          label="Inactive Services"
+          value={counts.inactive}
+          sub="Disabled offerings"
+          icon={XCircle}
+          variant="rose"
+        />
       </div>
 
       {/* ── Search + Filters ── */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className="relative w-full sm:max-w-sm mr-auto">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input type="text" placeholder="Search by service name or ID..."
             value={search} onChange={e => setSearch(e.target.value)}
@@ -612,9 +571,9 @@ export default function ServicesPage() {
         </div>
 
         {/* Status Filter */}
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <button onClick={() => setShowStatusMenu(s => !s)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs transition-all">
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs transition-all">
             <Filter className="w-4 h-4 text-gray-500" />
             {filterStatus === 'All' ? 'All Status' : filterStatus}
             <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showStatusMenu ? 'rotate-180' : ''}`} />
@@ -630,9 +589,9 @@ export default function ServicesPage() {
         </div>
 
         {/* Category Filter */}
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <button onClick={() => setShowCatMenu(s => !s)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs transition-all">
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 rounded-full border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 shadow-xs transition-all">
             <Tag className="w-4 h-4 text-gray-500" />
             {filterCategory === 'All' ? 'All Categories' : filterCategory}
             <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showCatMenu ? 'rotate-180' : ''}`} />
@@ -646,15 +605,20 @@ export default function ServicesPage() {
             </div>
           )}
         </div>
-      </div>
+        
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#12372A] hover:bg-[#1a4a38] text-white px-5 py-2.5 rounded-full font-bold text-xs transition-all shadow-md shrink-0"
+        >
+          <Plus className="w-4 h-4 text-[#a8d5b9]" />
+          Add New Service
+        </button>
       </div>
 
-      {/* ── Services Table (Scrollable) ── */}
-      <div className="mt-4 lg:mt-6 bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden flex flex-col flex-1 min-h-0">
-        <div className="overflow-x-auto w-full flex flex-col flex-1 min-h-0">
-          <div className="min-w-[900px] flex flex-col flex-1 min-h-0">
-            {/* Header */}
-            <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest shrink-0 sticky top-0 z-10">
+      {/* ── Services Table ── */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
+        {/* Header */}
+        <div className="grid grid-cols-12 px-5 py-3 bg-gray-50 border-b border-gray-100 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
           <div className="col-span-3">Service Name</div>
           <div className="col-span-2">Required Docs</div>
           <div className="col-span-1 text-right">Govt. Fee</div>
@@ -666,8 +630,7 @@ export default function ServicesPage() {
         </div>
 
         {/* Rows */}
-        <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
-          {filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="py-16 text-center">
             <Building2 className="w-10 h-10 text-gray-200 mx-auto mb-3" />
             <p className="text-sm font-bold text-gray-400">No services found</p>
@@ -754,10 +717,13 @@ export default function ServicesPage() {
             </div>
           </div>
         ))}
+
+        {/* Footer */}
+        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+          <p className="text-[11px] text-gray-400">Showing {filtered.length} of {services.length} services</p>
+          <p className="text-[11px] text-gray-400">{counts.active} active · {counts.draft} drafts</p>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
 
       {/* ── Modals ── */}
       {showAddModal && <ServiceModal mode="add" onClose={() => setShowAddModal(false)} onSave={handleAdd} />}

@@ -51,6 +51,11 @@ export default function ReceiptDetailPage({ params }: ReceiptPageProps) {
           const txns = JSON.parse(raw);
           const match = txns.find((t: any) => t.id === paymentId || t.appId === paymentId);
           if (match) {
+            const actualPaidAmt = match.paidAmount && match.paidAmount > 0 ? match.paidAmount : (match.status === 'Partial' ? 1000 : (match.totalAmount || 2000));
+            const fullServiceFee = match.totalAmount || 2000;
+            const remainingPending = match.pendingAmount !== undefined ? match.pendingAmount : (match.status === 'Partial' ? 1000 : 0);
+            const isPartial = match.status === 'Partial' || (match.paidAmount > 0 && match.paidAmount < fullServiceFee);
+
             setPayment({
               receiptNumber: match.id.startsWith('REC-') ? match.id : `REC-${match.id}`,
               paymentDate: match.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -59,15 +64,19 @@ export default function ReceiptDetailPage({ params }: ReceiptPageProps) {
               customerPhone: activePhone,
               customerAddress: activeAddress,
               applicationNumber: match.appId || 'AMC-2026-000001',
-              description: `${match.service || 'Service Fee'} Application Fee`,
+              description: isPartial
+                ? `${match.service || 'Service Request'} (50% Initial Partition Fee)`
+                : `${match.service || 'Service Fee'} Application Fee`,
               quantity: 1,
-              unitPrice: match.totalAmount || 2000,
-              subtotal: match.totalAmount || 2000,
+              unitPrice: actualPaidAmt,
+              subtotal: actualPaidAmt,
               tax: 0,
-              totalAmount: match.totalAmount || 2000,
+              totalAmount: actualPaidAmt, // INVOICE ONLY FOR THE AMOUNT ACTUALLY PAID
+              serviceTotalFee: fullServiceFee,
+              pendingBalance: remainingPending,
               paymentMethod: match.paymentMode || 'UPI / NetBanking',
               transactionId: match.id,
-              paymentStatus: (match.status || 'PAID').toUpperCase(),
+              paymentStatus: isPartial ? 'PARTIAL' : 'PAID',
             });
             return;
           }
@@ -88,13 +97,15 @@ export default function ReceiptDetailPage({ params }: ReceiptPageProps) {
       applicationNumber: 'AMC-2026-000001',
       description: 'Official Government Service & Application Fee',
       quantity: 1,
-      unitPrice: 2000,
-      subtotal: 2000,
+      unitPrice: 1000,
+      subtotal: 1000,
       tax: 0,
-      totalAmount: 2000,
+      totalAmount: 1000,
+      serviceTotalFee: 2000,
+      pendingBalance: 1000,
       paymentMethod: 'UPI / NetBanking',
       transactionId: paymentId,
-      paymentStatus: 'PAID',
+      paymentStatus: 'PARTIAL',
     });
   }, [paymentId, user]);
 

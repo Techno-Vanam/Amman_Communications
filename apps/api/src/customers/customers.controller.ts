@@ -20,10 +20,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
-
 @ApiTags('Admin - Customers')
 @ApiBearerAuth()
-@Controller('admin/customers')
+@Controller(['admin/customers', 'v1/admin/customers', 'api/v1/admin/customers'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 export class CustomersController {

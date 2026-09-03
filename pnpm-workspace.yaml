@@ -10,6 +10,6 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
   '@scarf/scarf': true
-  '@firebase/util': true
+  '@firebase/util': false
 minimumReleaseAgeExclude:
   - nodemailer@9.1.1

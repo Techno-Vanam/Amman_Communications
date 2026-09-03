@@ -1,89 +1,101 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { ApiOperation, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { IsEmail, IsString, MinLength, Length, Matches } from 'class-validator';
+import { Body, Controller, Get, Post, Req, Res, UnauthorizedException } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { PasswordResetService } from './password-reset.service';
 
-class LoginDto {
-  @ApiProperty({ description: 'Account email address', example: 'admin@test.com' })
+export class LoginDto {
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ description: 'Account password', example: 'password123' })
   @IsString()
-  @MinLength(1)
+  @IsNotEmpty()
   password!: string;
 }
 
-class RegisterDto {
-  @ApiProperty({ description: 'Full name of the user', example: 'Test Customer' })
+export class RegisterDto {
   @IsString()
-  @MinLength(2)
+  @IsNotEmpty()
   name!: string;
 
-  @ApiProperty({ description: 'Account email address', example: 'customer@test.com' })
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ description: 'Account password', example: 'password123' })
   @IsString()
-  @MinLength(8)
+  @MinLength(6)
   password!: string;
 }
 
-class ForgotPasswordDto {
-  @ApiProperty({ description: 'Email address to send reset code to', example: 'user@example.com' })
+export class ForgotPasswordDto {
   @IsEmail()
   email!: string;
 }
 
-class VerifyResetOtpDto {
-  @ApiProperty({ description: 'Email address associated with the reset request', example: 'user@example.com' })
+export class VerifyResetOtpDto {
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ description: '6-digit verification code', example: '123456' })
   @IsString()
-  @Length(6, 6, { message: 'OTP must be exactly 6 digits' })
-  @Matches(/^\d{6}$/, { message: 'OTP must contain only digits' })
+  @IsNotEmpty()
   otp!: string;
 }
 
-class ResetPasswordDto {
-  @ApiProperty({ description: 'Email address associated with the reset request', example: 'user@example.com' })
+export class ResetPasswordDto {
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ description: 'Reset token received after OTP verification' })
   @IsString()
+  @IsNotEmpty()
   token!: string;
 
-  @ApiProperty({ description: 'New password (min 8 chars, uppercase, lowercase, number, special char)', example: 'NewPass@123' })
   @IsString()
   @MinLength(8)
   newPassword!: string;
 }
 
-class ResendOtpDto {
-  @ApiProperty({ description: 'Email address to resend the reset code to', example: 'user@example.com' })
+export class ResendOtpDto {
   @IsEmail()
   email!: string;
 }
 
 @ApiTags('Auth')
-@Controller('auth')
+@Controller(['auth', 'v1/auth', 'api/v1/auth'])
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly passwordReset: PasswordResetService,
   ) {}
 
+  private setRefreshCookie(response: Response, token: string) {
+    response.cookie('refresh_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+  }
+
+  private clearRefreshCookie(response: Response) {
+    response.clearCookie('refresh_token', { httpOnly: true, sameSite: 'lax', path: '/' });
+  }
+
+  private getRefreshToken(request: Request) {
+    const cookieHeader = request.headers.cookie ?? '';
+    return cookieHeader
+      .split(';')
+      .map((part) => part.trim().split('='))
+      .find(([name]) => name === 'refresh_token')?.[1];
+  }
+
   @Post('login')
   @ApiOperation({ summary: 'User Login', description: 'Authenticates admin or customer and returns JWT access token.' })
   @ApiResponse({ status: 201, description: 'Authentication successful. Returns access token and user role.' })
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
-  async login(@Body() dto: LoginDto) {
-    const { accessToken, user } = await this.auth.login(dto.email, dto.password);
+  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: Response) {
+    const { accessToken, refreshToken, user } = await this.auth.login(dto.email, dto.password);
+    this.setRefreshCookie(response, refreshToken);
     return { accessToken, user };
   }
 
@@ -91,8 +103,9 @@ export class AuthController {
   @ApiOperation({ summary: 'Customer Registration', description: 'Registers a new customer account.' })
   @ApiResponse({ status: 201, description: 'Registration successful. Returns access token and user info.' })
   @ApiResponse({ status: 400, description: 'Bad Request - Validation error or duplicate email.' })
-  async register(@Body() dto: RegisterDto) {
-    const { accessToken, user } = await this.auth.register(dto.name, dto.email, dto.password);
+  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) response: Response) {
+    const { accessToken, refreshToken, user } = await this.auth.register(dto.name, dto.email, dto.password);
+    this.setRefreshCookie(response, refreshToken);
     return { accessToken, user };
   }
 
@@ -149,5 +162,39 @@ export class AuthController {
     const result = await this.passwordReset.resendOTP(dto.email);
     return { success: result.success, message: result.message };
   }
-}
 
+  @Get('me')
+  @ApiOperation({ summary: 'Get Current Authenticated User' })
+  async me(@Req() request: Request) {
+    const authHeader = request.headers.authorization;
+    let token: string | undefined;
+    if (authHeader?.startsWith('Bearer ')) {
+      token = authHeader.slice(7);
+    } else {
+      const cookieHeader = request.headers.cookie ?? '';
+      token = cookieHeader
+        .split(';')
+        .map((part) => part.trim().split('='))
+        .find(([name]) => name === 'access_token')?.[1];
+    }
+    if (!token) throw new UnauthorizedException('Missing access token');
+    const user = await this.auth.getUserFromAccessToken(token);
+    return { user };
+  }
+
+  @Post('refresh')
+  async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
+    const refreshToken = this.getRefreshToken(request);
+    if (!refreshToken) throw new UnauthorizedException('Refresh token is missing');
+    const session = await this.auth.refresh(refreshToken);
+    this.setRefreshCookie(response, session.refreshToken);
+    return { accessToken: session.accessToken, user: session.user };
+  }
+
+  @Post('logout')
+  async logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
+    await this.auth.logout(this.getRefreshToken(request));
+    this.clearRefreshCookie(response);
+    return { success: true };
+  }
+}

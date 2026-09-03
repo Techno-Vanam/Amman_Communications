@@ -1,6 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { getAccessToken } from '@/lib/server-auth';
 
 const API_BASE_URL =
   process.env.API_BASE_URL ??
@@ -8,8 +9,7 @@ const API_BASE_URL =
   'http://localhost:3003';
 
 async function getAuthHeader(): Promise<Record<string, string>> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
+  const token = (await getAccessToken()) || (await cookies()).get('access_token')?.value;
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -31,20 +31,16 @@ export async function fetchApplicationsAction(search?: string, status?: string) 
       const apiStatus = UI_TO_DB_STATUS[status] || 'SUBMITTED';
       params.append('status', apiStatus);
     }
-    params.append('limit', '100'); // return up to 100 entries
+    params.append('limit', '100');
 
     let res = await fetch(`${API_BASE_URL}/v1/admin/applications?${params.toString()}`, {
-      headers: {
-        ...authHeader,
-      },
+      headers: { ...authHeader },
       cache: 'no-store',
     });
 
     if (res.status === 404) {
       res = await fetch(`${API_BASE_URL}/api/v1/admin/applications?${params.toString()}`, {
-        headers: {
-          ...authHeader,
-        },
+        headers: { ...authHeader },
         cache: 'no-store',
       });
     }
@@ -75,7 +71,7 @@ export async function updateApplicationStatusAction(id: string, status: string, 
       'Pending Payment': 'PENDING_PAYMENT',
       'Completed': 'COMPLETED'
     };
-    const apiStatus = UI_TO_DB_STATUS[status] || 'SUBMITTED';
+    const apiStatus = UI_TO_DB_STATUS[status] || status || 'SUBMITTED';
 
     let res = await fetch(`${API_BASE_URL}/v1/admin/applications/${id}/status`, {
       method: 'PUT',
@@ -232,6 +228,7 @@ export async function fetchApplicationDocumentsAction(applicationId: string) {
     return { error: error.message || 'Network error' };
   }
 }
+
 export async function updateApplicationAction(id: string, data: Partial<any>) {
   try {
     const authHeader = await getAuthHeader();
@@ -247,7 +244,7 @@ export async function updateApplicationAction(id: string, data: Partial<any>) {
         'Pending Payment': 'PENDING_PAYMENT',
         'Completed': 'COMPLETED'
       };
-      payload.status = UI_TO_DB_STATUS[payload.status] || 'SUBMITTED';
+      payload.status = UI_TO_DB_STATUS[payload.status] || payload.status || 'SUBMITTED';
     }
     if (payload.customer) {
       payload.fullName = payload.customer;
@@ -280,8 +277,6 @@ export async function updateApplicationAction(id: string, data: Partial<any>) {
     return { error: error.message || 'Network error' };
   }
 }
-
-
 
 export async function updateDocumentStatusAction(
   applicationId: string,
@@ -323,4 +318,12 @@ export async function updateDocumentStatusAction(
     console.error('updateDocumentStatusAction error:', error);
     return { error: error.message || 'Network error' };
   }
+}
+
+export async function fetchAdminApplications(search?: string, status?: string) {
+  return fetchApplicationsAction(search, status);
+}
+
+export async function updateAdminApplicationStatus(id: string, status: string) {
+  return updateApplicationStatusAction(id, status);
 }

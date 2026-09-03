@@ -17,14 +17,10 @@ import {
   Wallet,
   PieChart,
   LogOut,
-  Bell,
   Menu,
   X,
   ChevronDown,
-  Settings
 } from 'lucide-react';
-import { NotificationProvider } from '@/context/NotificationContext';
-import { UserProvider } from '@/context/UserContext';
 
 const ADMIN_NAV_ITEMS = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -47,18 +43,17 @@ function AdminSidebarNavContent({
 }) {
   const pathname = usePathname();
   const isProfileActive = pathname === '/admin/profile';
-  const isSettingsActive = pathname === '/admin/settings';
 
   return (
     <aside
       className={`
         fixed inset-y-0 left-0 z-40 w-72 md:w-60 lg:w-72 bg-white text-gray-800 flex flex-col transition-transform duration-300 ease-in-out md:static md:translate-x-0
         ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-3 lg:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:sticky md:top-4 overflow-hidden
+        shadow-xl md:shadow-xs border border-gray-100 rounded-3xl md:m-3 lg:m-4 md:mr-0 md:h-[calc(100vh-2rem)] md:sticky md:top-4
       `}
     >
       {/* Fixed Brand Header — not scrollable */}
-      <div className="p-4 pb-3 border-b border-gray-100 shrink-0">
+      <div className="p-6 pb-4 border-b border-gray-100 shrink-0">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-2xl bg-[#12372A] text-white flex items-center justify-center shadow-md shrink-0">
             <ShieldCheck className="w-6 h-6 text-[#a8d5b9]" />
@@ -77,20 +72,14 @@ function AdminSidebarNavContent({
         </div>
       </div>
 
-      {/* Navigation */}
-      <div 
-        className="px-3 py-2 flex-1 flex flex-col justify-start overflow-y-auto"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        <style dangerouslySetInnerHTML={{__html: `
-          div::-webkit-scrollbar { display: none; }
-        `}} />
+      {/* Scrollable Navigation */}
+      <div className="p-5 pt-4 space-y-1 overflow-y-auto flex-1 admin-scrollbar">
         {/* Main Nav Section */}
-        <div className="space-y-0.5">
-          <p className="px-3 pt-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">
+        <div className="space-y-1">
+          <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
             Main Menu
           </p>
-          <nav aria-label="Admin portal main navigation" className="space-y-0.5">
+          <nav aria-label="Admin portal main navigation" className="space-y-1.5">
             {ADMIN_NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive =
@@ -103,20 +92,20 @@ function AdminSidebarNavContent({
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`
-                    flex items-center justify-between px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 group
-                    ${isActive ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold shadow-2xs' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+                    flex items-center justify-between px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 group
+                    ${isActive ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold shadow-2xs' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-semibold'}
                   `}
                 >
                   <div className="flex items-center space-x-3">
                     <div
                       className={`
-                        w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-200
+                        w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-200
                         ${isActive ? 'bg-[#12372A] text-white shadow-xs' : 'bg-transparent text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-800'}
                       `}
                     >
-                      <Icon className="w-3.5 h-3.5" />
+                      <Icon className="w-4 h-4" />
                     </div>
-                    <span>{item.name}</span>
+                    <span className="text-xs">{item.name}</span>
                   </div>
                 </Link>
               );
@@ -125,9 +114,9 @@ function AdminSidebarNavContent({
         </div>
       </div>
 
-      {/* Bottom Fixed Footer Section: Profile, Settings & Log Out */}
-      <div className="p-3 border-t border-gray-100 bg-white space-y-1 shrink-0 rounded-b-3xl">
-        <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+      {/* Bottom Fixed Footer Section: Profile & Log Out only */}
+      <div className="p-4 border-t border-gray-100 bg-white space-y-1.5 shrink-0 rounded-b-3xl">
+        <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">
           System &amp; Account
         </p>
 
@@ -136,49 +125,29 @@ function AdminSidebarNavContent({
           href="/admin/profile"
           onClick={() => setMobileMenuOpen(false)}
           className={`
-            flex items-center space-x-3 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 group
+            flex items-center space-x-3 px-2.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 group
             ${isProfileActive ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold shadow-2xs' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
           `}
         >
           <div
             className={`
-              w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-200
+              w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-200
               ${isProfileActive ? 'bg-[#12372A] text-white shadow-xs' : 'bg-transparent text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-800'}
             `}
           >
-            <User className="w-3.5 h-3.5" />
+            <User className="w-4 h-4" />
           </div>
           <span>Profile</span>
-        </Link>
-
-        {/* Settings Link */}
-        <Link
-          href="/admin/settings"
-          onClick={() => setMobileMenuOpen(false)}
-          className={`
-            flex items-center space-x-3 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 group
-            ${isSettingsActive ? 'bg-[#f0f7f2] text-[#12372A] font-extrabold shadow-2xs' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
-          `}
-        >
-          <div
-            className={`
-              w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-200
-              ${isSettingsActive ? 'bg-[#12372A] text-white shadow-xs' : 'bg-transparent text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-800'}
-            `}
-          >
-            <Settings className="w-3.5 h-3.5" />
-          </div>
-          <span>Settings</span>
         </Link>
 
         {/* Log Out Button */}
         <div className="pt-2 border-t border-gray-100 mt-1">
           <Link
             href="/login"
-            className="flex items-center space-x-3 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-600 hover:bg-rose-50 hover:text-rose-600 transition-colors group"
+            className="flex items-center space-x-3 px-2.5 py-1.5 rounded-full text-xs font-semibold text-gray-600 hover:bg-rose-50 hover:text-rose-600 transition-colors group"
           >
-            <div className="w-7 h-7 rounded-full bg-transparent text-gray-400 group-hover:bg-rose-100 group-hover:text-rose-600 flex items-center justify-center shrink-0 transition-colors">
-              <LogOut className="w-3.5 h-3.5" />
+            <div className="w-8 h-8 rounded-full bg-transparent text-gray-400 group-hover:bg-rose-100 group-hover:text-rose-600 flex items-center justify-center shrink-0 transition-colors">
+              <LogOut className="w-4 h-4" />
             </div>
             <span>Log out</span>
           </Link>
@@ -250,6 +219,7 @@ function ProfileDropdown() {
             </Link>
 
             <div className="mx-3 my-1 border-t border-gray-100" />
+
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-rose-50 hover:text-rose-600 transition-colors group"
@@ -322,9 +292,7 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <UserProvider>
-    <NotificationProvider>
-      <div className="h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-hidden" suppressHydrationWarning>
+    <div className="h-screen bg-[#f4f6f8] text-gray-900 flex flex-col md:flex-row font-sans max-w-full overflow-hidden" suppressHydrationWarning>
       {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between bg-[#12372A] px-4 py-3 text-white sticky top-0 z-50 border-b border-[#1f4e3c]">
         <div className="flex items-center space-x-3">
@@ -356,18 +324,9 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
       </Suspense>
 
       {/* Main Content Area */}
-      <main className="min-w-0 flex-1 p-3.5 sm:p-4 md:p-5 lg:p-8 overflow-hidden max-w-full flex flex-col">
-        <style dangerouslySetInnerHTML={{__html: `
-          ::-webkit-scrollbar-button { display: none !important; height: 0 !important; width: 0 !important; }
-          ::-webkit-scrollbar { width: 5px; height: 5px; }
-          ::-webkit-scrollbar-track { background: transparent; }
-          ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
-          ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
-        `}} />
+      <main className="min-w-0 flex-1 p-3.5 sm:p-4 md:p-5 lg:p-8 overflow-y-auto max-w-full overflow-x-hidden">
         <AdminTopHeader />
-        <div className="flex-1 min-h-0 overflow-y-auto pr-1" id="admin-main-scroll">
-          {children}
-        </div>
+        {children}
       </main>
 
       {/* Backdrop for Mobile */}
@@ -375,7 +334,5 @@ export default function AdminLayoutShell({ children }: { children: React.ReactNo
         <div onClick={() => setMobileMenuOpen(false)} className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm" />
       )}
     </div>
-    </NotificationProvider>
-    </UserProvider>
   );
 }

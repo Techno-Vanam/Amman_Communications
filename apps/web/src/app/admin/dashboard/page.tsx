@@ -4,11 +4,11 @@ type AdminSummary = { customers: number; applications: number; documents: number
 
 async function getSummary(): Promise<AdminSummary | null> {
 	const token = await getAccessToken();
-	const apiBaseUrl = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3003';
+	const apiBaseUrl = process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://127.0.0.1:3003';
 	if (!token) return null;
 
 	try {
-		const response = await fetch(`${apiBaseUrl}/api/v1/admin/dashboard/summary`, {
+		const response = await fetch(`${apiBaseUrl}/admin/dashboard/summary`, {
 			headers: { Authorization: `Bearer ${token}` },
 			cache: 'no-store',
 		});

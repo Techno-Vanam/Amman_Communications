@@ -96,6 +96,7 @@ import { useNotifications } from '@/context/NotificationContext';
 import { useUser, getUserStorageKey } from '@/context/UserContext';
 import CustomDatePicker from '@/components/ui/CustomDatePicker';
 import CustomSelect from '@/components/ui/CustomSelect';
+import StatCard from '@/components/ui/StatCard';
 
 import { fetchCustomerPaymentsAction } from '@/app/portal/actions';
 
@@ -396,67 +397,36 @@ export default function PaymentsPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-4 font-sans pb-1">
 
-      {/* 3 Metric Cards - Dynamically reflect transactions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-        {/* Card 1: Total Paid */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 shadow-2xs relative flex flex-col justify-between h-44">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Total Paid</span>
-            </div>
-            <p className="text-3xl sm:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
-              {formatCurrency(totalPaidSum)}
-            </p>
-          </div>
-          <div className="mt-3">
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200/60">
-              {getDateTimelineLabel()}
-            </span>
-          </div>
-        </div>
-
-        {/* Card 2: Pending Payments */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 shadow-2xs relative flex flex-col justify-between h-44">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
-                <Clock className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Pending Payments</span>
-            </div>
-            <p className="text-3xl sm:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
-              {formatCurrency(pendingPaymentsSum)}
-            </p>
-          </div>
-          <div className="mt-3">
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200/60">
-              {overdueInvoicesCount} {overdueInvoicesCount === 1 ? 'Invoice Overdue' : 'Invoices Overdue'}
-            </span>
-          </div>
-        </div>
-
-        {/* Card 3: Total Transactions */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 shadow-2xs relative flex flex-col justify-between h-44 sm:col-span-2 md:col-span-1">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-700 border border-gray-200 flex items-center justify-center shrink-0">
-                <Receipt className="w-5 h-5" />
-              </div>
-              <span className="text-xs font-bold text-gray-600 tracking-wide truncate">Total Transactions</span>
-            </div>
-            <p className="text-3xl sm:text-4xl font-extrabold text-[#0e2a47] tracking-tight mt-3 sm:mt-4">
-              {totalTransactionsCount}
-            </p>
-          </div>
-          <div className="mt-3">
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200/60">
-              {getDateTimelineLabel()}
-            </span>
-          </div>
-        </div>
+      {/* ── KPI Metric Cards ── */}
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Total Paid"
+          value={formatCurrency(totalPaidSum)}
+          sub="Revenue cleared"
+          icon={CheckCircle2}
+          variant="emerald"
+        />
+        <StatCard
+          label="Pending Payments"
+          value={formatCurrency(pendingPaymentsSum)}
+          sub={overdueInvoicesCount > 0 ? `${overdueInvoicesCount} invoices pending` : 'All caught up'}
+          icon={Clock}
+          variant="rose"
+        />
+        <StatCard
+          label="Total Invoiced"
+          value={formatCurrency(totalPaidSum + pendingPaymentsSum)}
+          sub="Cumulative billed"
+          icon={CreditCard}
+          variant="blue"
+        />
+        <StatCard
+          label="Total Transactions"
+          value={totalTransactionsCount}
+          sub="Logged receipts"
+          icon={Receipt}
+          variant="indigo"
+        />
       </div>
 
       {/* Main Transactions Container Card */}
@@ -925,7 +895,7 @@ export default function PaymentsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-3 border-2 border-[#0e2a47] bg-[#f0f7ff] rounded-xl flex items-center gap-2 cursor-pointer font-bold text-[#0e2a47]">
                   <CreditCard className="w-4 h-4 text-[#0e2a47]" />
-                  <span>Card / UPI</span>
+                  <span>UPI / QR Code</span>
                 </div>
                 <div className="p-3 border border-gray-200 bg-white rounded-xl flex items-center gap-2 cursor-pointer font-semibold text-gray-700 hover:border-gray-300">
                   <Building className="w-4 h-4 text-gray-500" />

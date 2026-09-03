@@ -21,6 +21,7 @@ import {
   fetchVerificationRecordsAction,
   updateVerificationStatusAction,
 } from './actions';
+import StatCard from '@/components/ui/StatCard';
 
 // ── Types ─────────────────────────────────────────────────────
 type VerifStatus = 'Pending Review' | 'Verified' | 'Needs Correction' | 'Rejected';
@@ -342,21 +343,35 @@ export default function VerificationPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-4 font-sans" suppressHydrationWarning>
       {/* ── Summary Cards ── */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {summaryCards.map(card => (
-          <div key={card.label} className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 shadow-2xs hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className={`w-8 h-8 rounded-xl border flex items-center justify-center [&>svg]:w-4 [&>svg]:h-4 ${card.iconBg}`}>
-                {card.icon}
-              </div>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${card.badge} truncate max-w-[140px]`}>
-                {card.desc}
-              </span>
-            </div>
-            <p className={`text-xl sm:text-2xl font-extrabold ${card.text}`}>{card.value}</p>
-            <p className="text-[11px] text-gray-500 font-semibold mt-0.5 truncate">{card.label}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Pending Review"
+          value={pendingCount}
+          sub="Requires review"
+          icon={Hourglass}
+          variant="amber"
+        />
+        <StatCard
+          label="Verified Today"
+          value={verifiedToday}
+          sub="Cleared today"
+          icon={CheckCircle}
+          variant="emerald"
+        />
+        <StatCard
+          label="Needs Correction"
+          value={needsCorrection}
+          sub="Action required"
+          icon={AlertTriangle}
+          variant="orange"
+        />
+        <StatCard
+          label="Total Submissions"
+          value={records.length}
+          sub="Verification queue"
+          icon={ShieldCheck}
+          variant="indigo"
+        />
       </div>
 
       {/* ── Search + Filter ── */}

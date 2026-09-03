@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -12,8 +13,9 @@ import {
 } from '@nestjs/common';
 
 import { CustomerAppointmentsService } from './customer-appointments.service';
-import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import { CreateCustomerAppointmentDto } from './dto/create-appointment.dto';
 import { GetAppointmentsDto } from './dto/get-appointments.dto';
+import { CustomerRescheduleAppointmentDto } from './dto/reschedule-appointment.dto';
 import { CompleteDocumentUploadDto, CreateUploadUrlDto } from './dto/upload-document.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -49,7 +51,7 @@ export class CustomerAppointmentsController {
 @Roles('CUSTOMER')
   async createAppointment(
     @Req() req: RequestWithUser,
-    @Body() dto: CreateAppointmentDto,
+    @Body() dto: CreateCustomerAppointmentDto,
   ) {
     const customerId = req.user.customerId || req.user.sub;
     if (!customerId) throw new Error('Customer ID missing from session');
@@ -108,7 +110,7 @@ export class CustomerAppointmentsController {
 
   @Delete('appointments/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('CUSTOMER')
+  @Roles('CUSTOMER')
   async cancelAppointment(
     @Req() req: RequestWithUser,
     @Param('id') id: string,
@@ -116,5 +118,18 @@ export class CustomerAppointmentsController {
     const customerId = req.user.customerId || req.user.sub;
     if (!customerId) throw new Error('Customer ID missing from session');
     return this.appointmentsService.cancelAppointment(customerId, id);
+  }
+
+  @Patch('appointments/:id/reschedule')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('CUSTOMER')
+  async rescheduleAppointment(
+    @Req() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() dto: CustomerRescheduleAppointmentDto,
+  ) {
+    const customerId = req.user.customerId || req.user.sub;
+    if (!customerId) throw new Error('Customer ID missing from session');
+    return this.appointmentsService.rescheduleAppointment(customerId, id, dto);
   }
 }

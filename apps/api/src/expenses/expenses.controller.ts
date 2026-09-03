@@ -2,16 +2,13 @@ import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards, Req, Delet
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ExpensesService } from './expenses.service';
 import { CreateExpenseDto, UpdateExpenseDto } from './dto/expense.dto';
-
-
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
-
-@ApiBearerAuth()
 @ApiTags('Admin - Expenses')
-@Controller('admin/expenses')
+@ApiBearerAuth()
+@Controller(['admin/expenses', 'v1/admin/expenses', 'api/v1/admin/expenses'])
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 export class ExpensesController {
@@ -19,7 +16,7 @@ export class ExpensesController {
 
   @Post()
   create(@Req() req: { user: { sub: string; role: string } }, @Body() createExpenseDto: CreateExpenseDto) {
-    const adminId = req.user.sub; // The JWT payload stores the ID in 'sub'
+    const adminId = req.user.sub;
     return this.expensesService.create(adminId, createExpenseDto);
   }
 

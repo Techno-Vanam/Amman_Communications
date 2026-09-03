@@ -12,7 +12,6 @@ import {
   ShieldAlert,
   FileText,
   CreditCard,
-  Plus,
 } from 'lucide-react';
 import {
   BarChart,
@@ -227,8 +226,6 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 font-sans pb-12" suppressHydrationWarning>
-
-
 
       {/* ── KPI Cards — Row 1 (4 cards) ── */}
       <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

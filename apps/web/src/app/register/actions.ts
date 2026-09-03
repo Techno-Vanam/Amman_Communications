@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 const API_BASE_URL =
   process.env.API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3003';
+  'http://127.0.0.1:3003';
 
 export async function registerAction(formData: FormData) {
   const name = formData.get('name');
@@ -63,7 +63,8 @@ export async function registerAction(formData: FormData) {
     return {
       success: true,
       user,
-      redirectTo: '/portal/dashboard',
+      accessToken,
+      redirectTo: user.role === 'ADMIN' ? '/admin' : '/portal/dashboard',
     };
   } catch (error) {
     console.error('Registration action error:', error);

@@ -3,9 +3,43 @@ import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 
+export type AuthRole = 'ADMIN' | 'CUSTOMER';
+
 @Injectable()
 export class AuthService {
   constructor(private readonly prisma: PrismaService, private readonly jwt: JwtService) {}
+
+  private get accessSecret() {
+    return process.env.JWT_ACCESS_SECRET || 'amman-communications-jwt-access-secret-32-chars-minimum';
+  }
+
+  private get refreshSecret() {
+    return process.env.JWT_REFRESH_SECRET || process.env.JWT_ACCESS_SECRET || 'amman-communications-jwt-refresh-secret-32-chars-minimum';
+  }
+
+  private async issueSession(user: { id: string; name: string; email: string | null; isProfileCompleted?: boolean }, role: AuthRole) {
+    const refreshToken = await this.jwt.signAsync(
+      { sub: user.id, role, type: 'refresh' },
+      { secret: this.refreshSecret, expiresIn: '7d' },
+    );
+
+    const accessToken = await this.jwt.signAsync(
+      { sub: user.id, role },
+      { secret: this.accessSecret, expiresIn: '7d' },
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email || '',
+        role,
+        isProfileCompleted: 'isProfileCompleted' in user ? Boolean(user.isProfileCompleted) : true,
+      },
+    };
+  }
 
   async login(email: string, password: string) {
     const normalizedEmail = email.toLowerCase().trim();
@@ -26,7 +60,7 @@ export class AuthService {
     }
 
     const user = admin || customer;
-    const role = admin ? 'ADMIN' : (customer ? 'CUSTOMER' : null);
+    const role: AuthRole | null = admin ? 'ADMIN' : (customer ? 'CUSTOMER' : null);
 
     if (!user || !role) {
       throw new UnauthorizedException('Invalid credentials');
@@ -37,21 +71,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const accessToken = await this.jwt.signAsync(
-      { sub: user.id, role },
-      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '7d' }
-    );
-
-    return {
-      accessToken,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role,
-        isProfileCompleted: 'isProfileCompleted' in user ? Boolean((user as any).isProfileCompleted) : true,
-      },
-    };
+    return this.issueSession(user, role);
   }
 
   async register(name: string, email: string, password: string) {
@@ -77,20 +97,64 @@ export class AuthService {
       },
     });
 
-    const accessToken = await this.jwt.signAsync(
-      { sub: customer.id, role: 'CUSTOMER' },
-      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '7d' }
-    );
+    return this.issueSession(customer, 'CUSTOMER');
+  }
+
+  async refresh(refreshToken: string) {
+    let payload: { sub?: unknown; role?: unknown };
+    try {
+      payload = await this.jwt.verifyAsync(refreshToken, { secret: this.refreshSecret });
+    } catch {
+      throw new UnauthorizedException('Refresh token is invalid or expired');
+    }
+
+    if (
+      typeof payload.sub !== 'string' ||
+      (payload.role !== 'ADMIN' && payload.role !== 'CUSTOMER')
+    ) throw new UnauthorizedException('Refresh token is invalid');
+
+    const user = payload.role === 'ADMIN'
+      ? await this.prisma.admin.findUnique({ where: { id: payload.sub } })
+      : await this.prisma.customer.findUnique({ where: { id: payload.sub } });
+
+    if (!user || ('status' in user && user.status !== 'ACTIVE')) {
+      throw new UnauthorizedException('Account is inactive or no longer exists');
+    }
+
+    return this.issueSession(user, payload.role as AuthRole);
+  }
+
+  async logout(_refreshToken?: string) {
+    return { success: true };
+  }
+
+  async getUserFromAccessToken(accessToken: string) {
+    let payload: { sub?: unknown; role?: unknown };
+    try {
+      payload = await this.jwt.verifyAsync(accessToken, { secret: this.accessSecret });
+    } catch {
+      throw new UnauthorizedException('Access token is invalid or expired');
+    }
+
+    if (
+      typeof payload.sub !== 'string' ||
+      (payload.role !== 'ADMIN' && payload.role !== 'CUSTOMER')
+    ) throw new UnauthorizedException('Invalid token payload');
+
+    const user = payload.role === 'ADMIN'
+      ? await this.prisma.admin.findUnique({ where: { id: payload.sub } })
+      : await this.prisma.customer.findUnique({ where: { id: payload.sub } });
+
+    if (!user || ('status' in user && user.status !== 'ACTIVE')) {
+      throw new UnauthorizedException('User account not found or inactive');
+    }
 
     return {
-      accessToken,
-      user: {
-        id: customer.id,
-        name: customer.name,
-        email: customer.email,
-        role: 'CUSTOMER',
-        isProfileCompleted: false,
-      },
+      id: user.id,
+      name: user.name,
+      email: user.email || '',
+      role: payload.role as AuthRole,
+      isProfileCompleted: 'isProfileCompleted' in user ? Boolean((user as any).isProfileCompleted) : true,
     };
   }
 }

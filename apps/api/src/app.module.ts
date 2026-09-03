@@ -15,7 +15,6 @@ import { CustomerProfileModule } from './customer-profile/customer-profile.modul
 import { ApplicationsModule } from './applications/applications.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { ExpensesModule } from './expenses/expenses.module';
-// Need to handle business profile and admin preferences which seem to be inside settings/
 import { BusinessProfileModule } from './settings/business-profile/business-profile.module';
 import { AdminPreferencesModule } from './settings/admin-preferences/admin-preferences.module';
 import { StorageModule } from './storage/storage.module';
@@ -35,7 +34,8 @@ import { MailModule } from './mail/mail.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [
-        path.resolve(__dirname, '../.env.local'),
+        path.resolve(process.cwd(), '.env'),
+        path.resolve(process.cwd(), '../../.env'),
         path.resolve(__dirname, '../.env'),
       ],
     }),
