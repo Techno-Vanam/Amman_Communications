@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
+    optimizePackageImports: ['lucide-react', 'recharts', 'react-hook-form', 'zod'],
     serverActions: {
       bodySizeLimit: '15mb',
     },

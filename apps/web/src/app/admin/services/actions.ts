@@ -1,42 +1,16 @@
 'use server';
 
-import { cookies } from 'next/headers';
-import { getAccessToken } from '@/lib/server-auth';
-
-const API_BASE_URL =
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3003';
-
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const token = (await getAccessToken()) || (await cookies()).get('access_token')?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { serverApiFetch } from '@/lib/server-api';
 
 export async function fetchServicesAction(search?: string, status?: string) {
   try {
-    const authHeader = await getAuthHeader();
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (status && status !== 'All') {
       params.append('status', status.toUpperCase()); // ACTIVE, INACTIVE, DRAFT
     }
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services?${params.toString()}`, {
-      headers: {
-        ...authHeader,
-      },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services?${params.toString()}`, {
-        headers: {
-          ...authHeader,
-        },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverApiFetch(`/admin/services?${params.toString()}`);
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -62,8 +36,6 @@ export async function createServiceAction(formData: {
   requiredDocs: { name: string }[];
 }) {
   try {
-    const authHeader = await getAuthHeader();
-    // Encode category into description
     const fullDescription = `[${formData.category}] ${formData.description || ''}`;
 
     const payload = {
@@ -80,25 +52,10 @@ export async function createServiceAction(formData: {
       })),
     };
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services`, {
+    const res = await serverApiFetch('/admin/services', {
       method: 'POST',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services`, {
-        method: 'POST',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -127,7 +84,6 @@ export async function updateServiceAction(
   }
 ) {
   try {
-    const authHeader = await getAuthHeader();
     const payload: any = {};
 
     if (formData.name !== undefined) payload.name = formData.name;
@@ -148,25 +104,10 @@ export async function updateServiceAction(
       }));
     }
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services/${id}`, {
+    const res = await serverApiFetch(`/admin/services/${id}`, {
       method: 'PATCH',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services/${id}`, {
-        method: 'PATCH',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -183,28 +124,12 @@ export async function updateServiceAction(
 
 export async function updateServiceStatusAction(id: string, status: string) {
   try {
-    const authHeader = await getAuthHeader();
     const payload = { status: status.toUpperCase() };
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services/${id}/status`, {
+    const res = await serverApiFetch(`/admin/services/${id}/status`, {
       method: 'PATCH',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services/${id}/status`, {
-        method: 'PATCH',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -221,23 +146,9 @@ export async function updateServiceStatusAction(id: string, status: string) {
 
 export async function deleteServiceAction(id: string) {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/services/${id}`, {
+    const res = await serverApiFetch(`/admin/services/${id}`, {
       method: 'DELETE',
-      headers: {
-        ...authHeader,
-      },
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/services/${id}`, {
-        method: 'DELETE',
-        headers: {
-          ...authHeader,
-        },
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));

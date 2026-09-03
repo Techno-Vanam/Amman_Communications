@@ -38,14 +38,14 @@ export async function getAccessToken() {
 
   let response: Response;
   try {
-    response = await fetch(`${primaryApiBase}/v1/auth/refresh`, {
+    response = await fetch(`${primaryApiBase}/api/v1/auth/refresh`, {
       method: 'POST',
       headers: { Cookie: `refresh_token=${refreshToken}` },
       cache: 'no-store',
     });
   } catch {
     try {
-      response = await fetch('http://127.0.0.1:3003/v1/auth/refresh', {
+      response = await fetch('http://127.0.0.1:3003/api/v1/auth/refresh', {
         method: 'POST',
         headers: { Cookie: `refresh_token=${refreshToken}` },
         cache: 'no-store',

@@ -2349,6 +2349,66 @@
         ]
       }
     },
+    "/api/v1/admin/dashboard/stats": {
+      "get": {
+        "operationId": "AdminDashboardController_stats[0]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get consolidated admin dashboard stats in a single fast call",
+        "tags": [
+          "Admin - Dashboard"
+        ]
+      }
+    },
+    "/api/v1/v1/admin/dashboard/stats": {
+      "get": {
+        "operationId": "AdminDashboardController_stats[1]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get consolidated admin dashboard stats in a single fast call",
+        "tags": [
+          "Admin - Dashboard"
+        ]
+      }
+    },
+    "/api/v1/api/v1/admin/dashboard/stats": {
+      "get": {
+        "operationId": "AdminDashboardController_stats[2]",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get consolidated admin dashboard stats in a single fast call",
+        "tags": [
+          "Admin - Dashboard"
+        ]
+      }
+    },
     "/api/v1/customer/dashboard/summary": {
       "get": {
         "operationId": "CustomerDashboardController_summary[0]",
@@ -7861,6 +7921,3513 @@
           "Customer Payments"
         ]
       }
+    },
+    "/api/v1/admin/reports/summary": {
+      "get": {
+        "operationId": "ReportsController_getSummary[0]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get overall summary metrics for reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/v1/admin/reports/summary": {
+      "get": {
+        "operationId": "ReportsController_getSummary[1]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get overall summary metrics for reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/api/v1/admin/reports/summary": {
+      "get": {
+        "operationId": "ReportsController_getSummary[2]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get overall summary metrics for reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/admin/reports/applications": {
+      "get": {
+        "operationId": "ReportsController_getApplicationsReport[0]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get application performance and status reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/v1/admin/reports/applications": {
+      "get": {
+        "operationId": "ReportsController_getApplicationsReport[1]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get application performance and status reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/api/v1/admin/reports/applications": {
+      "get": {
+        "operationId": "ReportsController_getApplicationsReport[2]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get application performance and status reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/admin/reports/services": {
+      "get": {
+        "operationId": "ReportsController_getServicesReport[0]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get service performance and revenue metrics",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/v1/admin/reports/services": {
+      "get": {
+        "operationId": "ReportsController_getServicesReport[1]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get service performance and revenue metrics",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/api/v1/admin/reports/services": {
+      "get": {
+        "operationId": "ReportsController_getServicesReport[2]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get service performance and revenue metrics",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/admin/reports/customers": {
+      "get": {
+        "operationId": "ReportsController_getCustomersReport[0]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get customer activity and registration reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/v1/admin/reports/customers": {
+      "get": {
+        "operationId": "ReportsController_getCustomersReport[1]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get customer activity and registration reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/api/v1/admin/reports/customers": {
+      "get": {
+        "operationId": "ReportsController_getCustomersReport[2]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get customer activity and registration reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/admin/reports/documents": {
+      "get": {
+        "operationId": "ReportsController_getDocumentsReport[0]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get document review workflow reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/v1/admin/reports/documents": {
+      "get": {
+        "operationId": "ReportsController_getDocumentsReport[1]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get document review workflow reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/api/v1/admin/reports/documents": {
+      "get": {
+        "operationId": "ReportsController_getDocumentsReport[2]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get document review workflow reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/admin/reports/appointments": {
+      "get": {
+        "operationId": "ReportsController_getAppointmentsReport[0]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get appointments and consultation reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/v1/admin/reports/appointments": {
+      "get": {
+        "operationId": "ReportsController_getAppointmentsReport[1]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get appointments and consultation reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/api/v1/admin/reports/appointments": {
+      "get": {
+        "operationId": "ReportsController_getAppointmentsReport[2]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get appointments and consultation reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/admin/reports/finance": {
+      "get": {
+        "operationId": "ReportsController_getFinanceReport[0]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get comprehensive financial performance reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/v1/admin/reports/finance": {
+      "get": {
+        "operationId": "ReportsController_getFinanceReport[1]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get comprehensive financial performance reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/api/v1/admin/reports/finance": {
+      "get": {
+        "operationId": "ReportsController_getFinanceReport[2]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get comprehensive financial performance reports",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/admin/reports/export/pdf": {
+      "get": {
+        "operationId": "ReportsController_exportPdf[0]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": false,
+            "in": "query",
+            "description": "Export file format",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pdf",
+                "excel"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export complete filtered report as branded PDF",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/v1/admin/reports/export/pdf": {
+      "get": {
+        "operationId": "ReportsController_exportPdf[1]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": false,
+            "in": "query",
+            "description": "Export file format",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pdf",
+                "excel"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export complete filtered report as branded PDF",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/api/v1/admin/reports/export/pdf": {
+      "get": {
+        "operationId": "ReportsController_exportPdf[2]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": false,
+            "in": "query",
+            "description": "Export file format",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pdf",
+                "excel"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export complete filtered report as branded PDF",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/admin/reports/export/excel": {
+      "get": {
+        "operationId": "ReportsController_exportExcel[0]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": false,
+            "in": "query",
+            "description": "Export file format",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pdf",
+                "excel"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export complete filtered report as multi-sheet Excel workbook",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/v1/admin/reports/export/excel": {
+      "get": {
+        "operationId": "ReportsController_exportExcel[1]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": false,
+            "in": "query",
+            "description": "Export file format",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pdf",
+                "excel"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export complete filtered report as multi-sheet Excel workbook",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
+    },
+    "/api/v1/api/v1/admin/reports/export/excel": {
+      "get": {
+        "operationId": "ReportsController_exportExcel[2]",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date filter (ISO string, e.g. 2026-01-01)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date filter (ISO string, e.g. 2026-01-31)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serviceId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by specific service ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "applicationStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by application status (SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "paymentStatus",
+            "required": false,
+            "in": "query",
+            "description": "Filter by payment status (PAID, UNPAID, PARTIALLY_PAID, OVERDUE, etc.)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number for pagination",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of records per page",
+            "schema": {
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Keyword search query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "required": false,
+            "in": "query",
+            "description": "Field to sort by",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "required": false,
+            "in": "query",
+            "description": "Sort direction",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "section",
+            "required": false,
+            "in": "query",
+            "description": "Specific report section to view or export",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": false,
+            "in": "query",
+            "description": "Export file format",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pdf",
+                "excel"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export complete filtered report as multi-sheet Excel workbook",
+        "tags": [
+          "Admin - Reports"
+        ]
+      }
     }
   },
   "info": {
@@ -8187,6 +11754,7 @@
         },
         "required": [
           "name",
+          "email",
           "password"
         ]
       },
@@ -8753,7 +12321,17 @@
           },
           "category": {
             "type": "string",
-            "example": "Operations"
+            "enum": [
+              "OFFICE",
+              "TRAVEL",
+              "EMPLOYEE",
+              "PROPERTY",
+              "UTILITIES",
+              "MARKETING",
+              "EQUIPMENT",
+              "OTHER"
+            ],
+            "example": "OFFICE"
           },
           "amount": {
             "type": "number",
@@ -8805,7 +12383,17 @@
           },
           "category": {
             "type": "string",
-            "example": "Operations"
+            "enum": [
+              "OFFICE",
+              "TRAVEL",
+              "EMPLOYEE",
+              "PROPERTY",
+              "UTILITIES",
+              "MARKETING",
+              "EQUIPMENT",
+              "OTHER"
+            ],
+            "example": "OFFICE"
           },
           "amount": {
             "type": "number",

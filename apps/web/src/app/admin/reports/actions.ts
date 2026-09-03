@@ -1,151 +1,110 @@
 'use server';
 
-import { fetchInvoicesAction } from '../finance/actions';
-import { fetchExpensesAction } from '../expenses/actions';
-import { fetchApplicationsAction } from '../applications/actions';
-import { fetchAppointmentsAction } from '../appointments/actions';
+import { serverApiFetch } from '@/lib/server-api';
 
-export async function fetchReportsDataAction() {
+export interface ReportFilters {
+  from?: string;
+  to?: string;
+  serviceId?: string;
+  applicationStatus?: string;
+  paymentStatus?: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+function buildQueryString(filters?: ReportFilters): string {
+  if (!filters) return '';
+  const params = new URLSearchParams();
+  if (filters.from) params.append('from', filters.from);
+  if (filters.to) params.append('to', filters.to);
+  if (filters.serviceId && filters.serviceId !== 'ALL') params.append('serviceId', filters.serviceId);
+  if (filters.applicationStatus && filters.applicationStatus !== 'ALL') params.append('applicationStatus', filters.applicationStatus);
+  if (filters.paymentStatus && filters.paymentStatus !== 'ALL') params.append('paymentStatus', filters.paymentStatus);
+  if (filters.page) params.append('page', String(filters.page));
+  if (filters.limit) params.append('limit', String(filters.limit));
+  if (filters.search) params.append('search', filters.search);
+  if (filters.sortBy) params.append('sortBy', filters.sortBy);
+  if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
+  const q = params.toString();
+  return q ? `?${q}` : '';
+}
+
+export async function getReportSummaryAction(filters?: ReportFilters) {
   try {
-    const [invRes, expRes, appRes, aptRes] = await Promise.all([
-      fetchInvoicesAction(),
-      fetchExpensesAction(),
-      fetchApplicationsAction(),
-      fetchAppointmentsAction(),
-    ]);
+    const res = await serverApiFetch(`/admin/reports/summary${buildQueryString(filters)}`);
+    if (!res.ok) return { error: 'Failed to fetch report summary' };
+    const data = await res.json();
+    return { success: true, data };
+  } catch (err: any) {
+    return { error: err.message || 'Network error' };
+  }
+}
 
-    const invoices = invRes.success ? (invRes.data || []) : [];
-    const expenses = expRes.success ? (expRes.data || []) : [];
-    const applications = appRes.success ? (appRes.data || []) : [];
-    const appointments = aptRes.success ? (aptRes.data || []) : [];
+export async function getApplicationReportAction(filters?: ReportFilters) {
+  try {
+    const res = await serverApiFetch(`/admin/reports/applications${buildQueryString(filters)}`);
+    if (!res.ok) return { error: 'Failed to fetch application report' };
+    const data = await res.json();
+    return { success: true, data };
+  } catch (err: any) {
+    return { error: err.message || 'Network error' };
+  }
+}
 
-    // 1. Calculate Monthly Revenue & Expenses
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const monthlyDataMap: Record<string, { revenue: number; expenses: number }> = {};
-    months.forEach((m) => {
-      monthlyDataMap[m] = { revenue: 0, expenses: 0 };
-    });
+export async function getServiceReportAction(filters?: ReportFilters) {
+  try {
+    const res = await serverApiFetch(`/admin/reports/services${buildQueryString(filters)}`);
+    if (!res.ok) return { error: 'Failed to fetch service report' };
+    const data = await res.json();
+    return { success: true, data };
+  } catch (err: any) {
+    return { error: err.message || 'Network error' };
+  }
+}
 
-    // Populate revenue from paid invoices
-    invoices.forEach((inv: any) => {
-      if (inv.createdAt) {
-        const date = new Date(inv.createdAt);
-        const monthName = months[date.getMonth()];
-        if (monthlyDataMap[monthName]) {
-          monthlyDataMap[monthName].revenue += inv.paidAmount || 0;
-        }
-      }
-    });
+export async function getCustomerReportAction(filters?: ReportFilters) {
+  try {
+    const res = await serverApiFetch(`/admin/reports/customers${buildQueryString(filters)}`);
+    if (!res.ok) return { error: 'Failed to fetch customer report' };
+    const data = await res.json();
+    return { success: true, data };
+  } catch (err: any) {
+    return { error: err.message || 'Network error' };
+  }
+}
 
-    // Populate expenses
-    expenses.forEach((exp: any) => {
-      if (exp.expenseDate) {
-        const date = new Date(exp.expenseDate);
-        const monthName = months[date.getMonth()];
-        if (monthlyDataMap[monthName]) {
-          monthlyDataMap[monthName].expenses += Number(exp.amount) || 0;
-        }
-      }
-    });
+export async function getDocumentReportAction(filters?: ReportFilters) {
+  try {
+    const res = await serverApiFetch(`/admin/reports/documents${buildQueryString(filters)}`);
+    if (!res.ok) return { error: 'Failed to fetch document report' };
+    const data = await res.json();
+    return { success: true, data };
+  } catch (err: any) {
+    return { error: err.message || 'Network error' };
+  }
+}
 
-    // We only return months that have data or default to Jan-Aug to match design
-    const revenueMonthly = months.slice(0, 8).map((month) => ({
-      month,
-      revenue: monthlyDataMap[month].revenue,
-      expenses: monthlyDataMap[month].expenses,
-    }));
+export async function getAppointmentReportAction(filters?: ReportFilters) {
+  try {
+    const res = await serverApiFetch(`/admin/reports/appointments${buildQueryString(filters)}`);
+    if (!res.ok) return { error: 'Failed to fetch appointment report' };
+    const data = await res.json();
+    return { success: true, data };
+  } catch (err: any) {
+    return { error: err.message || 'Network error' };
+  }
+}
 
-    // 2. Application Status Breakdown
-    const appStatusCount: Record<string, number> = {};
-    applications.forEach((app: any) => {
-      appStatusCount[app.status] = (appStatusCount[app.status] || 0) + 1;
-    });
-
-    const colors = ['#12372A', '#3d7a60', '#f4b251', '#e56b6f', '#6c757d'];
-    const applicationStatus = Object.keys(appStatusCount).map((status, index) => ({
-      name: status,
-      value: appStatusCount[status],
-      color: colors[index % colors.length],
-    }));
-
-    // 3. Top Services
-    const serviceMap: Record<string, { applications: number; revenue: number }> = {};
-    // Populate from applications
-    applications.forEach((app: any) => {
-      const name = app.serviceType || 'Technical Onsite Survey';
-      if (!serviceMap[name]) serviceMap[name] = { applications: 0, revenue: 0 };
-      serviceMap[name].applications += 1;
-    });
-    // Populate revenue from invoices
-    invoices.forEach((inv: any) => {
-      const name = inv.service?.name || 'Technical Onsite Survey';
-      if (!serviceMap[name]) serviceMap[name] = { applications: 0, revenue: 0 };
-      serviceMap[name].revenue += inv.paidAmount || 0;
-    });
-
-    const topServices = Object.keys(serviceMap).map((name) => ({
-      name,
-      applications: serviceMap[name].applications,
-      revenue: serviceMap[name].revenue,
-    })).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
-
-    // 4. Appointments Trend
-    const weekMap: Record<string, { confirmed: number; pending: number; cancelled: number }> = {
-      'W1': { confirmed: 0, pending: 0, cancelled: 0 },
-      'W2': { confirmed: 0, pending: 0, cancelled: 0 },
-      'W3': { confirmed: 0, pending: 0, cancelled: 0 },
-      'W4': { confirmed: 0, pending: 0, cancelled: 0 },
-    };
-
-    appointments.forEach((apt: any) => {
-      // Group by week of the month (1-4)
-      if (apt.date) {
-        const day = new Date(apt.date).getDate();
-        const weekKey = day <= 7 ? 'W1' : day <= 14 ? 'W2' : day <= 21 ? 'W3' : 'W4';
-        const status = apt.status?.toLowerCase();
-        if (status === 'confirmed') {
-          weekMap[weekKey].confirmed += 1;
-        } else if (status === 'pending') {
-          weekMap[weekKey].pending += 1;
-        } else if (status === 'cancelled') {
-          weekMap[weekKey].cancelled += 1;
-        }
-      }
-    });
-
-    const appointmentsTrend = Object.keys(weekMap).map((week) => ({
-      week,
-      confirmed: weekMap[week].confirmed,
-      pending: weekMap[week].pending,
-      cancelled: weekMap[week].cancelled,
-    }));
-
-    // 5. Expense Breakdown
-    const expBreakdownMap: Record<string, number> = {};
-    expenses.forEach((exp: any) => {
-      const cat = exp.category;
-      expBreakdownMap[cat] = (expBreakdownMap[cat] || 0) + Number(exp.amount);
-    });
-
-    const expColors = ['#e56b6f', '#3d7a60', '#f4b251', '#355c7d', '#9b59b6'];
-    const expenseBreakdown = Object.keys(expBreakdownMap).map((cat, index) => ({
-      name: cat.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase()),
-      value: expBreakdownMap[cat],
-      color: expColors[index % expColors.length],
-    }));
-
-    return {
-      success: true,
-      data: {
-        revenueMonthly,
-        applicationStatus,
-        topServices,
-        appointmentsTrend,
-        expenseBreakdown,
-      },
-    };
-  } catch (error: any) {
-    console.error('fetchReportsDataAction error:', error);
-    return { error: error.message || 'Network error' };
+export async function getFinanceReportAction(filters?: ReportFilters) {
+  try {
+    const res = await serverApiFetch(`/admin/reports/finance${buildQueryString(filters)}`);
+    if (!res.ok) return { error: 'Failed to fetch finance report' };
+    const data = await res.json();
+    return { success: true, data };
+  } catch (err: any) {
+    return { error: err.message || 'Network error' };
   }
 }

@@ -1,0 +1,72 @@
+.exportContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnPdf {
+  background-color: #12372A;
+  color: #ffffff;
+}
+
+.btnPdf:hover:not(:disabled) {
+  background-color: #0d281e;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(18, 55, 42, 0.2);
+}
+
+.btnExcel {
+  background-color: #ffffff;
+  color: #12372A;
+  border-color: #12372A;
+}
+
+.btnExcel:hover:not(:disabled) {
+  background-color: #f0fdf4;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(18, 55, 42, 0.1);
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .exportContainer {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

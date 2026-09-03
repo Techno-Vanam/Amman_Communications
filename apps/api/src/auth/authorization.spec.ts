@@ -14,14 +14,6 @@ function contextWithToken(token?: string) {
   } as any;
 }
 
-function contextWithAuthorization(authorization: string) {
-  const req = { headers: { authorization } };
-  return {
-    switchToHttp: () => ({
-      getRequest: () => req,
-    }),
-  } as any;
-}
 
 function jwtFor(payload: { sub: string; role: string }) {
   return { verifyAsync: async () => payload } as any;

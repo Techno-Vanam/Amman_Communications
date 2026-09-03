@@ -1,0 +1,172 @@
+.sectionContainer {
+  margin-bottom: 2rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.sectionTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #12372A;
+  margin: 0 0 0.2rem 0;
+}
+
+.sectionSubtitle {
+  font-size: 0.825rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.countersGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.countCard {
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+.countLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.2rem;
+}
+
+.countVal {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.card_green {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+.card_amber {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.card_blue {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.card_teal {
+  background: #f0fdfa;
+  border-color: #99f6e4;
+  color: #0f766e;
+}
+
+.card_red {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.aptNo {
+  font-family: monospace;
+  color: #12372A;
+  font-weight: 600;
+}
+
+.customerCell {
+  display: flex;
+  flex-direction: column;
+}
+
+.customerName {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.contactSub {
+  font-size: 0.725rem;
+  color: #6b7280;
+}
+
+.serviceText {
+  color: #374151;
+}
+
+.modeBadge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.25rem;
+  font-size: 0.725rem;
+  font-weight: 500;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.badge_green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge_amber {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge_blue {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge_teal {
+  background: #ccfbf1;
+  color: #115e59;
+}
+
+.badge_red {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge_gray {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.dateText {
+  color: #4b5563;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 1024px) {
+  .countersGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .countersGrid {
+    grid-template-columns: 1fr;
+  }
+}

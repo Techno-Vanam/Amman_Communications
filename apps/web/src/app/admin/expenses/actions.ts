@@ -1,43 +1,9 @@
 'use server';
 
-import { cookies } from 'next/headers';
-
-const API_BASE_URL =
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3003';
-
-const UI_TO_DB_CATEGORY: Record<string, string> = {
-  Infrastructure: 'PROPERTY',
-  Operations: 'OFFICE',
-  Salaries: 'EMPLOYEE',
-  Marketing: 'MARKETING',
-  Utilities: 'UTILITIES',
-  Equipment: 'EQUIPMENT',
-  Maintenance: 'TRAVEL',
-  Miscellaneous: 'OTHER',
-};
-
-const DB_TO_UI_CATEGORY: Record<string, string> = {
-  PROPERTY: 'Infrastructure',
-  OFFICE: 'Operations',
-  EMPLOYEE: 'Salaries',
-  MARKETING: 'Marketing',
-  UTILITIES: 'Utilities',
-  EQUIPMENT: 'Equipment',
-  TRAVEL: 'Maintenance',
-  OTHER: 'Miscellaneous',
-};
-
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { serverApiFetch } from '@/lib/server-api';
 
 export async function fetchExpensesAction(search?: string, category?: string) {
   try {
-    const authHeader = await getAuthHeader();
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (category && category !== 'All') {
@@ -45,21 +11,7 @@ export async function fetchExpensesAction(search?: string, category?: string) {
     }
     params.append('take', '100'); // limit to 100 entries
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/expenses?${params.toString()}`, {
-      headers: {
-        ...authHeader,
-      },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/expenses?${params.toString()}`, {
-        headers: {
-          ...authHeader,
-        },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverApiFetch(`/admin/expenses?${params.toString()}`);
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -69,7 +21,7 @@ export async function fetchExpensesAction(search?: string, category?: string) {
     const result = await res.json();
     const mapped = (result.data || []).map((e: any) => ({
       id: e.id,
-      category: e.category || 'Miscellaneous',
+      category: e.category || 'OTHER',
       amount: Number(e.amount),
       title: e.title || '',
       description: e.description || '',
@@ -88,23 +40,7 @@ export async function fetchExpensesAction(search?: string, category?: string) {
 
 export async function fetchExpenseStatsAction() {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/expenses/stats`, {
-      headers: {
-        ...authHeader,
-      },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/expenses/stats`, {
-        headers: {
-          ...authHeader,
-        },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverApiFetch('/admin/expenses/stats');
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -129,36 +65,20 @@ export async function createExpenseAction(formData: {
   notes?: string;
 }) {
   try {
-    const authHeader = await getAuthHeader();
     const payload = {
       title: formData.title || formData.description || 'Expense',
       description: formData.description,
-      category: formData.category || 'Miscellaneous',
+      category: formData.category || 'OTHER',
       amount: formData.amount,
       expenseDate: new Date(formData.date).toISOString(),
       paymentMethod: formData.paymentMethod || 'OTHER',
       notes: formData.notes || '',
     };
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/expenses`, {
+    const res = await serverApiFetch('/admin/expenses', {
       method: 'POST',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/expenses`, {
-        method: 'POST',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -183,7 +103,6 @@ export async function updateExpenseAction(
   }
 ) {
   try {
-    const authHeader = await getAuthHeader();
     const payload: any = {};
     if (formData.description) {
       payload.title = formData.description.slice(0, 100);
@@ -195,25 +114,10 @@ export async function updateExpenseAction(
     if (formData.amount !== undefined) payload.amount = formData.amount;
     if (formData.date) payload.expenseDate = new Date(formData.date).toISOString();
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/expenses/${id}`, {
+    const res = await serverApiFetch(`/admin/expenses/${id}`, {
       method: 'PATCH',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/expenses/${id}`, {
-        method: 'PATCH',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -230,23 +134,9 @@ export async function updateExpenseAction(
 
 export async function deleteExpenseAction(id: string) {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/expenses/${id}`, {
+    const res = await serverApiFetch(`/admin/expenses/${id}`, {
       method: 'DELETE',
-      headers: {
-        ...authHeader,
-      },
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/expenses/${id}`, {
-        method: 'DELETE',
-        headers: {
-          ...authHeader,
-        },
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));

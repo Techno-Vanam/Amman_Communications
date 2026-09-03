@@ -1,17 +1,31 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+  constructor() {
+    super({
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL,
+        },
+      },
+    });
+  }
+
   async onModuleInit() {
     try {
       await this.$connect();
-      console.log('✅ [PrismaService] Connected to Database successfully');
+      console.log('✅ [PrismaService] Connected to Supabase Database successfully');
     } catch (error) {
       console.error('❌ [PrismaService] Failed to connect to database on startup:', (error as Error).message);
     }
   }
+
   async onModuleDestroy() {
     await this.$disconnect();
   }
 }
+

@@ -44,11 +44,15 @@ export async function apiClient<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const primaryUrl = endpoint.startsWith('http')
-    ? endpoint
-    : endpoint.startsWith('/api/')
-      ? endpoint
-      : `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  let primaryUrl: string;
+  if (endpoint.startsWith('http')) {
+    primaryUrl = endpoint;
+  } else if (normalizedEndpoint.startsWith('/api/v1')) {
+    primaryUrl = `${API_BASE_URL.replace(/\/api\/v1\/?$/, '')}${normalizedEndpoint}`;
+  } else {
+    primaryUrl = `${API_BASE_URL.replace(/\/api\/v1\/?$/, '')}/api/v1${normalizedEndpoint}`;
+  }
 
   let response: Response;
 

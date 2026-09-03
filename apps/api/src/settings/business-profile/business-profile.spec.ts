@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { BadRequestException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { BusinessProfileService } from './business-profile.service';
 import { UpdateBusinessProfileDto } from './dto/update-business-profile.dto';

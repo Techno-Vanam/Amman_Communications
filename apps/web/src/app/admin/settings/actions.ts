@@ -1,30 +1,10 @@
 'use server';
 
-import { cookies } from 'next/headers';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3003';
-
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { serverApiFetch } from '@/lib/server-api';
 
 export async function fetchAdminPreferencesAction() {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/settings/preferences`, {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/settings/preferences`, {
-        headers: { ...authHeader },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverApiFetch('/admin/settings/preferences');
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -49,27 +29,10 @@ export async function updateAdminPreferencesAction(payload: {
   autoLogout?: string;
 }) {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/settings/preferences`, {
+    const res = await serverApiFetch('/admin/settings/preferences', {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeader,
-      },
       body: JSON.stringify(payload),
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/settings/preferences`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...authHeader,
-        },
-        body: JSON.stringify(payload),
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));

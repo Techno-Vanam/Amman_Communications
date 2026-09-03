@@ -58,6 +58,121 @@ export class AdminDashboardController {
       downloadUrl: `/api/v1/admin/applications/${doc.applicationId}/documents/${doc.id}/stream`,
     }));
   }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Get consolidated admin dashboard stats in a single fast call' })
+  async stats() {
+    const [
+      customersCount,
+      applicationsCount,
+      invoices,
+      expensesSum,
+      appointments,
+      totalAppointmentsCount,
+      pendingVerificationsCount,
+      recentApplications,
+    ] = await Promise.all([
+      this.prisma.customer.count(),
+      this.prisma.application.count(),
+      this.prisma.invoice.findMany({
+        select: {
+          id: true,
+          status: true,
+          service: { select: { name: true } },
+          payments: { select: { amount: true, status: true } },
+        },
+      }),
+      this.prisma.expense.aggregate({
+        where: { isVoided: false },
+        _sum: { amount: true },
+      }),
+      this.prisma.appointment.findMany({
+        take: 5,
+        orderBy: { appointmentDate: 'desc' },
+        include: { service: { select: { name: true } } },
+      }),
+      this.prisma.appointment.count(),
+      this.prisma.document.count({
+        where: { status: { in: ['UPLOADED', 'UNDER_REVIEW'] } },
+      }),
+      this.prisma.application.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: { customer: { select: { name: true } } },
+      }),
+    ]);
+
+    let totalIncome = 0;
+    let pendingPaymentCount = 0;
+    const serviceRevenueMap: Record<string, number> = {};
+
+    invoices.forEach((inv) => {
+      const paid = inv.payments
+        .filter((p) => p.status === 'PAID')
+        .reduce((sum, p) => sum + Number(p.amount), 0);
+      totalIncome += paid;
+      if (inv.status === 'UNPAID') pendingPaymentCount++;
+
+      const sName = inv.service?.name || 'Technical Onsite Survey';
+      serviceRevenueMap[sName] = (serviceRevenueMap[sName] || 0) + paid;
+    });
+
+    const totalExpense = Number(expensesSum._sum.amount || 0);
+
+    const DB_TO_UI_STATUS: Record<string, string> = {
+      CONFIRMED: 'Confirmed',
+      PENDING: 'Pending',
+      COMPLETED: 'Completed',
+      CANCELLED: 'Cancelled',
+      RESCHEDULED: 'Rescheduled',
+    };
+
+    const recentAppointments = appointments.map((apt) => ({
+      id: apt.id,
+      customer: apt.customerName,
+      service: apt.service?.name || 'Technical Onsite Survey',
+      date: apt.appointmentDate ? apt.appointmentDate.toISOString().split('T')[0] : '',
+      status: DB_TO_UI_STATUS[apt.status] || 'Confirmed',
+    }));
+
+    const recentApps = recentApplications.map((app) => ({
+      id: app.id,
+      customer: app.fullName || app.customer?.name || '—',
+      service: app.serviceType || app.title || 'Support',
+      date: app.createdAt ? app.createdAt.toISOString().split('T')[0] : '',
+      status:
+        app.status === 'APPROVED'
+          ? 'Completed'
+          : app.status === 'REJECTED'
+            ? 'Rejected'
+            : 'Under Verification',
+    }));
+
+    const pieColors = ['#12372A', '#3d7a60', '#f4b251', '#e56b6f', '#6c757d'];
+    const servicesPieData = Object.keys(serviceRevenueMap)
+      .map((name, idx) => ({
+        name,
+        value: totalIncome > 0 ? Math.round((serviceRevenueMap[name] / totalIncome) * 100) : 0,
+        color: pieColors[idx % pieColors.length],
+      }))
+      .filter((item) => item.value > 0);
+
+    return {
+      stats: {
+        totalClients: customersCount,
+        totalIncome,
+        totalExpense,
+        totalProfit: totalIncome - totalExpense,
+        totalAppointments: totalAppointmentsCount,
+        pendingVerifications: pendingVerificationsCount,
+        totalApplications: applicationsCount,
+        pendingPayment: pendingPaymentCount,
+      },
+      recentAppointments,
+      recentApplications: recentApps,
+      servicesPieData,
+    };
+  }
 }
 
 @ApiTags('Customer - Dashboard')

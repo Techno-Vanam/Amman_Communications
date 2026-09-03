@@ -1,33 +1,10 @@
 'use server';
 
-import { cookies } from 'next/headers';
-
-const API_BASE_URL =
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'http://localhost:3003';
-
-async function getAuthHeader(): Promise<Record<string, string>> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { serverApiFetch } from '@/lib/server-api';
 
 export async function fetchBusinessProfileAction() {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/settings/business-profile`, {
-      headers: { ...authHeader },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/settings/business-profile`, {
-        headers: { ...authHeader },
-        cache: 'no-store',
-      });
-    }
+    const res = await serverApiFetch('/admin/settings/business-profile');
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -51,9 +28,6 @@ export async function updateBusinessProfileAction(formData: {
   registrationNumber?: string;
 }) {
   try {
-    const authHeader = await getAuthHeader();
-
-    // Map UI structure to backend DTO fields
     const payload = {
       businessName: formData.companyName,
       registrationNumber: formData.registrationNumber || undefined,
@@ -62,25 +36,10 @@ export async function updateBusinessProfileAction(formData: {
       supportEmail: formData.email,
     };
 
-    let res = await fetch(`${API_BASE_URL}/v1/admin/settings/business-profile`, {
+    const res = await serverApiFetch('/admin/settings/business-profile', {
       method: 'PATCH',
-      headers: {
-        ...authHeader,
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(payload),
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/settings/business-profile`, {
-        method: 'PATCH',
-        headers: {
-          ...authHeader,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -97,19 +56,9 @@ export async function updateBusinessProfileAction(formData: {
 
 export async function deleteBusinessLogoAction() {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/settings/business-profile/logo`, {
+    const res = await serverApiFetch('/admin/settings/business-profile/logo', {
       method: 'DELETE',
-      headers: { ...authHeader },
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/settings/business-profile/logo`, {
-        method: 'DELETE',
-        headers: { ...authHeader },
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
@@ -125,21 +74,10 @@ export async function deleteBusinessLogoAction() {
 
 export async function uploadBusinessLogoAction(formData: FormData) {
   try {
-    const authHeader = await getAuthHeader();
-
-    let res = await fetch(`${API_BASE_URL}/v1/admin/settings/business-profile/logo`, {
+    const res = await serverApiFetch('/admin/settings/business-profile/logo', {
       method: 'POST',
-      headers: { ...authHeader },
       body: formData,
     });
-
-    if (res.status === 404) {
-      res = await fetch(`${API_BASE_URL}/api/v1/admin/settings/business-profile/logo`, {
-        method: 'POST',
-        headers: { ...authHeader },
-        body: formData,
-      });
-    }
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
